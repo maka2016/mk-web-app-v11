@@ -76,50 +76,52 @@ export const CompLoader: React.FC<CompLoaderProps> = ({
     );
   }
 
-  const hideElement = [
-    'MkBaoMingV2',
-    'MkPinTuan',
-    'MkHuiZhi',
-    'MkGift',
-    'Text',
-    'Picture',
-    'MkBulletScreen_v2',
-  ];
+  return null;
 
-  if (hideElement.includes(elementRef)) {
-    return <></>;
-  }
+  // const hideElement = [
+  //   'MkBaoMingV2',
+  //   'MkPinTuan',
+  //   'MkHuiZhi',
+  //   'MkGift',
+  //   'Text',
+  //   'Picture',
+  //   'MkBulletScreen_v2',
+  // ];
 
-  const WidgetPlugin = LoadWidget<PlatformCompProps & PlatformCompPropsExtend>(
-    elementRef
-  );
-  return WidgetPlugin ? (
-    <div
-      style={Object.assign(
-        { width: '100%', height: '100%', overflow: 'hidden' },
-        maskImage ? { maskImage, WebkitMaskImage: maskImage } : {}
-      )}
-      className={clas(
-        'canvas_item_normal',
-        !canvasInteraction && 'no_editing_form'
-      )}
-    >
-      <WidgetPlugin
-        id={id}
-        widgetState={widgetState}
-        body={body}
-        getWorksData={() => store.worksData}
-        readonly={readonly}
-        editorCtx={editorContext}
-        editorSDK={editorSDK}
-        canvaInfo={canvaInfo}
-        containerInfo={containerInfo}
-        controledValues={contentProps}
-        lifecycle={lifecycle}
-        pageInfo={pageInfo}
-      />
-    </div>
-  ) : (
-    <></>
-  );
+  // if (hideElement.includes(elementRef)) {
+  //   return <></>;
+  // }
+
+  // const WidgetPlugin = LoadWidget<PlatformCompProps & PlatformCompPropsExtend>(
+  //   elementRef
+  // );
+  // return WidgetPlugin ? (
+  //   <div
+  //     style={Object.assign(
+  //       { width: '100%', height: '100%', overflow: 'hidden' },
+  //       maskImage ? { maskImage, WebkitMaskImage: maskImage } : {}
+  //     )}
+  //     className={clas(
+  //       'canvas_item_normal',
+  //       !canvasInteraction && 'no_editing_form'
+  //     )}
+  //   >
+  //     <WidgetPlugin
+  //       id={id}
+  //       widgetState={widgetState}
+  //       body={body}
+  //       getWorksData={() => store.worksData}
+  //       readonly={readonly}
+  //       editorCtx={editorContext}
+  //       editorSDK={editorSDK}
+  //       canvaInfo={canvaInfo}
+  //       containerInfo={containerInfo}
+  //       controledValues={contentProps}
+  //       lifecycle={lifecycle}
+  //       pageInfo={pageInfo}
+  //     />
+  //   </div>
+  // ) : (
+  //   <></>
+  // );
 };

@@ -1,8 +1,13 @@
 import { getAppId, getPlatform, getToken, getUid } from '@/services';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
+import * as services from '@mk/services';
 import { API } from '@mk/services';
+import * as utils from '@mk/utils';
 import { IWorksAPI, WorksStore, WorksStoreConfig } from '@mk/works-store/store';
+import * as axios from 'axios';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 // import "@mk/ui/style/index.scss";
 import { worksApi2 } from './works2';
 
@@ -30,6 +35,19 @@ export const initWidgetEnv = async () => {
    * 准备组件需要的运行时环境
    */
   Object.assign(window, {
+    CORE_VENDOR: {
+      React,
+      ReactDOM,
+      Axios: axios,
+    },
+    LIB_VENDOR: {},
+    UI_VENDER: {
+      MKUI,
+    },
+    MK_LIB: {
+      services,
+      utils,
+    },
     APPBridge: APPBridge,
   });
 };

@@ -8,6 +8,7 @@ import MkCalendarV3 from '@mk/widgets/MkCalendarV3/comp';
 import MkHuiZhi from '@mk/widgets/MkHuiZhi/comp';
 import MkImageGroup from '@mk/widgets/MkImageGroup_v2/comp';
 import MkMapComp from '@mk/widgets/MkMapV4/comp';
+import MkGift from '@mk/widgets/MkGift/comp';
 
 import { GridProps } from '../shared';
 import {
@@ -26,6 +27,7 @@ import LayoutWrapper from './layoutWrapper';
 import './lib/animate.css';
 import { useGridContext } from './provider';
 import { clearUndefinedKey } from './utils';
+import RSVPComp from '@/components/RSVP/comp';
 
 interface WidgetItemRendererProps {
   rowDepth?: number[];
@@ -319,6 +321,14 @@ const WidgetItemRendererV2Internal = (
 
   if (/container/gi.test(elementRef)) {
     return null;
+  } else if (/rsvp1/gi.test(elementRef)) {
+    compEntity = (
+      <RSVPComp
+        attrs={currAttr as any}
+        editorSDK={editorSDKForComp as any}
+        layer={layer}
+      />
+    );
   } else if (/picture/gi.test(elementRef)) {
     compEntity = (
       <ImgLiteCompV2
@@ -496,6 +506,33 @@ const WidgetItemRendererV2Internal = (
           }}
         />
       );
+    } else if (/MkGift/gi.test(elementRef)) {
+      compEntity = (
+        <MkGift
+          id={layer.elemId}
+          editorCtx={editorCtx}
+          editorSDK={editorSDKForComp}
+          widgetState={widgetStateV2}
+          canvaInfo={canvaInfo}
+          viewerSDK={viewerSDK}
+          containerInfo={
+            {
+              width: containerW,
+              height: 'auto',
+            } as any
+          }
+          getWorksData={{} as any}
+          controledValues={currAttr as any}
+          pageInfo={pageInfo}
+          lifecycle={{
+            didMount: (data: any) => editorSDKForComp?.didMount?.(elemId, data),
+            didLoaded: () => {
+              setLoaded(true);
+              didLoaded?.(elemId);
+            },
+          }}
+        />
+      );
     } else {
       let Comp;
       if (/MkBulletScreen_v2/gi.test(elementRef)) {
@@ -507,6 +544,7 @@ const WidgetItemRendererV2Internal = (
         console.log('组件加载失败', layer.elementRef);
         return null;
       }
+      return null;
 
       compEntity = (
         <Comp

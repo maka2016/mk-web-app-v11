@@ -5,6 +5,7 @@ import MkCalendarV3Form from '@mk/widgets/MkCalendarV3/form';
 import MkHuiZhiForm from '@mk/widgets/MkHuiZhi/form';
 import MkImageGroupForm from '@mk/widgets/MkImageGroup_v2/form-wap';
 import MkMapV4Form from '@mk/widgets/MkMapV4/form-wap';
+import RSVPConfigPanel from '@/components/RSVP/configPanel';
 import { useGridContext } from '../../../comp/provider';
 import { useWidgetsAttrs } from '../../../comp/WidgetLoader';
 import { BtnLiteColumn as BtnLite } from '../../../shared/style-comps';
@@ -111,6 +112,14 @@ export const SettingElemV3 = ({ onUpdate }: { onUpdate?: () => void }) => {
               editorCtx={editorCtx}
             />
           </div>
+        );
+      case /RSVP1/gi.test(layer.elementRef):
+        return (
+          <RSVPConfigPanel
+            attrs={layer.attrs as any}
+            editorSDK={editorSDK}
+            layer={layer}
+          />
         );
       default:
         // return <></>
