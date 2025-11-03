@@ -3,7 +3,7 @@ import { getAllLayers } from '@/app/editor/SimpleEditor/utils';
 import { getAppId, getCmsApiHost, getUid, requestCMS } from '@/services';
 import { getWorkData2 } from '@/services/works2';
 import { useStore } from '@/store';
-import WebsiteApp from '@mk/viewer/components/website';
+import WebsiteApp from '@/components/viewer/components/website';
 import { LayerElemItem } from '@mk/works-store/types';
 import { useSearchParams } from 'next/navigation';
 import qs from 'qs';

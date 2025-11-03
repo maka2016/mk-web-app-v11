@@ -1,7 +1,7 @@
 'use client';
 import { formReceiverServiceApi } from '@mk/services';
 import { EventEmitter } from '@mk/utils';
-import { getViewerSDK } from '@mk/viewer/utils/viewerSDK';
+import { getViewerSDK } from '@/components/viewer/utils/viewerSDK';
 import { LayerElemItem } from '@mk/works-store/types';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';

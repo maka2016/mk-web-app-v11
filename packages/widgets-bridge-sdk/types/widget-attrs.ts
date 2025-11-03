@@ -56,7 +56,6 @@ export interface PlatformCompProps<
   editorLoad?: (action: () => void) => void;
   /** 组件是否在显示页 */
   isActivePage?: boolean;
-  worksType?: string;
   /** 作品规格 */
   worksSpec?: string;
   /** 是否当前展示的页面 */

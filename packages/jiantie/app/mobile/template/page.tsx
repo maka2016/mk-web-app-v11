@@ -1,6 +1,6 @@
 import EventNotFound from '@/components/EventNotFound';
 import { treeNodeCounter2 } from '@/utils/works';
-import { getInitialPropsCommonAppRouter } from '@mk/viewer/utils/getInitialPropsCommon2';
+import { getInitialPropsCommonAppRouter } from '@/components/viewer/utils/getInitialPropsCommon2';
 import { prisma } from '@workspace/database';
 import cls from 'classnames';
 import Header from './components/header';

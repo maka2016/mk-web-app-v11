@@ -30,7 +30,6 @@
     "@mk/loggerv7": "workspace:*",
     "@mk/services": "workspace:*",
     "@mk/utils": "workspace:*",
-    "@mk/viewer": "workspace:*",
     "@mk/widgets": "workspace:*",
     "@mk/widgets-bridge-sdk": "workspace:*",
     "@mk/works-store": "workspace:*",
@@ -45,6 +44,8 @@
     "@workspace/database": "workspace:*",
     "@workspace/server": "workspace:*",
     "@workspace/ui": "workspace:*",
+    "animejs": "^4.1.2",
+    "howler": "^2.2.4",
     "axios": "^1.7.7",
     "classnames": "^2.5.1",
     "client-zip": "^2.4.5",
@@ -84,6 +85,7 @@
     "zod": "^4.0.5"
   },
   "devDependencies": {
+    "@types/howler": "^2.2.12",
     "@commitlint/cli": "^13.1.0",
     "@commitlint/config-conventional": "^13.1.0",
     "@types/express": "^4.17.13",
