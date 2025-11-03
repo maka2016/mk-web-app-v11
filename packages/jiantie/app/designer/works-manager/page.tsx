@@ -309,7 +309,7 @@ const WorksManager = () => {
   // 打开设计师编辑器
   const openEditor = (work: SerializedWorksEntity) => {
     window.open(
-      `/editor-designer?works_id=${work.id}&designer_tool=2&uid=${getUid()}&appid=${getAppId()}&works_cate=h5`,
+      `/editor-designer?works_id=${work.id}&designer_tool=2&uid=${getUid()}&appid=${getAppId()}`,
       '_blank'
     );
   };

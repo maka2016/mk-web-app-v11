@@ -52,7 +52,6 @@ interface ClickableElementProps {
   className?: string;
   style?: React.CSSProperties;
   currentTheme: ThemeConfigV2;
-  updateTheme: (updates: Partial<ThemeConfigV2>) => void;
   updateElemStyle: (type: SelectableElement, updates: any) => void;
   selectedGridType: string;
 }
@@ -66,7 +65,6 @@ const ClickableElement = ({
   className = '',
   style = {},
   currentTheme,
-  updateTheme,
   updateElemStyle,
   selectedGridType,
 }: ClickableElementProps) => {
@@ -91,22 +89,19 @@ const ClickableElement = ({
           <TextSetting
             attrs={createElemAttrs(type)}
             onChange={nextVal => {
+              console.log('type', type);
+              console.log('nextVal', nextVal);
               updateElemStyle(type as any, nextVal);
             }}
           />
           <StyleCustomSetting
             useFrontground={false}
             useTransform={false}
-            key={`${selectedGridType}`}
-            style={currentTheme[selectedGridType as keyof ThemeConfigV2] || {}}
+            key={`text_${type}`}
+            style={currentTheme[type as keyof ThemeConfigV2] || {}}
             onChange={nextVal => {
               console.log('nextVal', nextVal);
-              updateTheme({
-                [selectedGridType]: {
-                  ...currentTheme[selectedGridType as keyof ThemeConfigV2],
-                  ...nextVal,
-                },
-              });
+              updateElemStyle(type as any, nextVal);
             }}
           />
         </>
@@ -116,16 +111,11 @@ const ClickableElement = ({
         <StyleCustomSetting
           useFrontground={true}
           useTransform={false}
-          key={`${selectedGridType}`}
-          style={currentTheme[selectedGridType as keyof ThemeConfigV2] || {}}
+          key={`photo_${type}`}
+          style={currentTheme[type as keyof ThemeConfigV2] || {}}
           onChange={nextVal => {
             console.log('nextVal', nextVal);
-            updateTheme({
-              [selectedGridType]: {
-                ...currentTheme[selectedGridType as keyof ThemeConfigV2],
-                ...nextVal,
-              },
-            });
+            updateElemStyle(type as any, nextVal);
           }}
         />
       );
@@ -135,15 +125,12 @@ const ClickableElement = ({
           <StyleCustomSetting
             useFrontground={true}
             useTransform={false}
-            key={`${selectedGridType}`}
+            key={`container_${selectedGridType}`}
             style={currentTheme[selectedGridType as keyof ThemeConfigV2] || {}}
             onChange={nextVal => {
               console.log('nextVal', nextVal);
-              updateTheme({
-                [selectedGridType]: {
-                  ...currentTheme[selectedGridType as keyof ThemeConfigV2],
-                  ...nextVal,
-                },
+              updateElemStyle(selectedGridType as any, {
+                nextVal,
               });
             }}
           />
@@ -167,7 +154,9 @@ const ClickableElement = ({
         </div>
       </PopoverTrigger>
       <PopoverContent align='center' side='right' className='p-2'>
-        {renderElemSettingPanel(elementType)}
+        <div className='max-h-[80vh] overflow-y-auto'>
+          {renderElemSettingPanel(elementType)}
+        </div>
       </PopoverContent>
     </Popover>
   );
@@ -198,11 +187,6 @@ export default function StylingCreatorV4({
   const [selectedTab, setSelectedTab] = useState<
     'element' | 'container' | 'color'
   >('element');
-  // 更新主题配置
-  const updateTheme = (updates: Partial<ThemeConfigV2>) => {
-    const newTheme = { ...currentTheme, ...updates };
-    setCurrentTheme(newTheme);
-  };
 
   const takeStyle = (): ThemeConfigV2 => {
     const styleRes = {
@@ -283,10 +267,13 @@ export default function StylingCreatorV4({
 
   // 更新文本样式
   const updateElemStyle = (type: SelectableElement, updates: any) => {
+    console.log('updateElemStyle', type, updates);
     // 直接更新主题，让blockStyleFilter来处理单位
-    updateTheme({
+    const newTheme = {
+      ...currentTheme,
       [type]: { ...currentTheme[type], ...updates },
-    });
+    };
+    setCurrentTheme(newTheme);
   };
 
   // 保存主题
@@ -299,6 +286,7 @@ export default function StylingCreatorV4({
     setCurrentTheme(saveTheme);
     editorSDK?.onFormValueChange({
       themeConfig2: saveTheme,
+      _updateVersion: (gridProps._updateVersion || 0) + 1,
     });
     onSave?.(currentTheme, false);
   };
@@ -331,7 +319,7 @@ export default function StylingCreatorV4({
           </TabsTrigger>
         </TabsList>
         <TabsContent value='element' className='flex-1 overflow-hidden'>
-          <ScrollArea className='flex-1 overflow-y-auto min-h-0 bg-gray-50'>
+          <ScrollArea className='flex-1 overflow-y-auto min-h-0 bg-gray-50 max-h-[70vh]'>
             <ContainerWithBgV2
               className='preview-container'
               style={blockStyleFilter({
@@ -372,7 +360,6 @@ export default function StylingCreatorV4({
                         elementType={item.link.tag as SelectableElement}
                         key={item.link.tag}
                         currentTheme={currentTheme}
-                        updateTheme={updateTheme}
                         updateElemStyle={updateElemStyle}
                         selectedGridType={selectedGridType}
                       >
@@ -442,7 +429,6 @@ export default function StylingCreatorV4({
                             }
                             elementType={item.link.tag as SelectableElement}
                             currentTheme={currentTheme}
-                            updateTheme={updateTheme}
                             updateElemStyle={updateElemStyle}
                             selectedGridType={selectedGridType}
                           >
@@ -494,7 +480,6 @@ export default function StylingCreatorV4({
                     }
                     elementType={tag as SelectableElement}
                     currentTheme={currentTheme}
-                    updateTheme={updateTheme}
                     updateElemStyle={updateElemStyle}
                     selectedGridType={selectedGridType}
                     key={tag}

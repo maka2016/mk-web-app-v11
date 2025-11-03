@@ -650,12 +650,12 @@ const COMPARE_KEYS = {
   // layer.attrs 下的属性（需要深度比较）
   layerAttrs: [
     '_v', // 版本号 - 最关键
-    // 'color', // 颜色
-    // 'fontSize', // 字体大小
-    // 'fontFamily', // 字体
-    // 'textAlign', // 字体
-    // 'fontWeight', // 字体
-    // 'text', // 文字
+    'color', // 颜色
+    'fontSize', // 字体大小
+    'fontFamily', // 字体
+    'textAlign', // 字体
+    'fontWeight', // 字体
+    'text', // 文字
     'aspectRatio', // 宽高比
     'width', // 宽度
     'height', // 高度
