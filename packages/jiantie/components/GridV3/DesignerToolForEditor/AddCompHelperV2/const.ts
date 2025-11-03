@@ -173,7 +173,7 @@ export const createAddConfigFactory = (
             },
           },
           {
-            title: '回执',
+            title: '回执(已废弃，请使用RSVP组件)',
             elementRef: 'MkHuiZhi',
             attrs: {
               inLayout: true,
@@ -192,6 +192,11 @@ export const createAddConfigFactory = (
                 },
               ],
             },
+          },
+          {
+            title: 'RSVP组件',
+            elementRef: 'RSVP1',
+            attrs: {},
           },
           {
             title: '弹幕',
