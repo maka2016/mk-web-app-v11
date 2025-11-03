@@ -3,11 +3,11 @@
   "typescript.referencesCodeLens.enabled": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.organizeImports": "explicit"
   },
   "[typescript]": {
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit"
+      "source.removeUnusedImports": "explicit"
     }
   },
   "editor.tabSize": 2,

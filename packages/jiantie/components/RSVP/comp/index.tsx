@@ -64,6 +64,7 @@ export default function RSVPComp({ attrs, editorSDK, layer }: RSVPCompProps) {
           });
           // 没有配置时：自动为当前作品创建一个默认配置（enabled=true）
           setConfig(data as any);
+          setLoading(false);
 
           const fields: RSVPField[] = (data as any)?.form_fields?.fields || [];
           const initValues: Record<string, any> = {};

@@ -1,6 +1,11 @@
+import RSVPConfigPanelTrigger from '@/components/RSVP/configPanel';
 import styled from '@emotion/styled';
 import { getWidgetMeta } from '@mk/services';
 import { isPc, LoadWidget } from '@mk/utils';
+import MkCalendarV3Form from '@mk/widgets/MkCalendarV3/form';
+import MkHuiZhiForm from '@mk/widgets/MkHuiZhi/form';
+import MkImageGroupForm from '@mk/widgets/MkImageGroup_v2/form-wap';
+import MkMapV4Form from '@mk/widgets/MkMapV4/form-wap';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import {
   ArrowDownFromLine,
@@ -13,10 +18,6 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
-import MkCalendarV3Form from '@mk/widgets/MkCalendarV3/form';
-import MkHuiZhiForm from '@mk/widgets/MkHuiZhi/form';
-import MkImageGroupForm from '@mk/widgets/MkImageGroup_v2/form-wap';
-import MkMapV4Form from '@mk/widgets/MkMapV4/form-wap';
 import { useGridContext } from '../../../comp/provider';
 import { useWidgetsAttrs } from '../../../comp/WidgetLoader';
 import { BtnLite } from '../../../shared/style-comps';
@@ -144,6 +145,14 @@ export const SettingElemV3Pop = () => {
               editorCtx={editorCtx}
             />
           </div>
+        );
+      case /RSVP/gi.test(layer.elementRef):
+        return (
+          <RSVPConfigPanelTrigger
+            attrs={layer.attrs as any}
+            editorSDK={editorSDK}
+            layer={layer}
+          />
         );
       default:
         // return <></>
