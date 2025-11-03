@@ -45,9 +45,6 @@ importers:
       '@mk/utils':
         specifier: workspace:*
         version: link:packages/utils
-      '@mk/viewer':
-        specifier: workspace:*
-        version: link:packages/viewer
       '@mk/widgets':
         specifier: workspace:*
         version: link:packages/widgets
@@ -90,6 +87,9 @@ importers:
       '@workspace/ui':
         specifier: workspace:*
         version: link:packages/ui
+      animejs:
+        specifier: ^4.1.2
+        version: 4.1.2
       axios:
         specifier: ^1.7.7
         version: 1.8.4
@@ -126,6 +126,9 @@ importers:
       file-saver:
         specifier: ^2.0.5
         version: 2.0.5
+      howler:
+        specifier: ^2.2.4
+        version: 2.2.4
       html2canvas:
         specifier: ^1.4.1
         version: 1.4.1
@@ -214,6 +217,9 @@ importers:
       '@types/file-saver':
         specifier: ^2.0.7
         version: 2.0.7
+      '@types/howler':
+        specifier: ^2.2.12
+        version: 2.2.12
       '@types/node':
         specifier: ^20
         version: 20.17.28
@@ -487,34 +493,6 @@ importers:
       nanoid:
         specifier: '*'
         version: 3.3.4
-
-  packages/viewer:
-    dependencies:
-      '@types/howler':
-        specifier: ^2.2.12
-        version: 2.2.12
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
-      howler:
-        specifier: ^2.2.4
-        version: 2.2.4
-      micell:
-        specifier: ^0.6.1
-        version: 0.6.2
-      ua-parser-js:
-        specifier: ^0.7.21
-        version: 0.7.41
-      yup:
-        specifier: ^1.6.1
-        version: 1.6.1
-    devDependencies:
-      '@types/ua-parser-js':
-        specifier: ^0.7.39
-        version: 0.7.39
-      tailwind-merge:
-        specifier: ^2.5.4
-        version: 2.6.0
 
   packages/widgets:
     dependencies:
@@ -2878,9 +2856,6 @@ packages:
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
 
-  '@types/ua-parser-js@0.7.39':
-    resolution: {integrity: sha512-P/oDfpofrdtF5xw433SPALpdSchtJmY7nsJItf8h3KXqOslkbySh8zq4dSWXH2oTjRvJ5PczVEoCZPow6GicLg==}
-
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
@@ -5162,10 +5137,6 @@ packages:
   methods@1.1.2:
     resolution: {integrity: sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w==}
     engines: {node: '>= 0.6'}
-
-  micell@0.6.2:
-    resolution: {integrity: sha512-cylVYCwiK0rzaggW1PTF6d9St5X1ZOmJktOVSyL0/BxOkhuZgnONqsyyrMpRpk/A65lbpZva1YlAOW0wap6pew==}
-    engines: {node: '>=6.0.0'}
 
   micromatch@4.0.8:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
@@ -10006,8 +9977,6 @@ snapshots:
   '@types/trusted-types@2.0.7':
     optional: true
 
-  '@types/ua-parser-js@0.7.39': {}
-
   '@types/ws@8.18.1':
     dependencies:
       '@types/node': 22.13.14
@@ -12698,10 +12667,6 @@ snapshots:
       - supports-color
 
   methods@1.1.2: {}
-
-  micell@0.6.2:
-    dependencies:
-      '@babel/runtime': 7.28.4
 
   micromatch@4.0.8:
     dependencies:

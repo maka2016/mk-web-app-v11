@@ -27,7 +27,7 @@ import { useRouter } from 'next/navigation';
 import ImageCropper from './ImageCropper';
 import { buildExportButtons, buildShareButtons } from './shareButtons';
 // import { Separator } from "@workspace/ui/components/separator";
-import { onScreenShot } from '@mk/widgets/GridV3/shared';
+import { onScreenShot } from '@/components/GridV3/shared';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,7 +48,7 @@ import { useShareNavigation } from '@/utils/share';
 import {
   CanvaInfo2,
   getCanvaInfo2,
-} from '@mk/widgets/GridV3/comp/provider/utils';
+} from '@/components/GridV3/comp/provider/utils';
 import { IWorksData } from '@mk/works-store/types';
 import { Label } from '@workspace/ui/components/label';
 import { Separator } from '@workspace/ui/components/separator';

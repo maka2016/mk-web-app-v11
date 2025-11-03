@@ -3,9 +3,6 @@ import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { API } from '@mk/services';
 import { IWorksAPI, WorksStore, WorksStoreConfig } from '@mk/works-store/store';
-import axios from 'axios';
-import React from 'react';
-import ReactDOM from 'react-dom';
 // import "@mk/ui/style/index.scss";
 import { worksApi2 } from './works2';
 
@@ -28,32 +25,11 @@ export const getRequestCommonConfig = (config: any) => {
 };
 
 export const initWidgetEnv = async () => {
-  const [services, utils, OSSClientCompat] = await Promise.all([
-    import('@mk/services'),
-    import('@mk/utils'),
-    import('@mk/services/src/oss-client-compat'),
-  ]);
-
   const MKUI = {};
   /**
    * 准备组件需要的运行时环境
    */
   Object.assign(window, {
-    CORE_VENDOR: {
-      React,
-      ReactDOM,
-      Axios: axios,
-    },
-    LIB_VENDOR: {
-      AliOss: OSSClientCompat, // 使用兼容的 OSS 客户端
-    },
-    UI_VENDER: {
-      MKUI,
-    },
-    MK_LIB: {
-      services,
-      utils,
-    },
     APPBridge: APPBridge,
   });
 };

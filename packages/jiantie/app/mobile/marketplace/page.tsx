@@ -1,5 +1,5 @@
 import EventNotFound from '@/components/EventNotFound';
-import { getInitialPropsCommonAppRouter } from '@mk/viewer/utils/getInitialPropsCommon2';
+import { getInitialPropsCommonAppRouter } from '@/components/viewer/utils/getInitialPropsCommon2';
 import { Button } from '@workspace/ui/components/button';
 import Link from 'next/link';
 import CreateBtn from './components/createBtn';
