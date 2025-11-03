@@ -1,0 +1,12 @@
+{
+  "title": "祝福留言",
+  "namePlaceholder": "输入您的姓名",
+  "contentPlaceholder": "输入您的祝福留言",
+  "submit": "发送祝福",
+  "submitting": "发送中...",
+
+  "errorTip": "请分享后使用此功能",
+  "emptyName": "请输入姓名",
+  "emptyContent": "请输入您的祝福留言",
+  "errorTip2": "您提交的内容涉嫌违规， 请重新编辑！"
+}

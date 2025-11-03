@@ -1,0 +1,17 @@
+{
+  "name": "@mk/loggerv7",
+  "version": "0.1.6",
+  "main": "index.js",
+  "author": "linli",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "copy:files": "node ./scripts/copy-files",
+    "pre:release": "rm -rf ./dist && yarn build && yarn copy:files",
+    "release": "yarn pre:release && cd ./dist && npm publish"
+  },
+  "publishConfig": {
+    "registry": "https://nexus.maka.mobi/repository/maka-npm/"
+  },
+  "dependencies": {}
+}

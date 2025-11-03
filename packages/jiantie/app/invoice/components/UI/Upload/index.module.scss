@@ -1,0 +1,34 @@
+.main {
+  text-align: center;
+  border: 1px dashed rgba(0, 0, 0, 0.06);
+  width: 88px;
+  height: 88px;
+  border-radius: 6px;
+  background-color: #fff;
+  transition: all 0.3s;
+  &:hover {
+    // border-color: rgba(21, 94, 239, 1);
+  }
+
+  .imgWrapper {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.01);
+    .img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  .uploadWrapper {
+    margin-top: 18px;
+    .text {
+      color: rgba(0, 0, 0, 0.25);
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 20px;
+      margin-top: -6px;
+    }
+  }
+}

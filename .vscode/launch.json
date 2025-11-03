@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // 启动本地服务（如 Vite / Next / Taro）
+      "type": "node-terminal",
+      "name": "Run Script: dev:jiantie",
+      "request": "launch",
+      "command": "pnpm run dev:jiantie",
+      "cwd": "${workspaceFolder}"
+    },
+
+    {
+      // 可选：附加到已运行的 Chrome（备用）
+      "type": "chrome",
+      "request": "attach",
+      "name": "Attach to Chrome",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+.main {
+  padding: 0 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  row-gap: 16px;
+
+  .primaryColor {
+    color: rgba(21, 94, 239, 1);
+    font-weight: var(--font-semibold);
+    margin: 0 2px;
+  }
+
+  .header {
+    padding: 12px 0;
+    box-shadow: 0 -1px 0 0 inset rgba(0, 0, 0, 0.06);
+    font-size: 14px;
+    font-weight: var(--font-semibold);
+    line-height: 24px;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    row-gap: 16px;
+
+    .tipsBlock {
+      padding: 16px 20px;
+
+      display: flex;
+      flex-direction: column;
+      row-gap: 8px;
+
+      color: rgba(60, 60, 61, 1);
+      background-color: rgba(239, 248, 255, 1);
+
+      .tipsTitle {
+        font-size: 14px;
+        font-weight: var(--font-semibold);
+        line-height: 22px;
+        color: rgba(0, 0, 0, 0.88);
+      }
+
+      .tipsContent {
+        color: rgba(0, 0, 0, 0.6);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 24px;
+      }
+    }
+
+    .btnRow {
+      display: flex;
+      align-items: center;
+      column-gap: 12px;
+
+      .btnTips {
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 22px;
+        color: rgba(0, 0, 0, 0.45);
+      }
+    }
+  }
+}
+
+.modalContent {
+  width: 100%;
+  height: auto;
+
+  .header {
+    padding: 16px;
+    color: rgba(1, 7, 13, 0.8);
+    font-size: 16px;
+    font-weight: var(--font-semibold);
+    line-height: 24px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    box-shadow: 0px -1px 0px 0px rgba(236, 238, 240, 1) inset;
+  }
+
+  .content {
+    padding: 40px 50px;
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+    align-items: center;
+
+    .piao {
+      width: 300px;
+      height: 80px;
+      background-color: rgba(211, 236, 253, 1);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      column-gap: 16px;
+      color: rgba(0, 0, 0, 1);
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      cursor: pointer;
+
+      .head {
+        width: 80px;
+        height: 100%;
+        border-right: 2px dotted rgba(0, 0, 0, 0.06);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    }
+
+    .bg2 {
+      background-color: rgba(255, 250, 193, 1);
+    }
+  }
+
+  .closeBtn {
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2px;
+  }
+
+  :global(.ant-modal-confirm-paragraph) {
+    max-width: 100%;
+  }
+
+  :global(.ant-modal-confirm-btns) {
+    margin-top: 0;
+  }
+}

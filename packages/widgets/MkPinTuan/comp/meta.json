@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "elementRef": "MkPinTuan",
+  "logo": "",
+  "label": "",
+  "editorApply": {
+    "webFormRef": "MkPinTuanForm",
+    "wapFormRef": "MkPinTuanWapForm",
+    "templatesRef": "MkPinTuanTemplates"
+  },
+  "classification": "Other",
+  "formProcessor": "MkPinTuan_FormProcessor"
+}

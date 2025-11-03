@@ -1,0 +1,3 @@
+// export const defaultFontFamily = `tahoma,arial,'Hiragino Sans GB',\\5b8b\\4f53,sans-serif`
+export const defaultFontFamily = `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,"Microsoft YaHei", "微软雅黑", "PingFang SC", "Hiragino Sans GB", "Source Han Sans SC", "Noto Sans SC", "Source Han Sans CN", "华文细黑", sans-serif,"Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif,"Noto Sans", sans-serif, "Droid Sans", "Arial Unicode MS", sans-serif`;
+// export const defaultFontFamily = `"PingFang SC", sans-serif, system-ui, ui-sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"`

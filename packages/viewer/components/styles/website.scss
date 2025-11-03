@@ -1,0 +1,25 @@
+.website_root {
+  background-color: #eee;
+  .long_viewer_container {
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    .viewerContainer {
+      position: relative;
+    }
+  }
+}
+
+// 屏幕宽度大于 768px 时
+@media (min-width: 767px) {
+  .website_root {
+    .long_viewer_container {
+      margin: 0 auto;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      margin: 24px auto;
+      max-width: 720px;
+    }
+  }
+}

@@ -1,0 +1,14 @@
+.main {
+  :global(.ant-table-tbody) {
+    & > tr > td {
+      border: none;
+    }
+  }
+
+  :global(.ant-table-selection-column) {
+  }
+
+  :global(.ant-pagination-options-size-changer) {
+    display: none;
+  }
+}

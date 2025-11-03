@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "elementRef": "MkBaoMingV2",
+  "logo": "",
+  "label": "",
+  "editorApply": {
+    "webFormRef": "MkBaoMingV2Form",
+    "wapFormRef": "MkBaoMingV2WapForm",
+    "templatesRef": "MkBaoMingV2Templates"
+  },
+  "classification": "Other",
+  "formProcessor": "MkBaoMingV2_FormProcessor"
+}

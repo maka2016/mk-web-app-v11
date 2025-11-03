@@ -1,0 +1,27 @@
+.main {
+  display: flex;
+  flex-direction: column;
+  row-gap: 16px;
+
+  .optsCell {
+    .optsBtn {
+      padding-left: 6px;
+      padding-right: 6px;
+      &:first-child {
+        padding-left: 0;
+      }
+
+      &:last-child {
+        padding-right: 0;
+      }
+
+      &.disabled {
+        // color:
+      }
+    }
+
+    .effectiveBtn {
+      color: rgba(21, 94, 239, 1);
+    }
+  }
+}

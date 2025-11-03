@@ -1,0 +1,23 @@
+.libTemplate {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 12px;
+
+  .templateList {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+
+    .templateItem {
+      border-radius: 8px;
+      border: 1px solid #0000001a;
+      aspect-ratio: 171/251;
+      overflow: hidden;
+
+      &.active {
+        border: 2px solid var(--theme-color);
+        pointer-events: none;
+      }
+    }
+  }
+}

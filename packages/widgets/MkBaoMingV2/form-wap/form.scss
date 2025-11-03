@@ -1,0 +1,9 @@
+.__mk_image_form__ {
+  .ant-input-number-handler-wrap {
+    display: none;
+  }
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
+}

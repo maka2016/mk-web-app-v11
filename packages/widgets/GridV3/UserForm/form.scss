@@ -1,0 +1,49 @@
+.tippy-box {
+  pointer-events: auto !important;
+}
+
+.__tip__ {
+  border-radius: 100px;
+  overflow: hidden;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+  width: fit-content !important;
+  padding: 0 !important;
+}
+
+.tabs-container {
+  overflow: hidden;
+  .tab-content {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+}
+
+.editing_more_option {
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+
+  .__mk_button__ {
+    // 不换行
+    white-space: nowrap;
+  }
+
+  .more_option {
+    position: absolute;
+    top: 120%;
+    right: 0;
+    // transform: translateY(60%);
+    background-color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+
+    .more_option_item {
+      padding: 8px 0;
+    }
+  }
+}

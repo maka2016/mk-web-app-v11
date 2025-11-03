@@ -1,0 +1,88 @@
+.overview {
+  background-color: #fff;
+  height: 100%;
+
+  .bulletScreen {
+    padding: 0 20px 20px;
+
+    .bulletScreenItem {
+      padding: 8px 0 4px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 8px;
+
+      .headImg {
+        margin-right: 12px;
+
+        img {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+        }
+      }
+
+      .left {
+        margin-right: 12px;
+        flex: 1;
+        overflow: hidden;
+        gap: 2px;
+      }
+
+      .content {
+        color: rgba(0, 0, 0, 0.88);
+        // overflow: hidden;
+        // text-overflow: ellipsis;
+        // white-space: nowrap;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 22px;
+      }
+
+      .name {
+        font-weight: 400;
+        font-size: 13px;
+        line-height: 20px;
+        color: #000;
+      }
+
+      .time {
+        font-weight: 400;
+        font-size: 11px;
+        line-height: 100%;
+        color: rgba(0, 0, 0, 0.45);
+      }
+    }
+  }
+}
+
+.finished {
+  position: relative;
+  padding: 16px 0;
+  text-align: center;
+  color: rgba(1, 7, 13, 0.4);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 24px;
+
+  &::before {
+    content: '';
+    width: 29%;
+    height: 1px;
+    background: rgba(1, 7, 13, 0.06);
+    position: absolute;
+    left: 40px;
+    top: 28px;
+  }
+
+  &::after {
+    content: '';
+    width: 29%;
+    height: 1px;
+    background: rgba(1, 7, 13, 0.06);
+    position: absolute;
+    right: 40px;
+    top: 28px;
+  }
+}

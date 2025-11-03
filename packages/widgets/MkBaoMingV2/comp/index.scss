@@ -1,0 +1,183 @@
+.mk_baoming_v2_footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  position: absolute;
+  bottom: calc(16px + var(--preview-footer-height));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 207px;
+  border-radius: 100px;
+  height: 46px;
+  background: #3358d4;
+  color: #fff;
+  font-family: PingFang SC;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 22px;
+  pointer-events: auto;
+}
+
+.mk_baoming_form {
+  padding: 16px 20px;
+  background-image: url('https://img2.maka.im/cdn/webstore10/huiyao/mk_baoming_v2_bg.png');
+  background-size: 100% 280px;
+  background-repeat: no-repeat;
+  border-radius: 30px 30px;
+  overflow-y: auto;
+
+  .title {
+    font-family: PingFang SC;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 26px;
+    letter-spacing: 0%;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.88);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    gap: 4px;
+
+    img {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  .desc {
+    font-family: PingFang SC;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 20px;
+    color: rgba(0, 0, 0, 0.45);
+    margin-bottom: 8px;
+  }
+
+  .close {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    color: rgba(0, 0, 0, 0.88);
+  }
+
+  .content {
+    border: 1px solid #ccd8ff;
+    border-radius: 16px;
+    padding: 0 20px;
+    background-color: #fff;
+
+    .form_item {
+      padding: 16px 0;
+      display: flex;
+      align-items: flex-start;
+
+      border-bottom: 0.5px solid #f0f0f0;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .course_item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        span {
+          font-weight: 400;
+          font-size: 14px;
+          line-height: 22px;
+          color: #000;
+        }
+      }
+
+      .form_item_title {
+        width: 76px;
+        font-family: PingFang SC;
+        font-weight: 600;
+        font-size: 14px;
+        line-height: 22px;
+
+        .required {
+          color: #ff4d4f;
+          margin-right: 2px;
+        }
+      }
+
+      .form_item_input {
+        flex: 1;
+        font-size: 14px;
+        color: #000;
+        font-weight: 400;
+
+        &::placeholder {
+          font-size: 14px;
+          color: rgba(0, 0, 0, 0.45);
+        }
+      }
+    }
+  }
+
+  .mk_baoming_form_submit {
+    margin: 16px 0 8px;
+    width: 100%;
+    height: 48px;
+    line-height: 48px;
+    text-align: center;
+    background: #3358d4;
+    color: #fff;
+    border-radius: 8px;
+    font-family: PingFang SC;
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .success_content {
+    // min-height: 223px;
+    border-radius: 16px;
+    max-height: 80vh;
+    overflow-y: auto;
+
+    .submit_success {
+      padding: 42px 0 16px;
+      // background-color: #FFF0F3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      gap: 8px;
+
+      img {
+        width: 60px;
+        height: 60px;
+      }
+
+      span {
+        font-family: PingFang SC;
+        font-weight: 600;
+        font-size: 14px;
+        line-height: 22px;
+        letter-spacing: 0px;
+        text-align: center;
+        color: rgba(0, 0, 0, 0.88);
+      }
+    }
+  }
+
+  .resubmit {
+    margin: 16px 0;
+    width: 100%;
+    height: 48px;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    font-family: PingFang SC;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 48px;
+    text-align: center;
+    color: #09090b;
+  }
+}

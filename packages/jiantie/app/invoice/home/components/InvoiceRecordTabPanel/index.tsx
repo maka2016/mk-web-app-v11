@@ -1,0 +1,155 @@
+'use client';
+import { Icon } from '@workspace/ui/components/Icon';
+import styles from './index.module.scss';
+import cls from 'classnames';
+import React, { useEffect, useState } from 'react';
+import { Button, ConfigProvider, TableProps } from 'antd';
+import { usePathname, useRouter } from 'next/navigation';
+import { fontWeight } from 'html2canvas/dist/types/css/property-descriptors/font-weight';
+import EmptyContent from '@/app/invoice/components/UI/EmptyContent';
+import { InvoiceStatus, InvoiceType } from '@/types/invoice';
+import Table from '@/app/invoice/components/PC/Table';
+import {
+  ApplyInvoiceInfo,
+  ApplyInvoiceInfoStatus,
+} from '@/types/invoice/order';
+import {
+  getApplyInvoiceList,
+  getApplyInvoiceListPageNum,
+} from '@/services/invoice/applyInvoice';
+
+interface Props {}
+
+const InvoiceRecordTabPanel: React.FC<Props> = props => {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [invoices, setInvoices] = useState<ApplyInvoiceInfo[]>();
+  const [pageNum, setPageNum] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+
+  const initData = async () => {
+    getInvoiceInfos();
+    syncPageNum();
+  };
+
+  const getInvoiceInfos = async (page?: number) => {
+    const res = await getApplyInvoiceList(page);
+    if (!res.success) return;
+    setInvoices(res.data);
+  };
+
+  const syncPageNum = async () => {
+    const res = await getApplyInvoiceListPageNum();
+    if (!res.success) return;
+    res.data?.page_num && setPageNum(res.data.page_num);
+  };
+  useEffect(() => {
+    initData();
+  }, []);
+
+  const columns: TableProps<ApplyInvoiceInfo>['columns'] = [
+    {
+      title: '申请单号',
+      dataIndex: 'id',
+      key: 'id',
+    },
+    {
+      title: '申请日期',
+      dataIndex: 'created_at',
+      key: 'created_at',
+    },
+    {
+      title: '发票类型',
+      dataIndex: 'apply_type',
+      key: 'apply_type',
+      render: (value: ApplyInvoiceInfo['apply_type']) => {
+        if (value === 'special') {
+          return '增值税专用发票';
+        } else {
+          return '增值税普通发票';
+        }
+      },
+    },
+    {
+      title: '金额',
+      dataIndex: 'total',
+      key: 'total',
+      render: value => `¥${value}`,
+    },
+    {
+      title: '进度',
+      dataIndex: 'status',
+      key: 'status',
+      render: (value: ApplyInvoiceInfoStatus) => {
+        switch (value) {
+          case ApplyInvoiceInfoStatus.不通过:
+            return '不通过';
+          case ApplyInvoiceInfoStatus.待审核:
+            return '待审核';
+          case ApplyInvoiceInfoStatus.待发送:
+            return '待发送';
+          case ApplyInvoiceInfoStatus.已发送:
+            return '已发送';
+        }
+      },
+    },
+    {
+      title: '操作',
+      key: 'options',
+      render: (value, record, index) => {
+        const className = cls(styles.optsBtn, styles.effectiveBtn);
+
+        return (
+          <div className={styles.optsCell}>
+            <Button
+              className={className}
+              onClick={async () => {
+                router.push(`${pathname}/apply-details/${record.id}`);
+              }}
+              color='default'
+              variant='link'
+            >
+              详情
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  return (
+    <div className={styles.main}>
+      <div>
+        <Button
+          type='primary'
+          onClick={() => {
+            router.push('/invoice/order');
+          }}
+        >
+          去开发票
+        </Button>
+      </div>
+      <div>
+        <ConfigProvider>
+          <Table<ApplyInvoiceInfo>
+            columns={columns}
+            dataSource={invoices}
+            rowKey={record => record.id}
+            size='small'
+            pagination={{
+              pageSize: pageSize,
+              hideOnSinglePage: true,
+              total: pageSize * pageNum,
+              onChange: (page, pageSize) => {
+                getInvoiceInfos(page);
+              },
+            }}
+          />
+        </ConfigProvider>
+      </div>
+    </div>
+  );
+};
+
+export default InvoiceRecordTabPanel;

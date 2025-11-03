@@ -1,0 +1,11 @@
+{
+  "name": "@mk/form-engine",
+  "version": "0.1.2",
+  "description": "maka表单引擎",
+  "author": "sanget",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {},
+  "dependencies": {},
+  "devDependencies": {}
+}

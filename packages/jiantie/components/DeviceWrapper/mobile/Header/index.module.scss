@@ -1,0 +1,52 @@
+.head {
+  position: sticky;
+  top: 0;
+  height: 44px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(0, 0, 0, 0.88);
+  background-color: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  z-index: 9;
+
+  .title {
+    flex: 1;
+    text-align: center;
+    font-size: 16px;
+    font-weight: var(--font-semibold);
+    line-height: 24px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    color: rgba(0, 0, 0, 0.88);
+  }
+
+  .left {
+    width: 80px;
+
+    span {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 22px;
+      color: #000;
+      white-space: nowrap;
+    }
+  }
+
+  .right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 80px;
+    text-align: right;
+    // color: rgba(0, 0, 0, 0.88);
+    color: var(--app-theme-color);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 22px;
+  }
+}

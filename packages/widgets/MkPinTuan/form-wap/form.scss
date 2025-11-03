@@ -1,0 +1,22 @@
+.mk_huizhi_wap_form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+
+  .mk_huizhi_wap_form_btn {
+    padding: 0 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-family: PingFang SC;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 22px;
+    letter-spacing: 0px;
+    vertical-align: middle;
+    color: rgba(0, 0, 0, 0.88);
+  }
+}

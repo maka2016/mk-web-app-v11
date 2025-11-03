@@ -1,0 +1,16 @@
+.lib_picture_tab {
+  .tab-group {
+    padding: 0 8px;
+    margin-bottom: 8px;
+  }
+}
+
+.LibPictureV2 {
+  height: 100%;
+  position: relative;
+  .check_btn {
+    position: absolute;
+    top: 0px;
+    right: 8px;
+  }
+}

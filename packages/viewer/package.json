@@ -1,0 +1,30 @@
+{
+  "name": "@mk/viewer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "lint-staged": "lint-staged",
+    "dev": "ENV=prod NODE_ENV=development PORT=9999 next dev --turbopack",
+    "dev:next": "next dev",
+    "build": "NODE_ENV=production next build",
+    "analyzer": "ANALYZE=true next build",
+    "start": "NODE_ENV=production next start",
+    "build:start": "yarn build && PORT=9001 NODE_ENV=production next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@types/howler": "^2.2.12",
+    "clsx": "^2.1.1",
+    "howler": "^2.2.4",
+    "micell": "^0.6.1",
+    "ua-parser-js": "^0.7.21",
+    "yup": "^1.6.1"
+  },
+  "devDependencies": {
+    "@types/ua-parser-js": "^0.7.39",
+    "tailwind-merge": "^2.5.4"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": "eslint"
+  }
+}

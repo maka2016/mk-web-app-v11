@@ -1,0 +1,22 @@
+{
+  "name": "@mk/form-protocol",
+  "version": "0.2.4",
+  "description": "mk 表单引擎协议",
+  "main": "index.js",
+  "types": "./index.ts",
+  "scripts": {
+    "build": "tsc",
+    "copy:files": "node ./scripts/copy-files",
+    "pre:release": "rm -rf ./dist && yarn build && yarn copy:files",
+    "release:publish": "yarn pre:release && npm publish ./dist --access=public",
+    "release": "yarn pre:release && cd ./dist &&  npm publish"
+  },
+  "dependencies": {
+    "yup": "^1.6.1",
+    "class-transformer": "0.5.1",
+    "class-validator": "^0.13.2"
+  },
+  "publishConfig": {},
+  "author": "SANGET",
+  "license": "MIT"
+}

@@ -1,0 +1,468 @@
+.container {
+  // overflow-y: auto;
+  // height: 100vh;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
+
+  .userGuide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+    display: flex;
+    background-color: rgba(0, 0, 0, 0.7);
+
+    .guideTop {
+      position: absolute;
+      top: 44px;
+      right: 16px;
+      font-family: PingFang SC;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 22px;
+      color: #fff;
+    }
+
+    .guideContent {
+      position: absolute;
+      top: 124px;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      .title {
+        display: flex;
+        align-items: center;
+
+        iconpark-icon {
+          color: var(--theme-color) !important;
+        }
+
+        span {
+          font-family: PingFang SC;
+          font-weight: var(--font-semibold);
+          font-size: 20px;
+          line-height: 28px;
+          text-align: center;
+          color: #fff;
+        }
+      }
+
+      img {
+        width: 266px;
+      }
+
+      .desc {
+        font-family: PingFang SC;
+        font-weight: var(--font-semibold);
+        font-size: 16px;
+        line-height: 24px;
+        color: #fff;
+      }
+    }
+
+    .btn {
+      position: absolute;
+      bottom: 48px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 300px;
+    }
+  }
+}
+
+.header {
+  flex-shrink: 0;
+  height: 44px;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  // padding-right: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 9;
+  box-shadow: inset 0 -1px rgba(0, 0, 0, 0.15);
+
+  .left {
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 22px;
+    color: #000;
+  }
+
+  .templateBtn {
+    background-color: #fff4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    height: 30px;
+    border-radius: 6px;
+    gap: 4px;
+    background-color: var(--theme-background-color);
+
+    span {
+      font-family: PingFang SC;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 20px;
+      text-align: center;
+      color: #09090b;
+    }
+
+    &.xueji {
+      background-color: #fef7c3;
+
+      iconpark-icon {
+        color: #09090b !important;
+      }
+    }
+  }
+
+  .center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    .iconBtn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+
+      &.disabled {
+        color: #a5a6a7;
+        pointer-events: none;
+      }
+    }
+  }
+
+  .right {
+    text-align: right;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 22px;
+    color: #000;
+  }
+}
+
+.footer {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  z-index: 9;
+  background-color: #fff;
+  width: 100%;
+  box-shadow: 0px 2px 14px 0px #55555526;
+  min-height: 66px;
+
+  .actionItem {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+    padding: 12px 0;
+
+    span {
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 16px;
+      text-align: center;
+      color: rgba(0, 0, 0, 0.88);
+    }
+
+    .newTip {
+      position: absolute;
+      bottom: calc(100% + 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 312px;
+      padding: 16px;
+      background-color: rgba(0, 0, 0, 0.88);
+      border-radius: 8px;
+      padding: 12px 16px;
+      z-index: 1;
+
+      .tipClose {
+        position: absolute;
+        right: 16px;
+        top: 16px;
+      }
+
+      span {
+        font-family: PingFang SC;
+        font-size: 16px;
+        line-height: 24px;
+        color: #fff;
+      }
+
+      .arrow {
+        height: 8px;
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+  }
+}
+
+.text {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  width: 100%;
+  overflow: hidden;
+
+  .input {
+    overflow: hidden;
+    padding: 8px 12px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    border: 1px solid #0000000f;
+    border-radius: 6px;
+    margin-right: 12px;
+
+    p {
+      margin-right: 4px;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+.editingContainer {
+  z-index: 2;
+  // color: white;
+  // font-size: 20px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .editing-content-layer {
+    overflow-y: auto;
+    height: 0;
+    flex: 1;
+  }
+
+  .editing-content {
+    padding: 16px 16px 0;
+    // caret-color: var(--color-blue-drak);
+
+    .content {
+      min-height: 30vh;
+    }
+
+    ::selection {
+      background: rgba(26, 135, 255, 0.5);
+    }
+
+    * {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+  }
+
+  .editingOperation {
+    flex-shrink: 0;
+    gap: 8px;
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 8px;
+    // border-bottom: 1px solid var(--divid-color);
+
+    .cancel-btn {
+      padding: 0 8px;
+    }
+  }
+
+  .editing_input {
+    background: transparent;
+    border: none;
+    color: white;
+    height: 35vh;
+    width: 100%;
+    padding: 50px 10px;
+    -webkit-user-select: text;
+    user-select: text;
+    text-align: center;
+  }
+}
+
+.scrolling-text-container {
+  height: 16px;
+  width: 50px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+
+  .content {
+    height: 100%;
+    margin: 0;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.88);
+    white-space: nowrap;
+    transform: translateX(25%);
+    animation: scroll-left 5s linear infinite;
+  }
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(50%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.componentSettings {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 8px;
+  overflow-y: auto;
+
+  .settingItem {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    border-radius: 12px;
+    background-color: #fafafa;
+
+    .name {
+      flex: 1;
+      font-family: PingFang SC;
+      font-weight: var(--font-semibold);
+      font-size: 16px;
+      line-height: 24px;
+      letter-spacing: 0px;
+      color: rgba(0, 0, 0, 0.88);
+    }
+
+    .desc {
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 20px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: PingFang SC;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 22px;
+      letter-spacing: 0px;
+      vertical-align: middle;
+      color: hsl(var(--primary));
+      margin-right: 16px;
+    }
+  }
+}
+
+.pageNavigation {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.operatingBtns {
+  padding: 8px 16px;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  gap: 8px;
+  border-top: 1px solid #e4e4e7;
+
+  .btnItem {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 138px;
+    padding: 8px 0;
+    cursor: pointer;
+    gap: 4px;
+    border-radius: 8px;
+    border: 1px solid #e4e4e7;
+
+    &:active {
+      background-color: #eee;
+    }
+
+    .corner {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      height: 18px;
+      padding: 0 4px;
+      border-radius: 8px 8px 8px 0px;
+      background-color: #52c41a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: PingFang SC;
+      font-weight: var(--font-semibold);
+      font-size: 10px;
+      line-height: 100%;
+      color: #fff;
+    }
+
+    img {
+      width: 24px;
+      height: 24px;
+    }
+
+    span {
+      font-family: PingFang SC;
+      font-weight: var(--font-semibold);
+      font-size: 14px;
+      line-height: 20px;
+      text-align: center;
+      color: #000;
+    }
+
+    &.disabled {
+      pointer-events: none;
+      opacity: 0.25;
+    }
+  }
+}

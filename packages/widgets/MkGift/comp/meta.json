@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "elementRef": "MkGift",
+  "logo": "",
+  "label": "",
+  "editorApply": {
+    "webFormRef": "MkGiftForm",
+    "wapFormRef": "MkGiftWapForm",
+    "templatesRef": "MkGiftTemplates"
+  },
+  "classification": "Other",
+  "formProcessor": "MkGift_FormProcessor"
+}

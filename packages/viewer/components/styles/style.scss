@@ -1,0 +1,341 @@
+p {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.animation-stop {
+  animation-play-state: paused;
+  -webkit-animation-play-state: paused;
+
+  /* Safari 和 Chrome */
+  * {
+    animation-play-state: paused;
+    -webkit-animation-play-state: paused;
+    /* Safari 和 Chrome */
+  }
+}
+
+.fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.fanyeh5_main_container {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.canvas {
+  height: 100vh;
+  width: 100vw;
+}
+
+.main_container {
+  position: relative;
+  z-index: 1;
+}
+
+.canvas_item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 50% 50%;
+
+  .combination_box {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.indicator {
+  z-index: 111;
+  position: absolute;
+  bottom: 20px;
+  width: 30px;
+  // padding: 20px;
+  left: 50%;
+  margin-left: -12px;
+  text-align: center;
+
+  img {
+    width: 100%;
+    filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.5));
+    animation-name: arrowing;
+    -webkit-animation-name: arrowing;
+    animation-duration: 1.5s;
+    -webkit-animation-duration: 1.5s;
+    animation-iteration-count: infinite;
+    -webkit-animation-iteration-count: infinite;
+  }
+
+  &::after {
+    // 添加20px的点击热区
+    content: '';
+    position: absolute;
+    left: -10px;
+    top: -10px;
+    right: -10px;
+    bottom: -10px;
+  }
+}
+
+.page_indicator {
+  z-index: 10001;
+  position: absolute;
+  // background: red;
+  text-align: center;
+
+  text-align: center;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.2);
+  position: absolute;
+  border-radius: 8px;
+  padding: 2px 12px;
+  font-size: 18px;
+
+  &.none {
+    display: none;
+  }
+
+  &.leftBottom {
+    bottom: 40px;
+    left: 20px;
+    transform-origin: left;
+  }
+
+  &.rightBottom {
+    bottom: 40px;
+    right: 20px;
+    transform-origin: right;
+  }
+
+  &.topCenter {
+    top: 20px;
+    left: 50%;
+    margin-left: -32px;
+    transform-origin: center;
+  }
+}
+
+@keyframes arrowing {
+  0% {
+    transform: translateY(-5px);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: translateY(10px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-5px);
+    opacity: 0.8;
+  }
+}
+
+@-webkit-keyframes arrowing {
+  0% {
+    -webkit-transform: translateY(-5px);
+    opacity: 0.8;
+  }
+
+  50% {
+    -webkit-transform: translateY(10px);
+    opacity: 1;
+  }
+
+  100% {
+    -webkit-transform: translateY(-5px);
+    opacity: 0.8;
+  }
+}
+
+.watermark-web-mask {
+  background: url(https://makapicture.oss-cn-beijing.aliyuncs.com/cdn/mk-widgets/sdk/canvas-watermark.svg)
+    repeat 0 0 / 100%;
+  display: block;
+  opacity: 1;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  position: absolute;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.stopAnimation {
+  animation-play-state: paused !important;
+}
+
+.runAnimation {
+  animation-play-state: running !important;
+}
+
+.musicIcon {
+  $scale: 2.5rem;
+  // background: transparent !important;
+  // -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  transform-origin: center center;
+  animation: 5s linear 0s infinite normal forwards running rotateRound;
+  // position: fixed;
+  // right: 1.5rem;
+  // top: 1.5rem;
+  width: $scale;
+  height: $scale;
+  z-index: 999998;
+
+  img {
+    width: 100%;
+  }
+}
+
+.share_campaign_button {
+  position: fixed;
+  bottom: 100px;
+  right: 23px;
+  font-size: 12px;
+  z-index: 999998;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #fff;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 16px;
+
+  img {
+    width: 18px;
+    height: 15px;
+    margin-bottom: 4px;
+  }
+}
+
+@-webkit-keyframes rotateRound {
+  0% {
+    -webkit-transform: rotateZ(0deg);
+    transform: rotateZ(0deg);
+  }
+
+  100% {
+    -webkit-transform: rotateZ(360deg);
+    transform: rotateZ(360deg);
+  }
+}
+
+@keyframes rotateRound {
+  0% {
+    -webkit-transform: rotateZ(0deg);
+    transform: rotateZ(0deg);
+  }
+
+  100% {
+    -webkit-transform: rotateZ(360deg);
+    transform: rotateZ(360deg);
+  }
+}
+
+.viewer_canvas_content {
+  position: relative;
+}
+
+.fixed_layers_container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  pointer-events: none;
+  z-index: 11111;
+}
+
+.viewer_background_container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  // pointer-events: none;
+}
+
+@keyframes outer-circle {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(0.5);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@-moz-keyframes outer-circle
+
+/* Firefox */ {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(0.5);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@-webkit-keyframes outer-circle
+
+/* Safari 和 Chrome */ {
+  0% {
+    -webkit-transform: scale(1);
+  }
+
+  50% {
+    -webkit-transform: scale(0.5);
+  }
+
+  100% {
+    -webkit-transform: scale(1);
+  }
+}
+
+@-o-keyframes outer-circle
+
+/* Opera */ {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(0.5);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.combination_box {
+  pointer-events: all;
+}
+
+.canvas_content_box {
+  // contain: content;
+  // pointer-events: auto;
+}

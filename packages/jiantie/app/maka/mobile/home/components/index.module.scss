@@ -1,0 +1,28 @@
+.container {
+  .tabBar {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border-top: 1px solid #00000008;
+
+    .tabItem {
+      flex: 1;
+      padding: 12px 0;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      text-align: center;
+      color: rgba(0, 0, 0, 0.6);
+
+      &.active {
+        font-size: 18px;
+        font-weight: var(--font-semibold);
+        color: rgba(0, 0, 0, 0.88);
+      }
+    }
+  }
+
+  .tabContent {
+    height: 100%;
+  }
+}

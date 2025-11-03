@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "elementRef": "MkMapV4",
+  "label": "地图组件(Grid)",
+  "desc": "点击地图可以导航到设定的地址",
+  "visable": false,
+  "viewerApply": {
+    "interaction": true,
+    "scrollable": true
+  },
+  "editorApply": {
+    "webFormRef": "MkMapV4Form",
+    "wapFormRef": "MkMapV4WapForm"
+  }
+}

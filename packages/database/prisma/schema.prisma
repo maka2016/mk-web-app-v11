@@ -1,0 +1,110 @@
+// Prisma schema for works database
+// Database: works-v2-db
+
+generator client {
+  provider = "prisma-client-js"
+  output = "../generated/client"
+  binaryTargets = ["native", "darwin-arm64", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorksSpecEntityUnitEnum {
+  px
+  mm
+  cm
+  in
+  pt
+  pc
+
+  @@map("works_spec_entity_unit_enum")
+}
+
+model WorksSpecEntity {
+  id                    String                     @id @default(cuid()) @db.Text /// 文档id, 通过md5(name)得出的id
+  alias                 String                     @db.VarChar
+  desc                  String?                    @db.VarChar
+  width                 Int?                       @db.Integer
+  height                Int?                       @db.Integer
+  max_page_count        Int?                       @map("max_page_count") @db.Integer
+  is_flip_page          Boolean?                   @map("is_flip_page") /// 是否翻页
+  use_animation         Boolean?                   @map("use_animation") /// 是否使用动画
+  offline               Boolean?                   @default(false)
+  deleted               Boolean                    @default(false)
+  create_time           DateTime                   @default(now()) @map("create_time") @db.Timestamptz
+  update_time           DateTime                   @default(now()) @updatedAt @map("update_time") @db.Timestamptz
+  appid                 String?                    @db.VarChar
+  is_flat_page          Boolean?                   @map("is_flat_page") /// 是否多页平铺
+  name                  String                     @db.Text
+  unit                  WorksSpecEntityUnitEnum?
+  interactive_features  String?                    @map("interactive_features") @db.Text
+  display_name          String?                    @map("display_name") @db.VarChar
+  viewport_width        Int?                       @map("viewport_width") @db.Integer
+  fixed_height          Boolean?                   @map("fixed_height")
+  export_format         String?                    @map("export_format") @db.Text
+
+  @@index([alias], map: "IDX_b4e878a9d7962422e5c968abda")
+  @@index([deleted], map: "IDX_fa6660065ae44e94a7cf8abce9")
+  @@index([appid], map: "IDX_cb4295fef52621f89102b0049d")
+  @@index([name], map: "IDX_5e7a363c0d9bd7d0e087c09b95")
+  @@index([id], map: "IDX_faad62178424ae6de4f4fc5163")
+  @@map("works_spec_entity")
+}
+
+model TemplateEntity {
+  id                  String    @id @default(cuid()) @db.Text
+  title               String    @db.VarChar
+  desc                String?   @db.VarChar
+  cover               String?   @db.VarChar
+  deleted             Boolean   @default(false)
+  deleted_confirmed   Boolean   @default(false) @map("deleted_confirmed")
+  create_time         DateTime  @default(now()) @map("create_time") @db.Timestamptz
+  update_time         DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz
+  custom_time         DateTime  @default(now()) @map("custom_time") @db.Timestamptz
+  version             Int       @default(1) @db.Integer
+  designer_works_id   String?   @map("designer_works_id") @db.Text
+  designer_uid        Int       @map("designer_uid") @db.Integer
+  spec_id             String?   @map("spec_id") @db.VarChar
+
+  @@index([designer_works_id], map: "IDX_66088e78c3bfd2706638f66598")
+  @@index([designer_uid], map: "IDX_3e730e89a9ec98217d789cd750")
+  @@index([id], map: "IDX_83f66c7249ae42d36912d8e3de")
+  @@map("template_entity")
+}
+
+model WorksEntity {
+  id                      String    @id @default(cuid()) @db.Text
+  title                   String    @db.VarChar
+  desc                    String?   @db.VarChar
+  cover                   String?   @db.VarChar
+  deleted                 Boolean   @default(false)
+  deleted_confirmed       Boolean   @default(false) @map("deleted_confirmed")
+  create_time             DateTime  @default(now()) @map("create_time") @db.Timestamptz
+  update_time             DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz
+  custom_time             DateTime  @default(now()) @map("custom_time") @db.Timestamptz
+  version                 Int       @default(1) @db.Integer
+  child_works_id          String?   @map("child_works_id") @db.Text
+  template_id             String?   @map("template_id") @db.Text
+  uid                     Int       @db.Integer
+  is_folder               Boolean   @default(false) @map("is_folder")
+  is_paied                Boolean   @default(false) @map("is_paied")
+  folder_id               String?   @map("folder_id") @db.VarChar
+  alias                   String?   @db.VarChar
+  appid                   String?   @db.VarChar
+  offline                 Boolean?  @default(false)
+  spec_id                 String?   @map("spec_id") @db.VarChar
+  is_title_desc_modified  Boolean   @default(false) @map("is_title_desc_modified")
+
+  @@index([uid], map: "IDX_121635b71d5f6986874d4c5de4")
+  @@index([alias], map: "IDX_d6ed9b7a04fa675847385b649e")
+  @@index([title], map: "IDX_38ec230c026b7bf0f26cd4d3af")
+  @@index([deleted], map: "IDX_be9b6ba752f89754c380cf730c")
+  @@index([deleted_confirmed], map: "IDX_bc26e3ce127467389b618be65e")
+  @@index([template_id], map: "IDX_6971eef7cc8c6e651145e8aaa4")
+  @@index([id], map: "IDX_a52922adec7b0677945f447108")
+  @@index([appid], map: "IDX_37330c43b0c9f7e1689cb94e4e")
+  @@map("works_entity")
+}

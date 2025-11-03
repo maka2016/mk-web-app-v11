@@ -1,0 +1,11 @@
+{
+  "title": "Blessing Messages",
+  "namePlaceholder": "Your Name",
+  "contentPlaceholder": "Write your wishes...",
+  "submit": "Send",
+  "submitting": "Sending...",
+  "errorTip": "Please share first to continue",
+  "emptyName": "Name required",
+  "emptyContent": "Please write a blessing",
+  "errorTip2": "Your submission contains prohibited content. Please revise and resubmit."
+}

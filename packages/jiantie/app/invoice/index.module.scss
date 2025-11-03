@@ -1,0 +1,22 @@
+.layout {
+  font-family: PingFang SC;
+  padding: 20px 120px;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(245, 245, 245, 1);
+
+  .container {
+    max-width: 1200px;
+    border-radius: 8px;
+    background-color: #fff;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .leftContainer {
+    border-right: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .rightContainer {
+  }
+}

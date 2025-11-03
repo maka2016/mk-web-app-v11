@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2015",
+    "lib": ["es2015", "es2017", "dom"],
+    "outDir": "./dist",
+    "downlevelIteration": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": false,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "moduleResolution": "node",
+    "jsx": "react",
+    "declaration": true,
+    "module": "commonjs",
+    "allowUmdGlobalAccess": true
+  },
+  "include": ["./store", "./const", "./types", "./utils", "./index.ts"],
+  "exclude": ["**/test/*", "**/demo/*", "./scripts/*"]
+}

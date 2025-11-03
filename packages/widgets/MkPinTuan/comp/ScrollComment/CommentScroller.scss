@@ -1,0 +1,51 @@
+.comment-outer {
+  position: absolute;
+  bottom: calc(var(--preview-footer-height) + 60px);
+  left: 0;
+  height: 88px;
+  left: 8px;
+  width: 166px;
+  /* 显示2条，每条46px */
+  overflow: hidden;
+}
+
+.comment-inner {
+  transition: transform 0.5s ease-in-out;
+}
+
+.comment-item {
+  display: flex;
+  align-items: center;
+  height: 42px;
+  padding: 4px;
+  gap: 8px;
+  background: linear-gradient(
+    92.49deg,
+    #ff293a 34.78%,
+    rgba(255, 41, 58, 0) 91.17%
+  );
+  border-radius: 100px 0 0 100px;
+  margin-bottom: 4px;
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+  }
+
+  .name {
+    font-family: PingFang SC;
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 20px;
+    color: #fff;
+  }
+
+  .desc {
+    font-family: PingFang SC;
+    font-weight: 400;
+    font-size: 10px;
+    line-height: 100%;
+    color: #fff;
+  }
+}

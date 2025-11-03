@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "elementRef": "MkImageGroup_v2",
+  "logo": "",
+  "label": "图组组件（GridV3）",
+  "desc": "图片滚动播放，可以同时展示多张图片",
+  "visable": false,
+  "editorApply": {
+    "webFormRef": "MkImageGroup_v2Form",
+    "wapFormRef": "MkImageGroup_v2WapForm",
+    "templatesRef": "MkImageGroup_v2Template"
+  },
+  "viewerApply": {
+    "interaction": true
+  },
+  "classification": "Other"
+}

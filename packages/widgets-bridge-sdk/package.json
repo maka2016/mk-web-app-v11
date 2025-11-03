@@ -1,0 +1,29 @@
+{
+  "name": "@mk/widgets-bridge-sdk",
+  "version": "0.8.3",
+  "description": "mk 组件 bridge，主要用于定义「组件」<->「编辑器」的 interface。其中包含组件定义，编辑器需要提供的能力，编辑器与组件共同的运行环境 dll 实现 etc",
+  "main": "index.js",
+  "types": "./index.ts",
+  "scripts": {
+    "serve:data-convert": "yarn run rebuild:data-convert && serve ./data-convert/dist",
+    "build:vendor": "minictl build-externals",
+    "build": "tsc",
+    "copy:files": "node ./scripts/copy-files",
+    "copy:style": "sh ./scripts/get-style-file.sh",
+    "rebuild:vendor": "rm -rf ./vendor/dist && minictl build-externals",
+    "rebuild:data-convert": "rm -rf ./data-convert/dist && minictl build-externals",
+    "pre:release": "rm -rf ./dist && yarn build && yarn copy:files",
+    "release:publish": "yarn pre:release && npm publish ./dist --access=public",
+    "release": "yarn pre:release && cd ./dist && npm publish"
+  },
+  "author": "SANGET",
+  "license": "MIT",
+  "publishConfig": {},
+  "devDependencies": {},
+  "peerDependencies": {
+    "draft-js": "^0.11.7",
+    "draftjs-utils": "^0.10.2",
+    "draft-convert": "^2.1.11"
+  },
+  "dependencies": {}
+}

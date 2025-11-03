@@ -1,0 +1,19 @@
+{
+  "version": "1.0.1",
+  "elementRef": "MkBulletScreen_v2",
+  "logo": "",
+  "label": "弹幕组件",
+  "desc": "点击弹幕组件可以添加弹幕、评论",
+  "visable": false,
+  "editorApply": {
+    "wxAuth": true,
+    "disabledCopy": true,
+    "webFormRef": "MkBulletScreen_v2Form",
+    "wapFormRef": "MkBulletScreen_v2WapForm"
+  },
+  "viewerApply": {
+    "interaction": true
+  },
+  "classification": "Other",
+  "formProcessor": "MkBulletScreen_v2_FormProcessor"
+}

@@ -1,0 +1,23 @@
+.ossuploader {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  input[type='file'] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 0;
+    border: none;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .clickWrap {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+}

@@ -1,0 +1,75 @@
+import React from 'react';
+import { useGridContext } from '../../comp/provider';
+import { Label } from '@workspace/ui/components/label';
+import { UploadHelper } from '@workspace/ui/components/Upload';
+import { LottieConfig } from '../../shared/types';
+
+interface LottieSettingProps {
+  onChangeBg: (lottieBgConfig?: LottieConfig) => void;
+  onChangeFg: (lottieFgConfig?: LottieConfig) => void;
+  lottieBgConfig?: LottieConfig;
+  lottieFgConfig?: LottieConfig;
+}
+
+const testUrl =
+  'https://res.maka.im/cdn/jiantie/works-resources/605196910/98248987742061_33ba49.png?x-oss-process=image%2Fresize%2Cm_lfit%2Cw_240%2Cimage%2Fformat%2Cwebp';
+
+export default function LottieSetting(props: LottieSettingProps) {
+  const { onChangeBg, onChangeFg, lottieBgConfig, lottieFgConfig } = props;
+  const { editorCtx } = useGridContext();
+
+  return (
+    <div className='flex p-2'>
+      <div className='flex flex-col gap-1'>
+        <Label htmlFor='lottie_bg_btn'>Lottie背景</Label>
+        <UploadHelper
+          image={lottieBgConfig ? testUrl : undefined}
+          onRemove={() => {
+            onChangeBg(undefined);
+          }}
+          onUpload={() => {
+            editorCtx?.utils.showSelector({
+              onSelected: (params: any) => {
+                const { url, type, ossPath } = params;
+
+                onChangeBg({
+                  url,
+                  loop: true,
+                  autoplay: true,
+                  speed: 1,
+                });
+              },
+              type: 'picture',
+              // preUpload: false
+            } as any);
+          }}
+        />
+      </div>
+      <div className='flex flex-col gap-1'>
+        <Label htmlFor='lottie_bg_btn'>Lottie前景</Label>
+        <UploadHelper
+          image={lottieFgConfig ? testUrl : undefined}
+          onRemove={() => {
+            onChangeFg(undefined);
+          }}
+          onUpload={() => {
+            editorCtx?.utils.showSelector({
+              onSelected: (params: any) => {
+                const { url, type, ossPath } = params;
+
+                onChangeFg({
+                  url,
+                  loop: true,
+                  autoplay: true,
+                  speed: 1,
+                });
+              },
+              type: 'picture',
+              // preUpload: false
+            } as any);
+          }}
+        />
+      </div>
+    </div>
+  );
+}

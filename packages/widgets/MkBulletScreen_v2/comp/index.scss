@@ -1,0 +1,256 @@
+// 水平弹幕
+.bullet_v2_screen_wrap {
+  visibility: inherit;
+  position: fixed;
+  top: 64px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  pointer-events: none;
+  overflow: hidden;
+  // pointer-events: auto;
+
+  @keyframes RightToLeft {
+    from {
+      visibility: inherit;
+      transform: translateX(100vw);
+    }
+
+    to {
+      visibility: inherit;
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes EditorRightToLeft {
+    from {
+      visibility: inherit;
+      transform: translateX(640px);
+    }
+
+    to {
+      visibility: inherit;
+      transform: translateX(-100%);
+    }
+  }
+}
+
+// 垂直弹幕
+.bullet_v2_scroll_view {
+  // --preview-footer-height: 0px;
+  height: 110px;
+  position: absolute;
+  bottom: calc(16px + var(--preview-footer-height));
+  left: 16px;
+  overflow: hidden;
+  -webkit-mask: linear-gradient(0deg, #fff 67%, transparent 100%);
+  opacity: 1;
+  pointer-events: none;
+
+  .bullet_comment_wrap {
+    height: 100%;
+    width: 100%;
+    padding: 0 1px;
+    overflow: scroll;
+    pointer-events: none;
+    -ms-overflow-style: none;
+    overflow: -moz-scrollbars-none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .comment_bullet_item {
+      margin-top: 4px;
+      width: max-content;
+      max-width: calc(100vw - 164px);
+
+      .content {
+        word-break: break-all;
+      }
+    }
+  }
+}
+
+// 弹幕样式1
+.style_bullet_item {
+  // display: flex;
+  // align-items: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background-color: rgba(0, 0, 0, 0.45);
+  line-height: 15px;
+
+  &.hide {
+    opacity: 0;
+  }
+
+  &.active {
+    background-color: #1a88ffcb;
+  }
+
+  .name {
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    color: #bff0ff;
+    margin-right: 4px;
+  }
+
+  .content {
+    font-size: 12px;
+    font-weight: 400;
+    min-height: 16px;
+    line-height: 16px;
+    color: #fff;
+    word-break: keep-all;
+  }
+
+  .head_img {
+    width: 20px;
+    height: 20px;
+    margin-right: 4px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+}
+
+// 弹幕样式2
+.simple_bullet_item {
+  background-color: transparent;
+  padding: 4px 8px;
+
+  .content {
+    word-break: break-all;
+    font-size: 12px;
+    font-weight: bold;
+    min-height: 22px;
+    line-height: 16px;
+    color: #fff;
+    letter-spacing: 2px;
+    text-shadow:
+      0 0.8px #151515,
+      0.8px 0 #151515,
+      -0.8px 0 #151515,
+      0 -0.8px #151515;
+    word-break: keep-all;
+  }
+
+  &.active {
+    .content {
+      color: #1a87ff !important;
+    }
+  }
+}
+
+.bullet_input-wrap {
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1;
+  pointer-events: auto;
+
+  .bullet_input-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+  }
+
+  .bullet_input-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    // height: 130px;
+    background-color: #fff;
+    padding: 16px 16px 34px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+    gap: 8px;
+    border-radius: 20px 20px 0 0;
+
+    .bullet_input-title {
+      font-weight: 600;
+      font-size: 16px;
+      line-height: 24px;
+      letter-spacing: 0%;
+      text-align: center;
+      color: rgba(0, 0, 0, 0.88);
+      margin-bottom: 8px;
+    }
+
+    .bullet_input-close {
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+
+      img {
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    .bullet_input-name {
+      height: 48px;
+      border-radius: 8px;
+      background-color: #fff;
+      padding: 12px;
+      font-size: 16px;
+      line-height: 24px;
+      border: 1px solid #ff91ad;
+
+      &::placeholder {
+        color: rgba(0, 0, 0, 0.25);
+      }
+    }
+  }
+
+  textarea {
+    width: 100%;
+    height: 100px;
+    padding: 8px 12px;
+    resize: none;
+    background-color: #fff;
+    border-radius: 8px;
+    font-size: 16px;
+    line-height: 24px;
+    outline: none;
+    border: none;
+    border: 1px solid #ff91ad;
+
+    margin-bottom: 8px;
+
+    &::placeholder {
+      color: rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  .btn_send {
+    height: 48px;
+    padding: 0 16px;
+    font-size: 16px;
+    line-height: 48px;
+    color: #fff;
+    background-color: hsl(var(--primary));
+    border-radius: 8px;
+    text-align: center;
+  }
+}

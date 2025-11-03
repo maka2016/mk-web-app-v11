@@ -1,0 +1,21 @@
+{
+  "name": "@mk/services",
+  "version": "0.17.10",
+  "author": "SANGET",
+  "description": "mk 工具服务接口层",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "copy:files": "node ./scripts/copy-files",
+    "pre:release": "rm -rf ./dist && yarn build && yarn copy:files",
+    "release": "yarn pre:release && cd ./dist && npm publish"
+  },
+  "publishConfig": {
+    "registry": "https://nexus.maka.mobi/repository/maka-npm/"
+  },
+  "peerDependencies": {},
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.693.0",
+    "@mk/form-engine": "workspace:*"
+  }
+}
