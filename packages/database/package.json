@@ -11,7 +11,11 @@
   },
   "scripts": {
     "generate": "npx prisma generate",
-    "migrate:dev": "prisma migrate dev"
+    "migrate:dev": "npx prisma migrate dev",
+    "db:push": "npx prisma db push",
+    "db:pull": "npx prisma db pull",
+    "db:deploy": "npx prisma migrate deploy",
+    "db:sync": "npx prisma db pull && npx prisma generate"
   },
   "publishConfig": {},
   "peerDependencies": {},

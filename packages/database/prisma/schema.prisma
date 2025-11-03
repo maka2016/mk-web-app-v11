@@ -1,9 +1,6 @@
-// Prisma schema for works database
-// Database: works-v2-db
-
 generator client {
-  provider = "prisma-client-js"
-  output = "../generated/client"
+  provider      = "prisma-client-js"
+  output        = "../generated/client"
   binaryTargets = ["native", "darwin-arm64", "linux-musl-openssl-3.0.x"]
 }
 
@@ -11,6 +8,10 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// ============================================
+// Works Schema - Works and Templates
+// ============================================
 
 enum WorksSpecEntityUnitEnum {
   px
@@ -24,27 +25,31 @@ enum WorksSpecEntityUnitEnum {
 }
 
 model WorksSpecEntity {
-  id                    String                     @id @default(cuid()) @db.Text /// 文档id, 通过md5(name)得出的id
-  alias                 String                     @db.VarChar
-  desc                  String?                    @db.VarChar
-  width                 Int?                       @db.Integer
-  height                Int?                       @db.Integer
-  max_page_count        Int?                       @map("max_page_count") @db.Integer
-  is_flip_page          Boolean?                   @map("is_flip_page") /// 是否翻页
-  use_animation         Boolean?                   @map("use_animation") /// 是否使用动画
-  offline               Boolean?                   @default(false)
-  deleted               Boolean                    @default(false)
-  create_time           DateTime                   @default(now()) @map("create_time") @db.Timestamptz
-  update_time           DateTime                   @default(now()) @updatedAt @map("update_time") @db.Timestamptz
-  appid                 String?                    @db.VarChar
-  is_flat_page          Boolean?                   @map("is_flat_page") /// 是否多页平铺
-  name                  String                     @db.Text
-  unit                  WorksSpecEntityUnitEnum?
-  interactive_features  String?                    @map("interactive_features") @db.Text
-  display_name          String?                    @map("display_name") @db.VarChar
-  viewport_width        Int?                       @map("viewport_width") @db.Integer
-  fixed_height          Boolean?                   @map("fixed_height")
-  export_format         String?                    @map("export_format") @db.Text
+  alias                String                   @db.VarChar
+  desc                 String?                  @db.VarChar
+  width                Int?
+  height               Int?
+  max_page_count       Int?                     @map("max_page_count")
+  /// 是否翻页
+  is_flip_page         Boolean?                 @map("is_flip_page")
+  /// 是否使用动画
+  use_animation        Boolean?                 @map("use_animation")
+  offline              Boolean?                 @default(false)
+  deleted              Boolean                  @default(false)
+  create_time          DateTime                 @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time          DateTime                 @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  appid                String?                  @db.VarChar
+  /// 是否多页平铺
+  is_flat_page         Boolean?                 @map("is_flat_page")
+  name                 String
+  unit                 WorksSpecEntityUnitEnum?
+  /// 文档id, 通过md5(name)得出的id
+  id                   String                   @id(map: "PK_faad62178424ae6de4f4fc51632") @default(cuid())
+  interactive_features String?                  @map("interactive_features")
+  display_name         String?                  @map("display_name") @db.VarChar
+  viewport_width       Int?                     @map("viewport_width")
+  fixed_height         Boolean?                 @map("fixed_height")
+  export_format        String?                  @map("export_format")
 
   @@index([alias], map: "IDX_b4e878a9d7962422e5c968abda")
   @@index([deleted], map: "IDX_fa6660065ae44e94a7cf8abce9")
@@ -55,19 +60,19 @@ model WorksSpecEntity {
 }
 
 model TemplateEntity {
-  id                  String    @id @default(cuid()) @db.Text
-  title               String    @db.VarChar
-  desc                String?   @db.VarChar
-  cover               String?   @db.VarChar
-  deleted             Boolean   @default(false)
-  deleted_confirmed   Boolean   @default(false) @map("deleted_confirmed")
-  create_time         DateTime  @default(now()) @map("create_time") @db.Timestamptz
-  update_time         DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz
-  custom_time         DateTime  @default(now()) @map("custom_time") @db.Timestamptz
-  version             Int       @default(1) @db.Integer
-  designer_works_id   String?   @map("designer_works_id") @db.Text
-  designer_uid        Int       @map("designer_uid") @db.Integer
-  spec_id             String?   @map("spec_id") @db.VarChar
+  title             String   @db.VarChar
+  desc              String?  @db.VarChar
+  cover             String?  @db.VarChar
+  deleted           Boolean  @default(false)
+  deleted_confirmed Boolean  @default(false) @map("deleted_confirmed")
+  create_time       DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time       DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  custom_time       DateTime @default(now()) @map("custom_time") @db.Timestamptz(6)
+  version           Int      @default(1)
+  designer_works_id String?  @map("designer_works_id")
+  designer_uid      Int   @map("designer_uid")
+  id                String   @id(map: "PK_83f66c7249ae42d36912d8e3def") @default(cuid())
+  spec_id           String?  @map("spec_id") @db.VarChar
 
   @@index([designer_works_id], map: "IDX_66088e78c3bfd2706638f66598")
   @@index([designer_uid], map: "IDX_3e730e89a9ec98217d789cd750")
@@ -76,27 +81,27 @@ model TemplateEntity {
 }
 
 model WorksEntity {
-  id                      String    @id @default(cuid()) @db.Text
-  title                   String    @db.VarChar
-  desc                    String?   @db.VarChar
-  cover                   String?   @db.VarChar
-  deleted                 Boolean   @default(false)
-  deleted_confirmed       Boolean   @default(false) @map("deleted_confirmed")
-  create_time             DateTime  @default(now()) @map("create_time") @db.Timestamptz
-  update_time             DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz
-  custom_time             DateTime  @default(now()) @map("custom_time") @db.Timestamptz
-  version                 Int       @default(1) @db.Integer
-  child_works_id          String?   @map("child_works_id") @db.Text
-  template_id             String?   @map("template_id") @db.Text
-  uid                     Int       @db.Integer
-  is_folder               Boolean   @default(false) @map("is_folder")
-  is_paied                Boolean   @default(false) @map("is_paied")
-  folder_id               String?   @map("folder_id") @db.VarChar
-  alias                   String?   @db.VarChar
-  appid                   String?   @db.VarChar
-  offline                 Boolean?  @default(false)
-  spec_id                 String?   @map("spec_id") @db.VarChar
-  is_title_desc_modified  Boolean   @default(false) @map("is_title_desc_modified")
+  title                  String   @db.VarChar
+  desc                   String?  @db.VarChar
+  cover                  String?  @db.VarChar
+  deleted                Boolean  @default(false)
+  deleted_confirmed      Boolean  @default(false) @map("deleted_confirmed")
+  create_time            DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time            DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  custom_time            DateTime @default(now()) @map("custom_time") @db.Timestamptz(6)
+  version                Int      @default(1)
+  child_works_id         String?  @map("child_works_id")
+  template_id            String?  @map("template_id")
+  uid                    Int
+  is_folder              Boolean  @default(false) @map("is_folder")
+  is_paied               Boolean  @default(false) @map("is_paied")
+  folder_id              String?  @map("folder_id") @db.VarChar
+  alias                  String?  @db.VarChar
+  id                     String   @id(map: "PK_a52922adec7b0677945f4471081") @default(cuid())
+  appid                  String?  @db.VarChar
+  offline                Boolean? @default(false)
+  spec_id                String?  @map("spec_id") @db.VarChar
+  is_title_desc_modified Boolean  @default(true) @map("is_title_desc_modified")
 
   @@index([uid], map: "IDX_121635b71d5f6986874d4c5de4")
   @@index([alias], map: "IDX_d6ed9b7a04fa675847385b649e")
@@ -255,4 +260,183 @@ model RsvpContactEntity {
   @@index([deleted], map: "IDX_rsvp_contact_deleted")
   @@index([id], map: "IDX_rsvp_contact_id")
   @@map("rsvp_contact_entity")
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model boost_activity {
+  id                 Int                      @id(map: "PK_efa2f9f1a364deeee11d138fb1f") @default(autoincrement())
+  uid                Int
+  requiredPeople     Int
+  timeLimit          Int
+  type               boost_activity_type_enum
+  createdAt          DateTime                 @default(now()) @db.Timestamp(6)
+  worksId            String?                  @db.VarChar
+  sub_boost_activity sub_boost_activity[]
+
+  @@ignore
+}
+
+// ============================================
+// 兼容旧业务的 Schema，不要再使用这些模型
+// ============================================
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model boost_record {
+  id                 Int                    @id(map: "PK_566dfb09e9e088680ceba49be6c") @default(autoincrement())
+  openId             String                 @db.VarChar
+  nickname           String?                @db.VarChar
+  avatar             String?                @db.VarChar
+  type               boost_record_type_enum
+  score              Int                    @default(1)
+  createdAt          DateTime               @default(now()) @db.Timestamp(6)
+  subBoostActivityId Int?
+  phone              String?                @db.VarChar
+  sub_boost_activity sub_boost_activity?    @relation(fields: [subBoostActivityId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_602109673eb1426d09e3fc9b0ec")
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model group_buy_activity {
+  id                     Int                      @id(map: "PK_38f17d06330460e304db516edd9") @default(autoincrement())
+  uid                    Int
+  worksId                String                   @db.VarChar
+  requiredPeople         Int
+  timeLimit              Int
+  createdAt              DateTime                 @default(now()) @db.Timestamp(6)
+  sub_group_buy_activity sub_group_buy_activity[]
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model group_buy_record {
+  id                     Int                          @id(map: "PK_506483854ef60b902e42255eb86") @default(autoincrement())
+  openId                 String                       @db.VarChar
+  nickname               String?                      @db.VarChar
+  avatar                 String?                      @db.VarChar
+  phone                  String?                      @db.VarChar
+  createdAt              DateTime                     @default(now()) @db.Timestamp(6)
+  status                 group_buy_record_status_enum @default(zero)
+  isLeader               Boolean                      @default(false)
+  subGroupBuyActivityId  Int?
+  sub_group_buy_activity sub_group_buy_activity?      @relation(fields: [subGroupBuyActivityId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_4c81817292604b1ca0199bcb3a1")
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model invite_batch {
+  id             Int      @id @default(autoincrement())
+  uid            Int?
+  work_id        String?  @db.VarChar
+  appid          String?  @db.VarChar
+  title_template String?  @db.VarChar
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model invite_person {
+  id              Int       @id @default(autoincrement())
+  batch_id        Int
+  sent_at         DateTime? @db.Timestamptz(6)
+  last_sent_at    DateTime? @db.Timestamptz(6)
+  visited_at      DateTime? @db.Timestamptz(6)
+  last_visited_at DateTime? @db.Timestamptz(6)
+  version         Int       @default(1)
+  name            String?   @db.VarChar
+  unique_title    String?   @db.VarChar
+  created_at      DateTime  @default(now()) @db.Timestamp(6)
+  updated_at      DateTime  @default(now()) @db.Timestamp(6)
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model invite_send_record {
+  id        Int      @id @default(autoincrement())
+  batch_id  Int
+  person_id Int
+  send_type String   @db.VarChar
+  sent_at   DateTime @default(now()) @db.Timestamp(6)
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model invite_visit_record {
+  id         Int      @id @default(autoincrement())
+  batch_id   Int
+  person_id  Int
+  visited_at DateTime @default(now()) @db.Timestamp(6)
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model sub_boost_activity {
+  id              Int                            @id(map: "PK_c0d1e2553bbc5dfcd528585109e") @default(autoincrement())
+  openId          String                         @db.VarChar
+  nickname        String?                        @db.VarChar
+  avatar          String?                        @db.VarChar
+  phone           String?                        @db.VarChar
+  status          sub_boost_activity_status_enum @default(zero)
+  startTime       DateTime                       @db.Timestamp(6)
+  endTime         DateTime                       @db.Timestamp(6)
+  createdAt       DateTime                       @default(now()) @db.Timestamp(6)
+  boostActivityId Int?
+  boost_record    boost_record[]
+  boost_activity  boost_activity?                @relation(fields: [boostActivityId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_6f4acef639462539c07fac5296a")
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model sub_group_buy_activity {
+  id                 Int                 @id(map: "PK_99328e0c83dabd37b0d16dbb529") @default(autoincrement())
+  openId             String              @db.VarChar
+  nickname           String?             @db.VarChar
+  avatar             String?             @db.VarChar
+  phone              String?             @db.VarChar
+  startTime          DateTime            @db.Timestamp(6)
+  endTime            DateTime            @db.Timestamp(6)
+  createdAt          DateTime            @default(now()) @db.Timestamp(6)
+  groupBuyActivityId Int?
+  requiredPeople     Int?
+  group_buy_record   group_buy_record[]
+  group_buy_activity group_buy_activity? @relation(fields: [groupBuyActivityId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_8d57a40f62a3dfc3beaa25e3c11")
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+enum boost_activity_type_enum {
+  once
+  daily
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+enum boost_record_type_enum {
+  friend
+  share
+  shareTimeline
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+enum group_buy_record_status_enum {
+  zero   @map("0")
+  one    @map("1")
+  two    @map("2")
+  three  @map("3")
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+enum sub_boost_activity_status_enum {
+  zero   @map("0")
+  one    @map("1")
+  two    @map("2")
+  three  @map("3")
 }
