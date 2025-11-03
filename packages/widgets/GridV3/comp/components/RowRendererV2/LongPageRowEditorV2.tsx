@@ -422,6 +422,7 @@ export default function LongPageRowEditorV2(props: LongPageRowEditorV2Props) {
       <BlockWrapper
         key={`group_${currGroupRow.id}`}
         // id={`editor_block_${currGroupRow.id}`}
+        data-row-id={currGroupRow.id}
         className={cn('block_wrapper', fullStack && 'fullStack')}
         style={{
           ...(hiddenBlock && {

@@ -167,3 +167,23 @@ export const calcBlockHeight = (blockId: string) => {
   const height = (blockItems.getBoundingClientRect()?.height || 1) / canvaScale;
   return height;
 };
+
+export const calcBlockHeight2 = () => {
+  const { canvaScale } = getCanvaInfo2();
+  const blockItems = document.querySelectorAll<HTMLDivElement>(
+    `#id-canvas .block_wrapper`
+  );
+  if (!blockItems.length) {
+    console.log(
+      'calcViewerHeightError',
+      '找不到.Grid_container .editor_row_wrapper'
+    );
+    return {};
+  }
+  const blockHeight: Record<string, number> = {};
+  Array.from(blockItems).forEach(item => {
+    blockHeight[item.dataset.rowId || ''] =
+      (item.getBoundingClientRect()?.height || 1) / canvaScale;
+  });
+  return blockHeight as Record<string, number>;
+};
