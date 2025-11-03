@@ -1,6 +1,6 @@
-import { generateMetadataFac } from '@mk/viewer/components/getMeta';
-import WebsiteApp from '@mk/viewer/components/website';
-import { getInitialPropsCommonAppRouter } from '@mk/viewer/utils/getInitialPropsCommon2';
+import { generateMetadataFac } from '@/components/viewer/components/getMeta';
+import WebsiteApp from '@/components/viewer/components/website';
+import { getInitialPropsCommonAppRouter } from '@/components/viewer/utils/getInitialPropsCommon2';
 import { headers } from 'next/headers';
 
 import MiniPShare from '@/components/MiniPShare';
@@ -9,7 +9,7 @@ import { worksServerV2 } from '@/services/jiantie-services';
 import { toOssMiniPCoverUrl } from '@/utils';
 import { treeNodeCounter2 } from '@/utils/works';
 import { API, getAppId } from '@mk/services';
-import { getShareInfo } from '@mk/widgets/GridV3/comp/provider/utils';
+import { getShareInfo } from '@/components/GridV3/comp/provider/utils';
 
 export const generateMetadata = async ({
   params,

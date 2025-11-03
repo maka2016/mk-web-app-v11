@@ -38,12 +38,6 @@ export interface CommonFormProps<
   formControledValues: WidgetCommonAttrs & T;
   /** 与编辑器的接口上下文 */
   editorCtx: EditorContext;
-  /**
-   * @deprecated
-   * 作品规格类型，[poster, h5, longH5]
-   * 已废弃，使用 import { getWorksDetailStatic } from '@mk/services' 获取数据
-   */
-  worksType?: string;
   /** 批量操作模式 */
   batchAttrs?: LayerElemItem[];
   editorSDK: EditorSDK<T, WS>;

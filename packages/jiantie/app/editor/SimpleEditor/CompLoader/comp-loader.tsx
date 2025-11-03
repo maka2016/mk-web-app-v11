@@ -1,7 +1,7 @@
 import { getWidgetMeta } from '@mk/services';
 import { LoadWidget } from '@mk/utils';
 import { CommonFormProps, PlatformCompProps } from '@mk/widgets-bridge-sdk';
-import GridV3Comp from '@mk/widgets/GridV3/comp';
+import GridV3Comp from '@/components/GridV3/comp';
 import { LayerElemItem } from '@mk/works-store/types';
 import clas from 'classnames';
 import React from 'react';
@@ -43,7 +43,6 @@ export const CompLoader: React.FC<CompLoaderProps> = ({
 }) => {
   const store = useWorksStore();
   const metadata = getWidgetMeta(elementRef);
-  const worksType = 'h5';
 
   if (!metadata) {
     console.error('找不到 metadata', metadata, elementRef);
@@ -110,7 +109,6 @@ export const CompLoader: React.FC<CompLoaderProps> = ({
         widgetState={widgetState}
         body={body}
         getWorksData={() => store.worksData}
-        worksType={worksType}
         readonly={readonly}
         editorCtx={editorContext}
         editorSDK={editorSDK}
