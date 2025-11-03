@@ -27,7 +27,7 @@ import './index.scss';
 import './lib/animate.css';
 import { useGridContext } from './provider';
 import { getCanvaInfo2 } from './provider/utils';
-import { calcBlockHeight, getAllLayers } from './utils';
+import { calcBlockHeight, calcBlockHeight2, getAllLayers } from './utils';
 
 const debounce = new DebounceClass();
 
@@ -256,8 +256,10 @@ export const GridCompV2: React.FC<
         for (const entry of entries) {
           const currBlock = getActiveRootRow();
           if (currBlock) {
-            const height = calcBlockHeight(currBlock?.id || '');
+            const blockHeight = calcBlockHeight2();
+            const height = blockHeight[currBlock?.id || ''];
             if (
+              height &&
               Math.abs(height - (currBlock.canvasHeight || 0)) > 2 &&
               widgetStateV2.activeRowDepth?.[0] !== undefined
             ) {
