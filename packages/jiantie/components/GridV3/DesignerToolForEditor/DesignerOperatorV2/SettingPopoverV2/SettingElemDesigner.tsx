@@ -1,9 +1,10 @@
+import RSVPConfigPanelTrigger from '@/components/RSVP/configPanel';
 import { getWidgetMeta } from '@mk/services';
 import { isPc, LoadWidget } from '@mk/utils';
-import MkImageGroupForm from '@mk/widgets/MkImageGroup_v2/form-wap';
-import { Lock, SquareDashedMousePointer } from 'lucide-react';
 import MkCalendarV3Form from '@mk/widgets/MkCalendarV3/form';
 import MkHuiZhiForm from '@mk/widgets/MkHuiZhi/form';
+import MkImageGroupForm from '@mk/widgets/MkImageGroup_v2/form-wap';
+import { Lock, SquareDashedMousePointer } from 'lucide-react';
 import { useGridContext } from '../../../comp/provider';
 import { useWidgetsAttrs } from '../../../comp/WidgetLoader';
 import { BtnLite } from '../../../shared/style-comps';
@@ -65,6 +66,14 @@ export const SettingElemDesigner = () => {
               }}
             />
           </div>
+        );
+      case /RSVP/gi.test(layer.elementRef):
+        return (
+          <RSVPConfigPanelTrigger
+            attrs={layer.attrs as any}
+            editorSDK={editorSDK}
+            layer={layer}
+          />
         );
       case /MkCalendarV3/gi.test(layer.elementRef):
         return (
