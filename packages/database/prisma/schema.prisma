@@ -85,6 +85,7 @@ model TemplateMarketChannelEntity {
   id           Int      @id @default(autoincrement())
   alias        String   @unique @db.VarChar /// 频道别名（唯一标识，用于URL等场景）
   display_name String   @map("display_name") @db.VarChar /// 频道显示名
+  thumb_url    String?  @map("thumb_url") @db.VarChar /// 频道缩略图URL
   class        String   @db.VarChar /// 频道分类，如: level_1, level_2, level_3, level_4 等，支持扩展
   locale       String   @db.VarChar /// i18语言类型，如: zh-CN, en-US
   template_id  String?  @map("template_id") /// 关联的模板ID
@@ -106,8 +107,6 @@ model TemplateMarketChannelEntity {
   @@index([id], map: "IDX_template_market_channel_id")
   @@map("template_market_channel_entity")
 }
-
-
 
 model WorksEntity {
   title                  String   @db.VarChar
