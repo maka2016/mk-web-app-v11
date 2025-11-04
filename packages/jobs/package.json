@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@larksuiteoapi/node-sdk": "^1.55.0"
+    "@larksuiteoapi/node-sdk": "^1.55.0",
+    "@types/lodash": "^4.17.13",
+    "lodash": "^4.17.21"
   }
 }

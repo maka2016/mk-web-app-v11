@@ -1,9 +1,16 @@
+import dotenv from 'dotenv';
+import { syncChannel } from '../service/chanels';
 import { JTBitTables } from '../service/cms/bit_tables/jiantie';
-import { getAllRecord } from '../service/cms/lark';
 
+dotenv.config({ path: '.env.local' });
 const buildJStoreV2 = async () => {
-  const ch1Onbit = await getAllRecord(JTBitTables['一级-栏目']);
-  console.log(ch1Onbit);
+  await syncChannel(JTBitTables['一级-栏目'], '一级-栏目');
+
+  await syncChannel(
+    JTBitTables['二级-频道'],
+    '一级-栏目',
+    JTBitTables['一级-栏目']
+  );
   // const { data } = await getLarkClient().datasheet.v2.sheets.get({
   //   sheet_id: 'tblQHmefOcyLQ9Mg',
   // });
