@@ -8,7 +8,8 @@ import {
   TabsTrigger,
 } from '@workspace/ui/components/tabs';
 import { useSearchParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
+import ReactDOM from 'react-dom';
 import toast from 'react-hot-toast';
 import { useGridContext } from '../comp/provider';
 import { CopyRowData, scrollToActiveRow } from '../shared';
@@ -20,6 +21,7 @@ import ElementAttrsEditor from './ElementAttrsEditor';
 import ElementAttrsEditorV2 from './ElementAttrsEditorV2/index';
 import GridLibrary from './GridLibrary';
 import DesignerToolHeader from './Header';
+import HeaderForUser from './HeaderForUser';
 import DesignerToolHeaderV2 from './HeaderV2';
 import LayerManager from './LayerManager';
 import LayoutLibrary from './LayoutLibrary';
@@ -45,6 +47,15 @@ const DesignerToolRoot = styled.div`
   flex-direction: column;
   height: 100vh;
   width: 100vw;
+`;
+
+const UserRoot = styled.div`
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
 `;
 
 const SideContainer = styled.div`
@@ -92,12 +103,36 @@ export default function DesignerToolForEditor({
     );
   });
 
-  // 监听URL参数变化，同步tab状态
-  useEffect(() => {
-    const tabFromUrl =
-      searchParams.get('tab') || (isThemeMode ? 'blocks' : 'theme3_import');
-    setActiveTab(tabFromUrl);
-  }, [searchParams, isThemeMode]);
+  // 为非设计师模式创建第一个子容器
+  const [firstChildContainer, setFirstChildContainer] =
+    useState<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (!fullStack || !designerInfo?.isDesigner) {
+      const headerContainer = document.querySelector('#editor_container');
+      if (headerContainer) {
+        const wrapper = document.createElement('div');
+        // 插入到第一位
+        if (headerContainer.firstChild) {
+          headerContainer.insertBefore(wrapper, headerContainer.firstChild);
+        } else {
+          headerContainer.appendChild(wrapper);
+        }
+
+        // 使用 requestAnimationFrame 来在下一帧更新状态，避免同步更新
+        requestAnimationFrame(() => {
+          setFirstChildContainer(wrapper);
+        });
+
+        return () => {
+          if (headerContainer.contains(wrapper)) {
+            headerContainer.removeChild(wrapper);
+          }
+          setFirstChildContainer(null);
+        };
+      }
+    }
+  }, [fullStack, designerInfo?.isDesigner]);
 
   // 当tab改变时更新URL参数
   const handleTabChange = (value: string) => {
@@ -124,7 +159,13 @@ export default function DesignerToolForEditor({
   }
 
   if (!fullStack || !designerInfo?.isDesigner) {
-    return children;
+    return (
+      <>
+        {firstChildContainer &&
+          ReactDOM.createPortal(<HeaderForUser />, firstChildContainer)}
+        {children}
+      </>
+    );
   }
 
   return (

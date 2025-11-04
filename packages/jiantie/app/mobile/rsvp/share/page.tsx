@@ -1,28 +1,50 @@
 'use client';
+import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
+import { getIsOverSeas } from '@/services';
+import { useShareNavigation } from '@/utils/share';
 import { trpc } from '@/utils/trpc';
+import APPBridge from '@mk/app-bridge';
+import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Input } from '@workspace/ui/components/input';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import { Separator } from '@workspace/ui/components/separator';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import styles from './share.module.scss';
 
 export default function RSVPSharePage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const formConfigId = searchParams.get('form_config_id') || '';
   const worksId = searchParams.get('works_id') || '';
+
+  const isOversea = getIsOverSeas();
 
   const [copied, setCopied] = useState<boolean>(false);
   const [invitees, setInvitees] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [submissionsMap, setSubmissionsMap] = useState<Record<string, any[]>>(
-    {}
-  );
-  const [viewingInvitee, setViewingInvitee] = useState<any>(null);
+  const [allSubmissions, setAllSubmissions] = useState<any[]>([]);
+  const [viewingSubmission, setViewingSubmission] = useState<any>(null);
   const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
+  console.log('allSubmissions', allSubmissions);
+
+  // 嘉宾管理相关状态
+  const [inviteeDialogOpen, setInviteeDialogOpen] = useState(false);
+  const [editingInvitee, setEditingInvitee] = useState<any>(null);
+  const [inviteeName, setInviteeName] = useState<string>('');
+
+  // 分享面板相关状态
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [currentShareInvitee, setCurrentShareInvitee] = useState<any>(null);
+  const [shareTitle, setShareTitle] = useState<string>('');
+  const [isApp, setIsApp] = useState(false);
+  const [isMiniP, setIsMiniP] = useState(false);
+  const [showMiniPTip, setShowMiniPTip] = useState(false);
+  const [executingKey, setExecutingKey] = useState<string | null>(null);
+
+  const { toPosterShare } = useShareNavigation();
 
   // 生成公开链接
   const publicLink = useMemo(() => {
@@ -30,6 +52,24 @@ export default function RSVPSharePage() {
     const origin = window.location.origin;
     return `${origin}/viewer2/${worksId}`;
   }, [worksId]);
+
+  // 生成嘉宾专属链接
+  const generateInviteeLink = (invitee: any) => {
+    const params = new URLSearchParams();
+    params.set('rsvp_invitee', invitee.name);
+    params.set('rsvp_contact_id', invitee.id);
+    return `${window.location.origin}/viewer2/${worksId}?${params.toString()}`;
+  };
+
+  // 初始化 APP 环境判断
+  useEffect(() => {
+    const initAPP = async () => {
+      await APPBridge.init();
+      setIsApp(APPBridge.judgeIsInApp());
+      setIsMiniP(APPBridge.judgeIsInMiniP());
+    };
+    initAPP();
+  }, []);
 
   // 查询嘉宾列表
   useEffect(() => {
@@ -50,30 +90,23 @@ export default function RSVPSharePage() {
     fetchInvitees();
   }, [formConfigId]);
 
-  // 查询每个嘉宾的提交记录
+  // 查询所有提交记录
   useEffect(() => {
     const fetchSubmissions = async () => {
-      if (!formConfigId || invitees.length === 0) return;
-      const newMap: Record<string, any[]> = {};
-      for (const invitee of invitees) {
-        try {
-          const submissions = await trpc.rsvp.getInviteeSubmissions.query({
-            contact_id: invitee.id,
-            form_config_id: formConfigId,
-          });
-          newMap[invitee.id] = submissions || [];
-        } catch (error: any) {
-          console.error(
-            `Failed to fetch submissions for ${invitee.id}:`,
-            error
-          );
-          newMap[invitee.id] = [];
-        }
+      if (!formConfigId) return;
+      try {
+        const submissions = await trpc.rsvp.getAllSubmissions.query({
+          form_config_id: formConfigId,
+        });
+
+        console.log('submissions', submissions);
+        setAllSubmissions(submissions || []);
+      } catch (error: any) {
+        console.error('Failed to fetch submissions:', error);
       }
-      setSubmissionsMap(newMap);
     };
     fetchSubmissions();
-  }, [formConfigId, invitees]);
+  }, [formConfigId]);
 
   // 刷新列表函数
   const fetchInvitees = async () => {
@@ -105,6 +138,68 @@ export default function RSVPSharePage() {
     }
   };
 
+  // 打开添加嘉宾弹窗
+  const handleOpenAddInvitee = () => {
+    setEditingInvitee(null);
+    setInviteeName('');
+    setInviteeDialogOpen(true);
+  };
+
+  // 打开编辑嘉宾弹窗
+  const handleOpenEditInvitee = (invitee: any) => {
+    setEditingInvitee(invitee);
+    setInviteeName(invitee.name || '');
+    setInviteeDialogOpen(true);
+  };
+
+  // 创建嘉宾
+  const handleCreateInvitee = async () => {
+    try {
+      await trpc.rsvp.createInvitee.mutate({
+        form_config_id: formConfigId,
+        name: inviteeName.trim(),
+      });
+      toast.success('创建成功');
+      fetchInvitees();
+      setInviteeDialogOpen(false);
+      setInviteeName('');
+    } catch (error: any) {
+      toast.error(error.message || '创建失败');
+    }
+  };
+
+  // 更新嘉宾
+  const handleUpdateInvitee = async () => {
+    if (!editingInvitee) return;
+    try {
+      await trpc.rsvp.updateInvitee.mutate({
+        id: editingInvitee.id,
+        name: inviteeName.trim(),
+      });
+      toast.success('更新成功');
+      fetchInvitees();
+      setInviteeDialogOpen(false);
+      setEditingInvitee(null);
+      setInviteeName('');
+    } catch (error: any) {
+      toast.error(error.message || '更新失败');
+    }
+  };
+
+  // 提交嘉宾表单
+  const handleSubmitInvitee = async () => {
+    if (!inviteeName.trim()) {
+      toast.error('请输入姓名');
+      return;
+    }
+
+    if (editingInvitee) {
+      await handleUpdateInvitee();
+    } else {
+      await handleCreateInvitee();
+    }
+  };
+
   const handleCopyLink = (link: string) => {
     navigator.clipboard.writeText(link);
     setCopied(true);
@@ -113,14 +208,52 @@ export default function RSVPSharePage() {
   };
 
   const handleShareInvitee = (invitee: any) => {
-    // 生成专属链接
-    // URLSearchParams.set() 会自动编码，不需要手动 encodeURIComponent
-    const params = new URLSearchParams();
-    params.set('rsvp_invitee', invitee.name);
-    const shareLink = `${window.location.origin}/viewer2/${worksId}?${params.toString()}`;
+    // 打开分享面板
+    setCurrentShareInvitee(invitee);
+    setShareTitle(`邀请 ${invitee.name} 参加活动`);
+    setShareDialogOpen(true);
+  };
 
-    // 复制链接
+  // 分享到微信
+  const shareToWechat = async (to: 'wechat' | 'wechatTimeline') => {
+    if (!currentShareInvitee) return;
+    if (!shareTitle) {
+      toast.error('请填写分享标题');
+      return;
+    }
+
+    const shareLink = generateInviteeLink(currentShareInvitee);
+
+    APPBridge.appCall({
+      type: 'MKShare',
+      appid: 'jiantie',
+      params: {
+        title: shareTitle,
+        content: `诚邀您参加活动`,
+        thumb: '',
+        type: 'link',
+        shareType: to,
+        url: shareLink,
+      },
+    });
+  };
+
+  // 复制专属链接
+  const copyInviteeLink = () => {
+    if (!currentShareInvitee) return;
+    const shareLink = generateInviteeLink(currentShareInvitee);
     handleCopyLink(shareLink);
+  };
+
+  // 保存长图
+  const savePoster = async () => {
+    if (!worksId) return;
+    toPosterShare(worksId);
+  };
+
+  // 显示小程序分享提示
+  const showMiniPShareTip = () => {
+    setShowMiniPTip(true);
   };
 
   if (!formConfigId) {
@@ -132,7 +265,8 @@ export default function RSVPSharePage() {
   }
 
   return (
-    <div className='relative'>
+    <div className='relative bg-white'>
+      <MobileHeader title={'分享设置'} />
       <div className='px-4 py-3 border-b border-black/[0.06]'>
         <div className='flex items-center gap-2'>
           <Icon name='share' />
@@ -175,11 +309,7 @@ export default function RSVPSharePage() {
               variant='outline'
               className='text-[#3358D4] h-8 font-semibold hover:bg-transparent'
               size='sm'
-              onClick={() => {
-                router.push(
-                  `/mobile/rsvp/invitees?form_config_id=${formConfigId}&works_id=${worksId}`
-                );
-              }}
+              onClick={handleOpenAddInvitee}
             >
               <Icon name='add-one' size={16} />
               添加嘉宾
@@ -216,11 +346,7 @@ export default function RSVPSharePage() {
                     <Button
                       size='sm'
                       variant='ghost'
-                      onClick={() => {
-                        router.push(
-                          `/mobile/rsvp/invitees?form_config_id=${formConfigId}&works_id=${worksId}&edit_id=${invitee.id}`
-                        );
-                      }}
+                      onClick={() => handleOpenEditInvitee(invitee)}
                     >
                       编辑
                     </Button>
@@ -237,57 +363,53 @@ export default function RSVPSharePage() {
           </div>
         </div>
 
-        {/* 已邀请嘉宾的提交记录 */}
+        {/* 所有提交记录 */}
         <div className='border border-black/[0.1] rounded-xl p-3'>
           <div className='font-semibold text-base leading-6 text-[#09090B] mb-3'>
-            已邀请嘉宾的提交记录
+            所有提交记录
           </div>
           <div className='space-y-2'>
-            {invitees.length === 0 ? (
+            {allSubmissions.length === 0 ? (
               <div className='text-sm text-gray-500 text-center py-4'>
                 暂无提交记录
               </div>
             ) : (
-              invitees.map((invitee: any) => {
-                const submissions = submissionsMap[invitee.id] || [];
-                const latestSubmission = submissions[0]; // 最新的提交记录
-                const hasSubmission = latestSubmission !== undefined;
-                const statusText = hasSubmission
-                  ? latestSubmission.will_attend === true
+              allSubmissions.map((submission: any) => {
+                const statusText =
+                  submission.will_attend === true
                     ? '已确认出席'
-                    : latestSubmission.will_attend === false
+                    : submission.will_attend === false
                       ? '已确认不出席'
-                      : '已提交'
-                  : '待提交';
-                const statusColor = hasSubmission
-                  ? latestSubmission.will_attend === true
+                      : '已提交';
+                const statusColor =
+                  submission.will_attend === true
                     ? 'text-green-600'
-                    : latestSubmission.will_attend === false
+                    : submission.will_attend === false
                       ? 'text-gray-500'
-                      : 'text-blue-600'
-                  : 'text-gray-400';
+                      : 'text-blue-600';
 
                 return (
                   <div
-                    key={invitee.id}
+                    key={submission.id}
                     className='flex items-center justify-between p-2 border border-[#e4e4e7] rounded-md'
                   >
                     <div className='flex-1'>
                       <div className='font-semibold text-sm leading-5'>
-                        {invitee.name}
+                        {submission.invitee_name}
                       </div>
                       <div className={`text-xs mt-1 ${statusColor}`}>
                         {statusText}
-                        {hasSubmission && latestSubmission.create_time && (
+                        {submission.create_time && (
                           <span className='ml-2 text-gray-400'>
-                            {new Date(
-                              latestSubmission.create_time
-                            ).toLocaleString('zh-CN', {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                            {new Date(submission.create_time).toLocaleString(
+                              'zh-CN',
+                              {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              }
+                            )}
                           </span>
                         )}
                       </div>
@@ -296,10 +418,9 @@ export default function RSVPSharePage() {
                       size='sm'
                       variant='ghost'
                       onClick={() => {
-                        setViewingInvitee({ ...invitee, submissions });
+                        setViewingSubmission(submission);
                         setSubmissionDialogOpen(true);
                       }}
-                      disabled={!hasSubmission}
                     >
                       查看
                     </Button>
@@ -314,120 +435,295 @@ export default function RSVPSharePage() {
         <ResponsiveDialog
           isOpen={submissionDialogOpen}
           onOpenChange={setSubmissionDialogOpen}
-          title={viewingInvitee ? `${viewingInvitee.name}的提交记录` : ''}
+          title={
+            viewingSubmission
+              ? `${viewingSubmission.invitee_name}的提交详情`
+              : ''
+          }
         >
-          {viewingInvitee && (
+          {viewingSubmission && (
             <div className='px-4 pb-4 max-h-[70vh] overflow-y-auto'>
-              {viewingInvitee.submissions.length === 0 ? (
-                <div className='text-sm text-gray-500 text-center py-8'>
-                  暂无提交记录
+              <div className='border border-[#e4e4e7] rounded-md p-3'>
+                <div className='flex items-center justify-between mb-2'>
+                  <div className='font-semibold text-sm'>提交时间</div>
+                  <div className='text-xs text-gray-500'>
+                    {new Date(viewingSubmission.create_time).toLocaleString(
+                      'zh-CN'
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <div className='space-y-4'>
-                  {viewingInvitee.submissions.map(
-                    (submission: any, index: number) => (
-                      <div
-                        key={submission.id}
-                        className='border border-[#e4e4e7] rounded-md p-3'
-                      >
-                        <div className='flex items-center justify-between mb-2'>
-                          <div className='font-semibold text-sm'>
-                            {index === 0
-                              ? '最新提交'
-                              : `提交记录 #${index + 1}`}
-                          </div>
-                          <div className='text-xs text-gray-500'>
-                            {new Date(submission.create_time).toLocaleString(
-                              'zh-CN'
-                            )}
-                          </div>
+                <div className='space-y-2'>
+                  <div className='flex items-center gap-2'>
+                    <span className='text-xs text-gray-600'>出席状态：</span>
+                    <span
+                      className={`text-xs font-semibold ${
+                        viewingSubmission.will_attend === true
+                          ? 'text-green-600'
+                          : viewingSubmission.will_attend === false
+                            ? 'text-gray-500'
+                            : 'text-gray-400'
+                      }`}
+                    >
+                      {viewingSubmission.will_attend === true
+                        ? '确认出席'
+                        : viewingSubmission.will_attend === false
+                          ? '确认不出席'
+                          : '未选择'}
+                    </span>
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    <span className='text-xs text-gray-600'>审核状态：</span>
+                    <span
+                      className={`text-xs font-semibold ${
+                        viewingSubmission.status === 'approved'
+                          ? 'text-green-600'
+                          : viewingSubmission.status === 'rejected'
+                            ? 'text-red-600'
+                            : viewingSubmission.status === 'cancelled'
+                              ? 'text-gray-500'
+                              : 'text-yellow-600'
+                      }`}
+                    >
+                      {viewingSubmission.status === 'approved'
+                        ? '已确认'
+                        : viewingSubmission.status === 'rejected'
+                          ? '已拒绝'
+                          : viewingSubmission.status === 'cancelled'
+                            ? '已取消'
+                            : '待审核'}
+                    </span>
+                  </div>
+                  {viewingSubmission.submission_data &&
+                    typeof viewingSubmission.submission_data === 'object' &&
+                    Object.keys(viewingSubmission.submission_data).filter(
+                      key => !key.startsWith('_')
+                    ).length > 0 && (
+                      <div className='mt-3 pt-3 border-t border-gray-200'>
+                        <div className='text-xs font-semibold text-gray-700 mb-2'>
+                          表单数据：
                         </div>
-                        <div className='space-y-2'>
-                          <div className='flex items-center gap-2'>
-                            <span className='text-xs text-gray-600'>
-                              出席状态：
-                            </span>
-                            <span
-                              className={`text-xs font-semibold ${
-                                submission.will_attend === true
-                                  ? 'text-green-600'
-                                  : submission.will_attend === false
-                                    ? 'text-gray-500'
-                                    : 'text-gray-400'
-                              }`}
-                            >
-                              {submission.will_attend === true
-                                ? '确认出席'
-                                : submission.will_attend === false
-                                  ? '确认不出席'
-                                  : '未选择'}
-                            </span>
-                          </div>
-                          <div className='flex items-center gap-2'>
-                            <span className='text-xs text-gray-600'>
-                              审核状态：
-                            </span>
-                            <span
-                              className={`text-xs font-semibold ${
-                                submission.status === 'approved'
-                                  ? 'text-green-600'
-                                  : submission.status === 'rejected'
-                                    ? 'text-red-600'
-                                    : submission.status === 'cancelled'
-                                      ? 'text-gray-500'
-                                      : 'text-yellow-600'
-                              }`}
-                            >
-                              {submission.status === 'approved'
-                                ? '已确认'
-                                : submission.status === 'rejected'
-                                  ? '已拒绝'
-                                  : submission.status === 'cancelled'
-                                    ? '已取消'
-                                    : '待审核'}
-                            </span>
-                          </div>
-                          {submission.submission_data &&
-                            typeof submission.submission_data === 'object' &&
-                            Object.keys(submission.submission_data).filter(
-                              key => !key.startsWith('_')
-                            ).length > 0 && (
-                              <div className='mt-3 pt-3 border-t border-gray-200'>
-                                <div className='text-xs font-semibold text-gray-700 mb-2'>
-                                  表单数据：
-                                </div>
-                                <div className='space-y-1'>
-                                  {Object.entries(
-                                    submission.submission_data
-                                  ).map(([key, value]) => {
-                                    if (key.startsWith('_')) return null;
-                                    return (
-                                      <div
-                                        key={key}
-                                        className='flex items-start justify-between text-xs'
-                                      >
-                                        <span className='text-gray-600 flex-shrink-0 mr-2'>
-                                          {key}：
-                                        </span>
-                                        <span className='text-gray-800 text-right flex-1'>
-                                          {typeof value === 'object'
-                                            ? JSON.stringify(value)
-                                            : String(value)}
-                                        </span>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
+                        <div className='space-y-1'>
+                          {Object.entries(
+                            viewingSubmission.submission_data
+                          ).map(([key, value]) => {
+                            if (key.startsWith('_')) return null;
+                            return (
+                              <div
+                                key={key}
+                                className='flex items-start justify-between text-xs'
+                              >
+                                <span className='text-gray-600 flex-shrink-0 mr-2'>
+                                  {key}：
+                                </span>
+                                <span className='text-gray-800 text-right flex-1'>
+                                  {typeof value === 'object'
+                                    ? JSON.stringify(value)
+                                    : String(value)}
+                                </span>
                               </div>
-                            )}
+                            );
+                          })}
                         </div>
                       </div>
-                    )
-                  )}
+                    )}
                 </div>
-              )}
+              </div>
             </div>
           )}
+        </ResponsiveDialog>
+
+        {/* 添加/编辑嘉宾弹窗 */}
+        <ResponsiveDialog
+          isOpen={inviteeDialogOpen}
+          onOpenChange={open => {
+            setInviteeDialogOpen(open);
+            if (!open) {
+              setEditingInvitee(null);
+              setInviteeName('');
+            }
+          }}
+          title={editingInvitee ? '编辑嘉宾' : '添加嘉宾'}
+        >
+          <div className='px-4 pb-4'>
+            <div className='space-y-4'>
+              <div>
+                <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
+                  姓名 <span className='text-red-500'>*</span>
+                </div>
+                <Input
+                  className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
+                  value={inviteeName}
+                  onChange={e => setInviteeName(e.target.value)}
+                  placeholder='请输入嘉宾姓名'
+                />
+              </div>
+              <div className='flex items-center gap-2 pt-2'>
+                <Button
+                  className='flex-1'
+                  onClick={handleSubmitInvitee}
+                  disabled={loading}
+                >
+                  {editingInvitee ? '保存' : '添加'}
+                </Button>
+                <Button
+                  variant='outline'
+                  className='flex-1'
+                  onClick={() => setInviteeDialogOpen(false)}
+                >
+                  取消
+                </Button>
+              </div>
+            </div>
+          </div>
+        </ResponsiveDialog>
+
+        {/* 分享设置面板 */}
+        <ResponsiveDialog
+          isOpen={shareDialogOpen}
+          onOpenChange={open => {
+            setShareDialogOpen(open);
+            if (!open) {
+              setCurrentShareInvitee(null);
+              setShareTitle('');
+            }
+          }}
+          title='分享设置'
+        >
+          <div className='px-4 pb-4'>
+            <div className={styles.shareTypesWrap}>
+              <div className={styles.title}>
+                <span>分享标题</span>
+              </div>
+              <div className='mb-4'>
+                <Input
+                  value={shareTitle}
+                  className={styles.input}
+                  onChange={e => setShareTitle(e.target.value)}
+                  placeholder='请输入分享标题'
+                />
+              </div>
+
+              <div className={styles.title}>
+                <Icon name='share' color='#09090B' size={16} />
+                <span>分享方式</span>
+              </div>
+              <div className={styles.shareTypes}>
+                {/* 微信好友 */}
+                {isApp && !isOversea && !isMiniP && (
+                  <BehaviorBox
+                    behavior={{
+                      object_type: 'rsvp_share_wechat_btn',
+                      object_id: worksId,
+                    }}
+                    className={styles.shareItem}
+                    onClick={async () => {
+                      if (executingKey) return;
+                      setExecutingKey('wechat');
+                      try {
+                        await shareToWechat('wechat');
+                      } finally {
+                        setExecutingKey(null);
+                      }
+                    }}
+                  >
+                    <img
+                      src='https://img2.maka.im/cdn/webstore10/jiantie/icon_weixin.png'
+                      alt='微信'
+                    />
+                    <span>微信</span>
+                  </BehaviorBox>
+                )}
+
+                {/* 小程序分享 */}
+                {isMiniP && (
+                  <BehaviorBox
+                    behavior={{
+                      object_type: 'rsvp_share_minip_btn',
+                      object_id: worksId,
+                    }}
+                    className={styles.shareItem}
+                    onClick={() => showMiniPShareTip()}
+                  >
+                    <img
+                      src='https://img2.maka.im/cdn/webstore10/jiantie/icon_weixin.png'
+                      alt='分享'
+                    />
+                    <span>分享</span>
+                  </BehaviorBox>
+                )}
+
+                {/* 复制链接 */}
+                <BehaviorBox
+                  behavior={{
+                    object_type: 'rsvp_share_copy_link_btn',
+                    object_id: worksId,
+                  }}
+                  className={styles.shareItem}
+                  onClick={() => copyInviteeLink()}
+                >
+                  <img
+                    src='https://img2.maka.im/cdn/webstore10/jiantie/icon_lianjie.png'
+                    alt='复制链接'
+                  />
+                  <span>复制链接</span>
+                </BehaviorBox>
+
+                {/* 保存长图 */}
+                {!isMiniP && (
+                  <BehaviorBox
+                    behavior={{
+                      object_type: 'rsvp_share_poster_btn',
+                      object_id: worksId,
+                    }}
+                    className={styles.shareItem}
+                    onClick={async () => {
+                      if (executingKey) return;
+                      setExecutingKey('poster');
+                      try {
+                        await savePoster();
+                      } finally {
+                        setExecutingKey(null);
+                      }
+                    }}
+                  >
+                    <img
+                      src='https://res.maka.im/cdn/webstore10/jiantie/icon_poster.png'
+                      alt='长图'
+                    />
+                    <span>保存长图</span>
+                  </BehaviorBox>
+                )}
+              </div>
+            </div>
+          </div>
+        </ResponsiveDialog>
+
+        {/* 小程序分享提示 */}
+        <ResponsiveDialog
+          isDialog
+          isOpen={showMiniPTip}
+          onOpenChange={setShowMiniPTip}
+          contentProps={{
+            className: 'w-full bg-transparent top-[5%] translate-y-[0%]',
+          }}
+        >
+          <div
+            className={styles.shareOverlay}
+            onClick={() => setShowMiniPTip(false)}
+          >
+            <img
+              src='https://img2.maka.im/cdn/webstore10/jiantie/share_arrow.png'
+              alt=''
+              className={styles.arrow}
+            />
+            <div className={styles.tip}>
+              点击右上角&quot;
+              <div className={styles.icon}>
+                <Icon name='more-ga3j8jod' />
+              </div>
+              &quot;进行分享哦
+            </div>
+          </div>
         </ResponsiveDialog>
       </div>
     </div>
