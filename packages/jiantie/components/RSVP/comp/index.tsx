@@ -2,12 +2,14 @@
 import { getCookie, setCookie } from '@/components/viewer/utils/helper';
 import { trpc } from '@/utils/trpc';
 import styled from '@emotion/styled';
-import { getPageId } from '@mk/services';
 import { EditorSDK, LayerElemItem } from '@mk/works-store/types';
 import { Button } from '@workspace/ui/components/button';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { RSVPAttrs, RSVPField, RsvpFormConfigEntityForUi } from '../type';
+import { ResponsiveDialog } from '../../Drawer';
+import { RSVPConfigPanel } from '../configPanel';
+import { RSVPProvider, useRSVP } from '../RSVPContext';
+import { RSVPAttrs, RSVPField } from '../type';
 
 // Cookie 键名
 const COOKIE_VISITOR_ID = 'rsvp_visitor_id';
@@ -42,9 +44,13 @@ const FormCompWrapper = styled.div`
   border-radius: 10px;
 `;
 
-export default function RSVPComp({ attrs, editorSDK, layer }: RSVPCompProps) {
-  const { formConfigId, worksId } = attrs;
+// 内部组件：负责纯粹的渲染
+function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
+  const { formConfigId } = attrs;
   const searchParams = useSearchParams();
+  const rsvp = useRSVP();
+  const { config, loading, error, fields, showEditDialog, setShowEditDialog } =
+    rsvp;
 
   // 从 URL 参数获取被邀请人姓名
   const inviteeName =
@@ -52,13 +58,11 @@ export default function RSVPComp({ attrs, editorSDK, layer }: RSVPCompProps) {
 
   // 没有在编辑器时，就是访客模式，需要根据访客的设备生成访客的ID
   const isViewerMode = !editorSDK;
+
   // 区分是被邀请人（invitee）还是公开访客（guest）
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [guestName, setGuestName] = useState<string>('');
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [config, setConfig] = useState<RsvpFormConfigEntityForUi | null>(null);
   const [willAttend, setWillAttend] = useState<boolean | null>(null); // null=未选择, true=出席, false=不出席
   const [values, setValues] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -158,66 +162,30 @@ export default function RSVPComp({ attrs, editorSDK, layer }: RSVPCompProps) {
     }
   }, [isViewerMode, visitorId, contactId, config?.id]);
 
+  // 初始化表单值
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // 如果既没有 formConfigId，也没有有效的 worksId，则创建一个新的
-        if (editorSDK && !formConfigId && !worksId) {
-          const created = await trpc.rsvp.upsertFormConfig.mutate({
-            works_id: getPageId(),
-            title: inviteeName ? `诚邀${inviteeName}` : '我要报名',
-            desc: '',
-            form_fields: { fields: [] },
-            allow_multiple_submit: false,
-            require_approval: true,
-            enabled: true,
-          });
-          setConfig(created as any);
-          setValues({});
-          setLoading(false);
-          editorSDK.changeCompAttr(layer.elemId, {
-            formConfigId: created.id,
-            worksId: getPageId(),
-          });
-          return;
+    if (config && fields.length > 0) {
+      const initValues: Record<string, any> = {};
+      fields.forEach(f => {
+        if (typeof f.defaultValue !== 'undefined') {
+          initValues[f.id] = f.defaultValue;
+        } else if (f.type === 'checkbox') {
+          initValues[f.id] = [];
+        } else {
+          initValues[f.id] = values[f.id] || '';
         }
-
-        if (formConfigId) {
-          // 有且只有formConfigId是可以查询的
-          const data = await trpc.rsvp.getFormConfigById.query({
-            id: formConfigId,
-          });
-          // 没有配置时：自动为当前作品创建一个默认配置（enabled=true）
-          setConfig(data as any);
-          setLoading(false);
-
-          const fields: RSVPField[] = (data as any)?.form_fields?.fields || [];
-          const initValues: Record<string, any> = {};
-          fields.forEach(f => {
-            if (typeof f.defaultValue !== 'undefined') {
-              initValues[f.id] = f.defaultValue;
-            } else if (f.type === 'checkbox') {
-              initValues[f.id] = [];
-            } else {
-              initValues[f.id] = '';
-            }
-          });
-          setValues(initValues);
+      });
+      setValues(prev => {
+        // 只在字段变化时更新，保留已有的值
+        const hasNewFields = fields.some(f => !prev.hasOwnProperty(f.id));
+        if (hasNewFields) {
+          return { ...prev, ...initValues };
         }
-      } catch (e: any) {
-        setError(String(e?.message || '加载失败'));
-      } finally {
-      }
-    })();
-    return () => {};
+        return prev;
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formConfigId, worksId]);
-
-  const fields: RSVPField[] = useMemo(() => {
-    return (config as any)?.form_fields?.fields || [];
-  }, [config]);
+  }, [config?.id, fields.length]);
 
   // 显示标题：被邀请人显示「诚邀{姓名}」，公开访客显示配置的标题
   const displayTitle = useMemo(() => {
@@ -495,221 +463,244 @@ export default function RSVPComp({ attrs, editorSDK, layer }: RSVPCompProps) {
   }
 
   return (
-    <FormCompWrapper
-      className='w-full max-w-xl mx-auto space-y-4'
-      style={
-        editorSDK
-          ? {}
-          : {
-              pointerEvents: 'auto',
-            }
-      }
-    >
-      <div>
-        <div className='text-lg font-medium'>{displayTitle}</div>
-        {config.desc ? (
-          <div className='text-sm text-gray-500 mt-1'>{config.desc}</div>
-        ) : null}
-        {/* 如果有被邀请人姓名且不是公开访客，显示「不是本人」按钮 */}
-        {inviteeName &&
-          !isGuest &&
-          willAttend === null &&
-          !submitting &&
-          !resultMsg && (
-            <div className='mt-2'>
-              <Button
-                size='sm'
-                variant='ghost'
-                onClick={() => setIsGuest(true)}
-                className='text-xs text-gray-500'
-              >
-                不是本人？
-              </Button>
-            </div>
-          )}
-      </div>
-
-      {/* 如果是公开访客，显示姓名输入框 */}
-      {isGuest && !willAttend && (
-        <div className='space-y-2'>
-          <label className='block text-sm font-medium'>
-            您的姓名 <span className='text-red-500'>*</span>
-          </label>
-          <input
-            className='w-full border rounded px-3 py-2 text-sm'
-            type='text'
-            placeholder='请输入您的姓名'
-            value={guestName}
-            onChange={e => setGuestName(e.target.value)}
-          />
+    <>
+      <FormCompWrapper
+        className='w-full max-w-xl mx-auto space-y-4'
+        style={
+          editorSDK
+            ? {}
+            : {
+                pointerEvents: 'auto',
+              }
+        }
+      >
+        <div>
+          <div className='text-lg font-medium'>{displayTitle}</div>
+          {config.desc ? (
+            <div className='text-sm text-gray-500 mt-1'>{config.desc}</div>
+          ) : null}
+          {/* 如果有被邀请人姓名且不是公开访客，显示「不是本人」按钮 */}
+          {inviteeName &&
+            !isGuest &&
+            willAttend === null &&
+            !submitting &&
+            !resultMsg && (
+              <div className='mt-2'>
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  onClick={() => setIsGuest(true)}
+                  className='text-xs text-gray-500'
+                >
+                  不是本人？
+                </Button>
+              </div>
+            )}
         </div>
-      )}
 
-      {/* 如果还未选择出席/不出席，显示选择按钮 */}
-      {willAttend === null && !submitting && !resultMsg && (
-        <div className='flex items-center gap-3 pt-2'>
-          <Button
-            size='lg'
-            disabled={submitting || (isGuest && !guestName.trim())}
-            onClick={() => setWillAttend(true)}
-            className='flex-1'
-          >
-            出席
-          </Button>
-          <Button
-            size='lg'
-            variant='secondary'
-            disabled={submitting || (isGuest && !guestName.trim())}
-            onClick={() => handleSubmit(false)}
-            className='flex-1'
-          >
-            不出席
-          </Button>
-        </div>
-      )}
+        {/* 如果是公开访客，显示姓名输入框 */}
+        {isGuest && !willAttend && (
+          <div className='space-y-2'>
+            <label className='block text-sm font-medium'>
+              您的姓名 <span className='text-red-500'>*</span>
+            </label>
+            <input
+              className='w-full border rounded px-3 py-2 text-sm'
+              type='text'
+              placeholder='请输入您的姓名'
+              value={guestName}
+              onChange={e => setGuestName(e.target.value)}
+            />
+          </div>
+        )}
 
-      {/* 如果选择了出席，显示表单 */}
-      {willAttend === true && (
-        <div className='space-y-4'>
-          {fields.map(field => {
-            const common = (
-              <label className='block text-sm font-medium mb-1'>
-                {field.label}
-                {field.required ? ' *' : ''}
-              </label>
-            );
-            if (field.type === 'textarea') {
+        {/* 如果还未选择出席/不出席，显示选择按钮 */}
+        {willAttend === null && !submitting && !resultMsg && (
+          <div className='flex items-center gap-3 pt-2'>
+            <Button
+              size='lg'
+              disabled={submitting || (isGuest && !guestName.trim())}
+              onClick={() => setWillAttend(true)}
+              className='flex-1'
+            >
+              出席
+            </Button>
+            <Button
+              size='lg'
+              variant='secondary'
+              disabled={submitting || (isGuest && !guestName.trim())}
+              onClick={() => handleSubmit(false)}
+              className='flex-1'
+            >
+              不出席
+            </Button>
+          </div>
+        )}
+
+        {/* 如果选择了出席，显示表单 */}
+        {willAttend === true && (
+          <div className='space-y-4'>
+            {fields.map(field => {
+              const common = (
+                <label className='block text-sm font-medium mb-1'>
+                  {field.label}
+                  {field.required ? ' *' : ''}
+                </label>
+              );
+              if (field.type === 'textarea') {
+                return (
+                  <div key={field.id}>
+                    {common}
+                    <textarea
+                      className='w-full border rounded px-3 py-2 text-sm'
+                      placeholder={field.placeholder}
+                      value={values[field.id] || ''}
+                      onChange={e => handleChange(field, e.target.value)}
+                    />
+                  </div>
+                );
+              }
+              if (field.type === 'number') {
+                return (
+                  <div key={field.id}>
+                    {common}
+                    <input
+                      className='w-full border rounded px-3 py-2 text-sm'
+                      type='number'
+                      placeholder={field.placeholder}
+                      value={values[field.id] ?? ''}
+                      onChange={e =>
+                        handleChange(
+                          field,
+                          e.target.value === '' ? '' : Number(e.target.value)
+                        )
+                      }
+                    />
+                  </div>
+                );
+              }
+              if (field.type === 'radio') {
+                return (
+                  <div key={field.id}>
+                    {common}
+                    <div className='space-y-2'>
+                      {field.options?.map(opt => (
+                        <label
+                          key={opt.value}
+                          className='flex items-center gap-2 text-sm'
+                        >
+                          <input
+                            type='radio'
+                            name={field.id}
+                            checked={values[field.id] === opt.value}
+                            onChange={() => handleChange(field, opt.value)}
+                          />
+                          <span>{opt.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              if (field.type === 'checkbox') {
+                const selected: string[] = Array.isArray(values[field.id])
+                  ? values[field.id]
+                  : [];
+                const toggle = (val: string) => {
+                  const set = new Set(selected);
+                  if (set.has(val)) set.delete(val);
+                  else set.add(val);
+                  handleChange(field, Array.from(set));
+                };
+                return (
+                  <div key={field.id}>
+                    {common}
+                    <div className='space-y-2'>
+                      {field.options?.map(opt => (
+                        <label
+                          key={opt.value}
+                          className='flex items-center gap-2 text-sm'
+                        >
+                          <input
+                            type='checkbox'
+                            checked={selected.includes(opt.value)}
+                            onChange={() => toggle(opt.value)}
+                          />
+                          <span>{opt.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              // text
               return (
                 <div key={field.id}>
                   {common}
-                  <textarea
+                  <input
                     className='w-full border rounded px-3 py-2 text-sm'
+                    type='text'
                     placeholder={field.placeholder}
                     value={values[field.id] || ''}
                     onChange={e => handleChange(field, e.target.value)}
                   />
                 </div>
               );
-            }
-            if (field.type === 'number') {
-              return (
-                <div key={field.id}>
-                  {common}
-                  <input
-                    className='w-full border rounded px-3 py-2 text-sm'
-                    type='number'
-                    placeholder={field.placeholder}
-                    value={values[field.id] ?? ''}
-                    onChange={e =>
-                      handleChange(
-                        field,
-                        e.target.value === '' ? '' : Number(e.target.value)
-                      )
-                    }
-                  />
-                </div>
-              );
-            }
-            if (field.type === 'radio') {
-              return (
-                <div key={field.id}>
-                  {common}
-                  <div className='space-y-2'>
-                    {field.options?.map(opt => (
-                      <label
-                        key={opt.value}
-                        className='flex items-center gap-2 text-sm'
-                      >
-                        <input
-                          type='radio'
-                          name={field.id}
-                          checked={values[field.id] === opt.value}
-                          onChange={() => handleChange(field, opt.value)}
-                        />
-                        <span>{opt.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              );
-            }
-            if (field.type === 'checkbox') {
-              const selected: string[] = Array.isArray(values[field.id])
-                ? values[field.id]
-                : [];
-              const toggle = (val: string) => {
-                const set = new Set(selected);
-                if (set.has(val)) set.delete(val);
-                else set.add(val);
-                handleChange(field, Array.from(set));
-              };
-              return (
-                <div key={field.id}>
-                  {common}
-                  <div className='space-y-2'>
-                    {field.options?.map(opt => (
-                      <label
-                        key={opt.value}
-                        className='flex items-center gap-2 text-sm'
-                      >
-                        <input
-                          type='checkbox'
-                          checked={selected.includes(opt.value)}
-                          onChange={() => toggle(opt.value)}
-                        />
-                        <span>{opt.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              );
-            }
-            // text
-            return (
-              <div key={field.id}>
-                {common}
-                <input
-                  className='w-full border rounded px-3 py-2 text-sm'
-                  type='text'
-                  placeholder={field.placeholder}
-                  value={values[field.id] || ''}
-                  onChange={e => handleChange(field, e.target.value)}
-                />
-              </div>
-            );
-          })}
-        </div>
-      )}
+            })}
+          </div>
+        )}
 
-      {resultMsg ? (
-        <div className='text-sm text-gray-600'>{resultMsg}</div>
-      ) : null}
+        {resultMsg ? (
+          <div className='text-sm text-gray-600'>{resultMsg}</div>
+        ) : null}
 
-      {/* 如果选择了出席，显示提交按钮 */}
-      {willAttend === true && (
-        <div className='flex items-center gap-3 pt-2'>
-          <Button
-            size='sm'
-            disabled={submitting}
-            onClick={() => handleSubmit(true)}
-          >
-            {submitting ? '提交中...' : '提交'}
-          </Button>
-          <Button
-            size='sm'
-            variant='secondary'
-            disabled={submitting}
-            onClick={handleModify}
-          >
-            {submitting ? '保存中...' : '修改'}
-          </Button>
-          {config.max_submit_count != null ? (
-            <span className='text-xs text-gray-500'>
-              限制 {config.max_submit_count} 次
-            </span>
-          ) : null}
-        </div>
-      )}
-    </FormCompWrapper>
+        {/* 如果选择了出席，显示提交按钮 */}
+        {willAttend === true && (
+          <div className='flex items-center gap-3 pt-2'>
+            <Button
+              size='sm'
+              disabled={submitting}
+              onClick={() => handleSubmit(true)}
+            >
+              {submitting ? '提交中...' : '提交'}
+            </Button>
+            <Button
+              size='sm'
+              variant='secondary'
+              disabled={submitting}
+              onClick={handleModify}
+            >
+              {submitting ? '保存中...' : '修改'}
+            </Button>
+            {config.max_submit_count != null ? (
+              <span className='text-xs text-gray-500'>
+                限制 {config.max_submit_count} 次
+              </span>
+            ) : null}
+          </div>
+        )}
+        <div
+          id={`hidden_trigger_for_rsvp_config_panel_${formConfigId}`}
+          onClick={() => {
+            setShowEditDialog(true);
+          }}
+        ></div>
+      </FormCompWrapper>
+      <ResponsiveDialog
+        isOpen={showEditDialog}
+        onOpenChange={setShowEditDialog}
+      >
+        {config ? <RSVPConfigPanel /> : null}
+      </ResponsiveDialog>
+    </>
+  );
+}
+
+// 导出组件：使用 Provider 包裹
+export default function RSVPComp({ attrs, editorSDK, layer }: RSVPCompProps) {
+  return (
+    <RSVPProvider attrs={attrs} editorSDK={editorSDK} layer={layer}>
+      <RSVPCompInner attrs={attrs} editorSDK={editorSDK} layer={layer} />
+    </RSVPProvider>
   );
 }
