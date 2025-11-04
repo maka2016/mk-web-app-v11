@@ -1,5 +1,6 @@
 'use client';
 
+import Chanel2 from '@/app/mobile/chanel2/page';
 import Home from '@/app/mobile/channel/page';
 import Mine from '@/app/mobile/mine/page';
 import Works from '@/app/mobile/works/page';
@@ -12,13 +13,6 @@ import cls from 'classnames';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import styles from './index.module.scss';
-
-// Tabs 配置
-const Tabs = [
-  { label: '模板', key: 'home', component: Home },
-  { label: '作品', key: 'works', component: Works },
-  { label: '我的', key: 'mine', component: Mine },
-];
 
 const beian: any = {
   xueji: {
@@ -103,6 +97,22 @@ const TabLayout = (props: Props) => {
     // };
   }, []);
 
+  const getTabs = () => {
+    if (appid === 'jiantie') {
+      return [
+        { label: '模板', key: 'home', component: Chanel2 },
+        { label: '作品', key: 'works', component: Works },
+        { label: '我的', key: 'mine', component: Mine },
+      ];
+    } else {
+      return [
+        { label: '模板', key: 'home', component: Home },
+        { label: '作品', key: 'works', component: Works },
+        { label: '我的', key: 'mine', component: Mine },
+      ];
+    }
+  };
+
   const toNotificationCenter = () => {
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
@@ -116,7 +126,7 @@ const TabLayout = (props: Props) => {
 
   // 渲染每个 tab 对应的页面
   const renderTabContent = () =>
-    Tabs.map((tab, index) => {
+    getTabs().map((tab, index) => {
       const TabComponent: any = tab.component;
 
       return (
@@ -173,7 +183,7 @@ const TabLayout = (props: Props) => {
 
       {/* 底部 Tab 栏 */}
       <div className={cls(styles.tabBar, '')}>
-        {Tabs.map((tab, index) => {
+        {getTabs().map((tab, index) => {
           return (
             <button
               key={tab.key}
