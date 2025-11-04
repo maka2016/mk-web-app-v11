@@ -366,6 +366,8 @@ importers:
         specifier: ^6.9.17
         version: 6.9.18
 
+  packages/jobs: {}
+
   packages/logger: {}
 
   packages/server: {}
