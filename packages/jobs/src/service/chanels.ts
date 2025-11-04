@@ -1,12 +1,25 @@
 import { prisma } from '@workspace/database';
 import _ from 'lodash';
 import { BitChannelItem } from './cms/bit_tables/jiantie';
-import { DatasheetItem, batchCreateAndUpdate, getAllRecord } from './cms/lark';
+import {
+  DatasheetItem,
+  batchCreateAndUpdate,
+  getAllRecord,
+  updateRecordById,
+} from './cms/lark';
+import { downloadAndUploadLarkImage } from './cms/upload-helper';
 
 export const syncChannel = async (
   sonBitTable: DatasheetItem,
   ChClassName: string,
-  parentBit?: DatasheetItem
+  parentBit?: DatasheetItem,
+
+  option?: {
+    needThumb?: boolean;
+    needParent?: boolean;
+    needTemplate?: boolean;
+    templateBit?: DatasheetItem;
+  }
 ) => {
   const sonCh1RawOnbit: BitChannelItem[] = await getAllRecord(sonBitTable);
 
@@ -14,17 +27,121 @@ export const syncChannel = async (
     ? await getAllRecord(parentBit, undefined, true)
     : [];
 
+  let templateMap: any = {};
+  if (option?.needTemplate && option?.templateBit) {
+    const templateRawOnbit = await getAllRecord(option?.templateBit);
+    templateMap = _.keyBy(templateRawOnbit, 'record_id');
+  }
+
   const parentMap = _.keyBy(parentCh1RawOnbit, 'record_id');
   // const ch2OnbitMap = keyBy(ch2Onbit, "record_id");
+
+  // 用于回写封面 URL 的数组
+  const coverUpdateArr: any[] = [];
+  for (const item of sonCh1RawOnbit) {
+    if (option?.needThumb) {
+      if (!item?.fields['封面'] || item?.fields['封面']?.length < 1) {
+        // 需要上传封面
+        await updateRecordById(sonBitTable, item.record_id, {
+          状态: '需要封面图',
+        });
+        continue;
+      }
+    }
+
+    if (option?.needParent) {
+      console.log('needParent check', !item?.fields['父级']);
+      if (!item?.fields['父级']?.link_record_ids?.[0]) {
+        // 需要上传封面
+        await updateRecordById(sonBitTable, item.record_id, {
+          状态: '需要指定父级',
+        });
+        continue;
+      }
+    }
+    if (option?.needTemplate) {
+      if (
+        !item?.fields['包含模版']?.link_record_ids ||
+        !item?.fields['包含模版']?.link_record_ids?.[0]
+      ) {
+        console.log('没有模版');
+        // 需要上传封面
+        await updateRecordById(sonBitTable, item.record_id, {
+          状态: '需要指定模版',
+        });
+      }
+    }
+
+    if (!!item.fields['封面'] && !item.fields['封面url']) {
+      // 需要上传封面
+      try {
+        const coverFiles = item.fields['封面'];
+        if (coverFiles && coverFiles.length > 0) {
+          // 取第一个封面图片
+          const firstCover = coverFiles[0];
+
+          // 下载并上传到 OSS
+          const ossPath = await downloadAndUploadLarkImage(
+            firstCover,
+            'jiantie'
+          );
+          item.fields['封面url'] = [{ text: ossPath, type: 'text' }];
+          // 添加到回写数组
+          coverUpdateArr.push({
+            record_id: item.record_id,
+            fields: {
+              封面url: ossPath,
+            },
+          });
+        }
+      } catch (error) {
+        console.error(`处理记录 ${item.record_id} 的封面失败:`, error);
+        // 继续处理下一条记录
+      }
+    }
+  }
+
+  // 批量回写封面 URL 到飞书
+  if (coverUpdateArr.length > 0) {
+    await batchCreateAndUpdate([], coverUpdateArr, sonBitTable, 100);
+    console.log('封面 URL 回写完成');
+  }
+
   const inserData = sonCh1RawOnbit
-    .filter(
-      item =>
+    .filter(item => {
+      let pass = true;
+      console.log('item', item.fields.id?.[0]?.text);
+      if (option?.needThumb) {
+        pass = pass && !!item.fields['封面url'];
+        console.log('needThumb check ', pass);
+      }
+      if (option?.needParent) {
+        // return item.fields['父级'];
+        pass = pass && !!item?.fields['父级']?.link_record_ids?.[0];
+        console.log('needParent check ', pass);
+      }
+      if (option?.needTemplate) {
+        pass = pass && !!item?.fields['包含模版']?.link_record_ids?.[0];
+        console.log('needTemplate check ', pass);
+      }
+
+      return (
+        pass &&
         !!item.fields['内部唯一名称'] &&
         !!item.fields['显示名'] &&
         !!item.fields['语言']
-    )
+      );
+    })
     .map(item => {
       console.log('item', item);
+
+      const templateLinks = item.fields['包含模版']?.link_record_ids || [];
+      const templateIds =
+        templateLinks.map(id => {
+          console.log('templateMap[id]', templateMap[id]?.fields);
+          return templateMap[id]?.fields['任务模板ID']?.[0]?.text || '';
+        }) ?? [];
+
       // 提取内部唯一名称（bitTextRef 类型）
       const aliasField = item.fields['内部唯一名称'];
       const alias = aliasField?.[0]?.text || '';
@@ -43,14 +160,17 @@ export const syncChannel = async (
       console.log('parentData', parentData);
       const parentId = parentData?.fields['id']?.[0]?.text || null;
 
-      console.log('parentId', parentId);
+      const thumbPath = item.fields['封面url']?.[0]?.text || null;
+      console.log('thumbPath', thumbPath);
 
       const newData: any = {
         alias, // 使用内部唯一名称作为 alias
         display_name: displayName, // 显示名
+        thumb_path: item.fields['封面url']?.[0]?.text || null,
         class: ChClassName, // 一级栏目
         locale: language, // 语言类型
         appid: 'jiantie', // 应用ID
+        template_ids: templateIds,
       };
       if (parentId) {
         newData.parent_id = Number(parentId);
@@ -75,6 +195,10 @@ export const syncChannel = async (
         display_name: data.data.display_name,
         locale: data.data.locale,
         class: data.data.class,
+        thumb_path: data.data.thumb_path,
+        parent_id: data.data.parent_id,
+        update_time: new Date(),
+        template_ids: data.data.template_ids,
       },
       create: data.data,
     });
