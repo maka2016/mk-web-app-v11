@@ -354,6 +354,8 @@ export default function ImgLiteCompV2({
       ...imgRect,
       ...style,
       position: 'absolute',
+      width: 'auto',
+      height: 'auto',
       top: pt,
       left: pl,
       bottom: pb,

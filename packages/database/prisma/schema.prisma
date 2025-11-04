@@ -70,7 +70,7 @@ model TemplateEntity {
   custom_time       DateTime @default(now()) @map("custom_time") @db.Timestamptz(6)
   version           Int      @default(1)
   designer_works_id String?  @map("designer_works_id")
-  designer_uid      Int   @map("designer_uid")
+  designer_uid      Int      @map("designer_uid")
   id                String   @id(map: "PK_83f66c7249ae42d36912d8e3def") @default(cuid())
   spec_id           String?  @map("spec_id") @db.VarChar
 
@@ -79,6 +79,35 @@ model TemplateEntity {
   @@index([id], map: "IDX_83f66c7249ae42d36912d8e3de")
   @@map("template_entity")
 }
+
+/// 模板商城频道实体 - 支持无限嵌套的树形结构
+model TemplateMarketChannelEntity {
+  id           Int      @id @default(autoincrement())
+  alias        String   @unique @db.VarChar /// 频道别名（唯一标识，用于URL等场景）
+  display_name String   @map("display_name") @db.VarChar /// 频道显示名
+  class        String   @db.VarChar /// 频道分类，如: level_1, level_2, level_3, level_4 等，支持扩展
+  locale       String   @db.VarChar /// i18语言类型，如: zh-CN, en-US
+  template_id  String?  @map("template_id") /// 关联的模板ID
+  parent_id    Int?     @map("parent_id") /// 父频道ID
+  appid        String?  @db.VarChar /// 应用ID
+  create_time  DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time  DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  /// 自引用关系实现树形结构
+  parent   TemplateMarketChannelEntity?  @relation("ChannelHierarchy", fields: [parent_id], references: [id])
+  children TemplateMarketChannelEntity[] @relation("ChannelHierarchy")
+
+  @@index([alias], map: "IDX_template_market_channel_alias")
+  @@index([parent_id], map: "IDX_template_market_channel_parent_id")
+  @@index([template_id], map: "IDX_template_market_channel_template_id")
+  @@index([class], map: "IDX_template_market_channel_class")
+  @@index([locale], map: "IDX_template_market_channel_locale")
+  @@index([appid], map: "IDX_template_market_channel_appid")
+  @@index([id], map: "IDX_template_market_channel_id")
+  @@map("template_market_channel_entity")
+}
+
+
 
 model WorksEntity {
   title                  String   @db.VarChar
@@ -120,27 +149,27 @@ model WorksEntity {
 
 /// RSVP 表单配置实体
 model RsvpFormConfigEntity {
-  id                    String    @id @default(cuid()) @db.Text
-  works_id              String    @map("works_id") @db.Text /// 关联的作品ID
-  title                 String    @db.VarChar /// 表单标题
-  desc                  String?   @db.Text /// 表单描述
-  form_fields           Json      @map("form_fields") /// 表单字段配置 JSON
+  id          String  @id @default(cuid()) @db.Text
+  works_id    String  @map("works_id") @db.Text /// 关联的作品ID
+  title       String  @db.VarChar /// 表单标题
+  desc        String? @db.Text /// 表单描述
+  form_fields Json    @map("form_fields") /// 表单字段配置 JSON
 
   /// 表单功能设置
-  allow_multiple_submit Boolean   @default(false) @map("allow_multiple_submit") /// 是否允许多次提交
+  allow_multiple_submit Boolean   @default(true) @map("allow_multiple_submit") /// 是否允许多次提交
   require_approval      Boolean   @default(true) @map("require_approval") /// 是否需要审核
   max_submit_count      Int?      @map("max_submit_count") @db.Integer /// 最大提交次数限制
   submit_deadline       DateTime? @map("submit_deadline") @db.Timestamptz /// 提交截止时间
 
   /// 状态管理
-  enabled               Boolean   @default(true) /// 是否启用
-  deleted               Boolean   @default(false)
-  create_time           DateTime  @default(now()) @map("create_time") @db.Timestamptz
-  update_time           DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz
+  enabled     Boolean  @default(true) /// 是否启用
+  deleted     Boolean  @default(false)
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
+  update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz
 
   /// 关联关系
-  submissions           RsvpSubmissionEntity[]
-  view_logs             RsvpViewLogEntity[]
+  submissions RsvpSubmissionEntity[]
+  view_logs   RsvpViewLogEntity[]
 
   @@index([works_id], map: "IDX_rsvp_form_config_works_id")
   @@index([deleted], map: "IDX_rsvp_form_config_deleted")
@@ -151,48 +180,49 @@ model RsvpFormConfigEntity {
 
 /// RSVP 提交状态枚举
 enum RsvpSubmissionStatusEnum {
-  pending      /// 待审核
-  approved     /// 已确认
-  rejected     /// 已拒绝
-  cancelled    /// 已取消
+  pending /// 待审核
+  approved /// 已确认
+  rejected /// 已拒绝
+  cancelled /// 已取消
 
   @@map("rsvp_submission_status_enum")
 }
 
 /// RSVP 提交记录实体（版本化设计）
 model RsvpSubmissionEntity {
-  id                    String                    @id @default(cuid()) @db.Text
-  form_config_id        String                    @map("form_config_id") @db.Text /// 关联的表单配置ID
-  visitor_id            String?                   @map("visitor_id") @db.Text /// 访客唯一标识（用于跟踪同一访客）
-  contact_id            String?                   @map("contact_id") @db.Text /// 关联的联系人ID
+  id             String  @id @default(cuid()) @db.Text
+  form_config_id String  @map("form_config_id") @db.Text /// 关联的表单配置ID
+  visitor_id     String? @map("visitor_id") @db.Text /// 访客唯一标识（用于跟踪同一访客）
+  contact_id     String? @map("contact_id") @db.Text /// 关联的联系人ID
 
   /// 版本化管理
-  submission_group_id   String                    @map("submission_group_id") @db.Text /// 同一逻辑提交的组ID（第一次提交时等于id，后续修改使用第一次的id）
+  submission_group_id String @map("submission_group_id") @db.Text /// 同一逻辑提交的组ID（第一次提交时等于id，后续修改使用第一次的id）
 
   /// 提交数据
-  submission_data       Json                      @map("submission_data") /// 提交的表单数据 JSON
-  status                RsvpSubmissionStatusEnum  @default(pending) /// 提交状态
+  will_attend     Boolean?                 @map("will_attend") /// 是否出席（true=出席，false=不出席，null=未选择）
+  submission_data Json                     @map("submission_data") /// 提交的表单数据 JSON
+  status          RsvpSubmissionStatusEnum @default(pending) /// 提交状态
 
   /// 审核信息
-  approved_by           String?                   @map("approved_by") @db.VarChar /// 审核人
-  approved_time         DateTime?                 @map("approved_time") @db.Timestamptz /// 审核时间
-  reject_reason         String?                   @map("reject_reason") @db.Text /// 拒绝原因
+  approved_by   String?   @map("approved_by") @db.VarChar /// 审核人
+  approved_time DateTime? @map("approved_time") @db.Timestamptz /// 审核时间
+  reject_reason String?   @map("reject_reason") @db.Text /// 拒绝原因
 
   /// 修改信息（仅修改时填写）
-  changed_fields        Json?                     @map("changed_fields") /// 变更字段列表 JSON
-  operator_type         String?                   @map("operator_type") @db.VarChar /// 操作类型：visitor（访客）、admin（管理员）、system（系统）
-  operator_id           String?                   @map("operator_id") @db.VarChar /// 操作人ID
-  operator_name         String?                   @map("operator_name") @db.VarChar /// 操作人名称
-  remark                String?                   @db.Text /// 修改备注
+  changed_fields Json?   @map("changed_fields") /// 变更字段列表 JSON
+  operator_type  String? @map("operator_type") @db.VarChar /// 操作类型：visitor（访客）、admin（管理员）、system（系统）
+  operator_id    String? @map("operator_id") @db.VarChar /// 操作人ID
+  operator_name  String? @map("operator_name") @db.VarChar /// 操作人名称
+  remark         String? @db.Text /// 修改备注
 
   /// 状态管理
-  deleted               Boolean                   @default(false)
+  deleted     Boolean  @default(false)
   /// 注意：最新版本通过 create_time 排序获取；版本号可通过查询时排序后的序号计算
-  create_time           DateTime                  @default(now()) @map("create_time") @db.Timestamptz
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
 
   /// 关联关系
-  form_config           RsvpFormConfigEntity      @relation(fields: [form_config_id], references: [id])
-  contact               RsvpContactEntity?          @relation(fields: [contact_id], references: [id])
+  form_config RsvpFormConfigEntity @relation(fields: [form_config_id], references: [id])
+  contact     RsvpContactEntity?   @relation(fields: [contact_id], references: [id])
 
   @@index([form_config_id], map: "IDX_rsvp_submission_form_config_id")
   @@index([visitor_id], map: "IDX_rsvp_submission_visitor_id")
@@ -208,24 +238,24 @@ model RsvpSubmissionEntity {
 
 /// RSVP 访客浏览记录实体
 model RsvpViewLogEntity {
-  id                    String                @id @default(cuid()) @db.Text
-  form_config_id        String                @map("form_config_id") @db.Text /// 关联的表单配置ID
-  visitor_id            String?               @map("visitor_id") @db.Text /// 访客唯一标识
+  id             String  @id @default(cuid()) @db.Text
+  form_config_id String  @map("form_config_id") @db.Text /// 关联的表单配置ID
+  visitor_id     String? @map("visitor_id") @db.Text /// 访客唯一标识
 
   /// 访问信息
-  ip_address            String?               @map("ip_address") @db.VarChar /// IP地址
-  user_agent            String?               @map("user_agent") @db.Text /// User-Agent
-  referer               String?               @db.Text /// 来源页面
-  device_type           String?               @map("device_type") @db.VarChar /// 设备类型（mobile、desktop、tablet等）
+  ip_address  String? @map("ip_address") @db.VarChar /// IP地址
+  user_agent  String? @map("user_agent") @db.Text /// User-Agent
+  referer     String? @db.Text /// 来源页面
+  device_type String? @map("device_type") @db.VarChar /// 设备类型（mobile、desktop、tablet等）
 
   /// 访问时长（秒）
-  view_duration         Int?                  @map("view_duration") @db.Integer /// 页面停留时长（秒）
+  view_duration Int? @map("view_duration") @db.Integer /// 页面停留时长（秒）
 
   /// 时间戳
-  create_time           DateTime              @default(now()) @map("create_time") @db.Timestamptz
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
 
   /// 关联关系
-  form_config           RsvpFormConfigEntity @relation(fields: [form_config_id], references: [id])
+  form_config RsvpFormConfigEntity @relation(fields: [form_config_id], references: [id])
 
   @@index([form_config_id], map: "IDX_rsvp_view_log_form_config_id")
   @@index([visitor_id], map: "IDX_rsvp_view_log_visitor_id")
@@ -237,20 +267,20 @@ model RsvpViewLogEntity {
 
 /// RSVP 联系人实体
 model RsvpContactEntity {
-  id                    String                  @id @default(cuid()) @db.Text
-  name                  String                  @db.VarChar /// 联系人姓名
-  email                 String?                 @db.VarChar /// 邮箱
-  phone                 String?                 @db.VarChar /// 电话
+  id    String  @id @default(cuid()) @db.Text
+  name  String  @db.VarChar /// 联系人姓名
+  email String? @db.VarChar /// 邮箱
+  phone String? @db.VarChar /// 电话
 
   /// 备注：至少需要 email 或 phone 其中一个
 
   /// 状态管理
-  deleted               Boolean                 @default(false)
-  create_time           DateTime                @default(now()) @map("create_time") @db.Timestamptz
-  update_time           DateTime                @default(now()) @updatedAt @map("update_time") @db.Timestamptz
+  deleted     Boolean  @default(false)
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
+  update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz
 
   /// 关联关系
-  submissions           RsvpSubmissionEntity[]
+  submissions RsvpSubmissionEntity[]
 
   @@unique([email], map: "UQ_rsvp_contact_email")
   @@unique([phone], map: "UQ_rsvp_contact_phone")
@@ -427,16 +457,16 @@ enum boost_record_type_enum {
 
 /// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
 enum group_buy_record_status_enum {
-  zero   @map("0")
-  one    @map("1")
-  two    @map("2")
-  three  @map("3")
+  zero  @map("0")
+  one   @map("1")
+  two   @map("2")
+  three @map("3")
 }
 
 /// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
 enum sub_boost_activity_status_enum {
-  zero   @map("0")
-  one    @map("1")
-  two    @map("2")
-  three  @map("3")
+  zero  @map("0")
+  one   @map("1")
+  two   @map("2")
+  three @map("3")
 }

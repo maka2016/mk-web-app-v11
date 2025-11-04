@@ -68,5 +68,8 @@
   "gitlens.statusBar.enabled": true,
   "gitlens.statusBar.alignment": "left",
   "gitlens.statusBar.command": "gitlens.showQuickRepoStatus",
-  "kiroAgent.configureMCP": "Disabled"
+  "kiroAgent.configureMCP": "Disabled",
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  }
 }

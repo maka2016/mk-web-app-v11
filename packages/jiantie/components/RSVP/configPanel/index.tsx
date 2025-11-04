@@ -1,35 +1,18 @@
 'use client';
 import { BtnLite } from '@/components/GridV3/shared/style-comps';
-import { trpc } from '@/utils/trpc';
 import { EditorSDK, LayerElemItem } from '@mk/works-store/types';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Input } from '@workspace/ui/components/input';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import { Separator } from '@workspace/ui/components/separator';
+import { Switch } from '@workspace/ui/components/switch';
 import cls from 'classnames';
-import { useEffect, useMemo, useState } from 'react';
-import { ResponsiveDialog as LocalDialog } from '../../Drawer';
-import { RSVPAttrs } from '../type';
+import { useMemo, useState } from 'react';
+import { useRSVP } from '../RSVPContext';
+import { FieldType, RSVPAttrs, RSVPField, RSVPFieldOption } from '../type';
 
-type FieldType = 'text' | 'number' | 'textarea' | 'radio' | 'checkbox';
-
-interface RSVPFieldOption {
-  label: string;
-  value: string;
-}
-
-interface RSVPField {
-  id: string;
-  type: FieldType;
-  label: string;
-  required?: boolean;
-  placeholder?: string;
-  options?: RSVPFieldOption[]; // for radio/checkbox
-  defaultValue?: any;
-}
-
-interface Props {
+interface BaseProps {
   attrs: RSVPAttrs;
   editorSDK?: EditorSDK;
   layer: LayerElemItem;
@@ -37,27 +20,27 @@ interface Props {
 
 export default function RSVPConfigPanelTrigger({
   attrs,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   editorSDK,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   layer,
-}: Props) {
-  const [showTextEditDialog, setShowTextEditDialog] = useState(false);
+}: BaseProps) {
   return (
     <>
       <BtnLite
         title='RSVP配置'
         onClick={() => {
-          setShowTextEditDialog(true);
+          const trigger = document.getElementById(
+            `hidden_trigger_for_rsvp_config_panel_${attrs.formConfigId}`
+          );
+          if (trigger) {
+            trigger.click();
+          }
         }}
       >
         <Icon name='form-fill' size={20} />
         <span>RSVP配置</span>
       </BtnLite>
-      <LocalDialog
-        isOpen={showTextEditDialog}
-        onOpenChange={setShowTextEditDialog}
-      >
-        <RSVPConfigPanel attrs={attrs} editorSDK={editorSDK} layer={layer} />
-      </LocalDialog>
     </>
   );
 }
@@ -70,86 +53,23 @@ const fieldTypes = [
   { label: '多选', value: 'checkbox' as FieldType },
 ];
 
-function RSVPConfigPanel({ attrs }: Props) {
-  const { worksId } = attrs;
-  const [loading, setLoading] = useState<boolean>(true);
+export function RSVPConfigPanel() {
+  const rsvp = useRSVP();
+  const {
+    config,
+    configId,
+    title,
+    fields,
+    error,
+    setTitle,
+    setConfig,
+    setFields,
+    handleSave,
+  } = rsvp;
+
   const [saving, setSaving] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [configId, setConfigId] = useState<string | null>(null);
-  const [title, setTitle] = useState<string>('我要报名');
-  const [desc, setDesc] = useState<string>('');
-  const [enabled, setEnabled] = useState<boolean>(true);
-  const [allowMultiple, setAllowMultiple] = useState<boolean>(false);
-  const [requireApproval, setRequireApproval] = useState<boolean>(true);
-  const [maxSubmitCount, setMaxSubmitCount] = useState<number | ''>('');
-  const [submitDeadline, setSubmitDeadline] = useState<string>('');
-  const [fields, setFields] = useState<RSVPField[]>([]);
-
-  const [showFieldEditor, setShowFieldEditor] = useState(false);
+  const [showFieldEditor, setShowFieldEditor] = useState<boolean>(false);
   const [editingField, setEditingField] = useState<RSVPField | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const existing = await trpc.rsvp.getFormConfigByWorksId.query({
-          works_id: worksId,
-        });
-        if (!mounted) return;
-        if (existing) {
-          setConfigId((existing as any).id);
-          setTitle((existing as any).title || '');
-          setDesc((existing as any).desc || '');
-          setEnabled((existing as any).enabled !== false);
-          setAllowMultiple(Boolean((existing as any).allow_multiple_submit));
-          setRequireApproval((existing as any).require_approval !== false);
-          setMaxSubmitCount((existing as any).max_submit_count ?? '');
-          const deadline = (existing as any).submit_deadline
-            ? new Date((existing as any).submit_deadline)
-            : null;
-          setSubmitDeadline(deadline ? toLocalDateTimeValue(deadline) : '');
-          setFields(
-            ((existing as any).form_fields?.fields || []) as RSVPField[]
-          );
-        } else {
-          // defaults
-          setEnabled(true);
-          setRequireApproval(true);
-          setAllowMultiple(false);
-          setFields([]);
-        }
-      } catch (e: any) {
-        setError(String(e?.message || '加载失败'));
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [worksId]);
-
-  const addField = () => {
-    setEditingField({
-      id: '',
-      type: 'text',
-      label: '未命名字段',
-      required: false,
-      placeholder: '',
-    });
-    setShowFieldEditor(true);
-  };
-
-  const removeField = (id: string) => {
-    setFields(prev => prev.filter(f => f.id !== id));
-  };
-
-  const updateField = (id: string, patch: Partial<RSVPField>) => {
-    setFields(prev => prev.map(f => (f.id === id ? { ...f, ...patch } : f)));
-  };
 
   const ensureOptions = (f: RSVPField): RSVPField => {
     if (f.type === 'radio' || f.type === 'checkbox') {
@@ -167,40 +87,50 @@ function RSVPConfigPanel({ attrs }: Props) {
     return { ...f, options: undefined };
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    setError(null);
-    try {
-      const payload = {
-        works_id: worksId,
-        title: title || '我要报名',
-        desc,
-        form_fields: { fields: fields.map(ensureOptions) },
-        allow_multiple_submit: allowMultiple,
-        require_approval: requireApproval,
-        max_submit_count: maxSubmitCount === '' ? null : Number(maxSubmitCount),
-        submit_deadline: submitDeadline ? new Date(submitDeadline) : null,
-        enabled: enabled !== false,
-      } as any;
+  const previewFields = useMemo(
+    () => (config ? fields.map(ensureOptions) : []),
+    [fields, config]
+  );
 
-      const saved = await trpc.rsvp.upsertFormConfig.mutate(payload);
-      setConfigId((saved as any).id);
-    } catch (e: any) {
-      setError(String(e?.message || '保存失败'));
+  if (!config) {
+    return (
+      <div className='w-full py-4 text-center text-sm text-gray-500'>
+        配置加载中...
+      </div>
+    );
+  }
+
+  const addField = () => {
+    setEditingField({
+      id: '',
+      type: 'text',
+      label: '未命名字段',
+      required: false,
+      placeholder: '',
+    });
+    setShowFieldEditor(true);
+  };
+
+  const removeField = (id: string) => {
+    setFields(fields.filter((f: RSVPField) => f.id !== id));
+  };
+
+  const updateField = (id: string, patch: Partial<RSVPField>) => {
+    setFields(
+      fields.map((f: RSVPField) => (f.id === id ? { ...f, ...patch } : f))
+    );
+  };
+
+  const handleSaveClick = async () => {
+    setSaving(true);
+    try {
+      await handleSave();
+    } catch {
+      // 错误已在 Context 中处理
     } finally {
       setSaving(false);
     }
   };
-
-  const previewFields = useMemo(() => fields.map(ensureOptions), [fields]);
-
-  if (loading) {
-    return (
-      <div className='w-full py-4 text-center text-sm text-gray-500'>
-        加载中...
-      </div>
-    );
-  }
 
   return (
     <div className='relative'>
@@ -238,8 +168,13 @@ function RSVPConfigPanel({ attrs }: Props) {
             </div>
             <textarea
               className='h-[72px] resize-none w-full border-none text-xs rounded-md px-3 py-2 outline-none bg-[#F3F3F5]'
-              value={desc}
-              onChange={e => setDesc(e.target.value)}
+              value={config.desc ?? ''}
+              onChange={e =>
+                setConfig({
+                  ...config,
+                  desc: e.target.value || null,
+                })
+              }
               placeholder='补充说明（可选）'
             />
           </div>
@@ -250,60 +185,21 @@ function RSVPConfigPanel({ attrs }: Props) {
             提交规则
           </div>
           <div className='flex items-center gap-4 my-2'>
-            <label className='flex items-center gap-1 text-xs leading-[18px] text-[#09090B] cursor-pointer'>
-              <input
-                type='checkbox'
-                checked={enabled}
-                onChange={e => setEnabled(e.target.checked)}
-              />
-              开启
-            </label>
-            <label className='flex items-center gap-1 text-xs leading-[18px] text-[#09090B] cursor-pointer'>
-              <input
-                type='checkbox'
-                checked={allowMultiple}
-                onChange={e => setAllowMultiple(e.target.checked)}
-              />
-              允许多次提交
-            </label>
-            <label className='flex items-center gap-1 text-xs leading-[18px] text-[#09090B] cursor-pointer'>
-              <input
-                type='checkbox'
-                checked={requireApproval}
-                onChange={e => setRequireApproval(e.target.checked)}
-              />
-              需要审核
-            </label>
-          </div>
-
-          <div className='flex items-center gap-3 mt-3'>
-            <div className='flex-1'>
-              <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
-                最大提交次数
-              </div>
-              <Input
-                className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
-                type='number'
-                value={maxSubmitCount}
-                onChange={e =>
-                  setMaxSubmitCount(
-                    e.target.value === '' ? '' : Number(e.target.value)
-                  )
+            <div className='flex items-center gap-2 text-xs leading-[18px] text-[#09090B]'>
+              <Switch
+                checked={config.enabled ?? true}
+                onCheckedChange={checked =>
+                  setConfig({ ...config, enabled: checked })
                 }
-                placeholder='留空不限'
               />
+              <span>开启</span>
             </div>
-            <div className='flex-1'>
-              <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
-                截止时间
-              </div>
-              <Input
-                className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
-                type='datetime-local'
-                value={submitDeadline}
-                onChange={e => setSubmitDeadline(e.target.value)}
-              />
-            </div>
+          </div>
+          <div className='text-xs text-black/60 mt-2'>
+            <div>• 允许多次提交：已开启（默认）</div>
+            <div>• 需要审核：已关闭（默认）</div>
+            <div>• 最大提交次数：无限（默认）</div>
+            <div>• 截止时间：无限期（默认）</div>
           </div>
         </div>
 
@@ -323,7 +219,7 @@ function RSVPConfigPanel({ attrs }: Props) {
             </Button>
           </div>
           <div className='flex flex-col gap-2'>
-            {fields.map((f, index) => (
+            {fields.map((f: RSVPField, index: number) => (
               <FieldItem
                 key={f.id}
                 field={f}
@@ -344,13 +240,13 @@ function RSVPConfigPanel({ attrs }: Props) {
           </div>
           <div>
             <div className='font-medium text-base leading-6'>{title}</div>
-            {desc ? (
+            {config.desc ? (
               <div className='text-[13px] leading-5 text-black/60 mt-1'>
-                {desc}
+                {config.desc}
               </div>
             ) : null}
             <div className='mt-4 space-y-3'>
-              {previewFields.map(f => (
+              {previewFields.map((f: RSVPField) => (
                 <div key={f.id} className='mb-3'>
                   <div className='font-medium text-sm leading-5 mb-2'>
                     {f.label}
@@ -375,7 +271,7 @@ function RSVPConfigPanel({ attrs }: Props) {
                     />
                   ) : f.type === 'radio' ? (
                     <div className='space-y-1'>
-                      {f.options?.map(opt => (
+                      {f.options?.map((opt: RSVPFieldOption) => (
                         <label
                           key={opt.value}
                           className='flex items-center gap-2 text-sm'
@@ -387,7 +283,7 @@ function RSVPConfigPanel({ attrs }: Props) {
                     </div>
                   ) : f.type === 'checkbox' ? (
                     <div className='space-y-1'>
-                      {f.options?.map(opt => (
+                      {f.options?.map((opt: RSVPFieldOption) => (
                         <label
                           key={opt.value}
                           className='flex items-center gap-2 text-sm'
@@ -413,7 +309,7 @@ function RSVPConfigPanel({ attrs }: Props) {
       </div>
 
       <div className='p-4 border-t border-[#e4e4e7] flex items-center gap-3'>
-        <Button disabled={saving} onClick={handleSave} size='lg'>
+        <Button disabled={saving} onClick={handleSaveClick} size='lg'>
           {saving ? '保存中...' : '保存配置'}
         </Button>
         {configId ? (
@@ -426,30 +322,17 @@ function RSVPConfigPanel({ attrs }: Props) {
         field={editingField}
         open={showFieldEditor}
         onOpenChange={setShowFieldEditor}
-        onSave={field => {
-          if (field.id && fields.find(f => f.id === field.id)) {
+        onSave={(field: RSVPField) => {
+          if (field.id && fields.find((f: RSVPField) => f.id === field.id)) {
             updateField(field.id, field);
           } else {
-            setFields(prev => [
-              ...prev,
-              { ...field, id: `field_${Date.now()}` },
-            ]);
+            setFields([...fields, { ...field, id: `field_${Date.now()}` }]);
           }
           setShowFieldEditor(false);
         }}
       />
     </div>
   );
-}
-
-function toLocalDateTimeValue(date: Date) {
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  const yyyy = date.getFullYear();
-  const MM = pad(date.getMonth() + 1);
-  const dd = pad(date.getDate());
-  const hh = pad(date.getHours());
-  const mm = pad(date.getMinutes());
-  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
 }
 
 interface FieldItemProps {
@@ -515,7 +398,6 @@ function FieldEditorDialog({
   onOpenChange,
   onSave,
 }: FieldEditorDialogProps) {
-  // Use field as initial value directly
   const initialField = field || {
     id: '',
     type: 'text',
