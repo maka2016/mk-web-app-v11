@@ -44,7 +44,6 @@ export default function DesignerToolHeader() {
   const [showDownloadManager, setShowDownloadManager] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
   const [showMarketplaceConfig, setShowMarketplaceConfig] = useState(false);
-  const appid = queryToObj().appid;
 
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -143,28 +142,6 @@ export default function DesignerToolHeader() {
           >
             {isTemplateMode ? '模版制作模式' : '主题制作模式'}
           </div>
-          {/* <div
-            className={cls(styles.designer, 'cursor-pointer hover:underline')}
-            onClick={() => {
-              // 通过url跳转到theme2
-              const url = new URL(window.location.href);
-              url.searchParams.set('tab', 'theme2');
-              window.history.replaceState({}, '', url.toString());
-            }}
-          >
-            主题包V2：{themePackV2?.name}
-          </div> */}
-          {/* <div
-            className={cls(styles.designer, 'cursor-pointer hover:underline')}
-            onClick={() => {
-              // 通过url跳转到theme2
-              const url = new URL(window.location.href);
-              url.searchParams.set('tab', 'styling_library');
-              window.history.replaceState({}, '', url.toString());
-            }}
-          >
-            已选风格：{stylePackV2?.name || '未保存'}
-          </div> */}
           <Popover open={showTitleEditor} onOpenChange={setShowTitleEditor}>
             <PopoverTrigger asChild>
               <div

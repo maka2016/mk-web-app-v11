@@ -54,15 +54,22 @@ const RsvpSubmissionStatusChangeInput = z.object({
   reject_reason: z.string().optional(),
 });
 
-const RsvpViewLogCreateInput = z.object({
+const RsvpActionLogCreateInput = z.object({
   form_config_id: z.string(),
+  contact_id: z.string().optional(),
   visitor_id: z.string().optional(),
+  action_type: z.enum(['view_page', 'submit', 'resubmit']),
+  submission_id: z.string().optional(),
   ip_address: z.string().optional(),
   user_agent: z.string().optional(),
   referer: z.string().optional(),
   device_type: z.string().optional(),
   view_duration: z.number().int().optional(),
+  metadata: z.any().optional(),
 });
+
+// 保留旧的 schema 名称以兼容
+const RsvpViewLogCreateInput = RsvpActionLogCreateInput;
 
 const RsvpContactUpsertInput = z.object({
   id: z.string().optional(),
@@ -155,8 +162,9 @@ export const rsvpRouter = router({
 
       let finalContactId = input.contact_id;
 
-      // 如果提交了手机号，自动创建/更新联系人
-      if (input.will_attend && input.submission_data) {
+      // 优先级：contact_id > 手机号查找 > 创建新联系人
+      // 如果已经有 contact_id（专属链接），直接使用，不再查找手机号
+      if (!finalContactId && input.will_attend && input.submission_data) {
         const submissionData = input.submission_data as Record<string, any>;
 
         // 从提交数据中提取手机号
@@ -189,6 +197,9 @@ export const rsvpRouter = router({
           // 优先从 _guestInfo 中获取
           if (submissionData._guestInfo?.guestName) {
             name = submissionData._guestInfo.guestName;
+          } else if (submissionData._inviteeInfo?.inviteeName) {
+            // 从被邀请人信息中获取
+            name = submissionData._inviteeInfo.inviteeName;
           } else {
             // 查找姓名字段
             for (const [key, value] of Object.entries(submissionData)) {
@@ -213,7 +224,7 @@ export const rsvpRouter = router({
           });
 
           if (existing) {
-            // 更新现有联系人
+            // 更新现有联系人的姓名
             const updated = await ctx.prisma.rsvpContactEntity.update({
               where: { id: existing.id },
               data: { name: name },
@@ -222,7 +233,11 @@ export const rsvpRouter = router({
           } else {
             // 创建新联系人
             const created = await ctx.prisma.rsvpContactEntity.create({
-              data: { phone: phone, name: name },
+              data: {
+                phone: phone,
+                name: name,
+                form_config_id: input.form_config_id,
+              },
             });
             finalContactId = created.id;
           }
@@ -249,6 +264,22 @@ export const rsvpRouter = router({
         data: { submission_group_id: created.id },
       });
 
+      // 记录操作日志 - 首次提交
+      try {
+        await ctx.prisma.rsvpViewLogEntity.create({
+          data: {
+            form_config_id: input.form_config_id,
+            contact_id: finalContactId,
+            visitor_id: input.visitor_id,
+            action_type: 'submit',
+            submission_id: updated.id,
+          },
+        });
+      } catch (error) {
+        // 日志记录失败不影响提交
+        console.error('Failed to create action log:', error);
+      }
+
       // 返回包含 contact_id 的完整记录
       return ctx.prisma.rsvpSubmissionEntity.findUnique({
         where: { id: updated.id },
@@ -271,7 +302,7 @@ export const rsvpRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: '提交记录不存在' });
       }
 
-      return ctx.prisma.rsvpSubmissionEntity.create({
+      const newVersion = await ctx.prisma.rsvpSubmissionEntity.create({
         data: {
           form_config_id: latest.form_config_id,
           visitor_id: latest.visitor_id,
@@ -284,8 +315,27 @@ export const rsvpRouter = router({
           operator_name: input.operator_name,
           remark: input.remark,
           status: latest.status, // 版本化修改不改变审核状态
+          will_attend: latest.will_attend,
         },
       });
+
+      // 记录操作日志 - 重新提交
+      try {
+        await ctx.prisma.rsvpViewLogEntity.create({
+          data: {
+            form_config_id: latest.form_config_id,
+            contact_id: latest.contact_id,
+            visitor_id: latest.visitor_id,
+            action_type: 'resubmit',
+            submission_id: newVersion.id,
+          },
+        });
+      } catch (error) {
+        // 日志记录失败不影响提交
+        console.error('Failed to create action log:', error);
+      }
+
+      return newVersion;
     }),
 
   approveOrRejectSubmission: protectedProcedure
@@ -680,5 +730,390 @@ export const rsvpRouter = router({
       }
 
       return Array.from(latestByGroup.values());
+    }),
+
+  // 查询该 RSVP 下的所有提交记录（包含嘉宾信息）
+  getAllSubmissions: protectedProcedure
+    .input(
+      z.object({
+        form_config_id: z.string(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // 查询所有提交记录
+      const submissions = await ctx.prisma.rsvpSubmissionEntity.findMany({
+        where: {
+          form_config_id: input.form_config_id,
+          deleted: false,
+        },
+        orderBy: { create_time: 'desc' },
+      });
+
+      // 获取所有相关的 contact_id
+      const contactIds = [
+        ...new Set(
+          submissions.map(s => s.contact_id).filter(id => id !== null)
+        ),
+      ];
+
+      // 批量查询联系人信息
+      const contacts = await ctx.prisma.rsvpContactEntity.findMany({
+        where: {
+          id: { in: contactIds as string[] },
+        },
+      });
+
+      // 创建 contact_id 到 contact 的映射
+      const contactMap = new Map(contacts.map(c => [c.id, c]));
+      console.log('contactMap', contactMap);
+
+      // 为每个提交记录添加嘉宾信息
+      return submissions.map(submission => {
+        const contact = submission.contact_id
+          ? contactMap.get(submission.contact_id)
+          : null;
+        return {
+          ...submission,
+          invitee_name: contact?.name || '未知嘉宾',
+          invitee_email: contact?.email,
+          invitee_phone: contact?.phone,
+        };
+      });
+    }),
+
+  // ===== 操作日志 =====
+  // 创建操作日志（访问页面）
+  createActionLog: publicProcedure
+    .input(RsvpActionLogCreateInput)
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.rsvpViewLogEntity.create({
+        data: {
+          form_config_id: input.form_config_id,
+          contact_id: input.contact_id,
+          visitor_id: input.visitor_id,
+          action_type: input.action_type,
+          submission_id: input.submission_id,
+          ip_address: input.ip_address,
+          user_agent: input.user_agent,
+          referer: input.referer,
+          device_type: input.device_type,
+          view_duration: input.view_duration,
+          metadata: input.metadata,
+        },
+      });
+    }),
+
+  // 查询操作日志
+  getActionLogs: protectedProcedure
+    .input(
+      z.object({
+        form_config_id: z.string(),
+        contact_id: z.string().optional(),
+        action_type: z.enum(['view_page', 'submit', 'resubmit']).optional(),
+        skip: z.number().optional(),
+        take: z.number().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const where: any = {
+        form_config_id: input.form_config_id,
+      };
+
+      if (input.contact_id) {
+        where.contact_id = input.contact_id;
+      }
+
+      if (input.action_type) {
+        where.action_type = input.action_type;
+      }
+
+      const logs = await ctx.prisma.rsvpViewLogEntity.findMany({
+        where,
+        orderBy: { create_time: 'desc' },
+        skip: input.skip,
+        take: input.take,
+        include: {
+          contact: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+          submission: {
+            select: {
+              id: true,
+              will_attend: true,
+              status: true,
+            },
+          },
+        },
+      });
+
+      return logs;
+    }),
+
+  // ===== 通知中心 =====
+  // 获取用户的所有 RSVP 通知（包含提交记录）
+  getMyNotifications: protectedProcedure
+    .input(
+      z.object({
+        user_id: z.string(),
+        unread_only: z.boolean().optional(),
+        skip: z.number().optional(),
+        take: z.number().optional().default(50),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // 1. 查询用户的所有 RSVP 表单（通过 works_id 关联）
+      // 这里假设 works 表有 user_id 字段，实际需要根据你的数据结构调整
+      const formConfigs = await ctx.prisma.rsvpFormConfigEntity.findMany({
+        where: {
+          deleted: false,
+          // TODO: 需要通过 works 表关联查询用户的表单
+          // 暂时返回所有表单，实际应该加上 user_id 过滤
+        },
+        select: {
+          id: true,
+          works_id: true,
+          title: true,
+        },
+      });
+
+      const formConfigIds = formConfigs.map(f => f.id);
+
+      if (formConfigIds.length === 0) {
+        return {
+          notifications: [],
+          total: 0,
+          unreadCount: 0,
+        };
+      }
+
+      // 2. 查询这些表单的所有提交操作日志
+      const actionLogs = await ctx.prisma.rsvpViewLogEntity.findMany({
+        where: {
+          form_config_id: { in: formConfigIds },
+          action_type: { in: ['submit', 'resubmit'] },
+          submission_id: { not: null },
+        },
+        orderBy: { create_time: 'desc' },
+        include: {
+          contact: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+          submission: {
+            select: {
+              id: true,
+              will_attend: true,
+              status: true,
+              submission_data: true,
+              create_time: true,
+            },
+          },
+          form_config: {
+            select: {
+              id: true,
+              works_id: true,
+              title: true,
+            },
+          },
+        },
+      });
+
+      // 3. 查询已读记录
+      const submissionIds = actionLogs
+        .map(log => log.submission_id)
+        .filter(id => id !== null) as string[];
+
+      const readRecords = await ctx.prisma.rsvpNotificationReadEntity.findMany({
+        where: {
+          user_id: input.user_id,
+          submission_id: { in: submissionIds },
+        },
+      });
+
+      const readSubmissionIds = new Set(readRecords.map(r => r.submission_id));
+
+      // 4. 组装通知数据
+      let notifications = actionLogs.map(log => ({
+        id: log.id,
+        action_type: log.action_type,
+        create_time: log.create_time,
+        form_config: log.form_config,
+        contact: log.contact,
+        submission: log.submission,
+        is_read: log.submission_id
+          ? readSubmissionIds.has(log.submission_id)
+          : false,
+      }));
+
+      // 5. 如果只要未读的，过滤
+      if (input.unread_only) {
+        notifications = notifications.filter(n => !n.is_read);
+      }
+
+      const total = notifications.length;
+      const unreadCount = notifications.filter(n => !n.is_read).length;
+
+      // 6. 分页
+      if (input.skip !== undefined || input.take !== undefined) {
+        const skip = input.skip || 0;
+        const take = input.take || 50;
+        notifications = notifications.slice(skip, skip + take);
+      }
+
+      return {
+        notifications,
+        total,
+        unreadCount,
+      };
+    }),
+
+  // 标记通知为已读
+  markNotificationAsRead: protectedProcedure
+    .input(
+      z.object({
+        user_id: z.string(),
+        submission_ids: z.array(z.string()),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // 使用 upsert 避免重复插入
+      const results = await Promise.all(
+        input.submission_ids.map(submissionId =>
+          ctx.prisma.rsvpNotificationReadEntity.upsert({
+            where: {
+              user_id_submission_id: {
+                user_id: input.user_id,
+                submission_id: submissionId,
+              },
+            },
+            create: {
+              user_id: input.user_id,
+              submission_id: submissionId,
+            },
+            update: {
+              read_time: new Date(),
+            },
+          })
+        )
+      );
+
+      return { count: results.length };
+    }),
+
+  // 标记所有通知为已读
+  markAllNotificationsAsRead: protectedProcedure
+    .input(
+      z.object({
+        user_id: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // 查询用户的所有表单
+      const formConfigs = await ctx.prisma.rsvpFormConfigEntity.findMany({
+        where: {
+          deleted: false,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const formConfigIds = formConfigs.map(f => f.id);
+
+      // 查询所有提交记录
+      const submissions = await ctx.prisma.rsvpSubmissionEntity.findMany({
+        where: {
+          form_config_id: { in: formConfigIds },
+          deleted: false,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const submissionIds = submissions.map(s => s.id);
+
+      // 批量标记为已读
+      const results = await Promise.all(
+        submissionIds.map(submissionId =>
+          ctx.prisma.rsvpNotificationReadEntity.upsert({
+            where: {
+              user_id_submission_id: {
+                user_id: input.user_id,
+                submission_id: submissionId,
+              },
+            },
+            create: {
+              user_id: input.user_id,
+              submission_id: submissionId,
+            },
+            update: {
+              read_time: new Date(),
+            },
+          })
+        )
+      );
+
+      return { count: results.length };
+    }),
+
+  // 获取未读通知数量
+  getUnreadNotificationCount: protectedProcedure
+    .input(
+      z.object({
+        user_id: z.string(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // 查询用户的所有表单
+      const formConfigs = await ctx.prisma.rsvpFormConfigEntity.findMany({
+        where: {
+          deleted: false,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const formConfigIds = formConfigs.map(f => f.id);
+
+      if (formConfigIds.length === 0) {
+        return { count: 0 };
+      }
+
+      // 查询所有提交操作
+      const actionLogs = await ctx.prisma.rsvpViewLogEntity.findMany({
+        where: {
+          form_config_id: { in: formConfigIds },
+          action_type: { in: ['submit', 'resubmit'] },
+          submission_id: { not: null },
+        },
+        select: {
+          submission_id: true,
+        },
+      });
+
+      const submissionIds = [
+        ...new Set(actionLogs.map(log => log.submission_id).filter(Boolean)),
+      ] as string[];
+
+      // 查询已读记录
+      const readCount = await ctx.prisma.rsvpNotificationReadEntity.count({
+        where: {
+          user_id: input.user_id,
+          submission_id: { in: submissionIds },
+        },
+      });
+
+      return { count: submissionIds.length - readCount };
     }),
 });

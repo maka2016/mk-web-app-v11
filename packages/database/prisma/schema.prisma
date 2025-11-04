@@ -168,7 +168,7 @@ model RsvpFormConfigEntity {
 
   /// 关联关系
   submissions RsvpSubmissionEntity[]
-  view_logs   RsvpViewLogEntity[]
+  view_logs   RsvpViewLogEntity[] /// 操作记录（访问、提交、重新提交等）
   invitees    RsvpContactEntity[] /// 该表单的嘉宾列表
 
   @@index([works_id], map: "IDX_rsvp_form_config_works_id")
@@ -223,6 +223,7 @@ model RsvpSubmissionEntity {
   /// 关联关系
   form_config RsvpFormConfigEntity @relation(fields: [form_config_id], references: [id])
   contact     RsvpContactEntity?   @relation(fields: [contact_id], references: [id])
+  action_logs RsvpViewLogEntity[] /// 操作记录
 
   @@index([form_config_id], map: "IDX_rsvp_submission_form_config_id")
   @@index([visitor_id], map: "IDX_rsvp_submission_visitor_id")
@@ -236,11 +237,18 @@ model RsvpSubmissionEntity {
   @@map("rsvp_submission_entity")
 }
 
-/// RSVP 访客浏览记录实体
+/// RSVP 操作日志实体（访问、提交、重新提交等）
 model RsvpViewLogEntity {
   id             String  @id @default(cuid()) @db.Text
   form_config_id String  @map("form_config_id") @db.Text /// 关联的表单配置ID
+  contact_id     String? @map("contact_id") @db.Text /// 关联的嘉宾ID（可选，公开访客可能没有）
   visitor_id     String? @map("visitor_id") @db.Text /// 访客唯一标识
+
+  /// 操作类型
+  action_type String @default("view_page") @map("action_type") @db.VarChar /// 操作类型：view_page（访问页面）、submit（提交）、resubmit（重新提交）
+
+  /// 关联的提交记录（仅用于 submit 和 resubmit）
+  submission_id String? @map("submission_id") @db.Text
 
   /// 访问信息
   ip_address  String? @map("ip_address") @db.VarChar /// IP地址
@@ -248,17 +256,24 @@ model RsvpViewLogEntity {
   referer     String? @db.Text /// 来源页面
   device_type String? @map("device_type") @db.VarChar /// 设备类型（mobile、desktop、tablet等）
 
-  /// 访问时长（秒）
+  /// 访问时长（秒）- 仅用于 view_page
   view_duration Int? @map("view_duration") @db.Integer /// 页面停留时长（秒）
+
+  /// 操作详情
+  metadata Json? @db.JsonB /// 额外的元数据
 
   /// 时间戳
   create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
 
   /// 关联关系
-  form_config RsvpFormConfigEntity @relation(fields: [form_config_id], references: [id])
+  form_config RsvpFormConfigEntity  @relation(fields: [form_config_id], references: [id])
+  contact     RsvpContactEntity?    @relation(fields: [contact_id], references: [id])
+  submission  RsvpSubmissionEntity? @relation(fields: [submission_id], references: [id])
 
   @@index([form_config_id], map: "IDX_rsvp_view_log_form_config_id")
+  @@index([contact_id], map: "IDX_rsvp_view_log_contact_id")
   @@index([visitor_id], map: "IDX_rsvp_view_log_visitor_id")
+  @@index([action_type], map: "IDX_rsvp_view_log_action_type")
   @@index([create_time], map: "IDX_rsvp_view_log_create_time")
   @@index([ip_address], map: "IDX_rsvp_view_log_ip_address")
   @@index([id], map: "IDX_rsvp_view_log_id")
@@ -284,6 +299,7 @@ model RsvpContactEntity {
 
   /// 关联关系
   submissions RsvpSubmissionEntity[]
+  action_logs RsvpViewLogEntity[] /// 操作记录
   form_config RsvpFormConfigEntity?  @relation(fields: [form_config_id], references: [id])
 
   @@unique([email], map: "UQ_rsvp_contact_email")
@@ -295,6 +311,22 @@ model RsvpContactEntity {
   @@index([deleted], map: "IDX_rsvp_contact_deleted")
   @@index([id], map: "IDX_rsvp_contact_id")
   @@map("rsvp_contact_entity")
+}
+
+/// RSVP 通知已读记录表
+model RsvpNotificationReadEntity {
+  id            String  @id @default(cuid()) @db.Text
+  user_id       String  @map("user_id") @db.Text /// 用户ID
+  submission_id String  @map("submission_id") @db.Text /// 提交记录ID
+  action_log_id String? @map("action_log_id") @db.Text /// 操作日志ID（可选）
+
+  /// 时间戳
+  read_time DateTime @default(now()) @map("read_time") @db.Timestamptz /// 已读时间
+
+  @@unique([user_id, submission_id], map: "UQ_rsvp_notification_user_submission")
+  @@index([user_id], map: "IDX_rsvp_notification_user_id")
+  @@index([submission_id], map: "IDX_rsvp_notification_submission_id")
+  @@map("rsvp_notification_read_entity")
 }
 
 /// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用

@@ -83,7 +83,7 @@ const Watermark = (props: Props) => {
         display: 'block',
       }}
     >
-      <img src={sloganVersion} className={`slogan ${appid}`} />
+      <img src={sloganVersion} className={`slogan ${appid}`} alt='' />
     </WatermarkDiv>
   );
 };

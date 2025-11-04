@@ -110,8 +110,16 @@ const TabLayout = (props: Props) => {
         type: 'URL',
       });
     } else {
-      router.push(`/mobile/notification-center?appid=${appid}`);
+      router.push(`/mobile/rsvp/notifications?appid=${appid}`);
     }
+    // if (APPBridge.judgeIsInApp()) {
+    //   APPBridge.navToPage({
+    //     url: `${location.origin}/mobile/notification-center?is_full_screen=1`,
+    //     type: 'URL',
+    //   });
+    // } else {
+    //   router.push(`/mobile/notification-center?appid=${appid}`);
+    // }
   };
 
   // 渲染每个 tab 对应的页面

@@ -261,12 +261,41 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
       const vid = getOrCreateVisitorId();
       setVisitorId(vid);
 
-      const cid = getCookie(COOKIE_CONTACT_ID);
-      if (cid) {
-        setContactId(cid);
+      // 优先从 URL 参数读取 contact_id，确保专属链接能精确关联嘉宾
+      const urlContactId = searchParams.get('rsvp_contact_id');
+      if (urlContactId) {
+        setContactId(urlContactId);
+        setCookie(COOKIE_CONTACT_ID, urlContactId, COOKIE_EXPIRE_DAYS);
+      } else {
+        // 如果 URL 没有，再从 cookie 读取
+        const cid = getCookie(COOKIE_CONTACT_ID);
+        if (cid) {
+          setContactId(cid);
+        }
       }
     }
-  }, [isViewerMode]);
+  }, [isViewerMode, searchParams]);
+
+  // 记录访问日志（访客打开页面）
+  useEffect(() => {
+    if (isViewerMode && config?.id && typeof window !== 'undefined') {
+      trpc.rsvp.createActionLog
+        .mutate({
+          form_config_id: config.id,
+          contact_id: contactId || undefined,
+          visitor_id: visitorId || undefined,
+          action_type: 'view_page',
+          user_agent: navigator.userAgent,
+          device_type: /Mobile/.test(navigator.userAgent)
+            ? 'mobile'
+            : 'desktop',
+          referer: document.referrer || undefined,
+        })
+        .catch(() => {
+          // 忽略错误，不影响用户体验
+        });
+    }
+  }, [isViewerMode, config?.id, contactId, visitorId]);
 
   // 查询访客是否有提交记录（如果有则显示提交信息页）
   useEffect(() => {
@@ -292,16 +321,6 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
 
               // 设置结果消息
               setResultMsg('提交成功');
-            }
-
-            // 如果有 contact_id，更新状态
-            if (latest?.contact_id && latest.contact_id !== contactId) {
-              setContactId(latest.contact_id);
-              setCookie(
-                COOKIE_CONTACT_ID,
-                latest.contact_id,
-                COOKIE_EXPIRE_DAYS
-              );
             }
           }
         })
@@ -381,27 +400,41 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         };
       }
 
-      const created = await trpc.rsvp.createSubmission.mutate({
-        form_config_id: config.id!,
-        visitor_id: isViewerMode ? visitorId : undefined,
-        contact_id: isViewerMode ? contactId || undefined : undefined,
-        will_attend: willAttendValue,
-        submission_data: submissionData,
-      });
+      // 判断是首次提交还是重新提交
+      let result: any;
+      if (lastSubmissionGroupId) {
+        // 重新提交 - 创建新版本（后端会自动记录 resubmit 日志）
+        result = await trpc.rsvp.updateSubmissionVersion.mutate({
+          submission_group_id: lastSubmissionGroupId,
+          submission_data: submissionData,
+          operator_type: 'visitor',
+          operator_id: contactId || visitorId,
+        });
+      } else {
+        // 首次提交（后端会自动记录 submit 日志）
+        result = await trpc.rsvp.createSubmission.mutate({
+          form_config_id: config.id!,
+          visitor_id: isViewerMode ? visitorId : undefined,
+          contact_id: isViewerMode ? contactId || undefined : undefined,
+          will_attend: willAttendValue,
+          submission_data: submissionData,
+        });
 
-      // 如果服务器端创建了联系人，从返回结果中获取 contact_id
-      const returnedContactId = (created as any)?.contact_id;
-      if (
-        isViewerMode &&
-        returnedContactId &&
-        returnedContactId !== contactId
-      ) {
-        setContactId(returnedContactId);
-        // 保存到cookie
-        setCookie(COOKIE_CONTACT_ID, returnedContactId, COOKIE_EXPIRE_DAYS);
+        // 如果服务器端创建了联系人，从返回结果中获取 contact_id
+        const returnedContactId = result?.contact_id;
+        if (
+          isViewerMode &&
+          returnedContactId &&
+          returnedContactId !== contactId
+        ) {
+          setContactId(returnedContactId);
+          // 保存到cookie
+          setCookie(COOKIE_CONTACT_ID, returnedContactId, COOKIE_EXPIRE_DAYS);
+        }
+
+        setLastSubmissionGroupId(result?.submission_group_id || null);
       }
 
-      setLastSubmissionGroupId((created as any)?.submission_group_id || null);
       setWillAttend(willAttendValue);
       setSubmitted(true); // 标记为已提交
       if (config.require_approval) {
@@ -411,7 +444,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
       }
 
       // 提交成功后重新加载最新提交记录
-      const finalContactId = returnedContactId || contactId;
+      const finalContactId = contactId || result?.contact_id;
       if (isViewerMode && finalContactId && config.id) {
         try {
           const submissionData =
