@@ -162,9 +162,29 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
   const { config, loading, error, fields, showEditDialog, setShowEditDialog } =
     rsvp;
 
-  // 从 URL 参数获取被邀请人姓名
+  // 从 URL 参数获取被邀请人信息（支持新的专属链接参数）
+  // 解码 URL 参数，处理可能的双重编码情况
+  const decodeParam = (value: string | null): string => {
+    if (!value) return '';
+    try {
+      // searchParams.get() 已经自动解码一次，但如果遇到双重编码，需要再次解码
+      // 检查是否还包含编码字符（%）
+      if (value.includes('%')) {
+        return decodeURIComponent(value);
+      }
+      return value;
+    } catch {
+      return value;
+    }
+  };
+
   const inviteeName =
-    searchParams.get('invitee') || searchParams.get('name') || '';
+    decodeParam(searchParams.get('rsvp_invitee')) ||
+    decodeParam(searchParams.get('invitee')) ||
+    decodeParam(searchParams.get('name')) ||
+    '';
+  const inviteePhone = decodeParam(searchParams.get('rsvp_phone'));
+  const inviteeEmail = decodeParam(searchParams.get('rsvp_email'));
 
   // 没有在编辑器时，就是访客模式，需要根据访客的设备生成访客的ID
   const isViewerMode = !editorSDK;
@@ -352,10 +372,12 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           originalInvitee: inviteeName, // 记录原始被邀请人
         };
       } else if (inviteeName) {
-        // 被邀请人信息
+        // 被邀请人信息（专属链接）
         submissionData._inviteeInfo = {
           isGuest: false,
           inviteeName: inviteeName,
+          inviteePhone: inviteePhone,
+          inviteeEmail: inviteeEmail,
         };
       }
 

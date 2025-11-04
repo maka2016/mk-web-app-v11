@@ -71,6 +71,20 @@ const RsvpContactUpsertInput = z.object({
   phone: z.string().optional(),
 });
 
+const RsvpInviteeCreateInput = z.object({
+  form_config_id: z.string(),
+  name: z.string(),
+  phone: z.string().optional(),
+  email: z.string().email().optional(),
+});
+
+const RsvpInviteeUpdateInput = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email().optional(),
+});
+
 export const rsvpRouter = router({
   // ===== Form Configs =====
   upsertFormConfig: protectedProcedure
@@ -477,5 +491,194 @@ export const rsvpRouter = router({
         take: input?.take,
         orderBy: { update_time: 'desc' },
       });
+    }),
+
+  // ===== Invitees (嘉宾管理) =====
+  createInvitee: protectedProcedure
+    .input(RsvpInviteeCreateInput)
+    .mutation(async ({ ctx, input }) => {
+      // 验证表单配置存在
+      const formConfig = await ctx.prisma.rsvpFormConfigEntity.findUnique({
+        where: { id: input.form_config_id },
+      });
+      if (!formConfig || formConfig.deleted) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: '表单配置不存在',
+        });
+      }
+
+      // 如果提供了手机号，检查是否已存在
+      if (input.phone) {
+        const existing = await ctx.prisma.rsvpContactEntity.findUnique({
+          where: { phone: input.phone },
+        });
+        if (existing) {
+          // 如果已存在，更新为嘉宾
+          return ctx.prisma.rsvpContactEntity.update({
+            where: { id: existing.id },
+            data: {
+              name: input.name,
+              email: input.email,
+              form_config_id: input.form_config_id,
+            },
+          });
+        }
+      }
+
+      // 如果提供了邮箱，检查是否已存在
+      if (input.email) {
+        const existing = await ctx.prisma.rsvpContactEntity.findUnique({
+          where: { email: input.email },
+        });
+        if (existing) {
+          // 如果已存在，更新为嘉宾
+          return ctx.prisma.rsvpContactEntity.update({
+            where: { id: existing.id },
+            data: {
+              name: input.name,
+              phone: input.phone,
+              form_config_id: input.form_config_id,
+            },
+          });
+        }
+      }
+
+      // 创建新嘉宾
+      return ctx.prisma.rsvpContactEntity.create({
+        data: {
+          name: input.name,
+          phone: input.phone,
+          email: input.email,
+          form_config_id: input.form_config_id,
+        },
+      });
+    }),
+
+  updateInvitee: protectedProcedure
+    .input(RsvpInviteeUpdateInput)
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...data } = input;
+
+      // 检查嘉宾是否存在且是嘉宾（有form_config_id）
+      const existing = await ctx.prisma.rsvpContactEntity.findUnique({
+        where: { id },
+      });
+      if (!existing || !existing.form_config_id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: '嘉宾不存在',
+        });
+      }
+
+      // 如果更新手机号，检查唯一性
+      if (data.phone && data.phone !== existing.phone) {
+        const phoneExists = await ctx.prisma.rsvpContactEntity.findUnique({
+          where: { phone: data.phone },
+        });
+        if (phoneExists && phoneExists.id !== id) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: '该手机号已被使用',
+          });
+        }
+      }
+
+      // 如果更新邮箱，检查唯一性
+      if (data.email && data.email !== existing.email) {
+        const emailExists = await ctx.prisma.rsvpContactEntity.findUnique({
+          where: { email: data.email },
+        });
+        if (emailExists && emailExists.id !== id) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: '该邮箱已被使用',
+          });
+        }
+      }
+
+      return ctx.prisma.rsvpContactEntity.update({
+        where: { id },
+        data,
+      });
+    }),
+
+  deleteInvitee: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // 软删除
+      return ctx.prisma.rsvpContactEntity.update({
+        where: { id: input.id },
+        data: { deleted: true },
+      });
+    }),
+
+  listInvitees: protectedProcedure
+    .input(
+      z.object({
+        form_config_id: z.string(),
+        keyword: z.string().optional(),
+        skip: z.number().optional(),
+        take: z.number().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const where: any = {
+        form_config_id: input.form_config_id,
+        deleted: false,
+      };
+
+      if (input.keyword) {
+        where.OR = [
+          { name: { contains: input.keyword, mode: 'insensitive' } },
+          { phone: { contains: input.keyword, mode: 'insensitive' } },
+          { email: { contains: input.keyword, mode: 'insensitive' } },
+        ];
+      }
+
+      return ctx.prisma.rsvpContactEntity.findMany({
+        where,
+        skip: input.skip,
+        take: input.take,
+        orderBy: { create_time: 'desc' },
+      });
+    }),
+
+  getInviteeById: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.prisma.rsvpContactEntity.findUnique({
+        where: { id: input.id },
+      });
+    }),
+
+  getInviteeSubmissions: protectedProcedure
+    .input(
+      z.object({
+        contact_id: z.string(),
+        form_config_id: z.string(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // 查询该联系人的所有提交记录
+      const submissions = await ctx.prisma.rsvpSubmissionEntity.findMany({
+        where: {
+          contact_id: input.contact_id,
+          form_config_id: input.form_config_id,
+          deleted: false,
+        },
+        orderBy: { create_time: 'desc' },
+      });
+
+      // 按submission_group_id分组，取每组最新记录
+      const latestByGroup = new Map();
+      for (const submission of submissions) {
+        const groupId = submission.submission_group_id;
+        if (!latestByGroup.has(groupId)) {
+          latestByGroup.set(groupId, submission);
+        }
+      }
+
+      return Array.from(latestByGroup.values());
     }),
 });

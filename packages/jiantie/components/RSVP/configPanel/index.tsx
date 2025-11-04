@@ -9,6 +9,7 @@ import { Separator } from '@workspace/ui/components/separator';
 import { Switch } from '@workspace/ui/components/switch';
 import cls from 'classnames';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useRSVP } from '../RSVPContext';
 import { FieldType, RSVPAttrs, RSVPField, RSVPFieldOption } from '../type';
@@ -55,12 +56,13 @@ const fieldTypes = [
 
 export function RSVPConfigPanel() {
   const rsvp = useRSVP();
+  const router = useRouter();
   const {
     config,
-    configId,
     title,
     fields,
     error,
+    worksId,
     setTitle,
     setConfig,
     setFields,
@@ -268,6 +270,22 @@ export function RSVPConfigPanel() {
       </div>
 
       <div className='p-4 border-t border-[#e4e4e7] flex items-center gap-3'>
+        <Button
+          variant='outline'
+          onClick={() => {
+            if (!config?.id || !worksId) {
+              return;
+            }
+            router.push(
+              `/mobile/rsvp/share?form_config_id=${config.id}&works_id=${worksId}`
+            );
+          }}
+          size='lg'
+          disabled={!config?.id || !worksId}
+        >
+          <Icon name='share' size={16} />
+          分享设置
+        </Button>
         <Button disabled={saving} onClick={handleSaveClick} size='lg'>
           {saving ? '保存中...' : '保存配置'}
         </Button>

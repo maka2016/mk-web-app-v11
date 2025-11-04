@@ -20,6 +20,7 @@ interface RSVPContextValue {
   configId: string | null;
   title: string;
   fields: RSVPField[];
+  worksId: string; // 作品ID
 
   // 编辑方法
   setTitle: (title: string) => void;
@@ -226,6 +227,7 @@ export function RSVPProvider({
     configId,
     title,
     fields,
+    worksId,
     setTitle: handleTitleChange,
     setConfig: handleConfigChange,
     setFields: handleFieldsChange,
