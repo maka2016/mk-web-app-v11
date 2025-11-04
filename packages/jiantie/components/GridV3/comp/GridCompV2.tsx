@@ -27,7 +27,7 @@ import './index.scss';
 import './lib/animate.css';
 import { useGridContext } from './provider';
 import { getCanvaInfo2 } from './provider/utils';
-import { calcBlockHeight, calcBlockHeight2, getAllLayers } from './utils';
+import { calcBlockHeight2, getAllLayers } from './utils';
 
 const debounce = new DebounceClass();
 
@@ -56,6 +56,7 @@ export const GridCompV2: React.FC<
     gridStyle,
   } = useGridContext();
   useShortcut();
+  const currBlock = getActiveRootRow();
   const worksDetail = getWorksDetailStatic();
   const canvaInfo = getCanvaInfo2();
   const { isWebsite, isFixedHeight, maxPageCount } = canvaInfo;
@@ -252,30 +253,27 @@ export const GridCompV2: React.FC<
     }
 
     const resizeObserver = new ResizeObserver(entries => {
-      debounce.exec(() => {
-        for (const entry of entries) {
-          const currBlock = getActiveRootRow();
-          if (currBlock) {
-            const blockHeight = calcBlockHeight2();
-            const height = blockHeight[currBlock?.id || ''];
-            if (
-              height &&
-              Math.abs(height - (currBlock.canvasHeight || 0)) > 2 &&
-              widgetStateV2.activeRowDepth?.[0] !== undefined
-            ) {
-              // 误差小于1
-              setRowAttrsV2(
-                {
-                  canvasHeight: height,
-                },
-                {
-                  activeRowDepth: [widgetStateV2.activeRowDepth?.[0]],
-                }
-              );
-            }
+      for (const entry of entries) {
+        if (currBlock) {
+          const blockHeight = calcBlockHeight2();
+          const height = blockHeight[currBlock?.id || ''];
+          if (
+            height &&
+            Math.abs(height - (currBlock.canvasHeight || 0)) > 2 &&
+            widgetStateV2.activeRowDepth?.[0] !== undefined
+          ) {
+            // 误差小于1
+            setRowAttrsV2(
+              {
+                canvasHeight: height,
+              },
+              {
+                activeRowDepth: [widgetStateV2.activeRowDepth?.[0]],
+              }
+            );
           }
         }
-      }, 1000);
+      }
     });
 
     resizeObserver.observe(GridRef.current);
@@ -283,7 +281,7 @@ export const GridCompV2: React.FC<
     return () => {
       resizeObserver.disconnect();
     };
-  }, [JSON.stringify(widgetStateV2.activeRowDepth)]);
+  }, [widgetStateV2.activeRowDepth, editorSDK, currBlock, setRowAttrsV2]);
 
   const renderRow = () => {
     if (editorSDK) {
