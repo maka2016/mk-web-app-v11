@@ -81,6 +81,7 @@ export const rsvpRouter = router({
       });
 
       if (exists) {
+        // 一个作品只允许添加一个表单，添加多少个都会一样
         return ctx.prisma.rsvpFormConfigEntity.update({
           where: { id: exists.id },
           data: input,

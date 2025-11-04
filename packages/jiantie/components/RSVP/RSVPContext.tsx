@@ -4,10 +4,12 @@ import { getPageId } from '@mk/services';
 import { EditorSDK, LayerElemItem } from '@mk/works-store/types';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import {
+  getDefaultFields,
   parseRSVPFormFields,
   RSVPAttrs,
   RSVPField,
   RsvpFormConfigEntityForUi,
+  toRSVPFormFieldsJson,
 } from './type';
 
 interface RSVPContextValue {
@@ -52,7 +54,7 @@ export function RSVPProvider({
     null
   );
   const [configId, setConfigId] = useState<string | null>(null);
-  const [title, setTitle] = useState<string>('我要报名');
+  const [title, setTitle] = useState<string>('诚邀');
   const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
 
   // 从 config 中提取 fields
@@ -69,11 +71,12 @@ export function RSVPProvider({
       try {
         // 如果既没有 formConfigId，也没有有效的 worksId，则创建一个新的
         if (editorSDK && !formConfigId && !worksId) {
+          const defaultFields = getDefaultFields();
           const created = await trpc.rsvp.upsertFormConfig.mutate({
             works_id: getPageId(),
-            title: '我要报名',
+            title: '诚邀',
             desc: '',
-            form_fields: { fields: [] },
+            form_fields: toRSVPFormFieldsJson(defaultFields),
             allow_multiple_submit: true, // 默认允许，不可配置
             require_approval: false, // 默认不需要，不可配置
             max_submit_count: null, // 默认无限，不可配置
@@ -83,7 +86,7 @@ export function RSVPProvider({
           const createdData = created as any;
           setConfigState(createdData);
           setConfigId(createdData.id);
-          setTitle(createdData.title || '我要报名');
+          setTitle(createdData.title || '诚邀');
           setLoading(false);
           editorSDK.changeCompAttr(layer.elemId, {
             formConfigId: createdData.id,
@@ -107,7 +110,7 @@ export function RSVPProvider({
             submit_deadline: null, // 固定值：无限期，不可配置
           });
           setConfigId(dataAsAny?.id || null);
-          setTitle(dataAsAny?.title || '我要报名');
+          setTitle(dataAsAny?.title || '诚邀');
           setLoading(false);
         }
       } catch (e: any) {
@@ -172,7 +175,7 @@ export function RSVPProvider({
 
       const payload = {
         works_id: worksId,
-        title: title || '我要报名',
+        title: title || '诚邀',
         desc: config.desc ?? null,
         form_fields: toRSVPFormFieldsJson(fields.map(ensureOptions)),
         allow_multiple_submit: true, // 固定值：允许，不可配置
@@ -180,6 +183,7 @@ export function RSVPProvider({
         max_submit_count: null, // 固定值：无限，不可配置
         submit_deadline: null, // 固定值：无限期，不可配置
         enabled: config.enabled ?? true,
+        collect_form: config.collect_form ?? false,
       } as any;
 
       const saved = await trpc.rsvp.upsertFormConfig.mutate(payload);
@@ -193,6 +197,7 @@ export function RSVPProvider({
         title: savedData.title || title,
         desc: savedData.desc ?? config.desc,
         enabled: savedData.enabled ?? config.enabled,
+        collect_form: savedData.collect_form ?? config.collect_form,
         allow_multiple_submit: true, // 固定值：允许，不可配置
         require_approval: false, // 固定值：不需要，不可配置
         max_submit_count: null, // 固定值：无限，不可配置
