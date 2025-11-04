@@ -3,6 +3,7 @@ import { trpc } from '@/utils/trpc';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Input } from '@workspace/ui/components/input';
+import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import { Separator } from '@workspace/ui/components/separator';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
@@ -17,6 +18,11 @@ export default function RSVPSharePage() {
   const [copied, setCopied] = useState<boolean>(false);
   const [invitees, setInvitees] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [submissionsMap, setSubmissionsMap] = useState<Record<string, any[]>>(
+    {}
+  );
+  const [viewingInvitee, setViewingInvitee] = useState<any>(null);
+  const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
 
   // 生成公开链接
   const publicLink = useMemo(() => {
@@ -43,6 +49,31 @@ export default function RSVPSharePage() {
     };
     fetchInvitees();
   }, [formConfigId]);
+
+  // 查询每个嘉宾的提交记录
+  useEffect(() => {
+    const fetchSubmissions = async () => {
+      if (!formConfigId || invitees.length === 0) return;
+      const newMap: Record<string, any[]> = {};
+      for (const invitee of invitees) {
+        try {
+          const submissions = await trpc.rsvp.getInviteeSubmissions.query({
+            contact_id: invitee.id,
+            form_config_id: formConfigId,
+          });
+          newMap[invitee.id] = submissions || [];
+        } catch (error: any) {
+          console.error(
+            `Failed to fetch submissions for ${invitee.id}:`,
+            error
+          );
+          newMap[invitee.id] = [];
+        }
+      }
+      setSubmissionsMap(newMap);
+    };
+    fetchSubmissions();
+  }, [formConfigId, invitees]);
 
   // 刷新列表函数
   const fetchInvitees = async () => {
@@ -218,7 +249,24 @@ export default function RSVPSharePage() {
               </div>
             ) : (
               invitees.map((invitee: any) => {
-                // TODO: 查询该嘉宾的提交记录
+                const submissions = submissionsMap[invitee.id] || [];
+                const latestSubmission = submissions[0]; // 最新的提交记录
+                const hasSubmission = latestSubmission !== undefined;
+                const statusText = hasSubmission
+                  ? latestSubmission.will_attend === true
+                    ? '已确认出席'
+                    : latestSubmission.will_attend === false
+                      ? '已确认不出席'
+                      : '已提交'
+                  : '待提交';
+                const statusColor = hasSubmission
+                  ? latestSubmission.will_attend === true
+                    ? 'text-green-600'
+                    : latestSubmission.will_attend === false
+                      ? 'text-gray-500'
+                      : 'text-blue-600'
+                  : 'text-gray-400';
+
                 return (
                   <div
                     key={invitee.id}
@@ -228,9 +276,31 @@ export default function RSVPSharePage() {
                       <div className='font-semibold text-sm leading-5'>
                         {invitee.name}
                       </div>
-                      <div className='text-xs text-gray-500 mt-1'>待提交</div>
+                      <div className={`text-xs mt-1 ${statusColor}`}>
+                        {statusText}
+                        {hasSubmission && latestSubmission.create_time && (
+                          <span className='ml-2 text-gray-400'>
+                            {new Date(
+                              latestSubmission.create_time
+                            ).toLocaleString('zh-CN', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <Button size='sm' variant='ghost'>
+                    <Button
+                      size='sm'
+                      variant='ghost'
+                      onClick={() => {
+                        setViewingInvitee({ ...invitee, submissions });
+                        setSubmissionDialogOpen(true);
+                      }}
+                      disabled={!hasSubmission}
+                    >
                       查看
                     </Button>
                   </div>
@@ -239,6 +309,126 @@ export default function RSVPSharePage() {
             )}
           </div>
         </div>
+
+        {/* 提交记录详情弹窗 */}
+        <ResponsiveDialog
+          isOpen={submissionDialogOpen}
+          onOpenChange={setSubmissionDialogOpen}
+          title={viewingInvitee ? `${viewingInvitee.name}的提交记录` : ''}
+        >
+          {viewingInvitee && (
+            <div className='px-4 pb-4 max-h-[70vh] overflow-y-auto'>
+              {viewingInvitee.submissions.length === 0 ? (
+                <div className='text-sm text-gray-500 text-center py-8'>
+                  暂无提交记录
+                </div>
+              ) : (
+                <div className='space-y-4'>
+                  {viewingInvitee.submissions.map(
+                    (submission: any, index: number) => (
+                      <div
+                        key={submission.id}
+                        className='border border-[#e4e4e7] rounded-md p-3'
+                      >
+                        <div className='flex items-center justify-between mb-2'>
+                          <div className='font-semibold text-sm'>
+                            {index === 0
+                              ? '最新提交'
+                              : `提交记录 #${index + 1}`}
+                          </div>
+                          <div className='text-xs text-gray-500'>
+                            {new Date(submission.create_time).toLocaleString(
+                              'zh-CN'
+                            )}
+                          </div>
+                        </div>
+                        <div className='space-y-2'>
+                          <div className='flex items-center gap-2'>
+                            <span className='text-xs text-gray-600'>
+                              出席状态：
+                            </span>
+                            <span
+                              className={`text-xs font-semibold ${
+                                submission.will_attend === true
+                                  ? 'text-green-600'
+                                  : submission.will_attend === false
+                                    ? 'text-gray-500'
+                                    : 'text-gray-400'
+                              }`}
+                            >
+                              {submission.will_attend === true
+                                ? '确认出席'
+                                : submission.will_attend === false
+                                  ? '确认不出席'
+                                  : '未选择'}
+                            </span>
+                          </div>
+                          <div className='flex items-center gap-2'>
+                            <span className='text-xs text-gray-600'>
+                              审核状态：
+                            </span>
+                            <span
+                              className={`text-xs font-semibold ${
+                                submission.status === 'approved'
+                                  ? 'text-green-600'
+                                  : submission.status === 'rejected'
+                                    ? 'text-red-600'
+                                    : submission.status === 'cancelled'
+                                      ? 'text-gray-500'
+                                      : 'text-yellow-600'
+                              }`}
+                            >
+                              {submission.status === 'approved'
+                                ? '已确认'
+                                : submission.status === 'rejected'
+                                  ? '已拒绝'
+                                  : submission.status === 'cancelled'
+                                    ? '已取消'
+                                    : '待审核'}
+                            </span>
+                          </div>
+                          {submission.submission_data &&
+                            typeof submission.submission_data === 'object' &&
+                            Object.keys(submission.submission_data).filter(
+                              key => !key.startsWith('_')
+                            ).length > 0 && (
+                              <div className='mt-3 pt-3 border-t border-gray-200'>
+                                <div className='text-xs font-semibold text-gray-700 mb-2'>
+                                  表单数据：
+                                </div>
+                                <div className='space-y-1'>
+                                  {Object.entries(
+                                    submission.submission_data
+                                  ).map(([key, value]) => {
+                                    if (key.startsWith('_')) return null;
+                                    return (
+                                      <div
+                                        key={key}
+                                        className='flex items-start justify-between text-xs'
+                                      >
+                                        <span className='text-gray-600 flex-shrink-0 mr-2'>
+                                          {key}：
+                                        </span>
+                                        <span className='text-gray-800 text-right flex-1'>
+                                          {typeof value === 'object'
+                                            ? JSON.stringify(value)
+                                            : String(value)}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </ResponsiveDialog>
       </div>
     </div>
   );
