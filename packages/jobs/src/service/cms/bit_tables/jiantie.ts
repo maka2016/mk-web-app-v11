@@ -1,8 +1,8 @@
-import { DatasheetItem } from './types';
+import { DatasheetItem, bitRecRef, bitTextRaw } from './types';
 
 type BitTables = Record<string, DatasheetItem>;
 
-export const bitTables: BitTables = {
+export const JTBitTables: BitTables = {
   // https://www.feishu.cn/wiki/SKy7wPvIFiA8sokZTC1ccdbfnHf?base_hp_from=larktab&table=tblHMx8F5LPM6y7k&view=vewkBW3EJf
   '一级-栏目': {
     name: '一级-栏目',
@@ -39,3 +39,17 @@ export const bitTables: BitTables = {
     viewId: 'vewnxG8K7a',
   },
 };
+
+export interface BitChannelItem {
+  fields: {
+    内部唯一名称: bitTextRaw[];
+    显示名: bitTextRaw[];
+    语言: string;
+    子级: bitRecRef;
+    父级?: bitRecRef;
+    包含模版?: bitRecRef;
+    状态: string;
+    id: bitTextRaw[];
+  };
+  record_id: string;
+}

@@ -1,5 +1,6 @@
 import * as lark from '@larksuiteoapi/node-sdk';
 //获取所有记录
+import _ from 'lodash';
 
 export interface DatasheetItem {
   name: string;
@@ -9,12 +10,11 @@ export interface DatasheetItem {
   templateCoverUseGif?: boolean;
 }
 
-const config = {
-  appId: 'cli_a3070910dc3ad013',
-  appSecret: 'YYaWHVUAUJ1mEgpfhPNYabx11M16qOyR',
-};
-
 export const getLarkClient = async () => {
+  const config = {
+    appId: process.env.LARK_APP_ID || '',
+    appSecret: process.env.LARK_APP_SECRET || '',
+  };
   const larkClient = new lark.Client(config);
   return larkClient;
 };
@@ -40,13 +40,16 @@ export async function listTablesView(datasheetItem: DatasheetItem) {
 const cacheMap = new Map<string, any>();
 export const getAllRecord = async (
   datasheetItem: DatasheetItem,
-  limit?: number
+  limit?: number,
+  noCache?: boolean
 ) => {
   if (!datasheetItem) {
     console.log('wrong getAllRecord', datasheetItem);
   }
-
   const cacheKey = `${datasheetItem.tableId}-${limit}`;
+  if (noCache) {
+    cacheMap.delete(cacheKey);
+  }
   if (cacheMap.has(cacheKey)) {
     return cacheMap.get(cacheKey);
   }
@@ -138,4 +141,59 @@ export const updateRecordByIdV1 = async (
   });
 
   return wRes;
+};
+
+interface FeishuRecord {
+  record_id: string;
+  fields: Record<string, any>;
+}
+
+export const batchCreateAndUpdate = async (
+  insertArr: FeishuRecord[] = [],
+  updateArr: FeishuRecord[] = [],
+  table: DatasheetItem,
+  chunkSize: number = 100
+) => {
+  if (updateArr.length === 0) {
+    console.log('没有更新数据');
+    return;
+  }
+
+  const updateChunks = _.chunk(updateArr, chunkSize);
+  const pmdatasheet = await listTablesView(table);
+  const larkClient = await getLarkClient();
+
+  for (let i = 0; i < updateChunks.length; i++) {
+    console.log('更新第', i, '批');
+    const chunk = updateChunks[i];
+    if (chunk?.length === 0) continue;
+    let wRes = await larkClient.bitable.v1.appTableRecord.batchUpdate({
+      path: {
+        app_token: pmdatasheet.nodeData.obj_token || '',
+        table_id: table.tableId,
+      },
+      data: {
+        records: chunk,
+      },
+    });
+    console.log('wRes', wRes?.msg);
+  }
+
+  const chunks = _.chunk(insertArr, chunkSize);
+  for (let i = 0; i < chunks.length; i++) {
+    console.log('插入第', i, '批');
+
+    const chunk = chunks[i];
+    if (chunk?.length === 0) continue;
+    let wRes = await larkClient.bitable.v1.appTableRecord.batchCreate({
+      path: {
+        app_token: pmdatasheet.nodeData.obj_token || '',
+        table_id: table.tableId,
+      },
+      data: {
+        records: chunk,
+      },
+    });
+    console.log('wRes', wRes?.msg);
+  }
 };
