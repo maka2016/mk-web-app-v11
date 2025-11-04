@@ -2,7 +2,7 @@
 import { getAppId } from '@/services';
 import { getWorksMaka, updateWorksDetail2 } from '@/services/works2';
 import { cdnApi } from '@mk/services';
-import { onScreenShot } from '@mk/widgets/GridV3/shared';
+import { onScreenShot } from '@/components/GridV3/shared';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Loading } from '@workspace/ui/components/loading';

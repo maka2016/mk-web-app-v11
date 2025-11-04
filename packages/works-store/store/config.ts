@@ -76,8 +76,6 @@ export class IWorksStoreConfig<T extends Object = any> {
 
   hasWatermark?: () => boolean;
 
-  worksType?: 'h5' | 'longH5' | 'poster' | '';
-
   appMode?: ResourceMode;
 
   elementDidMount?: (

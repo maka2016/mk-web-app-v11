@@ -1,8 +1,8 @@
-import { getInitialPropsCommonAppRouter } from '@mk/viewer/utils/getInitialPropsCommon2';
+import { getInitialPropsCommonAppRouter } from '@/components/viewer/utils/getInitialPropsCommon2';
 import { headers } from 'next/headers';
 import React from 'react';
-import WebsiteApp from '@mk/viewer/components/website';
-import { generateMetadataFac } from '@mk/viewer/components/getMeta';
+import WebsiteApp from '@/components/viewer/components/website';
+import { generateMetadataFac } from '@/components/viewer/components/getMeta';
 import EventNotFound from '@/components/EventNotFound';
 import { worksServerV2 } from '@/services/jiantie-services';
 import JiantieExpired from '@/components/ViewerComp/JiantieExpired';

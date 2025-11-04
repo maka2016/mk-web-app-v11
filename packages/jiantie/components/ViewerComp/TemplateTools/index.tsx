@@ -2,7 +2,7 @@
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import styles from './index.module.scss';
 import { useEffect, useState } from 'react';
-import { CompLoader } from '@mk/viewer/components/CompLoader';
+import { CompLoader } from '@/components/viewer/components/CompLoader';
 import { Icon } from '@workspace/ui/components/Icon';
 import { cdnApi } from '@mk/services';
 import toast from 'react-hot-toast';

@@ -1,11 +1,13 @@
 import { getAppId, getPlatform, getToken, getUid } from '@/services';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
+import * as services from '@mk/services';
 import { API } from '@mk/services';
+import * as utils from '@mk/utils';
 import { IWorksAPI, WorksStore, WorksStoreConfig } from '@mk/works-store/store';
-import axios from 'axios';
-import React from 'react';
-import ReactDOM from 'react-dom';
+import * as axios from 'axios';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 // import "@mk/ui/style/index.scss";
 import { worksApi2 } from './works2';
 
@@ -28,12 +30,6 @@ export const getRequestCommonConfig = (config: any) => {
 };
 
 export const initWidgetEnv = async () => {
-  const [services, utils, OSSClientCompat] = await Promise.all([
-    import('@mk/services'),
-    import('@mk/utils'),
-    import('@mk/services/src/oss-client-compat'),
-  ]);
-
   const MKUI = {};
   /**
    * 准备组件需要的运行时环境
@@ -44,9 +40,7 @@ export const initWidgetEnv = async () => {
       ReactDOM,
       Axios: axios,
     },
-    LIB_VENDOR: {
-      AliOss: OSSClientCompat, // 使用兼容的 OSS 客户端
-    },
+    LIB_VENDOR: {},
     UI_VENDER: {
       MKUI,
     },

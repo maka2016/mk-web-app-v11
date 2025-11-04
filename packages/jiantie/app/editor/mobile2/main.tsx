@@ -10,9 +10,9 @@ import { useShareNavigation } from '@/utils/share';
 import APPBridge from '@mk/app-bridge';
 import { cdnApi, getToken } from '@mk/services';
 import { isAndroid, isMakaAppAndroid } from '@mk/utils';
-import { getCanvaInfo2 } from '@mk/widgets/GridV3/comp/provider/utils';
-import { calcViewerHeight } from '@mk/widgets/GridV3/comp/utils';
-import MusicManager from '@mk/widgets/GridV3/shared/LibContent/Music/MusicManager';
+import { getCanvaInfo2 } from '@/components/GridV3/comp/provider/utils';
+import { calcViewerHeight } from '@/components/GridV3/comp/utils';
+import MusicManager from '@/components/GridV3/shared/LibContent/Music/MusicManager';
 import { undoManager } from '@mk/works-store/store';
 import {
   AlertDialog,

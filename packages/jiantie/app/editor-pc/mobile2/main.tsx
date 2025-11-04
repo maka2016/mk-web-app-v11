@@ -5,7 +5,7 @@ import { useWorksStore } from '@/app/editor/useStore';
 import SaveErrorDialog from '@/components/SaveErrorDialog';
 import { getAppId } from '@/services';
 import { cdnApi } from '@mk/services';
-import { calcViewerHeight } from '@mk/widgets/GridV3/comp/utils';
+import { calcViewerHeight } from '@/components/GridV3/comp/utils';
 import { undoManager } from '@mk/works-store/store';
 import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
 import { Button } from '@workspace/ui/components/button';
