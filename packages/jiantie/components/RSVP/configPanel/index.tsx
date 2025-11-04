@@ -1,6 +1,5 @@
 'use client';
 import { BtnLite } from '@/components/GridV3/shared/style-comps';
-import { trpc } from '@/utils/trpc';
 import { EditorSDK, LayerElemItem } from '@mk/works-store/types';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
@@ -9,28 +8,12 @@ import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import { Separator } from '@workspace/ui/components/separator';
 import { Switch } from '@workspace/ui/components/switch';
 import cls from 'classnames';
-import { useEffect, useMemo, useState } from 'react';
-import { ResponsiveDialog as LocalDialog } from '../../Drawer';
-import { RSVPAttrs, RsvpFormConfigEntityForUi } from '../type';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useRSVP } from '../RSVPContext';
+import { FieldType, RSVPAttrs, RSVPField, RSVPFieldOption } from '../type';
 
-type FieldType = 'text' | 'number' | 'textarea' | 'radio' | 'checkbox';
-
-interface RSVPFieldOption {
-  label: string;
-  value: string;
-}
-
-interface RSVPField {
-  id: string;
-  type: FieldType;
-  label: string;
-  required?: boolean;
-  placeholder?: string;
-  options?: RSVPFieldOption[]; // for radio/checkbox
-  defaultValue?: any;
-}
-
-interface Props {
+interface BaseProps {
   attrs: RSVPAttrs;
   editorSDK?: EditorSDK;
   layer: LayerElemItem;
@@ -38,112 +21,77 @@ interface Props {
 
 export default function RSVPConfigPanelTrigger({
   attrs,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   editorSDK,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   layer,
-}: Props) {
-  const [showTextEditDialog, setShowTextEditDialog] = useState(false);
+}: BaseProps) {
   return (
     <>
       <BtnLite
         title='RSVP配置'
         onClick={() => {
-          setShowTextEditDialog(true);
+          const trigger = document.getElementById(
+            `hidden_trigger_for_rsvp_config_panel_${attrs.formConfigId}`
+          );
+          if (trigger) {
+            trigger.click();
+          }
         }}
       >
         <Icon name='form-fill' size={20} />
         <span>RSVP配置</span>
       </BtnLite>
-      <LocalDialog
-        isOpen={showTextEditDialog}
-        onOpenChange={setShowTextEditDialog}
-      >
-        <RSVPConfigPanel attrs={attrs} editorSDK={editorSDK} layer={layer} />
-      </LocalDialog>
     </>
   );
 }
 
 const fieldTypes = [
   { label: '文本', value: 'text' as FieldType },
-  { label: '数字', value: 'number' as FieldType },
-  { label: '长文本', value: 'textarea' as FieldType },
   { label: '单选', value: 'radio' as FieldType },
   { label: '多选', value: 'checkbox' as FieldType },
+  { label: '访客人数', value: 'guest_count' as FieldType },
 ];
 
-type Config = Partial<Omit<RsvpFormConfigEntityForUi, 'id' | 'works_id'>>;
+export function RSVPConfigPanel() {
+  const rsvp = useRSVP();
+  const {
+    config,
+    configId,
+    title,
+    fields,
+    error,
+    setTitle,
+    setConfig,
+    setFields,
+    handleSave,
+  } = rsvp;
 
-function RSVPConfigPanel({ attrs }: Props) {
-  const { worksId } = attrs;
-  const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [configId, setConfigId] = useState<string | null>(null);
-  const [title, setTitle] = useState<string>('我要报名');
-  const [config, setConfig] = useState<Config>({
-    desc: null,
-    enabled: true,
-    allow_multiple_submit: false,
-    require_approval: true,
-    max_submit_count: null,
-    submit_deadline: null,
-  });
-  const [fields, setFields] = useState<RSVPField[]>([]);
-
-  const [showFieldEditor, setShowFieldEditor] = useState(false);
+  const [showFieldEditor, setShowFieldEditor] = useState<boolean>(false);
   const [editingField, setEditingField] = useState<RSVPField | null>(null);
+  const [isBasicInfoExpanded, setIsBasicInfoExpanded] =
+    useState<boolean>(false);
+  const [collectForm, setCollectForm] = useState<boolean>(
+    config?.collect_form ?? fields.length > 0
+  );
 
+  // 同步 collectForm 状态与 config.collect_form
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const existing = await trpc.rsvp.getFormConfigByWorksId.query({
-          works_id: worksId,
-        });
-        if (!mounted) return;
-        if (existing) {
-          setConfigId(existing.id);
-          setTitle(existing.title || '');
-          const deadline = existing.submit_deadline
-            ? new Date(existing.submit_deadline)
-            : null;
-          setConfig({
-            desc: existing.desc ?? null,
-            enabled: existing.enabled ?? true,
-            allow_multiple_submit: existing.allow_multiple_submit ?? false,
-            require_approval: existing.require_approval ?? true,
-            max_submit_count: existing.max_submit_count ?? null,
-            submit_deadline: deadline ? toLocalDateTimeValue(deadline) : null,
-          });
-          const formFields = existing.form_fields as {
-            fields: RSVPField[];
-          } | null;
-          setFields(formFields?.fields || []);
-        } else {
-          // defaults
-          setConfig({
-            desc: null,
-            enabled: true,
-            allow_multiple_submit: false,
-            require_approval: true,
-            max_submit_count: null,
-            submit_deadline: null,
-          });
-          setFields([]);
-        }
-      } catch (e: any) {
-        setError(String(e?.message || '加载失败'));
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [worksId]);
+    if (config?.collect_form !== undefined) {
+      setCollectForm(config.collect_form);
+    } else if (fields.length > 0) {
+      setCollectForm(true);
+    }
+  }, [config?.collect_form, fields.length]);
+
+  if (!config) {
+    return (
+      <div className='w-full py-4 text-center text-sm text-gray-500'>
+        配置加载中...
+      </div>
+    );
+  }
 
   const addField = () => {
     setEditingField({
@@ -157,71 +105,45 @@ function RSVPConfigPanel({ attrs }: Props) {
   };
 
   const removeField = (id: string) => {
-    setFields(prev => prev.filter(f => f.id !== id));
+    // 系统字段不允许删除
+    const field = fields.find(f => f.id === id);
+    if (field?.isSystem) {
+      return;
+    }
+    setFields(fields.filter((f: RSVPField) => f.id !== id));
   };
 
   const updateField = (id: string, patch: Partial<RSVPField>) => {
-    setFields(prev => prev.map(f => (f.id === id ? { ...f, ...patch } : f)));
+    setFields(
+      fields.map((f: RSVPField) => {
+        if (f.id === id) {
+          // 系统字段的 isSystem 属性不能被修改
+          const updated = { ...f, ...patch };
+          if (f.isSystem) {
+            updated.isSystem = true;
+          }
+          return updated;
+        }
+        return f;
+      })
+    );
   };
 
-  const ensureOptions = (f: RSVPField): RSVPField => {
-    if (f.type === 'radio' || f.type === 'checkbox') {
-      return {
-        ...f,
-        options:
-          f.options && f.options.length > 0
-            ? f.options
-            : [
-                { label: '选项A', value: 'A' },
-                { label: '选项B', value: 'B' },
-              ],
-      };
-    }
-    return { ...f, options: undefined };
-  };
-
-  const handleSave = async () => {
+  const handleSaveClick = async () => {
     setSaving(true);
-    setError(null);
     try {
-      const payload = {
-        works_id: worksId,
-        title: title || '我要报名',
-        desc: config.desc ?? null,
-        form_fields: { fields: fields.map(ensureOptions) },
-        allow_multiple_submit: config.allow_multiple_submit ?? false,
-        require_approval: config.require_approval ?? true,
-        max_submit_count:
-          config.max_submit_count !== null &&
-          config.max_submit_count !== undefined
-            ? config.max_submit_count
-            : null,
-        submit_deadline: config.submit_deadline
-          ? typeof config.submit_deadline === 'string'
-            ? new Date(config.submit_deadline)
-            : config.submit_deadline
-          : null,
-        enabled: config.enabled ?? true,
-      } as any;
-
-      const saved = await trpc.rsvp.upsertFormConfig.mutate(payload);
-      setConfigId((saved as any).id);
-    } catch (e: any) {
-      setError(String(e?.message || '保存失败'));
+      // 保存 collect_form 到 config
+      setConfig({
+        ...config,
+        collect_form: collectForm,
+      });
+      await handleSave();
+    } catch {
+      // 错误已在 Context 中处理
     } finally {
       setSaving(false);
     }
   };
-
-  const previewFields = useMemo(() => fields.map(ensureOptions), [fields]);
-
-  if (loading) {
-    return (
-      <div className='w-full py-4 text-center text-sm text-gray-500'>
-        加载中...
-      </div>
-    );
-  }
 
   return (
     <div className='relative'>
@@ -238,237 +160,117 @@ function RSVPConfigPanel({ attrs }: Props) {
       <div className='px-4 py-3 max-h-[80vh] overflow-y-auto flex flex-col gap-2'>
         {error ? <div className='text-red-500 text-sm'>{error}</div> : null}
 
+        {/* 是否启用RSVP开关 */}
         <div className='border border-black/[0.1] rounded-xl p-3'>
-          <div className='font-semibold text-base leading-6 text-[#09090B] mb-3'>
-            基础信息
-          </div>
-          <div className='mb-3'>
-            <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
-              标题
-            </div>
-            <Input
-              className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder='如：我要报名'
-            />
-          </div>
-          <div>
-            <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
-              描述
-            </div>
-            <textarea
-              className='h-[72px] resize-none w-full border-none text-xs rounded-md px-3 py-2 outline-none bg-[#F3F3F5]'
-              value={config.desc ?? ''}
-              onChange={e =>
-                setConfig(prev => ({
-                  ...prev,
-                  desc: e.target.value || null,
-                }))
+          <div className='flex items-center gap-2 text-sm leading-[18px] text-[#09090B]'>
+            <Switch
+              checked={config.enabled ?? true}
+              onCheckedChange={checked =>
+                setConfig({ ...config, enabled: checked })
               }
-              placeholder='补充说明（可选）'
             />
+            <span className='font-semibold'>是否启用RSVP</span>
           </div>
         </div>
 
+        {/* 是否收集表单开关 */}
         <div className='border border-black/[0.1] rounded-xl p-3'>
-          <div className='font-semibold text-base leading-6 text-[#09090B] mb-3'>
-            提交规则
-          </div>
-          <div className='flex items-center gap-4 my-2'>
-            <div className='flex items-center gap-2 text-xs leading-[18px] text-[#09090B]'>
-              <Switch
-                checked={config.enabled ?? true}
-                onCheckedChange={checked =>
-                  setConfig(prev => ({ ...prev, enabled: checked }))
-                }
-              />
-              <span>开启</span>
-            </div>
-            <div className='flex items-center gap-2 text-xs leading-[18px] text-[#09090B]'>
-              <Switch
-                checked={config.allow_multiple_submit ?? false}
-                onCheckedChange={checked =>
-                  setConfig(prev => ({
-                    ...prev,
-                    allow_multiple_submit: checked,
-                  }))
-                }
-              />
-              <span>允许多次提交</span>
-            </div>
-            <div className='flex items-center gap-2 text-xs leading-[18px] text-[#09090B]'>
-              <Switch
-                checked={config.require_approval ?? true}
-                onCheckedChange={checked =>
-                  setConfig(prev => ({
-                    ...prev,
-                    require_approval: checked,
-                  }))
-                }
-              />
-              <span>需要审核</span>
-            </div>
+          <div className='flex items-center gap-2 text-sm leading-[18px] text-[#09090B] mb-3'>
+            <Switch checked={collectForm} onCheckedChange={setCollectForm} />
+            <span className='font-semibold'>是否收集表单</span>
           </div>
 
-          <div className='flex items-center gap-3 mt-3'>
-            <div className='flex-1'>
-              <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
-                最大提交次数
-              </div>
-              <Input
-                className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
-                type='number'
-                value={config.max_submit_count ?? ''}
-                onChange={e =>
-                  setConfig(prev => ({
-                    ...prev,
-                    max_submit_count:
-                      e.target.value === ''
-                        ? null
-                        : Number(e.target.value) || null,
-                  }))
-                }
-                placeholder='留空不限'
-              />
-            </div>
-            <div className='flex-1'>
-              <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
-                截止时间
-              </div>
-              <Input
-                className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
-                type='datetime-local'
-                value={
-                  config.submit_deadline
-                    ? typeof config.submit_deadline === 'string'
-                      ? config.submit_deadline
-                      : toLocalDateTimeValue(new Date(config.submit_deadline))
-                    : ''
-                }
-                onChange={e =>
-                  setConfig(prev => ({
-                    ...prev,
-                    submit_deadline: e.target.value || null,
-                  }))
-                }
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className='border border-black/[0.1] rounded-xl p-3'>
-          <div className='flex items-center justify-between mb-3'>
-            <div className='font-semibold text-base leading-6 text-[#09090B]'>
-              自定义字段
-            </div>
-            <Button
-              variant='outline'
-              className='text-[#3358D4] h-8 font-semibold hover:bg-transparent'
-              size='sm'
-              onClick={addField}
-            >
-              <Icon name='add-one' size={16} />
-              添加字段
-            </Button>
-          </div>
-          <div className='flex flex-col gap-2'>
-            {fields.map((f, index) => (
-              <FieldItem
-                key={f.id}
-                field={f}
-                index={index}
-                onEdit={() => {
-                  setEditingField(f);
-                  setShowFieldEditor(true);
-                }}
-                onDelete={() => removeField(f.id)}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className='border border-black/[0.1] rounded-xl p-3'>
-          <div className='font-semibold text-base leading-6 text-[#09090B] mb-3'>
-            预览
-          </div>
-          <div>
-            <div className='font-medium text-base leading-6'>{title}</div>
-            {config.desc ? (
-              <div className='text-[13px] leading-5 text-black/60 mt-1'>
-                {config.desc}
-              </div>
-            ) : null}
-            <div className='mt-4 space-y-3'>
-              {previewFields.map(f => (
-                <div key={f.id} className='mb-3'>
-                  <div className='font-medium text-sm leading-5 mb-2'>
-                    {f.label}
-                    {f.required ? (
-                      <span className='text-red-500 ml-0.5'>*</span>
-                    ) : (
-                      ''
-                    )}
-                  </div>
-                  {f.type === 'textarea' ? (
-                    <textarea
-                      className='w-full border border-[#e4e4e7] rounded-md px-3 py-2 text-sm bg-white min-h-[80px] resize-none'
-                      placeholder={f.placeholder}
-                      readOnly
-                    />
-                  ) : f.type === 'number' ? (
-                    <input
-                      className='w-full border border-[#e4e4e7] rounded-md px-3 py-2 text-sm bg-white'
-                      type='number'
-                      placeholder={f.placeholder}
-                      readOnly
-                    />
-                  ) : f.type === 'radio' ? (
-                    <div className='space-y-1'>
-                      {f.options?.map(opt => (
-                        <label
-                          key={opt.value}
-                          className='flex items-center gap-2 text-sm'
-                        >
-                          <input type='radio' disabled />
-                          <span>{opt.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  ) : f.type === 'checkbox' ? (
-                    <div className='space-y-1'>
-                      {f.options?.map(opt => (
-                        <label
-                          key={opt.value}
-                          className='flex items-center gap-2 text-sm'
-                        >
-                          <input type='checkbox' disabled />
-                          <span>{opt.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  ) : (
-                    <input
-                      className='w-full border border-[#e4e4e7] rounded-md px-3 py-2 text-sm bg-white'
-                      type='text'
-                      placeholder={f.placeholder}
-                      readOnly
-                    />
-                  )}
+          {/* 当收集表单开关打开时，显示自定义字段列表 */}
+          {collectForm && (
+            <>
+              <div className='flex items-center justify-between mb-3'>
+                <div className='font-semibold text-base leading-6 text-[#09090B]'>
+                  自定义字段
                 </div>
-              ))}
+                <Button
+                  variant='outline'
+                  className='text-[#3358D4] h-8 font-semibold hover:bg-transparent'
+                  size='sm'
+                  onClick={addField}
+                >
+                  <Icon name='add-one' size={16} />
+                  添加字段
+                </Button>
+              </div>
+              <div className='flex flex-col gap-2'>
+                {fields.map((f: RSVPField, index: number) => (
+                  <FieldItem
+                    key={f.id}
+                    field={f}
+                    index={index}
+                    onEdit={() => {
+                      setEditingField(f);
+                      setShowFieldEditor(true);
+                    }}
+                    onDelete={() => removeField(f.id)}
+                    onToggleEnabled={(id, enabled) => {
+                      updateField(id, { enabled });
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* 基础信息 - 默认折叠 */}
+        <div className='border border-black/[0.1] rounded-xl'>
+          <div
+            className='p-3 flex items-center justify-between cursor-pointer'
+            onClick={() => setIsBasicInfoExpanded(!isBasicInfoExpanded)}
+          >
+            <div className='font-semibold text-base leading-6 text-[#09090B]'>
+              基础信息
             </div>
+            {isBasicInfoExpanded ? (
+              <ChevronUp className='h-4 w-4 text-gray-500' />
+            ) : (
+              <ChevronDown className='h-4 w-4 text-gray-500' />
+            )}
           </div>
+          {isBasicInfoExpanded && (
+            <div className='px-3 pb-3 space-y-3'>
+              <div>
+                <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
+                  标题
+                </div>
+                <Input
+                  className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder='如：我要报名'
+                />
+              </div>
+              <div>
+                <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
+                  描述
+                </div>
+                <textarea
+                  className='h-[72px] resize-none w-full border-none text-xs rounded-md px-3 py-2 outline-none bg-[#F3F3F5]'
+                  value={config.desc ?? ''}
+                  onChange={e =>
+                    setConfig({
+                      ...config,
+                      desc: e.target.value || null,
+                    })
+                  }
+                  placeholder='补充说明（可选）'
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       <div className='p-4 border-t border-[#e4e4e7] flex items-center gap-3'>
-        <Button disabled={saving} onClick={handleSave} size='lg'>
+        <Button disabled={saving} onClick={handleSaveClick} size='lg'>
           {saving ? '保存中...' : '保存配置'}
         </Button>
-        {configId ? (
-          <span className='text-xs text-gray-500'>ID: {configId}</span>
-        ) : null}
       </div>
 
       <FieldEditorDialog
@@ -476,13 +278,15 @@ function RSVPConfigPanel({ attrs }: Props) {
         field={editingField}
         open={showFieldEditor}
         onOpenChange={setShowFieldEditor}
-        onSave={field => {
-          if (field.id && fields.find(f => f.id === field.id)) {
+        onSave={(field: RSVPField) => {
+          if (field.id && fields.find((f: RSVPField) => f.id === field.id)) {
+            // 更新现有字段时，保留 isSystem 属性
             updateField(field.id, field);
           } else {
-            setFields(prev => [
-              ...prev,
-              { ...field, id: `field_${Date.now()}` },
+            // 添加新字段时，确保 isSystem 为 false（用户添加的字段不是系统字段）
+            setFields([
+              ...fields,
+              { ...field, id: `field_${Date.now()}`, isSystem: false },
             ]);
           }
           setShowFieldEditor(false);
@@ -492,24 +296,20 @@ function RSVPConfigPanel({ attrs }: Props) {
   );
 }
 
-function toLocalDateTimeValue(date: Date) {
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  const yyyy = date.getFullYear();
-  const MM = pad(date.getMonth() + 1);
-  const dd = pad(date.getDate());
-  const hh = pad(date.getHours());
-  const mm = pad(date.getMinutes());
-  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
-}
-
 interface FieldItemProps {
   field: RSVPField;
   index: number;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleEnabled: (id: string, enabled: boolean) => void;
 }
 
-function FieldItem({ field, onEdit, onDelete }: FieldItemProps) {
+function FieldItem({
+  field,
+  onEdit,
+  onDelete,
+  onToggleEnabled,
+}: FieldItemProps) {
   const fieldTypeLabel = fieldTypes.find(t => t.value === field.type)?.label;
 
   return (
@@ -535,19 +335,33 @@ function FieldItem({ field, onEdit, onDelete }: FieldItemProps) {
           </div>
         )}
       </div>
-      <div
-        className='flex items-center gap-1 text-[#3358D4] cursor-pointer'
-        onClick={onEdit}
-      >
-        <Icon name='edit' size={16} />
-        <span className='text-xs flex-shrink-0'>编辑</span>
+      <div className='flex items-center gap-2'>
+        <div
+          className='flex items-center gap-1 text-[#3358D4] cursor-pointer'
+          onClick={onEdit}
+        >
+          <Icon name='edit' size={16} />
+          <span className='text-xs flex-shrink-0'>编辑</span>
+        </div>
+        <div className='flex items-center gap-1'>
+          <Switch
+            checked={field.enabled !== false}
+            onCheckedChange={checked => onToggleEnabled(field.id, checked)}
+          />
+          <span className='text-xs text-gray-500'>
+            {field.enabled !== false ? '开启' : '关闭'}
+          </span>
+        </div>
+        {/* 系统字段不允许删除 */}
+        {!field.isSystem && (
+          <Icon
+            name='delete-g8c551hn'
+            size={16}
+            onClick={onDelete}
+            className='cursor-pointer'
+          />
+        )}
       </div>
-      <Icon
-        name='delete-g8c551hn'
-        size={16}
-        onClick={onDelete}
-        className='cursor-pointer'
-      />
     </div>
   );
 }
@@ -565,13 +379,13 @@ function FieldEditorDialog({
   onOpenChange,
   onSave,
 }: FieldEditorDialogProps) {
-  // Use field as initial value directly
   const initialField = field || {
     id: '',
     type: 'text',
     label: '',
     required: false,
     placeholder: '',
+    enabled: true,
   };
 
   const [localField, setLocalField] = useState<RSVPField>(initialField);
@@ -697,6 +511,54 @@ function FieldEditorDialog({
             placeholder='如：请输入您的姓名'
             className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
           />
+        </div>
+
+        {localField.type === 'guest_count' && (
+          <div className='px-4 mb-5'>
+            <div
+              className='flex items-center gap-1 cursor-pointer'
+              onClick={() => {
+                updateLocalField({
+                  splitAdultChild: !localField.splitAdultChild,
+                });
+              }}
+            >
+              {localField.splitAdultChild ? (
+                <Icon
+                  size={20}
+                  name='danxuan-yixuan'
+                  color='var(--theme-color)'
+                />
+              ) : (
+                <Icon size={20} name='danxuan-weixuan' color='#E4E4E7' />
+              )}
+              <span className='text-sm leading-5 text-black/[0.88]'>
+                划分大人和小孩
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div className='px-4 mb-5'>
+          <div
+            className='flex items-center gap-1 cursor-pointer'
+            onClick={() => {
+              updateLocalField({ enabled: !localField.enabled });
+            }}
+          >
+            {localField.enabled !== false ? (
+              <Icon
+                size={20}
+                name='danxuan-yixuan'
+                color='var(--theme-color)'
+              />
+            ) : (
+              <Icon size={20} name='danxuan-weixuan' color='#E4E4E7' />
+            )}
+            <span className='text-sm leading-5 text-black/[0.88]'>
+              启用该字段
+            </span>
+          </div>
         </div>
 
         <div className='px-4 mb-5'>

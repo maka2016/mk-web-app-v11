@@ -1,15 +1,16 @@
 import { getPermissionData } from '@mk/services';
 import { deepClone, LoadWidget, mergeDeep, queryToObj } from '@mk/utils';
-import { IPositionLink, LayerElemItem } from '@mk/works-store/types';
-import clas from 'classnames';
-import React, { useRef, useState } from 'react';
 import MkBulletScreen from '@mk/widgets/MkBulletScreen_v2/comp';
 import MkCalendarV3 from '@mk/widgets/MkCalendarV3/comp';
+import MkGift from '@mk/widgets/MkGift/comp';
 import MkHuiZhi from '@mk/widgets/MkHuiZhi/comp';
 import MkImageGroup from '@mk/widgets/MkImageGroup_v2/comp';
 import MkMapComp from '@mk/widgets/MkMapV4/comp';
-import MkGift from '@mk/widgets/MkGift/comp';
+import { IPositionLink, LayerElemItem } from '@mk/works-store/types';
+import clas from 'classnames';
+import React, { useRef, useState } from 'react';
 
+import RSVPComp from '@/components/RSVP/comp';
 import { GridProps } from '../shared';
 import {
   bgImageChangeToWebp,
@@ -27,7 +28,6 @@ import LayoutWrapper from './layoutWrapper';
 import './lib/animate.css';
 import { useGridContext } from './provider';
 import { clearUndefinedKey } from './utils';
-import RSVPComp from '@/components/RSVP/comp';
 
 interface WidgetItemRendererProps {
   rowDepth?: number[];
@@ -330,6 +330,18 @@ const WidgetItemRendererV2Internal = (
       />
     );
   } else if (/picture/gi.test(elementRef)) {
+    const styleForImg = {
+      maskImage: innerStyle.maskImage,
+      WebkitMaskImage: innerStyle.WebkitMaskImage,
+      WebkitMaskPosition: innerStyle.WebkitMaskPosition,
+      WebkitMaskRepeat: innerStyle.WebkitMaskRepeat,
+      WebkitMaskSize: innerStyle.WebkitMaskSize,
+    };
+    delete innerStyle.maskImage;
+    delete innerStyle.WebkitMaskImage;
+    delete innerStyle.WebkitMaskPosition;
+    delete innerStyle.WebkitMaskRepeat;
+    delete innerStyle.WebkitMaskSize;
     compEntity = (
       <ImgLiteCompV2
         isAbsoluteElem={isAbsoluteElem}
@@ -339,6 +351,7 @@ const WidgetItemRendererV2Internal = (
           padding: innerStyle.padding,
           aspectRatio: innerStyle.aspectRatio,
         }}
+        style={styleForImg}
         fullStack={fullStack}
         readonly={readonly}
         attrs={currAttr as any}
