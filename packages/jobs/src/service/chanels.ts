@@ -12,8 +12,9 @@ import { downloadAndUploadLarkImage } from './cms/upload-helper';
 export const syncChannel = async (
   sonBitTable: DatasheetItem,
   ChClassName: string,
-  parentBit?: DatasheetItem,
 
+  parentBit?: DatasheetItem,
+  env = 'prod',
   option?: {
     needThumb?: boolean;
     needParent?: boolean;
@@ -166,6 +167,7 @@ export const syncChannel = async (
       console.log('thumbPath', thumbPath);
 
       const newData: any = {
+        online: !(item.fields['上线'] === '下线'),
         alias, // 使用内部唯一名称作为 alias
         display_name: displayName, // 显示名
         thumb_path: item.fields['封面url']?.[0]?.text || null,
@@ -173,6 +175,7 @@ export const syncChannel = async (
         locale: language, // 语言类型
         appid: 'jiantie', // 应用ID
         template_ids: templateIds,
+        env: env,
       };
       if (parentId) {
         newData.parent_id = Number(parentId);
@@ -201,6 +204,7 @@ export const syncChannel = async (
         parent_id: data.data.parent_id,
         update_time: new Date(),
         template_ids: data.data.template_ids,
+        env: env,
       },
       create: data.data,
     });
@@ -217,5 +221,5 @@ export const syncChannel = async (
   }
 
   await batchCreateAndUpdate([], feishuArr, sonBitTable, 100);
-  console.log(`已同步 ${inserData.length} 条一级栏目数据`);
+  console.log(`已同步 ${inserData.length} 条${ChClassName}数据`);
 };

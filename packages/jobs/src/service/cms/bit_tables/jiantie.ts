@@ -58,6 +58,7 @@ export interface BitChannelItem {
     包含模版?: bitRecRef;
     状态: string;
     id: bitTextRaw[];
+    上线: string;
   };
   record_id: string;
 }
