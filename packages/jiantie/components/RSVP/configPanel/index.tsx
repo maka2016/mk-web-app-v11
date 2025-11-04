@@ -7,10 +7,11 @@ import { Icon } from '@workspace/ui/components/Icon';
 import { Input } from '@workspace/ui/components/input';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import { Separator } from '@workspace/ui/components/separator';
+import { Switch } from '@workspace/ui/components/switch';
 import cls from 'classnames';
 import { useEffect, useMemo, useState } from 'react';
 import { ResponsiveDialog as LocalDialog } from '../../Drawer';
-import { RSVPAttrs } from '../type';
+import { RSVPAttrs, RsvpFormConfigEntityForUi } from '../type';
 
 type FieldType = 'text' | 'number' | 'textarea' | 'radio' | 'checkbox';
 
@@ -70,6 +71,8 @@ const fieldTypes = [
   { label: '多选', value: 'checkbox' as FieldType },
 ];
 
+type Config = Partial<Omit<RsvpFormConfigEntityForUi, 'id' | 'works_id'>>;
+
 function RSVPConfigPanel({ attrs }: Props) {
   const { worksId } = attrs;
   const [loading, setLoading] = useState<boolean>(true);
@@ -78,12 +81,14 @@ function RSVPConfigPanel({ attrs }: Props) {
 
   const [configId, setConfigId] = useState<string | null>(null);
   const [title, setTitle] = useState<string>('我要报名');
-  const [desc, setDesc] = useState<string>('');
-  const [enabled, setEnabled] = useState<boolean>(true);
-  const [allowMultiple, setAllowMultiple] = useState<boolean>(false);
-  const [requireApproval, setRequireApproval] = useState<boolean>(true);
-  const [maxSubmitCount, setMaxSubmitCount] = useState<number | ''>('');
-  const [submitDeadline, setSubmitDeadline] = useState<string>('');
+  const [config, setConfig] = useState<Config>({
+    desc: null,
+    enabled: true,
+    allow_multiple_submit: false,
+    require_approval: true,
+    max_submit_count: null,
+    submit_deadline: null,
+  });
   const [fields, setFields] = useState<RSVPField[]>([]);
 
   const [showFieldEditor, setShowFieldEditor] = useState(false);
@@ -100,25 +105,33 @@ function RSVPConfigPanel({ attrs }: Props) {
         });
         if (!mounted) return;
         if (existing) {
-          setConfigId((existing as any).id);
-          setTitle((existing as any).title || '');
-          setDesc((existing as any).desc || '');
-          setEnabled((existing as any).enabled !== false);
-          setAllowMultiple(Boolean((existing as any).allow_multiple_submit));
-          setRequireApproval((existing as any).require_approval !== false);
-          setMaxSubmitCount((existing as any).max_submit_count ?? '');
-          const deadline = (existing as any).submit_deadline
-            ? new Date((existing as any).submit_deadline)
+          setConfigId(existing.id);
+          setTitle(existing.title || '');
+          const deadline = existing.submit_deadline
+            ? new Date(existing.submit_deadline)
             : null;
-          setSubmitDeadline(deadline ? toLocalDateTimeValue(deadline) : '');
-          setFields(
-            ((existing as any).form_fields?.fields || []) as RSVPField[]
-          );
+          setConfig({
+            desc: existing.desc ?? null,
+            enabled: existing.enabled ?? true,
+            allow_multiple_submit: existing.allow_multiple_submit ?? false,
+            require_approval: existing.require_approval ?? true,
+            max_submit_count: existing.max_submit_count ?? null,
+            submit_deadline: deadline ? toLocalDateTimeValue(deadline) : null,
+          });
+          const formFields = existing.form_fields as {
+            fields: RSVPField[];
+          } | null;
+          setFields(formFields?.fields || []);
         } else {
           // defaults
-          setEnabled(true);
-          setRequireApproval(true);
-          setAllowMultiple(false);
+          setConfig({
+            desc: null,
+            enabled: true,
+            allow_multiple_submit: false,
+            require_approval: true,
+            max_submit_count: null,
+            submit_deadline: null,
+          });
           setFields([]);
         }
       } catch (e: any) {
@@ -174,13 +187,21 @@ function RSVPConfigPanel({ attrs }: Props) {
       const payload = {
         works_id: worksId,
         title: title || '我要报名',
-        desc,
+        desc: config.desc ?? null,
         form_fields: { fields: fields.map(ensureOptions) },
-        allow_multiple_submit: allowMultiple,
-        require_approval: requireApproval,
-        max_submit_count: maxSubmitCount === '' ? null : Number(maxSubmitCount),
-        submit_deadline: submitDeadline ? new Date(submitDeadline) : null,
-        enabled: enabled !== false,
+        allow_multiple_submit: config.allow_multiple_submit ?? false,
+        require_approval: config.require_approval ?? true,
+        max_submit_count:
+          config.max_submit_count !== null &&
+          config.max_submit_count !== undefined
+            ? config.max_submit_count
+            : null,
+        submit_deadline: config.submit_deadline
+          ? typeof config.submit_deadline === 'string'
+            ? new Date(config.submit_deadline)
+            : config.submit_deadline
+          : null,
+        enabled: config.enabled ?? true,
       } as any;
 
       const saved = await trpc.rsvp.upsertFormConfig.mutate(payload);
@@ -238,8 +259,13 @@ function RSVPConfigPanel({ attrs }: Props) {
             </div>
             <textarea
               className='h-[72px] resize-none w-full border-none text-xs rounded-md px-3 py-2 outline-none bg-[#F3F3F5]'
-              value={desc}
-              onChange={e => setDesc(e.target.value)}
+              value={config.desc ?? ''}
+              onChange={e =>
+                setConfig(prev => ({
+                  ...prev,
+                  desc: e.target.value || null,
+                }))
+              }
               placeholder='补充说明（可选）'
             />
           </div>
@@ -250,30 +276,39 @@ function RSVPConfigPanel({ attrs }: Props) {
             提交规则
           </div>
           <div className='flex items-center gap-4 my-2'>
-            <label className='flex items-center gap-1 text-xs leading-[18px] text-[#09090B] cursor-pointer'>
-              <input
-                type='checkbox'
-                checked={enabled}
-                onChange={e => setEnabled(e.target.checked)}
+            <div className='flex items-center gap-2 text-xs leading-[18px] text-[#09090B]'>
+              <Switch
+                checked={config.enabled ?? true}
+                onCheckedChange={checked =>
+                  setConfig(prev => ({ ...prev, enabled: checked }))
+                }
               />
-              开启
-            </label>
-            <label className='flex items-center gap-1 text-xs leading-[18px] text-[#09090B] cursor-pointer'>
-              <input
-                type='checkbox'
-                checked={allowMultiple}
-                onChange={e => setAllowMultiple(e.target.checked)}
+              <span>开启</span>
+            </div>
+            <div className='flex items-center gap-2 text-xs leading-[18px] text-[#09090B]'>
+              <Switch
+                checked={config.allow_multiple_submit ?? false}
+                onCheckedChange={checked =>
+                  setConfig(prev => ({
+                    ...prev,
+                    allow_multiple_submit: checked,
+                  }))
+                }
               />
-              允许多次提交
-            </label>
-            <label className='flex items-center gap-1 text-xs leading-[18px] text-[#09090B] cursor-pointer'>
-              <input
-                type='checkbox'
-                checked={requireApproval}
-                onChange={e => setRequireApproval(e.target.checked)}
+              <span>允许多次提交</span>
+            </div>
+            <div className='flex items-center gap-2 text-xs leading-[18px] text-[#09090B]'>
+              <Switch
+                checked={config.require_approval ?? true}
+                onCheckedChange={checked =>
+                  setConfig(prev => ({
+                    ...prev,
+                    require_approval: checked,
+                  }))
+                }
               />
-              需要审核
-            </label>
+              <span>需要审核</span>
+            </div>
           </div>
 
           <div className='flex items-center gap-3 mt-3'>
@@ -284,11 +319,15 @@ function RSVPConfigPanel({ attrs }: Props) {
               <Input
                 className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
                 type='number'
-                value={maxSubmitCount}
+                value={config.max_submit_count ?? ''}
                 onChange={e =>
-                  setMaxSubmitCount(
-                    e.target.value === '' ? '' : Number(e.target.value)
-                  )
+                  setConfig(prev => ({
+                    ...prev,
+                    max_submit_count:
+                      e.target.value === ''
+                        ? null
+                        : Number(e.target.value) || null,
+                  }))
                 }
                 placeholder='留空不限'
               />
@@ -300,8 +339,19 @@ function RSVPConfigPanel({ attrs }: Props) {
               <Input
                 className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
                 type='datetime-local'
-                value={submitDeadline}
-                onChange={e => setSubmitDeadline(e.target.value)}
+                value={
+                  config.submit_deadline
+                    ? typeof config.submit_deadline === 'string'
+                      ? config.submit_deadline
+                      : toLocalDateTimeValue(new Date(config.submit_deadline))
+                    : ''
+                }
+                onChange={e =>
+                  setConfig(prev => ({
+                    ...prev,
+                    submit_deadline: e.target.value || null,
+                  }))
+                }
               />
             </div>
           </div>
@@ -344,9 +394,9 @@ function RSVPConfigPanel({ attrs }: Props) {
           </div>
           <div>
             <div className='font-medium text-base leading-6'>{title}</div>
-            {desc ? (
+            {config.desc ? (
               <div className='text-[13px] leading-5 text-black/60 mt-1'>
-                {desc}
+                {config.desc}
               </div>
             ) : null}
             <div className='mt-4 space-y-3'>

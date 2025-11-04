@@ -6,12 +6,12 @@ import { protectedProcedure, publicProcedure, router } from '../trpc';
 const RsvpFormConfigInput = z.object({
   works_id: z.string(),
   title: z.string(),
-  desc: z.string().optional(),
+  desc: z.string().nullable().optional(),
   form_fields: z.any(),
   allow_multiple_submit: z.boolean().optional(),
   require_approval: z.boolean().optional(),
-  max_submit_count: z.number().int().optional(),
-  submit_deadline: z.date().optional(),
+  max_submit_count: z.number().int().nullable().optional(),
+  submit_deadline: z.date().nullable().optional(),
   enabled: z.boolean().optional(),
 });
 const RsvpFormConfigUpdateInput = z.object({
@@ -32,6 +32,7 @@ const RsvpSubmissionCreateInput = z.object({
   form_config_id: z.string(),
   visitor_id: z.string().optional(),
   contact_id: z.string().optional(),
+  will_attend: z.boolean(),
   submission_data: SubmissionDataSchema,
   remark: z.string().optional(),
 });
@@ -137,12 +138,89 @@ export const rsvpRouter = router({
         });
       }
 
+      let finalContactId = input.contact_id;
+
+      // 如果提交了手机号，自动创建/更新联系人
+      if (input.will_attend && input.submission_data) {
+        const submissionData = input.submission_data as Record<string, any>;
+
+        // 从提交数据中提取手机号
+        let phone: string | null = null;
+        for (const [key, value] of Object.entries(submissionData)) {
+          if (typeof value === 'string') {
+            const lowerKey = key.toLowerCase();
+            if (
+              lowerKey.includes('phone') ||
+              lowerKey.includes('mobile') ||
+              lowerKey.includes('tel') ||
+              lowerKey.includes('手机') ||
+              lowerKey.includes('电话') ||
+              lowerKey.includes('联系方式')
+            ) {
+              const phoneMatch = value.replace(/\D/g, '');
+              if (phoneMatch.length >= 7) {
+                phone = phoneMatch;
+                break;
+              }
+            }
+          }
+        }
+
+        // 如果有手机号，创建/更新联系人
+        if (phone) {
+          // 从提交数据中提取姓名
+          let name = '访客'; // 默认名称
+
+          // 优先从 _guestInfo 中获取
+          if (submissionData._guestInfo?.guestName) {
+            name = submissionData._guestInfo.guestName;
+          } else {
+            // 查找姓名字段
+            for (const [key, value] of Object.entries(submissionData)) {
+              if (typeof value === 'string') {
+                const lowerKey = key.toLowerCase();
+                if (
+                  (lowerKey.includes('name') ||
+                    lowerKey.includes('姓名') ||
+                    lowerKey.includes('名字')) &&
+                  value.trim()
+                ) {
+                  name = value.trim();
+                  break;
+                }
+              }
+            }
+          }
+
+          // 查找或创建联系人
+          const existing = await ctx.prisma.rsvpContactEntity.findUnique({
+            where: { phone: phone },
+          });
+
+          if (existing) {
+            // 更新现有联系人
+            const updated = await ctx.prisma.rsvpContactEntity.update({
+              where: { id: existing.id },
+              data: { name: name },
+            });
+            finalContactId = updated.id;
+          } else {
+            // 创建新联系人
+            const created = await ctx.prisma.rsvpContactEntity.create({
+              data: { phone: phone, name: name },
+            });
+            finalContactId = created.id;
+          }
+        }
+      }
+
       // 基于创建的 id 作为组 id
       const created = await ctx.prisma.rsvpSubmissionEntity.create({
         data: {
           form_config_id: input.form_config_id,
           visitor_id: input.visitor_id,
-          contact_id: input.contact_id,
+          contact_id: finalContactId,
+          will_attend: input.will_attend,
           submission_group_id: '',
           submission_data: input.submission_data,
           remark: input.remark,
@@ -156,7 +234,10 @@ export const rsvpRouter = router({
         data: { submission_group_id: created.id },
       });
 
-      return updated;
+      // 返回包含 contact_id 的完整记录
+      return ctx.prisma.rsvpSubmissionEntity.findUnique({
+        where: { id: updated.id },
+      });
     }),
 
   updateSubmissionVersion: publicProcedure
@@ -305,6 +386,69 @@ export const rsvpRouter = router({
       }
 
       return ctx.prisma.rsvpContactEntity.create({ data: input });
+    }),
+
+  // 公开接口：根据 contact_id 获取提交记录
+  getSubmissionsByContactId: publicProcedure
+    .input(z.object({ contact_id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.prisma.rsvpSubmissionEntity.findMany({
+        where: {
+          contact_id: input.contact_id,
+          deleted: false,
+        },
+        orderBy: { create_time: 'desc' },
+        include: {
+          form_config: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      });
+    }),
+
+  // 公开接口：根据 visitor_id 或 contact_id 查询当前表单的提交记录
+  getMySubmissionByFormConfig: publicProcedure
+    .input(
+      z.object({
+        form_config_id: z.string(),
+        visitor_id: z.string().optional(),
+        contact_id: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const where: any = {
+        form_config_id: input.form_config_id,
+        deleted: false,
+      };
+
+      // 优先使用 contact_id，其次 visitor_id
+      if (input.contact_id) {
+        where.contact_id = input.contact_id;
+      } else if (input.visitor_id) {
+        where.visitor_id = input.visitor_id;
+      } else {
+        return [];
+      }
+
+      // 获取每个 submission_group_id 的最新记录
+      const allSubmissions = await ctx.prisma.rsvpSubmissionEntity.findMany({
+        where,
+        orderBy: { create_time: 'desc' },
+      });
+
+      // 按 submission_group_id 分组，取每组最新的
+      const latestByGroup = new Map();
+      for (const submission of allSubmissions) {
+        const groupId = submission.submission_group_id;
+        if (!latestByGroup.has(groupId)) {
+          latestByGroup.set(groupId, submission);
+        }
+      }
+
+      return Array.from(latestByGroup.values());
     }),
 
   findContacts: protectedProcedure
