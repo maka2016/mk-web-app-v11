@@ -97,6 +97,7 @@ model TemplateMarketChannelEntity {
   /// 自引用关系实现树形结构
   parent       TemplateMarketChannelEntity?  @relation("ChannelHierarchy", fields: [parent_id], references: [id])
   children     TemplateMarketChannelEntity[] @relation("ChannelHierarchy")
+  env          String                        @db.VarChar
 
   @@index([alias], map: "IDX_template_market_channel_alias")
   @@index([parent_id], map: "IDX_template_market_channel_parent_id")
@@ -106,6 +107,7 @@ model TemplateMarketChannelEntity {
   @@index([appid], map: "IDX_template_market_channel_appid")
   @@index([id], map: "IDX_template_market_channel_id")
   @@index([online], map: "IDX_template_market_channel_online")
+  @@index([env], map: "IDX_template_market_channel_env")
   @@map("template_market_channel_entity")
 }
 
