@@ -1,4 +1,4 @@
-import { DatasheetItem, bitRecRef, bitTextRaw } from './types';
+import { DatasheetItem, bitFileRaw, bitRecRef, bitTextRaw } from './types';
 
 type BitTables = Record<string, DatasheetItem>;
 
@@ -44,6 +44,8 @@ export interface BitChannelItem {
   fields: {
     内部唯一名称: bitTextRaw[];
     显示名: bitTextRaw[];
+    封面: bitFileRaw[];
+    封面url: bitTextRaw[];
     语言: string;
     子级: bitRecRef;
     父级?: bitRecRef;

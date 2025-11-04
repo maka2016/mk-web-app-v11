@@ -12,6 +12,8 @@
   "dependencies": {
     "@larksuiteoapi/node-sdk": "^1.55.0",
     "@types/lodash": "^4.17.13",
+    "@workspace/database": "workspace:*",
+    "@workspace/server": "workspace:*",
     "lodash": "^4.17.21"
   }
 }
