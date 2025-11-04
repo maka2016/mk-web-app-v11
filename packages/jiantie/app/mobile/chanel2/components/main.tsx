@@ -1,57 +1,173 @@
 'use client';
 
+import { trpc } from '@/utils/trpc';
+import { cdnApi } from '@mk/services';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-interface Props {}
+interface Channel {
+  id: number;
+  alias: string;
+  display_name: string;
+  thumb_path: string | null;
+  class: string;
+  locale: string;
+  template_ids: string[];
+  parent_id: number | null;
+  appid: string | null;
+  create_time: Date;
+  update_time: Date;
+  children?: Channel[];
+}
 
-export default function Main({ appid }: Props) {
+interface Props {
+  appid?: string;
+}
+
+export default function Main({ appid = 'jiantie' }: Props) {
   const router = useRouter();
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchChannels = async () => {
+      try {
+        setLoading(true);
+        const data = await trpc.channel.getChannels.query({
+          appid,
+          locale: 'zh-CN',
+        });
+        setChannels(data);
+      } catch (err) {
+        console.error('获取频道数据失败:', err);
+        setError(err instanceof Error ? err.message : '网络请求失败');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChannels();
+  }, [appid]);
 
   return (
     <div className='flex flex-col h-dvh bg-gray-50'>
-      {/* 头部 */}
-      <div className='flex items-center justify-between px-4 py-3 bg-white border-b'>
-        <h1 className='text-lg font-semibold'>Chanel2 页面</h1>
-        <div className='text-sm text-gray-500'>AppID: {appid}</div>
-      </div>
-
       {/* 主内容区 */}
-      <div className='flex-1 overflow-y-auto p-4'>
-        <div className='bg-white rounded-lg shadow-sm p-6'>
-          <h2 className='text-xl font-bold mb-4'>欢迎来到 Chanel2</h2>
-          <p className='text-gray-600 mb-4'>
-            这是一个新的组件目录，你可以在这里开始开发你的功能。
-          </p>
-          <div className='space-y-2'>
-            <div className='p-3 bg-blue-50 rounded-md'>
-              <p className='text-sm text-blue-800'>
-                📁 使用 Tailwind CSS 进行样式开发
-              </p>
-            </div>
-            <div className='p-3 bg-green-50 rounded-md'>
-              <p className='text-sm text-green-800'>
-                ⚛️ React 19 + Next.js 15 App Router
-              </p>
-            </div>
-            <div className='p-3 bg-purple-50 rounded-md'>
-              <p className='text-sm text-purple-800'>
-                📱 移动端优先的响应式设计
-              </p>
+      <div className='flex-1 overflow-y-auto'>
+        {loading ? (
+          <div className='flex items-center justify-center h-full'>
+            <div className='text-center'>
+              <div className='w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
+              <p className='text-gray-500'>加载中...</p>
             </div>
           </div>
-        </div>
+        ) : error ? (
+          <div className='flex items-center justify-center h-full'>
+            <div className='text-center text-red-500'>
+              <p className='text-xl mb-2'>❌</p>
+              <p>{error}</p>
+            </div>
+          </div>
+        ) : channels.length === 0 ? (
+          <div className='flex items-center justify-center h-full'>
+            <div className='text-center text-gray-500'>
+              <p className='text-xl mb-2'>📭</p>
+              <p>暂无频道数据</p>
+            </div>
+          </div>
+        ) : (
+          <div className='p-6 space-y-8'>
+            {channels.map(channel => (
+              <div key={channel.id}>
+                {/* 分类标题 */}
+                <h2 className='text-sm text-gray-400 mb-4 font-medium'>
+                  {channel.display_name}
+                </h2>
+
+                {/* 网格布局 */}
+                <div className='grid grid-cols-4 gap-6'>
+                  {channel.children && channel.children.length > 0 ? (
+                    channel.children.map(child => (
+                      <div
+                        key={child.id}
+                        className='flex flex-col items-center cursor-pointer transition-transform active:scale-95'
+                        onClick={() => {
+                          console.log('点击频道:', child);
+                        }}
+                      >
+                        {/* 圆形图标容器 */}
+                        <div className='w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2 overflow-hidden'>
+                          {child.thumb_path ? (
+                            <div className='w-full h-full relative'>
+                              <Image
+                                src={cdnApi(child.thumb_path)}
+                                alt={child.display_name}
+                                fill
+                                className='object-cover'
+                              />
+                            </div>
+                          ) : (
+                            <span className='text-2xl'>
+                              {child.display_name.substring(0, 2)}
+                            </span>
+                          )}
+                        </div>
+                        {/* 分类名称 */}
+                        <span className='text-sm text-gray-700 text-center leading-tight'>
+                          {child.display_name}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    // 如果没有子频道，显示父频道本身
+                    <div
+                      className='flex flex-col items-center cursor-pointer transition-transform active:scale-95'
+                      onClick={() => {
+                        console.log('点击频道:', channel);
+                      }}
+                    >
+                      <div className='w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2 overflow-hidden'>
+                        {channel.thumb_path ? (
+                          <div className='w-full h-full relative'>
+                            <Image
+                              src={cdnApi(channel.thumb_path)}
+                              alt={channel.display_name}
+                              fill
+                              className='object-cover'
+                            />
+                          </div>
+                        ) : (
+                          <span className='text-2xl'>
+                            {channel.display_name.substring(0, 2)}
+                          </span>
+                        )}
+                      </div>
+                      <span className='text-sm text-gray-700 text-center leading-tight'>
+                        {channel.display_name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* 底部操作栏（可选） */}
-      <div className='flex items-center justify-center gap-4 p-4 bg-white border-t'>
+      {/* 底部操作栏 */}
+      <div className='flex items-center justify-between gap-4 p-4 bg-white border-t'>
         <button
           onClick={() => router.back()}
-          className='px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors'
+          className='flex-1 px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors'
         >
           返回
         </button>
-        <button className='px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors'>
-          开始使用
+        <button
+          onClick={() => window.location.reload()}
+          className='flex-1 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors'
+        >
+          刷新数据
         </button>
       </div>
     </div>

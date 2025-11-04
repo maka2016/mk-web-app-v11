@@ -1,32 +1,29 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import {
+  getAppId,
+  getPermissionList,
+  getToken,
+  getUid,
+  getUserProfileV10,
+  getUserRole,
+  request,
+} from '@/services';
+import { getVipABTest } from '@/services/abtest';
+import { useStore } from '@/store';
 import APPBridge from '@mk/app-bridge';
+import { API, setEnv } from '@mk/services';
 import {
   delCookie,
   isMakaAppAndroid,
   isMakaAppClient,
-  isMakaAppIOS,
   isWechat,
   queryToObj,
   setCookie,
   setCookieExpire,
 } from '@mk/utils';
-import {
-  getCustomerVips,
-  getToken,
-  getUid,
-  getPermissionList,
-  getAppId,
-  request,
-  getUserProfileV10,
-  getUserRole,
-} from '@/services';
-import { useStore } from '@/store';
 import Script from 'next/script';
-import { API, setEnv } from '@mk/services';
-import useIsMobile from '@/utils/use-mobile';
-import { getVipABTest } from '@/services/abtest';
+import { useEffect, useState } from 'react';
 
 export const UserInfoLoader = () => {
   const appid = getAppId();
@@ -73,6 +70,7 @@ export const UserInfoLoader = () => {
   const getProfile = async () => {
     const uid = getUid();
     const token = getToken();
+    console.log('getProfile', uid, token);
     if (uid && token) {
       const [res, vipRes]: any = await Promise.all([
         getUserProfileV10(appid, uid),

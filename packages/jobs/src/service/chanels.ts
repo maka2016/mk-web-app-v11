@@ -143,8 +143,10 @@ export const syncChannel = async (
         }) ?? [];
 
       // 提取内部唯一名称（bitTextRef 类型）
-      const aliasField = item.fields['内部唯一名称'];
-      const alias = aliasField?.[0]?.text || '';
+      const alias = item.fields['内部唯一名称']?.value?.[0]?.text || '';
+
+      console.log('alias', alias);
+      // const alias = aliasField?.[0]?.text || '';
       // 提取显示名（bitTextRaw[] 类型）
       const displayNameField = item.fields['显示名'];
       const displayName = displayNameField?.[0]?.text || '';
