@@ -127,7 +127,7 @@ model RsvpFormConfigEntity {
   form_fields Json    @map("form_fields") /// 表单字段配置 JSON
 
   /// 表单功能设置
-  allow_multiple_submit Boolean   @default(false) @map("allow_multiple_submit") /// 是否允许多次提交
+  allow_multiple_submit Boolean   @default(true) @map("allow_multiple_submit") /// 是否允许多次提交
   require_approval      Boolean   @default(true) @map("require_approval") /// 是否需要审核
   max_submit_count      Int?      @map("max_submit_count") @db.Integer /// 最大提交次数限制
   submit_deadline       DateTime? @map("submit_deadline") @db.Timestamptz /// 提交截止时间
