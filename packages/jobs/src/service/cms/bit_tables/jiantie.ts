@@ -2,7 +2,7 @@ import { DatasheetItem } from './types';
 
 type BitTables = Record<string, DatasheetItem>;
 
-export const bitTables: BitTables = {
+export const JTBitTables: BitTables = {
   // https://www.feishu.cn/wiki/SKy7wPvIFiA8sokZTC1ccdbfnHf?base_hp_from=larktab&table=tblHMx8F5LPM6y7k&view=vewkBW3EJf
   '一级-栏目': {
     name: '一级-栏目',

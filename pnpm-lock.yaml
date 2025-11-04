@@ -307,9 +307,6 @@ importers:
       '@icon-park/react':
         specifier: ^1.4.2
         version: 1.4.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@larksuiteoapi/node-sdk':
-        specifier: ^1.55.0
-        version: 1.55.0
       '@supabase/supabase-js':
         specifier: ^2.76.1
         version: 2.76.1
@@ -339,7 +336,7 @@ importers:
         version: 9.2.0(mobx@6.13.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       next-intl:
         specifier: ^4.0.2
-        version: 4.1.0(next@16.0.0(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(sass@1.89.2))(react@19.2.0)(typescript@5.8.2)
+        version: 4.1.0(next@16.0.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(sass@1.89.2))(react@19.2.0)(typescript@5.8.2)
       qrcode.react:
         specifier: ^4.2.0
         version: 4.2.0(react@19.2.0)
@@ -354,7 +351,7 @@ importers:
         version: 2.6.0
       tailwindcss-animate:
         specifier: ^1.0.7
-        version: 1.0.7(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@20.17.28)(typescript@5.8.2)))
+        version: 1.0.7
     devDependencies:
       '@types/lodash':
         specifier: ^4.17.13
@@ -366,7 +363,11 @@ importers:
         specifier: ^6.9.17
         version: 6.9.18
 
-  packages/jobs: {}
+  packages/jobs:
+    dependencies:
+      '@larksuiteoapi/node-sdk':
+        specifier: ^1.55.0
+        version: 1.55.0
 
   packages/logger: {}
 
@@ -12907,11 +12908,11 @@ snapshots:
       url-loader: 4.1.1(file-loader@6.2.0(webpack@5.98.0))(webpack@5.98.0)
       webpack: 5.98.0
 
-  next-intl@4.1.0(next@16.0.0(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(sass@1.89.2))(react@19.2.0)(typescript@5.8.2):
+  next-intl@4.1.0(next@16.0.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(sass@1.89.2))(react@19.2.0)(typescript@5.8.2):
     dependencies:
       '@formatjs/intl-localematcher': 0.5.10
       negotiator: 1.0.0
-      next: 16.0.0(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(sass@1.89.2)
+      next: 16.0.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(sass@1.89.2)
       react: 19.2.0
       use-intl: 4.1.0(react@19.2.0)
     optionalDependencies:
@@ -12931,6 +12932,30 @@ snapshots:
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
       styled-jsx: 5.1.6(@babel/core@7.28.5)(react@19.2.0)
+    optionalDependencies:
+      '@next/swc-darwin-arm64': 16.0.0
+      '@next/swc-darwin-x64': 16.0.0
+      '@next/swc-linux-arm64-gnu': 16.0.0
+      '@next/swc-linux-arm64-musl': 16.0.0
+      '@next/swc-linux-x64-gnu': 16.0.0
+      '@next/swc-linux-x64-musl': 16.0.0
+      '@next/swc-win32-arm64-msvc': 16.0.0
+      '@next/swc-win32-x64-msvc': 16.0.0
+      sass: 1.89.2
+      sharp: 0.34.4
+    transitivePeerDependencies:
+      - '@babel/core'
+      - babel-plugin-macros
+
+  next@16.0.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(sass@1.89.2):
+    dependencies:
+      '@next/env': 16.0.0
+      '@swc/helpers': 0.5.15
+      caniuse-lite: 1.0.30001751
+      postcss: 8.4.31
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+      styled-jsx: 5.1.6(react@19.2.0)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.0.0
       '@next/swc-darwin-x64': 16.0.0
@@ -14304,6 +14329,11 @@ snapshots:
     optionalDependencies:
       '@babel/core': 7.28.5
 
+  styled-jsx@5.1.6(react@19.2.0):
+    dependencies:
+      client-only: 0.0.1
+      react: 19.2.0
+
   stylis@4.2.0: {}
 
   stylis@4.3.6: {}
@@ -14345,9 +14375,7 @@ snapshots:
 
   tailwind-merge@2.6.0: {}
 
-  tailwindcss-animate@1.0.7(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@20.17.28)(typescript@5.8.2))):
-    dependencies:
-      tailwindcss: 3.4.17(ts-node@10.9.2(@types/node@20.17.28)(typescript@5.8.2))
+  tailwindcss-animate@1.0.7: {}
 
   tailwindcss-animate@1.0.7(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@22.13.14)(typescript@5.8.2))):
     dependencies:
