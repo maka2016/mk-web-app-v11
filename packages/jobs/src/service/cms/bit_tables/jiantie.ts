@@ -1,4 +1,10 @@
-import { DatasheetItem, bitRecRef, bitTextRaw } from './types';
+import {
+  DatasheetItem,
+  bitFileRaw,
+  bitRecRef,
+  bitTextRaw,
+  bitTextRef,
+} from './types';
 
 type BitTables = Record<string, DatasheetItem>;
 
@@ -42,14 +48,17 @@ export const JTBitTables: BitTables = {
 
 export interface BitChannelItem {
   fields: {
-    内部唯一名称: bitTextRaw[];
+    内部唯一名称: bitTextRef;
     显示名: bitTextRaw[];
+    封面: bitFileRaw[];
+    封面url: bitTextRaw[];
     语言: string;
     子级: bitRecRef;
     父级?: bitRecRef;
     包含模版?: bitRecRef;
     状态: string;
     id: bitTextRaw[];
+    上线: string;
   };
   record_id: string;
 }

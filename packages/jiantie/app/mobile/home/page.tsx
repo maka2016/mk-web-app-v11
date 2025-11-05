@@ -20,10 +20,13 @@ export default async function Page({
   const userAgent = headersList.get('user-agent') || '';
   const isMiniProgram = /miniProgram/i.test(userAgent);
 
-  const isStoreV1 =
-    appid === 'jiantie' || appid === 'xueji' || storeChannelV1 === 'true';
+  const isStoreV1 = appid === 'xueji' || storeChannelV1 === 'true';
 
-  if (isStoreV1) {
+  const isPrisma = appid === 'jiantie';
+
+  if (isPrisma) {
+    templateChannels = {};
+  } else if (isStoreV1) {
     templateChannels = await getStoreChannelV1({ appid });
   } else {
     templateChannels = await getChannelData({ appid });

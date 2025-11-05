@@ -11,6 +11,15 @@ export interface bitTextRef {
   value: bitTextRaw[];
 }
 
+export interface bitFileRaw {
+  file_token: string;
+  name: string;
+  size: number;
+  tmp_url: string;
+  type: string;
+  url: string;
+}
+
 export interface bitRecRef {
   link_record_ids: string[];
 }

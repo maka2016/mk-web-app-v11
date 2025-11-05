@@ -1,9 +1,7 @@
-import { getWidgetMeta } from '@mk/services';
-import { LoadWidget } from '@mk/utils';
-import { CommonFormProps, PlatformCompProps } from '@mk/widgets-bridge-sdk';
 import GridV3Comp from '@/components/GridV3/comp';
+import { getWidgetMeta } from '@mk/services';
+import { CommonFormProps, PlatformCompProps } from '@mk/widgets-bridge-sdk';
 import { LayerElemItem } from '@mk/works-store/types';
-import clas from 'classnames';
 import React from 'react';
 import { useWorksStore } from '../../useStore';
 import { editorContext } from '../editor-ctx';

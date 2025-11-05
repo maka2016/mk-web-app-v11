@@ -9,7 +9,7 @@ export interface RSVPAttrs {
   worksId: string;
 }
 
-export type FieldType = 'text' | 'number' | 'textarea' | 'radio' | 'checkbox';
+export type FieldType = 'text' | 'radio' | 'checkbox' | 'guest_count';
 
 export interface RSVPFieldOption {
   label: string;
@@ -24,6 +24,9 @@ export interface RSVPField {
   placeholder?: string;
   options?: RSVPFieldOption[]; // for radio/checkbox
   defaultValue?: any;
+  splitAdultChild?: boolean; // for guest_count: 是否划分大人和小孩
+  enabled?: boolean; // 是否开启该字段
+  isSystem?: boolean; // 是否为系统字段（系统字段不允许删除）
 }
 
 /**
@@ -68,6 +71,50 @@ export function toRSVPFormFieldsJson(
   } as unknown as Prisma.InputJsonValue;
 }
 
+/**
+ * 获取默认的表单字段
+ */
+export function getDefaultFields(): RSVPField[] {
+  return [
+    {
+      id: 'guest_count',
+      type: 'guest_count',
+      label: '访客',
+      required: true,
+      enabled: true,
+      splitAdultChild: false,
+      isSystem: true, // 系统字段，不允许删除
+    },
+    {
+      id: 'phone',
+      type: 'text',
+      label: '手机',
+      required: false,
+      enabled: true,
+      placeholder: '请输入手机号码',
+      isSystem: true, // 系统字段，不允许删除
+    },
+    {
+      id: 'email',
+      type: 'text',
+      label: 'email',
+      required: false,
+      enabled: false,
+      placeholder: '请输入邮箱地址',
+      isSystem: true, // 系统字段，不允许删除
+    },
+    {
+      id: 'remark',
+      type: 'text',
+      label: '留言备注',
+      required: false,
+      enabled: false,
+      placeholder: '请输入留言备注',
+      isSystem: true, // 系统字段，不允许删除
+    },
+  ];
+}
+
 export interface RsvpFormConfigEntityForUi
   extends Partial<
     Omit<
@@ -77,4 +124,5 @@ export interface RsvpFormConfigEntityForUi
   > {
   form_fields: RSVPFormFields;
   submit_deadline: string | null;
+  collect_form?: boolean; // 是否收集表单
 }

@@ -2,14 +2,33 @@
 import { getCookie, setCookie } from '@/components/viewer/utils/helper';
 import { trpc } from '@/utils/trpc';
 import styled from '@emotion/styled';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { EditorSDK, LayerElemItem } from '@mk/works-store/types';
 import { Button } from '@workspace/ui/components/button';
+import { Checkbox } from '@workspace/ui/components/checkbox';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@workspace/ui/components/form';
+import { Input } from '@workspace/ui/components/input';
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '@workspace/ui/components/radio-group';
+import { Minus, Plus } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 import { ResponsiveDialog } from '../../Drawer';
 import { RSVPConfigPanel } from '../configPanel';
 import { RSVPProvider, useRSVP } from '../RSVPContext';
 import { RSVPAttrs, RSVPField } from '../type';
+import { SubmissionView } from './SubmissionView';
 
 // Cookie 键名
 const COOKIE_VISITOR_ID = 'rsvp_visitor_id';
@@ -29,6 +48,97 @@ function getOrCreateVisitorId(): string {
   return visitorId;
 }
 
+// 根据字段配置动态生成 zod schema
+function createFormSchema(fields: RSVPField[]) {
+  const schemaShape: Record<string, z.ZodTypeAny> = {};
+
+  // 只处理启用的字段
+  fields
+    .filter(field => field.enabled !== false)
+    .forEach(field => {
+      let fieldSchema: z.ZodTypeAny;
+
+      if (field.type === 'text') {
+        fieldSchema = z.string();
+      } else if (field.type === 'radio') {
+        fieldSchema = z.string();
+      } else if (field.type === 'checkbox') {
+        fieldSchema = z.array(z.string());
+      } else if (field.type === 'guest_count') {
+        // 访客人数类型：如果支持大人小孩划分，则存储 { adult: number, child: number }，否则存储 { total: number }
+        if (field.splitAdultChild) {
+          fieldSchema = z.object({
+            adult: z.number().int().min(0, '大人人数不能小于0'),
+            child: z.number().int().min(0, '小孩人数不能小于0'),
+          });
+        } else {
+          fieldSchema = z.object({
+            total: z.number().int().min(0, '人数不能小于0'),
+          });
+        }
+      } else {
+        fieldSchema = z.string();
+      }
+
+      // 如果字段是必填的，添加 required 验证
+      if (field.required) {
+        if (field.type === 'checkbox') {
+          fieldSchema = (fieldSchema as z.ZodArray<z.ZodString>).min(
+            1,
+            `${field.label} 为必选`
+          );
+        } else if (field.type === 'guest_count') {
+          // guest_count 类型的必填验证已经在对象内部处理
+          // 只需要确保至少有一个值大于0
+          if (field.splitAdultChild) {
+            fieldSchema = (fieldSchema as z.ZodObject<any>).refine(
+              (val: any) => val.adult > 0 || val.child > 0,
+              {
+                message: `${field.label} 至少需要填写一人`,
+              }
+            );
+          } else {
+            fieldSchema = (fieldSchema as z.ZodObject<any>).refine(
+              (val: any) => val.total > 0,
+              {
+                message: `${field.label} 至少需要填写一人`,
+              }
+            );
+          }
+        } else {
+          fieldSchema = (fieldSchema as z.ZodString).min(
+            1,
+            `${field.label} 为必填`
+          );
+        }
+      } else {
+        // 可选字段，允许空值
+        if (field.type === 'checkbox') {
+          fieldSchema = (fieldSchema as z.ZodArray<z.ZodString>)
+            .optional()
+            .default([]);
+        } else if (field.type === 'guest_count') {
+          // guest_count 可选时，默认值为空对象
+          if (field.splitAdultChild) {
+            fieldSchema = (fieldSchema as z.ZodObject<any>)
+              .optional()
+              .default({ adult: 0, child: 0 });
+          } else {
+            fieldSchema = (fieldSchema as z.ZodObject<any>)
+              .optional()
+              .default({ total: 0 });
+          }
+        } else {
+          fieldSchema = (fieldSchema as z.ZodString).optional().default('');
+        }
+      }
+
+      schemaShape[field.id] = fieldSchema;
+    });
+
+  return z.object(schemaShape);
+}
+
 interface RSVPCompProps {
   attrs: RSVPAttrs;
   editorSDK: EditorSDK;
@@ -46,15 +156,35 @@ const FormCompWrapper = styled.div`
 
 // 内部组件：负责纯粹的渲染
 function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
-  const { formConfigId } = attrs;
+  const { formConfigId, worksId } = attrs;
   const searchParams = useSearchParams();
   const rsvp = useRSVP();
   const { config, loading, error, fields, showEditDialog, setShowEditDialog } =
     rsvp;
 
-  // 从 URL 参数获取被邀请人姓名
+  // 从 URL 参数获取被邀请人信息（支持新的专属链接参数）
+  // 解码 URL 参数，处理可能的双重编码情况
+  const decodeParam = (value: string | null): string => {
+    if (!value) return '';
+    try {
+      // searchParams.get() 已经自动解码一次，但如果遇到双重编码，需要再次解码
+      // 检查是否还包含编码字符（%）
+      if (value.includes('%')) {
+        return decodeURIComponent(value);
+      }
+      return value;
+    } catch {
+      return value;
+    }
+  };
+
   const inviteeName =
-    searchParams.get('invitee') || searchParams.get('name') || '';
+    decodeParam(searchParams.get('rsvp_invitee')) ||
+    decodeParam(searchParams.get('invitee')) ||
+    decodeParam(searchParams.get('name')) ||
+    '';
+  const inviteePhone = decodeParam(searchParams.get('rsvp_phone'));
+  const inviteeEmail = decodeParam(searchParams.get('rsvp_email'));
 
   // 没有在编辑器时，就是访客模式，需要根据访客的设备生成访客的ID
   const isViewerMode = !editorSDK;
@@ -64,14 +194,13 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
   const [guestName, setGuestName] = useState<string>('');
 
   const [willAttend, setWillAttend] = useState<boolean | null>(null); // null=未选择, true=出席, false=不出席
-  const [values, setValues] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [lastSubmissionGroupId, setLastSubmissionGroupId] = useState<
     string | null
   >(null);
   const [resultMsg, setResultMsg] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<boolean>(false); // 是否已提交成功
-  const [submissionHistory, setSubmissionHistory] = useState<any[]>([]); // 提交历史记录
+  const [latestSubmission, setLatestSubmission] = useState<any | null>(null); // 最新提交记录
 
   // 访客模式下的访客ID和联系人ID
   const [visitorId, setVisitorId] = useState<string>('');
@@ -83,18 +212,90 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     return Date.now() > d.getTime();
   }, [config?.submit_deadline]);
 
+  // 动态生成表单 schema
+  const formSchema = useMemo(() => {
+    if (fields.length === 0) {
+      return z.record(z.string(), z.union([z.string(), z.array(z.string())]));
+    }
+    return createFormSchema(fields);
+  }, [fields]);
+
+  // 初始化表单默认值（只处理启用的字段）
+  const getDefaultValues = useMemo(() => {
+    const defaults: Record<string, string | string[] | Record<string, number>> =
+      {};
+    fields
+      .filter(f => f.enabled !== false)
+      .forEach(f => {
+        if (typeof f.defaultValue !== 'undefined') {
+          defaults[f.id] = f.defaultValue;
+        } else if (f.type === 'checkbox') {
+          defaults[f.id] = [];
+        } else if (f.type === 'guest_count') {
+          if (f.splitAdultChild) {
+            defaults[f.id] = { adult: 0, child: 0 };
+          } else {
+            defaults[f.id] = { total: 0 };
+          }
+        } else {
+          defaults[f.id] = '';
+        }
+      });
+    return defaults;
+  }, [fields]);
+
+  // 使用 react-hook-form
+  type FormValues = Record<
+    string,
+    string | string[] | { adult: number; child: number } | { total: number }
+  >;
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema) as any,
+    defaultValues: getDefaultValues,
+    mode: 'onChange',
+  });
+
   // 初始化访客ID和联系人ID（仅在访客模式下）
   useEffect(() => {
     if (isViewerMode && typeof window !== 'undefined') {
       const vid = getOrCreateVisitorId();
       setVisitorId(vid);
 
-      const cid = getCookie(COOKIE_CONTACT_ID);
-      if (cid) {
-        setContactId(cid);
+      // 优先从 URL 参数读取 contact_id，确保专属链接能精确关联嘉宾
+      const urlContactId = searchParams.get('rsvp_contact_id');
+      if (urlContactId) {
+        setContactId(urlContactId);
+        setCookie(COOKIE_CONTACT_ID, urlContactId, COOKIE_EXPIRE_DAYS);
+      } else {
+        // 如果 URL 没有，再从 cookie 读取
+        const cid = getCookie(COOKIE_CONTACT_ID);
+        if (cid) {
+          setContactId(cid);
+        }
       }
     }
-  }, [isViewerMode]);
+  }, [isViewerMode, searchParams]);
+
+  // 记录访问日志（访客打开页面）
+  useEffect(() => {
+    if (isViewerMode && config?.id && typeof window !== 'undefined') {
+      trpc.rsvp.createActionLog
+        .mutate({
+          form_config_id: config.id,
+          contact_id: contactId || undefined,
+          visitor_id: visitorId || undefined,
+          action_type: 'view_page',
+          user_agent: navigator.userAgent,
+          device_type: /Mobile/.test(navigator.userAgent)
+            ? 'mobile'
+            : 'desktop',
+          referer: document.referrer || undefined,
+        })
+        .catch(() => {
+          // 忽略错误，不影响用户体验
+        });
+    }
+  }, [isViewerMode, config?.id, contactId, visitorId]);
 
   // 查询访客是否有提交记录（如果有则显示提交信息页）
   useEffect(() => {
@@ -109,50 +310,17 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           if (data && data.length > 0) {
             // 有提交记录，显示提交信息页
             const submissions = data as any[];
-            setSubmissionHistory(submissions);
+            const latest = submissions[0];
+
+            setLatestSubmission(latest);
             setSubmitted(true);
 
-            // 设置最新的提交记录信息
-            const latest = submissions[0];
             if (latest) {
               setLastSubmissionGroupId(latest.submission_group_id);
               setWillAttend(latest.will_attend);
 
               // 设置结果消息
-              if (latest.status === 'approved') {
-                setResultMsg('提交成功，已确认');
-              } else if (latest.status === 'pending') {
-                setResultMsg('提交成功，等待审核');
-              } else if (latest.status === 'rejected') {
-                setResultMsg('提交已拒绝');
-              } else {
-                setResultMsg('提交成功');
-              }
-            }
-
-            // 如果有 contact_id，更新状态
-            if (latest?.contact_id && latest.contact_id !== contactId) {
-              setContactId(latest.contact_id);
-              setCookie(
-                COOKIE_CONTACT_ID,
-                latest.contact_id,
-                COOKIE_EXPIRE_DAYS
-              );
-            }
-          } else {
-            // 没有提交记录，但如果有 contact_id，加载历史记录用于显示
-            if (contactId) {
-              trpc.rsvp.getSubmissionsByContactId
-                .query({ contact_id: contactId })
-                .then((historyData: any) => {
-                  const currentFormSubmissions = (historyData as any[]).filter(
-                    (s: any) => s.form_config_id === config.id
-                  );
-                  setSubmissionHistory(currentFormSubmissions);
-                })
-                .catch(() => {
-                  // 忽略错误
-                });
+              setResultMsg('提交成功');
             }
           }
         })
@@ -162,27 +330,10 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     }
   }, [isViewerMode, visitorId, contactId, config?.id]);
 
-  // 初始化表单值
+  // 当字段变化时，重置表单默认值
   useEffect(() => {
     if (config && fields.length > 0) {
-      const initValues: Record<string, any> = {};
-      fields.forEach(f => {
-        if (typeof f.defaultValue !== 'undefined') {
-          initValues[f.id] = f.defaultValue;
-        } else if (f.type === 'checkbox') {
-          initValues[f.id] = [];
-        } else {
-          initValues[f.id] = values[f.id] || '';
-        }
-      });
-      setValues(prev => {
-        // 只在字段变化时更新，保留已有的值
-        const hasNewFields = fields.some(f => !prev.hasOwnProperty(f.id));
-        if (hasNewFields) {
-          return { ...prev, ...initValues };
-        }
-        return prev;
-      });
+      form.reset(getDefaultValues);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.id, fields.length]);
@@ -200,24 +351,6 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     return config.title; // 如果没有邀请人姓名，显示配置的标题
   }, [isGuest, inviteeName, config]);
 
-  const handleChange = (field: RSVPField, next: any) => {
-    setValues(prev => ({ ...prev, [field.id]: next }));
-  };
-
-  const validate = (): string | null => {
-    for (const f of fields) {
-      if (f.required) {
-        const v = values[f.id];
-        if (f.type === 'checkbox') {
-          if (!Array.isArray(v) || v.length === 0) return `${f.label} 为必选`;
-        } else if (v === undefined || v === null || String(v).trim() === '') {
-          return `${f.label} 为必填`;
-        }
-      }
-    }
-    return null;
-  };
-
   const handleSubmit = async (willAttendValue: boolean) => {
     if (!config) return;
 
@@ -227,20 +360,28 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
       return;
     }
 
-    // 如果选择出席，需要验证表单
-    if (willAttendValue) {
-      const err = validate();
-      if (err) {
-        setResultMsg(err);
-        return;
-      }
-    }
-
     setSubmitting(true);
     setResultMsg(null);
     try {
-      // 构建提交数据，包含访客类型和姓名信息
-      const submissionData = willAttendValue ? values : {};
+      // 如果选择出席，需要验证表单并获取表单数据
+      let submissionData: Record<string, any> = {};
+      if (willAttendValue) {
+        // 验证表单
+        const isValid = await form.trigger();
+        if (!isValid) {
+          const errors = form.formState.errors;
+          const firstError = Object.values(errors)[0];
+          if (firstError?.message) {
+            setResultMsg(String(firstError.message));
+          } else {
+            setResultMsg('请检查表单填写是否正确');
+          }
+          setSubmitting(false);
+          return;
+        }
+        // 获取表单值
+        submissionData = form.getValues();
+      }
 
       // 如果是公开访客，添加访客信息
       if (isGuest) {
@@ -250,34 +391,50 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           originalInvitee: inviteeName, // 记录原始被邀请人
         };
       } else if (inviteeName) {
-        // 被邀请人信息
+        // 被邀请人信息（专属链接）
         submissionData._inviteeInfo = {
           isGuest: false,
           inviteeName: inviteeName,
+          inviteePhone: inviteePhone,
+          inviteeEmail: inviteeEmail,
         };
       }
 
-      const created = await trpc.rsvp.createSubmission.mutate({
-        form_config_id: config.id!,
-        visitor_id: isViewerMode ? visitorId : undefined,
-        contact_id: isViewerMode ? contactId || undefined : undefined,
-        will_attend: willAttendValue,
-        submission_data: submissionData,
-      });
+      // 判断是首次提交还是重新提交
+      let result: any;
+      if (lastSubmissionGroupId) {
+        // 重新提交 - 创建新版本（后端会自动记录 resubmit 日志）
+        result = await trpc.rsvp.updateSubmissionVersion.mutate({
+          submission_group_id: lastSubmissionGroupId,
+          submission_data: submissionData,
+          operator_type: 'visitor',
+          operator_id: contactId || visitorId,
+        });
+      } else {
+        // 首次提交（后端会自动记录 submit 日志）
+        result = await trpc.rsvp.createSubmission.mutate({
+          form_config_id: config.id!,
+          visitor_id: isViewerMode ? visitorId : undefined,
+          contact_id: isViewerMode ? contactId || undefined : undefined,
+          will_attend: willAttendValue,
+          submission_data: submissionData,
+        });
 
-      // 如果服务器端创建了联系人，从返回结果中获取 contact_id
-      const returnedContactId = (created as any)?.contact_id;
-      if (
-        isViewerMode &&
-        returnedContactId &&
-        returnedContactId !== contactId
-      ) {
-        setContactId(returnedContactId);
-        // 保存到cookie
-        setCookie(COOKIE_CONTACT_ID, returnedContactId, COOKIE_EXPIRE_DAYS);
+        // 如果服务器端创建了联系人，从返回结果中获取 contact_id
+        const returnedContactId = result?.contact_id;
+        if (
+          isViewerMode &&
+          returnedContactId &&
+          returnedContactId !== contactId
+        ) {
+          setContactId(returnedContactId);
+          // 保存到cookie
+          setCookie(COOKIE_CONTACT_ID, returnedContactId, COOKIE_EXPIRE_DAYS);
+        }
+
+        setLastSubmissionGroupId(result?.submission_group_id || null);
       }
 
-      setLastSubmissionGroupId((created as any)?.submission_group_id || null);
       setWillAttend(willAttendValue);
       setSubmitted(true); // 标记为已提交
       if (config.require_approval) {
@@ -286,17 +443,19 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         setResultMsg('提交成功');
       }
 
-      // 提交成功后重新加载历史记录
-      const finalContactId = returnedContactId || contactId;
-      if (isViewerMode && finalContactId) {
+      // 提交成功后重新加载最新提交记录
+      const finalContactId = contactId || result?.contact_id;
+      if (isViewerMode && finalContactId && config.id) {
         try {
-          const historyData = await trpc.rsvp.getSubmissionsByContactId.query({
-            contact_id: finalContactId,
-          });
-          const currentFormSubmissions = (historyData as any[]).filter(
-            (s: any) => s.form_config_id === config.id
-          );
-          setSubmissionHistory(currentFormSubmissions);
+          const submissionData =
+            await trpc.rsvp.getMySubmissionByFormConfig.query({
+              form_config_id: config.id,
+              visitor_id: visitorId || undefined,
+              contact_id: finalContactId || undefined,
+            });
+          if (submissionData && submissionData.length > 0) {
+            setLatestSubmission(submissionData[0]);
+          }
         } catch {
           // 忽略错误
         }
@@ -308,50 +467,44 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     }
   };
 
-  const handleModify = async () => {
-    if (!config) return;
-    if (!lastSubmissionGroupId) {
-      setResultMsg('没有可修改的提交记录');
-      return;
-    }
-    const err = validate();
-    if (err) {
-      setResultMsg(err);
-      return;
-    }
-    setSubmitting(true);
-    setResultMsg(null);
-    try {
-      await trpc.rsvp.updateSubmissionVersion.mutate({
-        submission_group_id: lastSubmissionGroupId,
-        submission_data: values,
-      });
-      setResultMsg('修改成功，已创建新版本');
-    } catch (e: any) {
-      setResultMsg(String(e?.message || '修改失败'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleResubmit = () => {
     // 重置状态，回到表单
     setSubmitted(false);
     setResultMsg(null);
     setWillAttend(null);
-    // 重置表单值
-    const fields: RSVPField[] = (config as any)?.form_fields?.fields || [];
-    const initValues: Record<string, any> = {};
-    fields.forEach(f => {
-      if (typeof f.defaultValue !== 'undefined') {
-        initValues[f.id] = f.defaultValue;
-      } else if (f.type === 'checkbox') {
-        initValues[f.id] = [];
-      } else {
-        initValues[f.id] = '';
-      }
-    });
-    setValues(initValues);
+
+    // 如果有最新提交记录，使用其表单值作为默认值
+    if (latestSubmission?.submission_data) {
+      const submissionData = latestSubmission.submission_data;
+      const defaultValues: Record<
+        string,
+        string | string[] | { adult: number; child: number } | { total: number }
+      > = {};
+
+      // 从提交数据中提取表单字段值（只处理启用的字段，排除系统字段）
+      fields
+        .filter(field => field.enabled !== false)
+        .forEach(field => {
+          if (submissionData[field.id] !== undefined) {
+            defaultValues[field.id] = submissionData[field.id];
+          } else if (field.type === 'checkbox') {
+            defaultValues[field.id] = [];
+          } else if (field.type === 'guest_count') {
+            if (field.splitAdultChild) {
+              defaultValues[field.id] = { adult: 0, child: 0 };
+            } else {
+              defaultValues[field.id] = { total: 0 };
+            }
+          } else {
+            defaultValues[field.id] = '';
+          }
+        });
+
+      form.reset(defaultValues);
+    } else {
+      // 没有提交记录，使用默认值
+      form.reset(getDefaultValues);
+    }
   };
 
   if (loading) {
@@ -396,69 +549,20 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
 
   // 提交成功页面（如果有提交记录或已提交）
   if (submitted && resultMsg) {
-    const latestSubmission = submissionHistory[0];
     return (
-      <FormCompWrapper className='w-full max-w-xl mx-auto space-y-4'>
-        <div className='text-center py-8'>
-          <div className='text-2xl font-semibold text-green-600 mb-2'>
-            ✓ {resultMsg}
-          </div>
-          {latestSubmission && (
-            <div className='text-sm text-gray-600 mt-2'>
-              {latestSubmission.will_attend ? '您已确认出席' : '您已确认不出席'}
-            </div>
-          )}
-          {config.require_approval &&
-            latestSubmission?.status === 'pending' && (
-              <div className='text-sm text-gray-500 mt-2'>
-                您的提交已收到，请等待审核结果
-              </div>
-            )}
-          {submissionHistory.length > 0 && (
-            <div className='mt-6'>
-              <div className='text-sm font-medium mb-3'>您的提交记录：</div>
-              <div className='space-y-2'>
-                {submissionHistory.slice(0, 3).map((submission, idx) => (
-                  <div
-                    key={submission.id}
-                    className='border rounded p-3 text-left text-sm'
-                  >
-                    <div className='font-medium'>
-                      提交 #{submissionHistory.length - idx}
-                      {submission.will_attend ? (
-                        <span className='ml-2 text-green-600'>出席</span>
-                      ) : (
-                        <span className='ml-2 text-gray-500'>不出席</span>
-                      )}
-                    </div>
-                    <div className='text-gray-500 text-xs mt-1'>
-                      {new Date(submission.create_time).toLocaleString('zh-CN')}
-                    </div>
-                    <div className='text-gray-500 text-xs mt-1'>
-                      状态:{' '}
-                      {submission.status === 'approved'
-                        ? '已确认'
-                        : submission.status === 'pending'
-                          ? '待审核'
-                          : submission.status === 'rejected'
-                            ? '已拒绝'
-                            : '已取消'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {/* 再次提交按钮 */}
-          {config.allow_multiple_submit !== false && (
-            <div className='mt-6 flex justify-center'>
-              <Button size='lg' onClick={handleResubmit}>
-                再次提交
-              </Button>
-            </div>
-          )}
-        </div>
-      </FormCompWrapper>
+      <div
+        style={{
+          pointerEvents: editorSDK ? 'none' : 'auto',
+        }}
+      >
+        <SubmissionView
+          resultMsg={resultMsg}
+          latestSubmission={latestSubmission}
+          onResubmit={handleResubmit}
+          allowMultipleSubmit={config.allow_multiple_submit}
+          fields={fields}
+        />
+      </div>
     );
   }
 
@@ -466,13 +570,9 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     <>
       <FormCompWrapper
         className='w-full max-w-xl mx-auto space-y-4'
-        style={
-          editorSDK
-            ? {}
-            : {
-                pointerEvents: 'auto',
-              }
-        }
+        style={{
+          pointerEvents: editorSDK ? 'none' : 'auto',
+        }}
       >
         <div>
           <div className='text-lg font-medium'>{displayTitle}</div>
@@ -480,26 +580,22 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
             <div className='text-sm text-gray-500 mt-1'>{config.desc}</div>
           ) : null}
           {/* 如果有被邀请人姓名且不是公开访客，显示「不是本人」按钮 */}
-          {inviteeName &&
-            !isGuest &&
-            willAttend === null &&
-            !submitting &&
-            !resultMsg && (
-              <div className='mt-2'>
-                <Button
-                  size='sm'
-                  variant='ghost'
-                  onClick={() => setIsGuest(true)}
-                  className='text-xs text-gray-500'
-                >
-                  不是本人？
-                </Button>
-              </div>
-            )}
+          {inviteeName && !isGuest && !submitting && !resultMsg && (
+            <div className='mt-2'>
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={() => setIsGuest(true)}
+                className='text-xs text-gray-500'
+              >
+                不是本人？
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* 如果是公开访客，显示姓名输入框 */}
-        {isGuest && !willAttend && (
+        {isGuest && (
           <div className='space-y-2'>
             <label className='block text-sm font-medium'>
               您的姓名 <span className='text-red-500'>*</span>
@@ -514,20 +610,21 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           </div>
         )}
 
-        {/* 如果还未选择出席/不出席，显示选择按钮 */}
-        {willAttend === null && !submitting && !resultMsg && (
+        {/* 出席/不出席选择按钮始终显示 */}
+        {!submitting && !resultMsg && (
           <div className='flex items-center gap-3 pt-2'>
             <Button
               size='lg'
               disabled={submitting || (isGuest && !guestName.trim())}
               onClick={() => setWillAttend(true)}
               className='flex-1'
+              variant={willAttend === true ? 'default' : 'outline'}
             >
               出席
             </Button>
             <Button
               size='lg'
-              variant='secondary'
+              variant={willAttend === false ? 'secondary' : 'outline'}
               disabled={submitting || (isGuest && !guestName.trim())}
               onClick={() => handleSubmit(false)}
               className='flex-1'
@@ -539,115 +636,318 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
 
         {/* 如果选择了出席，显示表单 */}
         {willAttend === true && (
-          <div className='space-y-4'>
-            {fields.map(field => {
-              const common = (
-                <label className='block text-sm font-medium mb-1'>
-                  {field.label}
-                  {field.required ? ' *' : ''}
-                </label>
-              );
-              if (field.type === 'textarea') {
-                return (
-                  <div key={field.id}>
-                    {common}
-                    <textarea
-                      className='w-full border rounded px-3 py-2 text-sm'
-                      placeholder={field.placeholder}
-                      value={values[field.id] || ''}
-                      onChange={e => handleChange(field, e.target.value)}
-                    />
-                  </div>
-                );
-              }
-              if (field.type === 'number') {
-                return (
-                  <div key={field.id}>
-                    {common}
-                    <input
-                      className='w-full border rounded px-3 py-2 text-sm'
-                      type='number'
-                      placeholder={field.placeholder}
-                      value={values[field.id] ?? ''}
-                      onChange={e =>
-                        handleChange(
-                          field,
-                          e.target.value === '' ? '' : Number(e.target.value)
-                        )
-                      }
-                    />
-                  </div>
-                );
-              }
-              if (field.type === 'radio') {
-                return (
-                  <div key={field.id}>
-                    {common}
-                    <div className='space-y-2'>
-                      {field.options?.map(opt => (
-                        <label
-                          key={opt.value}
-                          className='flex items-center gap-2 text-sm'
-                        >
-                          <input
-                            type='radio'
-                            name={field.id}
-                            checked={values[field.id] === opt.value}
-                            onChange={() => handleChange(field, opt.value)}
-                          />
-                          <span>{opt.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-              if (field.type === 'checkbox') {
-                const selected: string[] = Array.isArray(values[field.id])
-                  ? values[field.id]
-                  : [];
-                const toggle = (val: string) => {
-                  const set = new Set(selected);
-                  if (set.has(val)) set.delete(val);
-                  else set.add(val);
-                  handleChange(field, Array.from(set));
-                };
-                return (
-                  <div key={field.id}>
-                    {common}
-                    <div className='space-y-2'>
-                      {field.options?.map(opt => (
-                        <label
-                          key={opt.value}
-                          className='flex items-center gap-2 text-sm'
-                        >
-                          <input
-                            type='checkbox'
-                            checked={selected.includes(opt.value)}
-                            onChange={() => toggle(opt.value)}
-                          />
-                          <span>{opt.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-              // text
-              return (
-                <div key={field.id}>
-                  {common}
-                  <input
-                    className='w-full border rounded px-3 py-2 text-sm'
-                    type='text'
-                    placeholder={field.placeholder}
-                    value={values[field.id] || ''}
-                    onChange={e => handleChange(field, e.target.value)}
+          <Form {...form}>
+            <form className='space-y-4'>
+              {fields
+                .filter(field => field.enabled !== false)
+                .map(field => (
+                  <FormField
+                    key={field.id}
+                    control={form.control}
+                    name={field.id}
+                    render={({ field: formField }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {field.label}
+                          {field.required ? (
+                            <span className='text-red-500 ml-1'>*</span>
+                          ) : null}
+                        </FormLabel>
+                        <FormControl>
+                          {field.type === 'text' ? (
+                            <Input
+                              placeholder={field.placeholder}
+                              value={formField.value as string}
+                              onChange={formField.onChange}
+                              onBlur={formField.onBlur}
+                              name={formField.name}
+                              ref={formField.ref}
+                            />
+                          ) : field.type === 'radio' ? (
+                            <RadioGroup
+                              value={formField.value as string}
+                              onValueChange={formField.onChange}
+                            >
+                              <div className='space-y-2'>
+                                {field.options?.map(opt => (
+                                  <div
+                                    key={opt.value}
+                                    className='flex items-center gap-2'
+                                  >
+                                    <RadioGroupItem
+                                      value={opt.value}
+                                      id={`${field.id}-${opt.value}`}
+                                    />
+                                    <label
+                                      htmlFor={`${field.id}-${opt.value}`}
+                                      className='text-sm cursor-pointer'
+                                    >
+                                      {opt.label}
+                                    </label>
+                                  </div>
+                                ))}
+                              </div>
+                            </RadioGroup>
+                          ) : field.type === 'checkbox' ? (
+                            <div className='space-y-2'>
+                              {field.options?.map(opt => (
+                                <div
+                                  key={opt.value}
+                                  className='flex items-center gap-2'
+                                >
+                                  <Checkbox
+                                    id={`${field.id}-${opt.value}`}
+                                    checked={(
+                                      formField.value as string[]
+                                    ).includes(opt.value)}
+                                    onCheckedChange={checked => {
+                                      const currentValue =
+                                        (formField.value as string[]) || [];
+                                      if (checked) {
+                                        formField.onChange([
+                                          ...currentValue,
+                                          opt.value,
+                                        ]);
+                                      } else {
+                                        formField.onChange(
+                                          currentValue.filter(
+                                            v => v !== opt.value
+                                          )
+                                        );
+                                      }
+                                    }}
+                                  />
+                                  <label
+                                    htmlFor={`${field.id}-${opt.value}`}
+                                    className='text-sm cursor-pointer'
+                                  >
+                                    {opt.label}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          ) : field.type === 'guest_count' ? (
+                            <div className='space-y-3'>
+                              {field.splitAdultChild ? (
+                                <div className='flex items-center gap-4'>
+                                  <div className='flex-1'>
+                                    <label className='block text-sm font-medium mb-1'>
+                                      大人
+                                    </label>
+                                    <div className='flex items-center gap-1.5'>
+                                      <Button
+                                        type='button'
+                                        variant='outline'
+                                        size='icon'
+                                        className='h-8 w-8 shrink-0'
+                                        onClick={() => {
+                                          const currentValue =
+                                            (formField.value as {
+                                              adult: number;
+                                              child: number;
+                                            }) || { adult: 0, child: 0 };
+                                          const newAdult = Math.max(
+                                            0,
+                                            (currentValue.adult || 0) - 1
+                                          );
+                                          formField.onChange({
+                                            ...currentValue,
+                                            adult: newAdult,
+                                          });
+                                        }}
+                                      >
+                                        <Minus className='h-3.5 w-3.5' />
+                                      </Button>
+                                      <Input
+                                        type='number'
+                                        min={0}
+                                        placeholder='0'
+                                        className='text-center flex-1 min-w-0'
+                                        value={
+                                          (
+                                            formField.value as {
+                                              adult: number;
+                                              child: number;
+                                            }
+                                          )?.adult || 0
+                                        }
+                                        onChange={e => {
+                                          const currentValue =
+                                            (formField.value as {
+                                              adult: number;
+                                              child: number;
+                                            }) || { adult: 0, child: 0 };
+                                          formField.onChange({
+                                            ...currentValue,
+                                            adult:
+                                              parseInt(e.target.value) || 0,
+                                          });
+                                        }}
+                                      />
+                                      <Button
+                                        type='button'
+                                        variant='outline'
+                                        size='icon'
+                                        className='h-8 w-8 shrink-0'
+                                        onClick={() => {
+                                          const currentValue =
+                                            (formField.value as {
+                                              adult: number;
+                                              child: number;
+                                            }) || { adult: 0, child: 0 };
+                                          formField.onChange({
+                                            ...currentValue,
+                                            adult:
+                                              (currentValue.adult || 0) + 1,
+                                          });
+                                        }}
+                                      >
+                                        <Plus className='h-3.5 w-3.5' />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <div className='flex-1'>
+                                    <label className='block text-sm font-medium mb-1'>
+                                      小孩
+                                    </label>
+                                    <div className='flex items-center gap-1.5'>
+                                      <Button
+                                        type='button'
+                                        variant='outline'
+                                        size='icon'
+                                        className='h-8 w-8 shrink-0'
+                                        onClick={() => {
+                                          const currentValue =
+                                            (formField.value as {
+                                              adult: number;
+                                              child: number;
+                                            }) || { adult: 0, child: 0 };
+                                          const newChild = Math.max(
+                                            0,
+                                            (currentValue.child || 0) - 1
+                                          );
+                                          formField.onChange({
+                                            ...currentValue,
+                                            child: newChild,
+                                          });
+                                        }}
+                                      >
+                                        <Minus className='h-3.5 w-3.5' />
+                                      </Button>
+                                      <Input
+                                        type='number'
+                                        min={0}
+                                        placeholder='0'
+                                        className='text-center flex-1 min-w-0'
+                                        value={
+                                          (
+                                            formField.value as {
+                                              adult: number;
+                                              child: number;
+                                            }
+                                          )?.child || 0
+                                        }
+                                        onChange={e => {
+                                          const currentValue =
+                                            (formField.value as {
+                                              adult: number;
+                                              child: number;
+                                            }) || { adult: 0, child: 0 };
+                                          formField.onChange({
+                                            ...currentValue,
+                                            child:
+                                              parseInt(e.target.value) || 0,
+                                          });
+                                        }}
+                                      />
+                                      <Button
+                                        type='button'
+                                        variant='outline'
+                                        size='icon'
+                                        className='h-8 w-8 shrink-0'
+                                        onClick={() => {
+                                          const currentValue =
+                                            (formField.value as {
+                                              adult: number;
+                                              child: number;
+                                            }) || { adult: 0, child: 0 };
+                                          formField.onChange({
+                                            ...currentValue,
+                                            child:
+                                              (currentValue.child || 0) + 1,
+                                          });
+                                        }}
+                                      >
+                                        <Plus className='h-3.5 w-3.5' />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className='flex items-center gap-2'>
+                                  <Button
+                                    type='button'
+                                    variant='outline'
+                                    size='icon'
+                                    className='h-9 w-9 shrink-0'
+                                    onClick={() => {
+                                      const currentValue = (formField.value as {
+                                        total: number;
+                                      }) || { total: 0 };
+                                      const newTotal = Math.max(
+                                        0,
+                                        (currentValue.total || 0) - 1
+                                      );
+                                      formField.onChange({
+                                        total: newTotal,
+                                      });
+                                    }}
+                                  >
+                                    <Minus className='h-4 w-4' />
+                                  </Button>
+                                  <Input
+                                    type='number'
+                                    min={0}
+                                    placeholder='请输入人数'
+                                    className='text-center flex-1'
+                                    value={
+                                      (formField.value as { total: number })
+                                        ?.total || 0
+                                    }
+                                    onChange={e => {
+                                      formField.onChange({
+                                        total: parseInt(e.target.value) || 0,
+                                      });
+                                    }}
+                                  />
+                                  <Button
+                                    type='button'
+                                    variant='outline'
+                                    size='icon'
+                                    className='h-9 w-9 shrink-0'
+                                    onClick={() => {
+                                      const currentValue = (formField.value as {
+                                        total: number;
+                                      }) || { total: 0 };
+                                      formField.onChange({
+                                        total: (currentValue.total || 0) + 1,
+                                      });
+                                    }}
+                                  >
+                                    <Plus className='h-4 w-4' />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ) : null}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-              );
-            })}
-          </div>
+                ))}
+            </form>
+          </Form>
         )}
 
         {resultMsg ? (
@@ -663,14 +963,6 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
               onClick={() => handleSubmit(true)}
             >
               {submitting ? '提交中...' : '提交'}
-            </Button>
-            <Button
-              size='sm'
-              variant='secondary'
-              disabled={submitting}
-              onClick={handleModify}
-            >
-              {submitting ? '保存中...' : '修改'}
             </Button>
             {config.max_submit_count != null ? (
               <span className='text-xs text-gray-500'>
