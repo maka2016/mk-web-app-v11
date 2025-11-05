@@ -98,7 +98,7 @@ const TabLayout = (props: Props) => {
   }, []);
 
   const getTabs = () => {
-    if (appid === 'jiantie') {
+    if (false && appid === 'jiantie') {
       return [
         { label: '模板', key: 'home', component: Chanel2 },
         { label: '作品', key: 'works', component: Works },

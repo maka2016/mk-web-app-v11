@@ -20,9 +20,10 @@ export default async function Page({
   const userAgent = headersList.get('user-agent') || '';
   const isMiniProgram = /miniProgram/i.test(userAgent);
 
-  const isStoreV1 = appid === 'xueji' || storeChannelV1 === 'true';
+  const isStoreV1 =
+    appid === 'jiantie' || appid === 'xueji' || storeChannelV1 === 'true';
 
-  const isPrisma = appid === 'jiantie';
+  const isPrisma = false && appid === 'jiantie';
 
   if (isPrisma) {
     templateChannels = {};
