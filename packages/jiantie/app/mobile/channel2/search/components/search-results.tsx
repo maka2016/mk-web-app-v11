@@ -5,7 +5,7 @@ import { cdnApi } from '@mk/services';
 import { Search } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import StatusBar from '../../../../../components/StatusBar';
 
 interface Collection {
@@ -35,6 +35,17 @@ export default function SearchResults({
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // 尝试自动聚焦输入框（在某些移动浏览器上可能不起作用）
+  useEffect(() => {
+    // 使用 setTimeout 延迟聚焦，提高成功率
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (searchKeyword) {
@@ -103,6 +114,7 @@ export default function SearchResults({
           <div className='flex-1 relative'>
             <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400' />
             <input
+              ref={inputRef}
               type='text'
               value={keyword}
               onChange={e => setKeyword(e.target.value)}
@@ -112,7 +124,6 @@ export default function SearchResults({
                 height: '38px',
               }}
               className='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-pink-600'
-              autoFocus
             />
           </div>
 
