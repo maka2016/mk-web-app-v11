@@ -118,7 +118,7 @@ export default function SearchResults({
 
           <button
             type='submit'
-            className='px-4 py-2 bg-[#D53933] text-white rounded-lg hover:bg-pink-200 transition-colors '
+            className='px-4 py-2 bg-[#D53933] text-white rounded-lg  transition-colors '
             disabled={!keyword.trim() || loading}
           >
             搜索
