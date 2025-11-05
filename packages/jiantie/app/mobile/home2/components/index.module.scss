@@ -1,0 +1,145 @@
+.container {
+  .tabBar {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border-top: 1px solid #00000008;
+
+    .tabItem {
+      flex: 1;
+      padding: 12px 0;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      text-align: center;
+      color: rgba(0, 0, 0, 0.6);
+
+      &.active {
+        font-size: 18px;
+        font-weight: var(--font-semibold);
+        color: rgba(0, 0, 0, 0.88);
+      }
+    }
+  }
+
+  .tabContent {
+    height: 100%;
+
+    .head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: calc(42px + var(--safe-area-inset-top));
+      padding: calc(4px + var(--safe-area-inset-top)) 12px 8px 14px;
+
+      .logo {
+        height: 24px;
+      }
+
+      .vip {
+        background: #ffffff33;
+        border: 1px solid #ffffff80;
+        border-radius: 25px;
+        padding: 2px 12px;
+        font-family: PingFang SC;
+        font-weight: var(--font-semibold);
+        font-size: 12px;
+        line-height: 20px;
+        letter-spacing: 0px;
+        vertical-align: middle;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+
+        img {
+          width: 24px;
+          height: 24px;
+        }
+      }
+
+      .message {
+        position: relative;
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        iconpark-icon {
+          color: #fff;
+        }
+
+        .num {
+          position: absolute;
+          top: -4px;
+          right: -4px;
+          font-family: PingFang SC;
+          font-weight: var(--font-semibold);
+          font-size: 11px;
+          line-height: 16px;
+          letter-spacing: 0px;
+          color: #fafafa;
+
+          padding: 0 4px;
+          background-color: #ef4444;
+          border-radius: 100px;
+        }
+      }
+    }
+
+    &.jiantie {
+      background-image: url('https://img2.maka.im/cdn/webstore10/jiantie/home_bg_v4.png');
+      background-size: 100% auto;
+      background-repeat: no-repeat;
+
+      .logo {
+        width: 50px;
+        height: auto;
+        margin-top: 3px;
+      }
+
+      .vip {
+        background-color: #ff4667;
+        border: 1px solid #ffffff80;
+        color: #ffffff;
+      }
+
+      .message {
+        iconpark-icon {
+          color: #ff4667 !important;
+        }
+      }
+    }
+
+    &.huiyao {
+      background: linear-gradient(180deg, #3358d4 0%, #3358d4 50%, #fff 100%);
+      background-size: 100% 300px;
+      background-repeat: no-repeat;
+
+      .head {
+        iconpark-icon[name='remind1'] {
+          color: #fff !important;
+        }
+      }
+    }
+
+    &.xueji {
+      background-image: url('https://img1.maka.im/vertical_app/cms/bg_10_167e7ccae9.png');
+      background-size: 100% 100%;
+
+      .head {
+        .vip {
+          background-color: #b07d15;
+          color: #fff;
+          border: none;
+        }
+
+        iconpark-icon {
+          color: #000;
+        }
+      }
+    }
+  }
+}

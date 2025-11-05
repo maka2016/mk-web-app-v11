@@ -2,6 +2,7 @@
 
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
+import { Search } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -53,6 +54,17 @@ export default function Main({ appid = 'jiantie' }: Props) {
 
   return (
     <div className='flex flex-col h-dvh bg-gray-50'>
+      {/* 顶部搜索栏 */}
+      <div className='bg-white shadow-sm p-4 sticky top-0 z-10'>
+        <div
+          onClick={() => router.push('/mobile/chanel2/search')}
+          className='flex items-center gap-3 px-4 py-2.5 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors'
+        >
+          <Search className='w-5 h-5 text-gray-400 flex-shrink-0' />
+          <span className='text-gray-400 text-sm flex-1'>搜索集合...</span>
+        </div>
+      </div>
+
       {/* 主内容区 */}
       <div className='flex-1 overflow-y-auto'>
         {loading ? (

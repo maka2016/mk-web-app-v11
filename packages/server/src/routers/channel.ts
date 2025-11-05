@@ -90,4 +90,33 @@ export const channelRouter = router({
 
       return collections;
     }),
+
+  // 搜索四级集合
+  searchCollections: publicProcedure
+    .input(
+      z.object({
+        keyword: z.string(),
+        appid: z.string().default('jiantie'),
+        locale: z.string().default('zh-CN'),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const collections = await ctx.prisma.templateMarketChannelEntity.findMany(
+        {
+          where: {
+            class: '四级集合',
+            appid: input.appid,
+            locale: input.locale,
+            display_name: {
+              contains: input.keyword,
+            },
+          },
+          orderBy: {
+            id: 'asc',
+          },
+        }
+      );
+
+      return collections;
+    }),
 });

@@ -10,5 +10,3 @@ export default async function Page(props: PageProps) {
   const params = await props.params;
   return <Detail channelId={Number(params.id)} />;
 }
-
-
