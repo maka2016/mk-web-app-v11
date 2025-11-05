@@ -14,7 +14,7 @@ export const syncChannel = async (
   ChClassName: string,
 
   parentBit?: DatasheetItem,
-  env = 'prod',
+  env = 'production',
   option?: {
     needThumb?: boolean;
     needParent?: boolean;
