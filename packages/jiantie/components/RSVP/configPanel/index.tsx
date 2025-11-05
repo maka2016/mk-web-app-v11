@@ -10,8 +10,6 @@ import cls from 'classnames';
 import {
   ArrowLeft,
   CheckSquare2,
-  ChevronDown,
-  ChevronUp,
   Circle,
   GripVertical,
   Lightbulb,
@@ -162,16 +160,16 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
     <div className='relative flex flex-col h-full max-h-screen overflow-hidden'>
       {/* 顶部导航栏 - 移动端风格 */}
       <div className='px-4 py-3 border-b border-black/[0.06] flex items-center justify-between bg-white flex-shrink-0 z-10'>
-        <div className='flex items-center gap-2 flex-1'>
-          <button
-            onClick={() => {
-              onClose?.();
-            }}
-            className='flex items-center gap-1 text-[#09090B]'
-          >
-            <ArrowLeft size={20} />
-            <span className='text-sm'>返回</span>
-          </button>
+        <button
+          onClick={() => {
+            onClose?.();
+          }}
+          className='flex items-center gap-1 text-[#09090B]'
+        >
+          <ArrowLeft size={20} />
+          <span className='text-sm'>返回</span>
+        </button>
+        <div className='flex items-center gap-2 flex-1 justify-center'>
           <span className='font-semibold text-lg leading-[26px] text-[#09090B] ml-4'>
             RSVP配置
           </span>
@@ -278,8 +276,8 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
             )}
           </div>
 
-          {/* 基础信息 - 默认折叠 */}
-          <div className='border border-black/[0.1] rounded-xl'>
+          {/* 基础信息 - 暂时不需要 */}
+          {/* <div className='border border-black/[0.1] rounded-xl'>
             <div
               className='p-3 flex items-center justify-between cursor-pointer'
               onClick={() => setIsBasicInfoExpanded(!isBasicInfoExpanded)}
@@ -324,7 +322,7 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
                 </div>
               </div>
             )}
-          </div>
+          </div> */}
         </div>
       </div>
 

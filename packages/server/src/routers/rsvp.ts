@@ -89,6 +89,8 @@ const RsvpInviteeUpdateInput = z.object({
   name: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email().optional(),
+  invite_title: z.string().optional(),
+  invite_desc: z.string().optional(),
 });
 
 export const rsvpRouter = router({
@@ -527,6 +529,30 @@ export const rsvpRouter = router({
       return ctx.prisma.rsvpSubmissionEntity.findMany({
         where: {
           contact_id: input.contact_id,
+          deleted: false,
+        },
+        orderBy: { create_time: 'desc' },
+        include: {
+          form_config: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      });
+    }),
+
+  // 批量查询：根据多个 contact_ids 获取提交记录
+  getSubmissionsByContactIds: protectedProcedure
+    .input(z.object({ contact_ids: z.array(z.string()) }))
+    .query(async ({ ctx, input }) => {
+      if (input.contact_ids.length === 0) {
+        return [];
+      }
+      return ctx.prisma.rsvpSubmissionEntity.findMany({
+        where: {
+          contact_id: { in: input.contact_ids },
           deleted: false,
         },
         orderBy: { create_time: 'desc' },
