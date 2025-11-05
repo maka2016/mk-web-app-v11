@@ -811,13 +811,76 @@ export const rsvpRouter = router({
   listInvitees: protectedProcedure
     .input(
       z.object({
+        form_config_id: z.string().optional(), // 可选的RSVP表单ID，如果提供则只返回该RSVP下的宾客
         keyword: z.string().optional(),
         skip: z.number().optional(),
         take: z.number().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
-      // 嘉宾归属于用户（uid），而不是某个RSVP表单
+      // 如果提供了form_config_id，则查询该RSVP下的宾客
+      if (input.form_config_id) {
+        // 验证表单配置属于当前用户
+        const formConfig = await ctx.prisma.rsvpFormConfigEntity.findUnique({
+          where: { id: input.form_config_id },
+        });
+        if (!formConfig || formConfig.deleted) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '表单配置不存在',
+          });
+        }
+        const works = await ctx.prisma.worksEntity.findUnique({
+          where: { id: formConfig.works_id },
+        });
+        if (!works || works.uid !== ctx.uid) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: '无权访问该表单配置',
+          });
+        }
+
+        // 通过关联表查询该RSVP下的宾客
+        const where: any = {
+          form_config_id: input.form_config_id,
+          contact: {
+            uid: ctx.uid,
+            deleted: false,
+          },
+        };
+
+        if (input.keyword) {
+          where.contact = {
+            ...where.contact,
+            OR: [
+              { name: { contains: input.keyword, mode: 'insensitive' } },
+              { phone: { contains: input.keyword, mode: 'insensitive' } },
+              { email: { contains: input.keyword, mode: 'insensitive' } },
+            ],
+          };
+        }
+
+        const contactFormConfigs =
+          await ctx.prisma.rsvpContactFormConfigEntity.findMany({
+            where,
+            include: {
+              contact: true,
+            },
+            skip: input.skip,
+            take: input.take,
+            orderBy: { create_time: 'desc' },
+          });
+
+        // 提取并返回宾客列表
+        return contactFormConfigs
+          .map(cfc => cfc.contact)
+          .filter(
+            (contact): contact is NonNullable<typeof contact> =>
+              contact !== null
+          );
+      }
+
+      // 如果没有提供form_config_id，返回当前用户的所有宾客（保持向后兼容）
       const where: any = {
         uid: ctx.uid,
         deleted: false,
