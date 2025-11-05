@@ -82,22 +82,21 @@ model TemplateEntity {
 
 /// 模板商城频道实体 - 支持无限嵌套的树形结构
 model TemplateMarketChannelEntity {
-  id           Int                           @id @default(autoincrement())
-  alias        String                        @unique @db.VarChar /// 频道别名（唯一标识，用于URL等场景）
-  display_name String                        @map("display_name") @db.VarChar /// 频道显示名
-  thumb_path   String?                       @map("thumb_path") @db.VarChar /// 频道缩略图URL
-  class        String                        @db.VarChar /// 频道分类，如: level_1, level_2, level_3, level_4 等，支持扩展
-  locale       String                        @db.VarChar /// i18语言类型，如: zh-CN, en-US
-  template_ids String[]                      @map("template_ids") /// 关联的多个模板ID数组
-  parent_id    Int?                          @map("parent_id") /// 父频道ID
-  appid        String?                       @db.VarChar /// 应用ID
-  create_time  DateTime                      @default(now()) @map("create_time") @db.Timestamptz(6)
-  update_time  DateTime                      @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
-  online       Boolean                       @default(true) @map("online")
+  id           Int      @id @default(autoincrement())
+  alias        String   @unique @db.VarChar /// 频道别名（唯一标识，用于URL等场景）
+  display_name String   @map("display_name") @db.VarChar /// 频道显示名
+  thumb_path   String?  @map("thumb_path") @db.VarChar /// 频道缩略图URL
+  class        String   @db.VarChar /// 频道分类，如: level_1, level_2, level_3, level_4 等，支持扩展
+  locale       String   @db.VarChar /// i18语言类型，如: zh-CN, en-US
+  template_ids String[] @map("template_ids") /// 关联的多个模板ID数组
+  parent_id    Int?     @map("parent_id") /// 父频道ID
+  appid        String?  @db.VarChar /// 应用ID
+  create_time  DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time  DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
   /// 自引用关系实现树形结构
-  parent       TemplateMarketChannelEntity?  @relation("ChannelHierarchy", fields: [parent_id], references: [id])
-  children     TemplateMarketChannelEntity[] @relation("ChannelHierarchy")
-  env          String                        @db.VarChar
+  parent   TemplateMarketChannelEntity?  @relation("ChannelHierarchy", fields: [parent_id], references: [id])
+  children TemplateMarketChannelEntity[] @relation("ChannelHierarchy")
 
   @@index([alias], map: "IDX_template_market_channel_alias")
   @@index([parent_id], map: "IDX_template_market_channel_parent_id")
@@ -106,8 +105,6 @@ model TemplateMarketChannelEntity {
   @@index([locale], map: "IDX_template_market_channel_locale")
   @@index([appid], map: "IDX_template_market_channel_appid")
   @@index([id], map: "IDX_template_market_channel_id")
-  @@index([online], map: "IDX_template_market_channel_online")
-  @@index([env], map: "IDX_template_market_channel_env")
   @@map("template_market_channel_entity")
 }
 
@@ -172,7 +169,7 @@ model RsvpFormConfigEntity {
   /// 关联关系
   submissions RsvpSubmissionEntity[]
   view_logs   RsvpViewLogEntity[] /// 操作记录（访问、提交、重新提交等）
-  invitees    RsvpContactEntity[] /// 该表单的嘉宾列表
+  contact_form_configs RsvpContactFormConfigEntity[] /// 关联的嘉宾关系（多对多）
 
   @@index([works_id], map: "IDX_rsvp_form_config_works_id")
   @@index([deleted], map: "IDX_rsvp_form_config_deleted")
@@ -290,8 +287,8 @@ model RsvpContactEntity {
   email String? @db.VarChar /// 邮箱
   phone String? @db.VarChar /// 电话
 
-  /// 嘉宾相关字段（新增）
-  form_config_id String? @map("form_config_id") @db.Text /// 关联的表单配置ID（如果为null，则为普通联系人；如果存在，则为该表单的嘉宾）
+  /// 嘉宾归属：嘉宾归属于简帖用户（uid），而不是某个RSVP表单
+  uid Int @map("uid") /// 用户ID，嘉宾归属于该用户
 
   /// 备注：至少需要 email 或 phone 其中一个
 
@@ -303,17 +300,37 @@ model RsvpContactEntity {
   /// 关联关系
   submissions RsvpSubmissionEntity[]
   action_logs RsvpViewLogEntity[] /// 操作记录
-  form_config RsvpFormConfigEntity?  @relation(fields: [form_config_id], references: [id])
+  contact_form_configs RsvpContactFormConfigEntity[] /// 关联的表单（多对多）
 
   @@unique([email], map: "UQ_rsvp_contact_email")
   @@unique([phone], map: "UQ_rsvp_contact_phone")
   @@index([name], map: "IDX_rsvp_contact_name")
   @@index([email], map: "IDX_rsvp_contact_email")
   @@index([phone], map: "IDX_rsvp_contact_phone")
-  @@index([form_config_id], map: "IDX_rsvp_contact_form_config_id")
+  @@index([uid], map: "IDX_rsvp_contact_uid")
   @@index([deleted], map: "IDX_rsvp_contact_deleted")
   @@index([id], map: "IDX_rsvp_contact_id")
   @@map("rsvp_contact_entity")
+}
+
+/// RSVP 嘉宾与表单的多对多关联表
+model RsvpContactFormConfigEntity {
+  id             String  @id @default(cuid()) @db.Text
+  contact_id     String  @map("contact_id") @db.Text /// 关联的嘉宾ID
+  form_config_id String  @map("form_config_id") @db.Text /// 关联的表单配置ID
+
+  /// 时间戳
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
+
+  /// 关联关系
+  contact     RsvpContactEntity     @relation(fields: [contact_id], references: [id])
+  form_config RsvpFormConfigEntity  @relation(fields: [form_config_id], references: [id])
+
+  @@unique([contact_id, form_config_id], map: "UQ_rsvp_contact_form_config")
+  @@index([contact_id], map: "IDX_rsvp_contact_form_config_contact_id")
+  @@index([form_config_id], map: "IDX_rsvp_contact_form_config_form_config_id")
+  @@index([id], map: "IDX_rsvp_contact_form_config_id")
+  @@map("rsvp_contact_form_config_entity")
 }
 
 /// RSVP 通知已读记录表

@@ -21,7 +21,7 @@ const MobileEditor2 = (props: Props) => {
 
   return (
     <div
-      className='relative h-full w-full overflow-hidden'
+      className='relative h-full w-full overflow-hidden flex flex-col'
       id='editor_container'
     >
       <div

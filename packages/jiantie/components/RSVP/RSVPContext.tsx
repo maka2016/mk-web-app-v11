@@ -48,7 +48,8 @@ export function RSVPProvider({
   layer,
   children,
 }: RSVPProviderProps) {
-  const { formConfigId, worksId } = attrs;
+  const { formConfigId, worksId: belongToWorksId } = attrs;
+  const currWorksId = getPageId();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [config, setConfigState] = useState<RsvpFormConfigEntityForUi | null>(
@@ -71,7 +72,7 @@ export function RSVPProvider({
       setError(null);
       try {
         // 如果既没有 formConfigId，也没有有效的 worksId，则创建一个新的
-        if (editorSDK && !formConfigId && !worksId) {
+        if (editorSDK && !formConfigId && !belongToWorksId) {
           const defaultFields = getDefaultFields();
           const created = await trpc.rsvp.upsertFormConfig.mutate({
             works_id: getPageId(),
@@ -102,6 +103,46 @@ export function RSVPProvider({
             id: formConfigId,
           });
           const dataAsAny = data as any;
+
+          // 检查是否被复制到其他作品：belongToWorksId != currWorksId
+          if (editorSDK && belongToWorksId && belongToWorksId !== currWorksId) {
+            // 该 RSVP 是被复制到其他作品的，需要创建新的 RSVP 实体
+            const newConfig = await trpc.rsvp.upsertFormConfig.mutate({
+              works_id: currWorksId,
+              title: dataAsAny?.title || '诚邀',
+              desc: dataAsAny?.desc ?? null,
+              form_fields:
+                dataAsAny?.form_fields ||
+                toRSVPFormFieldsJson(getDefaultFields()),
+              allow_multiple_submit: true, // 固定值：允许，不可配置
+              require_approval: false, // 固定值：不需要，不可配置
+              max_submit_count: null, // 固定值：无限，不可配置
+              submit_deadline: null, // 固定值：无限期，不可配置
+              enabled: dataAsAny?.enabled ?? true,
+              collect_form: dataAsAny?.collect_form ?? false,
+            } as any);
+            const newConfigData = newConfig as any;
+
+            // 更新 attrs 的 worksId 和 formConfigId
+            editorSDK.changeCompAttr(layer.elemId, {
+              formConfigId: newConfigData.id,
+              worksId: currWorksId,
+            });
+
+            // 使用新创建的配置
+            setConfigState({
+              ...newConfigData,
+              allow_multiple_submit: true, // 固定值：允许，不可配置
+              require_approval: false, // 固定值：不需要，不可配置
+              max_submit_count: null, // 固定值：无限，不可配置
+              submit_deadline: null, // 固定值：无限期，不可配置
+            });
+            setConfigId(newConfigData.id);
+            setTitle(newConfigData.title || '诚邀');
+            setLoading(false);
+            return;
+          }
+
           // 确保使用默认值，覆盖数据库中可能存在的旧值
           setConfigState({
             ...dataAsAny,
@@ -120,7 +161,7 @@ export function RSVPProvider({
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formConfigId, worksId]);
+  }, [formConfigId, belongToWorksId]);
 
   // 更新函数
   const handleTitleChange = (newTitle: string) => {
@@ -174,8 +215,14 @@ export function RSVPProvider({
         return { ...f, options: undefined };
       };
 
+      // 使用当前作品ID（可能已经被更新为 currWorksId）
+      const worksIdToSave =
+        belongToWorksId && belongToWorksId !== currWorksId
+          ? currWorksId
+          : belongToWorksId || currWorksId;
+
       const payload = {
-        works_id: worksId,
+        works_id: worksIdToSave,
         title: title || '诚邀',
         desc: config.desc ?? null,
         form_fields: toRSVPFormFieldsJson(fields.map(ensureOptions)),
@@ -211,7 +258,7 @@ export function RSVPProvider({
       if (editorSDK && savedData.id) {
         editorSDK.changeCompAttr(layer.elemId, {
           formConfigId: savedData.id,
-          worksId: worksId,
+          worksId: worksIdToSave,
         });
       }
     } catch (e: any) {
@@ -227,7 +274,7 @@ export function RSVPProvider({
     configId,
     title,
     fields,
-    worksId,
+    worksId: belongToWorksId,
     setTitle: handleTitleChange,
     setConfig: handleConfigChange,
     setFields: handleFieldsChange,

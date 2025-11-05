@@ -9,26 +9,20 @@ import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Input } from '@workspace/ui/components/input';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
-import { Separator } from '@workspace/ui/components/separator';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import styles from './share.module.scss';
+import styles from '../share.module.scss';
 
-export default function RSVPSharePage() {
+export default function RSVPInviteesManagePage() {
   const searchParams = useSearchParams();
   const formConfigId = searchParams.get('form_config_id') || '';
   const worksId = searchParams.get('works_id') || '';
 
   const isOversea = getIsOverSeas();
 
-  const [copied, setCopied] = useState<boolean>(false);
   const [invitees, setInvitees] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [allSubmissions, setAllSubmissions] = useState<any[]>([]);
-  const [viewingSubmission, setViewingSubmission] = useState<any>(null);
-  const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
-  console.log('allSubmissions', allSubmissions);
 
   // 嘉宾管理相关状态
   const [inviteeDialogOpen, setInviteeDialogOpen] = useState(false);
@@ -45,13 +39,6 @@ export default function RSVPSharePage() {
   const [executingKey, setExecutingKey] = useState<string | null>(null);
 
   const { toPosterShare } = useShareNavigation();
-
-  // 生成公开链接
-  const publicLink = useMemo(() => {
-    if (typeof window === 'undefined' || !worksId) return '';
-    const origin = window.location.origin;
-    return `${origin}/viewer2/${worksId}`;
-  }, [worksId]);
 
   // 生成嘉宾专属链接
   const generateInviteeLink = (invitee: any) => {
@@ -74,12 +61,10 @@ export default function RSVPSharePage() {
   // 查询嘉宾列表
   useEffect(() => {
     const fetchInvitees = async () => {
-      if (!formConfigId) return;
       setLoading(true);
       try {
-        const data = await trpc.rsvp.listInvitees.query({
-          form_config_id: formConfigId,
-        });
+        // 嘉宾归属于用户，不再需要form_config_id
+        const data = await trpc.rsvp.listInvitees.query({});
         setInvitees(data || []);
       } catch (error: any) {
         toast.error(error.message || '加载失败');
@@ -88,34 +73,14 @@ export default function RSVPSharePage() {
       }
     };
     fetchInvitees();
-  }, [formConfigId]);
-
-  // 查询所有提交记录
-  useEffect(() => {
-    const fetchSubmissions = async () => {
-      if (!formConfigId) return;
-      try {
-        const submissions = await trpc.rsvp.getAllSubmissions.query({
-          form_config_id: formConfigId,
-        });
-
-        console.log('submissions', submissions);
-        setAllSubmissions(submissions || []);
-      } catch (error: any) {
-        console.error('Failed to fetch submissions:', error);
-      }
-    };
-    fetchSubmissions();
-  }, [formConfigId]);
+  }, []);
 
   // 刷新列表函数
   const fetchInvitees = async () => {
-    if (!formConfigId) return;
     setLoading(true);
     try {
-      const data = await trpc.rsvp.listInvitees.query({
-        form_config_id: formConfigId,
-      });
+      // 嘉宾归属于用户，不再需要form_config_id
+      const data = await trpc.rsvp.listInvitees.query({});
       setInvitees(data || []);
     } catch (error: any) {
       toast.error(error.message || '加载失败');
@@ -155,8 +120,8 @@ export default function RSVPSharePage() {
   // 创建嘉宾
   const handleCreateInvitee = async () => {
     try {
+      // 创建嘉宾时不关联表单，分享时再关联
       await trpc.rsvp.createInvitee.mutate({
-        form_config_id: formConfigId,
         name: inviteeName.trim(),
       });
       toast.success('创建成功');
@@ -202,12 +167,23 @@ export default function RSVPSharePage() {
 
   const handleCopyLink = (link: string) => {
     navigator.clipboard.writeText(link);
-    setCopied(true);
     toast.success('复制成功');
-    setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleShareInvitee = (invitee: any) => {
+  const handleShareInvitee = async (invitee: any) => {
+    // 如果提供了form_config_id，先关联嘉宾和表单
+    if (formConfigId) {
+      try {
+        await trpc.rsvp.linkInviteeToForm.mutate({
+          contact_id: invitee.id,
+          form_config_id: formConfigId,
+        });
+      } catch (error: any) {
+        // 关联失败不影响打开分享面板（可能已经关联过了）
+        console.warn('关联嘉宾到表单失败:', error);
+      }
+    }
+
     // 打开分享面板
     setCurrentShareInvitee(invitee);
     setShareTitle(`邀请 ${invitee.name} 参加活动`);
@@ -220,6 +196,18 @@ export default function RSVPSharePage() {
     if (!shareTitle) {
       toast.error('请填写分享标题');
       return;
+    }
+
+    // 确保关联到表单（如果提供了form_config_id）
+    if (formConfigId) {
+      try {
+        await trpc.rsvp.linkInviteeToForm.mutate({
+          contact_id: currentShareInvitee.id,
+          form_config_id: formConfigId,
+        });
+      } catch (error: any) {
+        console.warn('关联嘉宾到表单失败:', error);
+      }
     }
 
     const shareLink = generateInviteeLink(currentShareInvitee);
@@ -239,8 +227,21 @@ export default function RSVPSharePage() {
   };
 
   // 复制专属链接
-  const copyInviteeLink = () => {
+  const copyInviteeLink = async () => {
     if (!currentShareInvitee) return;
+
+    // 确保关联到表单（如果提供了form_config_id）
+    if (formConfigId) {
+      try {
+        await trpc.rsvp.linkInviteeToForm.mutate({
+          contact_id: currentShareInvitee.id,
+          form_config_id: formConfigId,
+        });
+      } catch (error: any) {
+        console.warn('关联嘉宾到表单失败:', error);
+      }
+    }
+
     const shareLink = generateInviteeLink(currentShareInvitee);
     handleCopyLink(shareLink);
   };
@@ -256,49 +257,11 @@ export default function RSVPSharePage() {
     setShowMiniPTip(true);
   };
 
-  if (!formConfigId) {
-    return (
-      <div className='w-full py-4 text-center text-sm text-gray-500'>
-        参数错误，请先保存表单配置
-      </div>
-    );
-  }
-
   return (
     <div className='relative bg-white'>
-      <MobileHeader title={'分享设置'} />
-      <div className='px-4 py-3 border-b border-black/[0.06]'>
-        <div className='flex items-center gap-2'>
-          <Icon name='share' />
-          <span className='font-semibold text-lg leading-[26px]'>分享设置</span>
-        </div>
-      </div>
-      <Separator />
+      <MobileHeader title={'嘉宾管理'} />
 
       <div className='px-4 py-3 max-h-[80vh] overflow-y-auto flex flex-col gap-4'>
-        {/* 公开链接分享 */}
-        <div className='border border-black/[0.1] rounded-xl p-3'>
-          <div className='font-semibold text-base leading-6 text-[#09090B] mb-3'>
-            公开链接分享
-          </div>
-          <div className='space-y-2'>
-            <div className='flex items-center gap-2'>
-              <Input
-                className='flex-1 bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
-                value={publicLink}
-                readOnly
-              />
-              <Button
-                size='sm'
-                variant='outline'
-                onClick={() => handleCopyLink(publicLink)}
-              >
-                {copied ? '已复制' : '复制链接'}
-              </Button>
-            </div>
-          </div>
-        </div>
-
         {/* 指定嘉宾分享 */}
         <div className='border border-black/[0.1] rounded-xl p-3'>
           <div className='flex items-center justify-between mb-3'>
@@ -362,175 +325,6 @@ export default function RSVPSharePage() {
             )}
           </div>
         </div>
-
-        {/* 所有提交记录 */}
-        <div className='border border-black/[0.1] rounded-xl p-3'>
-          <div className='font-semibold text-base leading-6 text-[#09090B] mb-3'>
-            所有提交记录
-          </div>
-          <div className='space-y-2'>
-            {allSubmissions.length === 0 ? (
-              <div className='text-sm text-gray-500 text-center py-4'>
-                暂无提交记录
-              </div>
-            ) : (
-              allSubmissions.map((submission: any) => {
-                const statusText =
-                  submission.will_attend === true
-                    ? '已确认出席'
-                    : submission.will_attend === false
-                      ? '已确认不出席'
-                      : '已提交';
-                const statusColor =
-                  submission.will_attend === true
-                    ? 'text-green-600'
-                    : submission.will_attend === false
-                      ? 'text-gray-500'
-                      : 'text-blue-600';
-
-                return (
-                  <div
-                    key={submission.id}
-                    className='flex items-center justify-between p-2 border border-[#e4e4e7] rounded-md'
-                  >
-                    <div className='flex-1'>
-                      <div className='font-semibold text-sm leading-5'>
-                        {submission.invitee_name}
-                      </div>
-                      <div className={`text-xs mt-1 ${statusColor}`}>
-                        {statusText}
-                        {submission.create_time && (
-                          <span className='ml-2 text-gray-400'>
-                            {new Date(submission.create_time).toLocaleString(
-                              'zh-CN',
-                              {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              }
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      size='sm'
-                      variant='ghost'
-                      onClick={() => {
-                        setViewingSubmission(submission);
-                        setSubmissionDialogOpen(true);
-                      }}
-                    >
-                      查看
-                    </Button>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* 提交记录详情弹窗 */}
-        <ResponsiveDialog
-          isOpen={submissionDialogOpen}
-          onOpenChange={setSubmissionDialogOpen}
-          title={
-            viewingSubmission
-              ? `${viewingSubmission.invitee_name}的提交详情`
-              : ''
-          }
-        >
-          {viewingSubmission && (
-            <div className='px-4 pb-4 max-h-[70vh] overflow-y-auto'>
-              <div className='border border-[#e4e4e7] rounded-md p-3'>
-                <div className='flex items-center justify-between mb-2'>
-                  <div className='font-semibold text-sm'>提交时间</div>
-                  <div className='text-xs text-gray-500'>
-                    {new Date(viewingSubmission.create_time).toLocaleString(
-                      'zh-CN'
-                    )}
-                  </div>
-                </div>
-                <div className='space-y-2'>
-                  <div className='flex items-center gap-2'>
-                    <span className='text-xs text-gray-600'>出席状态：</span>
-                    <span
-                      className={`text-xs font-semibold ${
-                        viewingSubmission.will_attend === true
-                          ? 'text-green-600'
-                          : viewingSubmission.will_attend === false
-                            ? 'text-gray-500'
-                            : 'text-gray-400'
-                      }`}
-                    >
-                      {viewingSubmission.will_attend === true
-                        ? '确认出席'
-                        : viewingSubmission.will_attend === false
-                          ? '确认不出席'
-                          : '未选择'}
-                    </span>
-                  </div>
-                  <div className='flex items-center gap-2'>
-                    <span className='text-xs text-gray-600'>审核状态：</span>
-                    <span
-                      className={`text-xs font-semibold ${
-                        viewingSubmission.status === 'approved'
-                          ? 'text-green-600'
-                          : viewingSubmission.status === 'rejected'
-                            ? 'text-red-600'
-                            : viewingSubmission.status === 'cancelled'
-                              ? 'text-gray-500'
-                              : 'text-yellow-600'
-                      }`}
-                    >
-                      {viewingSubmission.status === 'approved'
-                        ? '已确认'
-                        : viewingSubmission.status === 'rejected'
-                          ? '已拒绝'
-                          : viewingSubmission.status === 'cancelled'
-                            ? '已取消'
-                            : '待审核'}
-                    </span>
-                  </div>
-                  {viewingSubmission.submission_data &&
-                    typeof viewingSubmission.submission_data === 'object' &&
-                    Object.keys(viewingSubmission.submission_data).filter(
-                      key => !key.startsWith('_')
-                    ).length > 0 && (
-                      <div className='mt-3 pt-3 border-t border-gray-200'>
-                        <div className='text-xs font-semibold text-gray-700 mb-2'>
-                          表单数据：
-                        </div>
-                        <div className='space-y-1'>
-                          {Object.entries(
-                            viewingSubmission.submission_data
-                          ).map(([key, value]) => {
-                            if (key.startsWith('_')) return null;
-                            return (
-                              <div
-                                key={key}
-                                className='flex items-start justify-between text-xs'
-                              >
-                                <span className='text-gray-600 flex-shrink-0 mr-2'>
-                                  {key}：
-                                </span>
-                                <span className='text-gray-800 text-right flex-1'>
-                                  {typeof value === 'object'
-                                    ? JSON.stringify(value)
-                                    : String(value)}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                </div>
-              </div>
-            </div>
-          )}
-        </ResponsiveDialog>
 
         {/* 添加/编辑嘉宾弹窗 */}
         <ResponsiveDialog
