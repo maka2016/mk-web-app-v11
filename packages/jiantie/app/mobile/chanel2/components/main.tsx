@@ -2,23 +2,19 @@
 
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
+import { TemplateMarketChannelEntity } from '@workspace/database/generated/client/client';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-interface Channel {
-  id: number;
-  alias: string;
-  display_name: string;
-  thumb_path: string | null;
-  class: string;
-  locale: string;
-  template_ids: string[];
-  parent_id: number | null;
-  appid: string | null;
-  create_time: Date;
-  update_time: Date;
+interface Channel
+  extends Omit<
+    TemplateMarketChannelEntity,
+    'children' | 'create_time' | 'update_time'
+  > {
   children?: Channel[];
+  create_time: string;
+  update_time: string;
 }
 
 interface Props {
