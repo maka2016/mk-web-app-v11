@@ -109,10 +109,10 @@ export default function Templates({ collectionId }: TemplatesProps) {
   return (
     <div className='flex flex-col h-dvh bg-white'>
       {/* 顶部标题栏 */}
-      <div className='flex items-center px-4 py-4 border-b border-gray-200'>
+      <div className='flex items-center px-3 py-2 border-b border-gray-200 '>
         <button
           onClick={() => router.back()}
-          className='flex-shrink-0 text-gray-600 mr-4'
+          className='flex-shrink-0 text-gray-600 mr-4 flex items-center '
         >
           <svg
             className='w-6 h-6'
@@ -127,8 +127,30 @@ export default function Templates({ collectionId }: TemplatesProps) {
               d='M15 19l-7-7 7-7'
             />
           </svg>
+          返回
         </button>
-        <h1 className='text-lg font-medium text-gray-900'>选择合适的模板</h1>
+        <h1 className='flex-1 text-center text-lg font-medium text-gray-900 '>
+          选择合适的模板
+        </h1>
+        <button
+          onClick={() => router.back()}
+          className='flex-shrink-0 text-gray-600 mr-4 flex items-center opacity-0 '
+        >
+          <svg
+            className='w-6 h-6'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M15 19l-7-7 7-7'
+            />
+          </svg>
+          返回
+        </button>
       </div>
 
       {/* 主内容区 - 模板列表 */}
@@ -151,24 +173,34 @@ export default function Templates({ collectionId }: TemplatesProps) {
                 }}
               >
                 {/* 模板封面 */}
-                <div className='aspect-[3/4] bg-gray-100 relative'>
+                <div className='aspect-[9/21] bg-gray-100 relative'>
                   {template.cover ? (
-                    <Image
-                      src={cdnApi(template.cover)}
-                      alt={template.title}
-                      fill
-                      className='object-cover'
-                    />
+                    <>
+                      {/* 底层模糊背景图 */}
+                      <Image
+                        src={cdnApi(template.cover)}
+                        alt=''
+                        fill
+                        className='object-cover blur-md scale-110'
+                      />
+                      {/* 上层清晰居中图 */}
+                      <Image
+                        src={cdnApi(template.cover)}
+                        alt={template.title}
+                        fill
+                        className='object-contain'
+                      />
+                    </>
                   ) : (
-                    <div className='flex items-center justify-center h-full text-4xl text-gray-400'>
+                    <div className=' flex items-center justify-center h-full text-4xl text-gray-400'>
                       📄
                     </div>
                   )}
                 </div>
 
                 {/* 模板信息 */}
-                <div className='p-3'>
-                  <h3 className='text-sm font-medium text-gray-900 mb-1 line-clamp-2'>
+                <div className='p-3 bg-white relative'>
+                  <h3 className='text-sm font-medium text-gray-900 mb-1 line-clamp-2 text-center'>
                     {template.title}
                   </h3>
                   {template.desc && (

@@ -52,7 +52,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
     <div
       className='flex flex-col h-dvh'
       style={{
-        backgroundImage: 'url(https://res.maka.im/assets/jiantie/beijing3.png)',
+        backgroundImage: 'url(https://res.maka.im/assets/jiantie/beijing4.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'top',
         backgroundRepeat: 'no-repeat',
@@ -112,7 +112,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
           }}
         >
           <Search className='w-5 h-5 text-gray-400 flex-shrink-0' />
-          <span className='text-gray-400 text-sm flex-1'>模板搜索</span>
+          <span className='text-gray-400 text-base flex-1'>模板搜索</span>
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
-import { Search } from 'lucide-react';
+import { ChevronRight, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -33,9 +33,10 @@ export default function Detail({ channelId }: DetailProps) {
   const [selectedKeywordId, setSelectedKeywordId] = useState<number | null>(
     null
   );
-  const [fourthLevelCollections, setFourthLevelCollections] = useState<
-    Channel[]
-  >([]);
+  const [fourthLevelFloors, setFourthLevelFloors] = useState<Channel[]>([]);
+  const [expandedFloorIds, setExpandedFloorIds] = useState<Set<number>>(
+    new Set()
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,23 +73,24 @@ export default function Detail({ channelId }: DetailProps) {
     fetchChannelDetail();
   }, [channelId]);
 
-  // 获取四级集合
+  // 获取四级楼层（包含五级集合）
   useEffect(() => {
     if (!selectedKeywordId) return;
 
-    const fetchCollections = async () => {
+    const fetchFloors = async () => {
       try {
         const data = await trpc.channel.getFourthLevelCollections.query({
           parentId: selectedKeywordId,
-          locale: 'zh-CN',
         });
-        setFourthLevelCollections(data);
+        setFourthLevelFloors(data);
+        // 切换热词时重置展开状态
+        setExpandedFloorIds(new Set());
       } catch (err) {
-        console.error('获取四级集合失败:', err);
+        console.error('获取四级楼层失败:', err);
       }
     };
 
-    fetchCollections();
+    fetchFloors();
   }, [selectedKeywordId]);
 
   if (loading) {
@@ -121,9 +123,13 @@ export default function Detail({ channelId }: DetailProps) {
 
   return (
     <div
-      className='flex flex-col h-dvh bg-cover bg-center bg-no-repeat'
+      className='flex flex-col h-dvh '
       style={{
-        backgroundImage: 'url(https://res.maka.im/assets/jiantie/beijing3.png)',
+        backgroundImage: 'url(https://res.maka.im/assets/jiantie/beijing4.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        // backgroundColor: 'yellow',
       }}
     >
       {/* 顶部导航栏 */}
@@ -151,20 +157,12 @@ export default function Detail({ channelId }: DetailProps) {
             </button>
 
             {channelDetail.thumb_path && (
-              <div className='w-6 h-6 flex-shrink-0'>
-                <Image
-                  src={cdnApi(channelDetail.thumb_path)}
-                  alt={channelDetail.display_name}
-                  width={24}
-                  height={24}
-                  className='object-contain'
-                />
+              <div className='w-100 h-6 flex-shrink-0'>
+                <h1 className='text-base font-medium text-gray-900 truncate'>
+                  {channelDetail.display_name}
+                </h1>
               </div>
             )}
-
-            <h1 className='text-base font-medium text-gray-900 truncate'>
-              {channelDetail.display_name}
-            </h1>
           </div>
 
           {/* 右侧：搜索按钮 */}
@@ -209,9 +207,9 @@ export default function Detail({ channelId }: DetailProps) {
         )}
       </div>
 
-      {/* 主内容区 - 四级集合 */}
+      {/* 主内容区 - 四级楼层和五级集合 */}
       <div className='flex-1 overflow-y-auto bg-cover bg-center bg-no-repeat'>
-        {fourthLevelCollections.length === 0 ? (
+        {fourthLevelFloors.length === 0 ? (
           <div className='flex items-center justify-center h-full'>
             <div className='text-center text-gray-400'>
               <p className='text-4xl mb-2'>📭</p>
@@ -219,46 +217,93 @@ export default function Detail({ channelId }: DetailProps) {
             </div>
           </div>
         ) : (
-          <div className='pt-3'>
-            {/* 场景名称标题 */}
+          <div className='pt-3 space-y-6'>
+            {fourthLevelFloors.map(floor => {
+              const collections = floor.children || [];
+              // 只有一个楼层时默认展开，否则根据expandedFloorIds判断
+              const isExpanded =
+                fourthLevelFloors.length === 1 ||
+                expandedFloorIds.has(floor.id);
+              const displayCollections = isExpanded
+                ? collections
+                : collections.slice(0, 4);
+              const hasMore = collections.length > 4;
+              // 只有多个楼层时才显示标题
+              const showTitle = fourthLevelFloors.length > 1;
 
-            {/* 模板卡片网格 */}
-            <div className='px-4 grid grid-cols-2 gap-3'>
-              {fourthLevelCollections.map(collection => (
-                <div
-                  key={collection.id}
-                  className='bg-white rounded-lg overflow-hidden active:opacity-80 transition-opacity'
-                  onClick={() => {
-                    router.push(`/mobile/channel2/collection/${collection.id}`);
-                  }}
-                >
-                  {/* 集合缩略图 */}
-                  <div className='aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-50 relative'>
-                    {collection.thumb_path ? (
-                      <Image
-                        src={cdnApi(collection.thumb_path)}
-                        alt={collection.display_name}
-                        fill
-                        className='object-cover'
-                      />
-                    ) : (
-                      <div className='flex items-center justify-center h-full'>
-                        <span className='text-3xl font-bold text-gray-300'>
-                          {collection.display_name.substring(0, 2)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+              return (
+                <div key={floor.id}>
+                  {/* 四级楼层标题 */}
+                  {showTitle && (
+                    <div className='px-4 mb-3 flex items-center justify-between'>
+                      <h2 className='text-lg font-bold text-gray-900'>
+                        {floor.display_name}
+                      </h2>
+                      {hasMore && (
+                        <button
+                          onClick={() => {
+                            setExpandedFloorIds(prev => {
+                              const newSet = new Set(prev);
+                              if (newSet.has(floor.id)) {
+                                newSet.delete(floor.id);
+                              } else {
+                                newSet.add(floor.id);
+                              }
+                              return newSet;
+                            });
+                          }}
+                          className='flex items-center text-[#D53933] text-sm'
+                        >
+                          <span>{isExpanded ? '收起' : '查看全部'}</span>
+                          <ChevronRight
+                            className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                          />
+                        </button>
+                      )}
+                    </div>
+                  )}
 
-                  {/* 集合信息 */}
-                  {/* <div className='px-2 py-2'>
-                    <h3 className='text-xs text-gray-900 font-medium line-clamp-1 mb-0.5'>
-                      {collection.display_name}
-                    </h3>
-                  </div> */}
+                  {/* 五级集合卡片网格 */}
+                  {collections.length > 0 ? (
+                    <div className='px-4 grid grid-cols-2 gap-x-2.5 gap-y-3'>
+                      {displayCollections.map(collection => (
+                        <div
+                          key={collection.id}
+                          className='bg-white rounded-tl-lg rounded-tr-lg rounded-bl-lg overflow-hidden active:opacity-80 transition-opacity'
+                          onClick={() => {
+                            router.push(
+                              `/mobile/channel2/collection/${collection.id}`
+                            );
+                          }}
+                        >
+                          {/* 集合缩略图 */}
+                          <div className='aspect-[176/236] bg-gradient-to-br from-gray-100 to-gray-50 relative'>
+                            {collection.thumb_path ? (
+                              <Image
+                                src={cdnApi(collection.thumb_path)}
+                                alt={collection.display_name}
+                                fill
+                                className='object-cover'
+                              />
+                            ) : (
+                              <div className='flex items-center justify-center h-full'>
+                                <span className='text-3xl font-bold text-gray-300'>
+                                  {collection.display_name.substring(0, 2)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className='px-4 py-6 text-center text-gray-400 text-sm'>
+                      该楼层暂无集合
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         )}
       </div>

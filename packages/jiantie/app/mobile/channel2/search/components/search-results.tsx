@@ -104,7 +104,7 @@ export default function SearchResults({
               type='text'
               value={keyword}
               onChange={e => setKeyword(e.target.value)}
-              placeholder='搜索集合...'
+              placeholder='搜索模板...'
               className='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
               autoFocus
             />
@@ -112,7 +112,7 @@ export default function SearchResults({
 
           <button
             type='submit'
-            className='px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+            className='px-4 py-2 bg-[#D53933] text-white rounded-lg hover:bg-pink-800 transition-colors '
             disabled={!keyword.trim() || loading}
           >
             搜索
@@ -156,10 +156,10 @@ export default function SearchResults({
           <div className='p-4'>
             <div className='mb-4 text-sm text-gray-600'>
               找到{' '}
-              <span className='font-semibold text-blue-600'>
+              <span className='font-semibold text-[#D53933]'>
                 {collections.length}
               </span>{' '}
-              个集合
+              个模板
             </div>
 
             <div className='grid grid-cols-2 gap-4'>
@@ -172,7 +172,7 @@ export default function SearchResults({
                   }}
                 >
                   {/* 集合封面 */}
-                  <div className='aspect-square bg-gray-100 relative'>
+                  <div className='aspect-[3/4] bg-gray-100 relative'>
                     {collection.thumb_path ? (
                       <Image
                         src={cdnApi(collection.thumb_path)}
@@ -185,16 +185,6 @@ export default function SearchResults({
                         📁
                       </div>
                     )}
-                  </div>
-
-                  {/* 集合信息 */}
-                  <div className='p-3'>
-                    <h3 className='text-sm font-medium text-gray-900 mb-1 line-clamp-2'>
-                      {collection.display_name}
-                    </h3>
-                    <p className='text-xs text-gray-500'>
-                      {collection.template_ids.length} 个模板
-                    </p>
                   </div>
                 </div>
               ))}
