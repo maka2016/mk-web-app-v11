@@ -7,6 +7,7 @@ import { Search } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import StatusBar from '../../../../components/StatusBar';
 
 interface Channel
   extends Omit<
@@ -58,7 +59,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
         backgroundRepeat: 'no-repeat',
       }}
     >
-      {/* 顶部Logo区 */}
+      <StatusBar bgColor='transparent' /> {/* 顶部Logo区 */}
       <div
         className='flex
        items-center justify-between
@@ -99,7 +100,6 @@ export default function Main({ appid = 'jiantie' }: Props) {
           </button>
         </div>
       </div>
-
       {/* 顶部搜索栏 */}
       <div className=' p-6 sticky top-12 z-10'>
         <div
@@ -115,7 +115,6 @@ export default function Main({ appid = 'jiantie' }: Props) {
           <span className='text-gray-400 text-base flex-1'>模板搜索</span>
         </div>
       </div>
-
       {/* 主内容区 */}
       <div className='flex-1 overflow-y-auto'>
         {loading ? (
