@@ -6,7 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { EditorSDK, LayerElemItem } from '@mk/works-store/types';
 import { Button } from '@workspace/ui/components/button';
 import { Form } from '@workspace/ui/components/form';
-import { MessageCircle } from 'lucide-react';
+import { Input } from '@workspace/ui/components/input';
+import { cn } from '@workspace/ui/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -22,11 +23,6 @@ import { SubmissionView } from './SubmissionView';
 const COOKIE_VISITOR_ID = 'rsvp_visitor_id';
 const COOKIE_CONTACT_ID = 'rsvp_contact_id';
 const COOKIE_EXPIRE_DAYS = 365; // Cookie 有效期1年
-
-// 生成专属链接已访问的 Cookie 键名
-function getInviteeLinkOpenedCookieKey(contactId: string): string {
-  return `rsvp_link_opened_${contactId}`;
-}
 
 // 生成或获取访客ID
 function getOrCreateVisitorId(): string {
@@ -139,13 +135,19 @@ interface RSVPCompProps {
 }
 
 const FormCompWrapper = styled.div`
-  width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 24px;
   background-color: #fff;
-  border-radius: 12px;
+  border-radius: 14px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  overflow: hidden;
+  border: 1px solid #e5e7ec;
+  .header {
+    padding: 8px 16px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .content {
+    padding: 16px;
+  }
 `;
 
 // 内部组件：负责纯粹的渲染
@@ -154,8 +156,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const rsvp = useRSVP();
-  const { config, loading, error, fields, showEditDialog, setShowEditDialog } =
-    rsvp;
+  const { config, loading, error, fields } = rsvp;
 
   // 从 URL 参数获取被邀请人信息（支持新的专属链接参数）
   // 解码 URL 参数，处理可能的双重编码情况
@@ -253,6 +254,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
   });
 
   useEffect(() => {
+    // 编辑器模式
     if (editorSDK) {
       const worksStore = editorSDK.fullSDK;
       const isRsvp = worksStore.worksDetail.is_rsvp;
@@ -284,47 +286,56 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
       // 优先从 URL 参数读取 contact_id，确保专属链接能精确关联嘉宾
       const urlContactId = searchParams.get('rsvp_contact_id');
       const urlInviteeName = inviteeName; // 从 URL 参数获取的邀请人姓名
+      const urlViewed = searchParams.get('rsvp_viewed'); // 链接是否已被查看过
 
-      // 如果是专属链接（有邀请人姓名），需要验证访问者身份
+      // 如果是专属链接（有邀请人姓名和联系人ID）
       if (urlInviteeName && urlContactId) {
-        // 检查当前访问者是否是该专属链接的原始被邀请人
         const existingContactId = getCookie(COOKIE_CONTACT_ID);
-        const linkOpenedKey = getInviteeLinkOpenedCookieKey(urlContactId);
-        const linkAlreadyOpened = getCookie(linkOpenedKey) === 'true';
 
-        // 判断是否是原始被邀请人：
-        // 1. 如果现有 contact_id 与 URL 中的 contact_id 匹配，是原始被邀请人（包括首次访问和再次访问）
-        // 2. 如果现有 contact_id 为空，且该链接未被标记为已打开，认为是首次访问（原始被邀请人）
-        const isOriginalInvitee =
-          existingContactId === urlContactId ||
-          (!existingContactId && !linkAlreadyOpened);
-
-        if (isOriginalInvitee) {
-          // 是原始被邀请人，设置 contact_id 并标记链接已打开
+        if (!urlViewed) {
+          // 场景1: 链接首次被打开（没有 viewed 标记）
+          // 认为是原始被邀请人A第一次打开
           setContactId(urlContactId);
           setCookie(COOKIE_CONTACT_ID, urlContactId, COOKIE_EXPIRE_DAYS);
-          // 标记该专属链接已被打开
-          setCookie(linkOpenedKey, 'true', COOKIE_EXPIRE_DAYS);
-        } else {
-          // 不是原始被邀请人（可能是通过分享访问），清除URL中的邀请参数
-          // 使其变成公开链接
+
+          // 在URL上添加 viewed 标记，表示该链接已被查看
           const params = new URLSearchParams(searchParams.toString());
-          params.delete('rsvp_invitee');
-          params.delete('invitee');
-          params.delete('name');
-          params.delete('rsvp_phone');
-          params.delete('rsvp_email');
-          params.delete('rsvp_contact_id');
-
-          // 使用 router.replace 更新 URL，不刷新页面
-          const newUrl = params.toString()
-            ? `${window.location.pathname}?${params.toString()}`
-            : window.location.pathname;
+          params.set('rsvp_viewed', 'true');
+          const newUrl = `${window.location.pathname}?${params.toString()}`;
           router.replace(newUrl, { scroll: false });
+        } else {
+          // 场景2: 链接带有 viewed 标记（已被查看过）
+          // 检查当前设备的 contact_id 是否与链接的 contact_id 匹配
+          // 如果当前state已经有正确的contactId，说明是刚设置完viewed后的重新执行，直接跳过
+          if (contactId === urlContactId) {
+            return;
+          }
 
-          // 如果有现有的 contact_id，使用它
-          if (existingContactId) {
-            setContactId(existingContactId);
+          if (existingContactId === urlContactId) {
+            // 是原始被邀请人A再次访问，保持专属链接
+            setContactId(urlContactId);
+          } else {
+            // 不是原始被邀请人（是B通过A的分享打开）
+            // 清除所有URL参数，转为公开链接
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete('rsvp_invitee');
+            params.delete('invitee');
+            params.delete('name');
+            params.delete('rsvp_phone');
+            params.delete('rsvp_email');
+            params.delete('rsvp_contact_id');
+            params.delete('rsvp_viewed');
+
+            // 使用 router.replace 更新 URL，不刷新页面
+            const newUrl = params.toString()
+              ? `${window.location.pathname}?${params.toString()}`
+              : window.location.pathname;
+            router.replace(newUrl, { scroll: false });
+
+            // 如果有现有的 contact_id，使用它
+            if (existingContactId) {
+              setContactId(existingContactId);
+            }
           }
         }
       } else if (urlContactId) {
@@ -339,6 +350,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isViewerMode, searchParams, inviteeName, router]);
 
   // 记录访问日志（访客打开页面）
@@ -467,7 +479,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         result = await trpc.rsvp.createSubmission.mutate({
           form_config_id: config.id!,
           visitor_id: isViewerMode ? visitorId : undefined,
-          contact_id: isViewerMode ? contactId || undefined : undefined,
+          contact_id: isViewerMode && contactId ? contactId : undefined,
           will_attend: willAttendValue,
           submission_data: submissionData,
         });
@@ -620,54 +632,54 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
 
   return (
     <>
-      <div
+      <FormCompWrapper
+        className='w-full max-w-xl'
+        data-form-id={config.id}
         style={{
           pointerEvents: editorSDK ? 'none' : 'auto',
         }}
       >
-        <FormCompWrapper className='w-full max-w-xl mx-auto space-y-6'>
-          {/* Header: 致 XXX 和 消息 */}
-          {isInviteeLink && (
-            <div className='flex items-center justify-between'>
-              <div className='text-base font-medium text-gray-900'>
-                致 {inviteeName}
-              </div>
-              <div className='flex items-center gap-1 text-sm text-gray-500 cursor-pointer hover:text-gray-700'>
-                <MessageCircle className='h-4 w-4' />
-                <span>消息</span>
-              </div>
+        {/* Header: 致 XXX 和 消息 */}
+        {isInviteeLink && (
+          <div className='flex items-center justify-between header bg-gray-50'>
+            <div className='text-gray-600'>
+              <span className='text-xs'>致</span>
+              <span className='font-medium'>{inviteeName}</span>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* 公开链接：必须填写姓名 */}
-          {!isInviteeLink && (
-            <div className='space-y-2'>
-              <label className='block text-sm font-medium text-gray-900'>
-                您的姓名 <span className='text-red-500'>*</span>
-              </label>
-              <input
-                className='w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400'
-                type='text'
-                placeholder='请输入您的姓名'
-                value={guestName}
-                onChange={e => setGuestName(e.target.value)}
-              />
-            </div>
-          )}
-
+        {/* 公开链接：必须填写姓名 */}
+        {!isInviteeLink && (
+          <div className='space-y-2 header bg-gray-50'>
+            <label className='block text-xs font-medium text-gray-900'>
+              您的姓名 <span className='text-red-500'>*</span>
+            </label>
+            <Input
+              type='text'
+              placeholder='请输入您的姓名'
+              value={guestName}
+              onChange={e => setGuestName(e.target.value)}
+            />
+          </div>
+        )}
+        <div className='content'>
           {/* 您是否参加？ */}
           <div>
-            <div className='text-base font-medium text-gray-900 mb-3'>
+            <div className='text-xs font-medium text-gray-600 mb-1'>
               您是否参加？
             </div>
             {/* 出席/不出席选择按钮 */}
             {!submitting && !resultMsg && (
-              <div className='flex items-center gap-3'>
+              <div className='flex items-center gap-2'>
                 <Button
                   size='lg'
                   disabled={submitting || (!isInviteeLink && !guestName.trim())}
                   onClick={() => setWillAttend(true)}
-                  className='flex-1 h-11 rounded-lg font-medium'
+                  className={cn(
+                    'flex-1 h-10 rounded-lg font-medium',
+                    !willAttend && 'border-2'
+                  )}
                   variant={willAttend === true ? 'default' : 'outline'}
                 >
                   参加
@@ -677,7 +689,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                   variant={willAttend === false ? 'default' : 'outline'}
                   disabled={submitting || (!isInviteeLink && !guestName.trim())}
                   onClick={() => handleSubmit(false)}
-                  className='flex-1 h-11 rounded-lg font-medium'
+                  className='flex-1 h-10 rounded-lg font-medium border-2'
                 >
                   不参加
                 </Button>
@@ -688,7 +700,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           {/* 如果选择了出席，显示表单 */}
           {willAttend === true && (
             <Form {...form}>
-              <form className='space-y-6'>
+              <form className='pt-3'>
                 <RSVPFormFields fields={fields} control={form.control} />
               </form>
             </Form>
@@ -718,14 +730,23 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
               ) : null}
             </div>
           )}
-          <div
-            id={`hidden_trigger_for_rsvp_config_panel_${formConfigId}`}
-            onClick={() => {
-              setShowEditDialog(true);
-            }}
-          ></div>
-        </FormCompWrapper>
-      </div>
+        </div>
+      </FormCompWrapper>
+    </>
+  );
+}
+
+const RsvpSetting = ({ formConfigId }: { formConfigId: string }) => {
+  const { showEditDialog, setShowEditDialog } = useRSVP();
+  const { config } = useRSVP();
+  return (
+    <>
+      <div
+        id={`hidden_trigger_for_rsvp_config_panel_${formConfigId}`}
+        onClick={() => {
+          setShowEditDialog(true);
+        }}
+      ></div>
       <ResponsiveDialog
         isOpen={showEditDialog}
         onOpenChange={setShowEditDialog}
@@ -739,13 +760,14 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
       </ResponsiveDialog>
     </>
   );
-}
+};
 
 // 导出组件：使用 Provider 包裹
 export default function RSVPComp({ attrs, editorSDK, layer }: RSVPCompProps) {
   return (
     <RSVPProvider attrs={attrs} editorSDK={editorSDK} layer={layer}>
       <RSVPCompInner attrs={attrs} editorSDK={editorSDK} layer={layer} />
+      <RsvpSetting formConfigId={attrs.formConfigId} />
     </RSVPProvider>
   );
 }
