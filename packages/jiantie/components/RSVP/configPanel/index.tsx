@@ -277,7 +277,7 @@ export function RSVPConfigPanel() {
               return;
             }
             router.push(
-              `/mobile/rsvp/share?form_config_id=${config.id}&works_id=${worksId}`
+              `/mobile/rsvp/invitees?form_config_id=${config.id}&works_id=${worksId}`
             );
           }}
           size='lg'

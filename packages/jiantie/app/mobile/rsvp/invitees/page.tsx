@@ -9,13 +9,12 @@ import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Input } from '@workspace/ui/components/input';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
-import { Separator } from '@workspace/ui/components/separator';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import styles from './share.module.scss';
 
-export default function RSVPSharePage() {
+export default function RSVPInviteesPage() {
   const searchParams = useSearchParams();
   const formConfigId = searchParams.get('form_config_id') || '';
   const worksId = searchParams.get('works_id') || '';
@@ -74,12 +73,10 @@ export default function RSVPSharePage() {
   // 查询嘉宾列表
   useEffect(() => {
     const fetchInvitees = async () => {
-      if (!formConfigId) return;
       setLoading(true);
       try {
-        const data = await trpc.rsvp.listInvitees.query({
-          form_config_id: formConfigId,
-        });
+        // 嘉宾归属于用户，不再需要form_config_id
+        const data = await trpc.rsvp.listInvitees.query({});
         setInvitees(data || []);
       } catch (error: any) {
         toast.error(error.message || '加载失败');
@@ -88,7 +85,7 @@ export default function RSVPSharePage() {
       }
     };
     fetchInvitees();
-  }, [formConfigId]);
+  }, []);
 
   // 查询所有提交记录
   useEffect(() => {
@@ -110,12 +107,10 @@ export default function RSVPSharePage() {
 
   // 刷新列表函数
   const fetchInvitees = async () => {
-    if (!formConfigId) return;
     setLoading(true);
     try {
-      const data = await trpc.rsvp.listInvitees.query({
-        form_config_id: formConfigId,
-      });
+      // 嘉宾归属于用户，不再需要form_config_id
+      const data = await trpc.rsvp.listInvitees.query({});
       setInvitees(data || []);
     } catch (error: any) {
       toast.error(error.message || '加载失败');
@@ -155,8 +150,9 @@ export default function RSVPSharePage() {
   // 创建嘉宾
   const handleCreateInvitee = async () => {
     try {
+      // form_config_id改为可选，如果提供则用于生成专属链接
       await trpc.rsvp.createInvitee.mutate({
-        form_config_id: formConfigId,
+        form_config_id: formConfigId || undefined,
         name: inviteeName.trim(),
       });
       toast.success('创建成功');
@@ -256,24 +252,12 @@ export default function RSVPSharePage() {
     setShowMiniPTip(true);
   };
 
-  if (!formConfigId) {
-    return (
-      <div className='w-full py-4 text-center text-sm text-gray-500'>
-        参数错误，请先保存表单配置
-      </div>
-    );
-  }
+  // 不再强制要求formConfigId，因为嘉宾归属于用户
+  // 但需要worksId用于生成链接
 
   return (
     <div className='relative bg-white'>
-      <MobileHeader title={'分享设置'} />
-      <div className='px-4 py-3 border-b border-black/[0.06]'>
-        <div className='flex items-center gap-2'>
-          <Icon name='share' />
-          <span className='font-semibold text-lg leading-[26px]'>分享设置</span>
-        </div>
-      </div>
-      <Separator />
+      <MobileHeader title={'嘉宾邀请'} />
 
       <div className='px-4 py-3 max-h-[80vh] overflow-y-auto flex flex-col gap-4'>
         {/* 公开链接分享 */}
@@ -283,17 +267,14 @@ export default function RSVPSharePage() {
           </div>
           <div className='space-y-2'>
             <div className='flex items-center gap-2'>
-              <Input
-                className='flex-1 bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
-                value={publicLink}
-                readOnly
-              />
               <Button
                 size='sm'
                 variant='outline'
-                onClick={() => handleCopyLink(publicLink)}
+                onClick={() => {
+                  setShareDialogOpen(true);
+                }}
               >
-                {copied ? '已复制' : '复制链接'}
+                公开分享
               </Button>
             </div>
           </div>
@@ -469,28 +450,6 @@ export default function RSVPSharePage() {
                         : viewingSubmission.will_attend === false
                           ? '确认不出席'
                           : '未选择'}
-                    </span>
-                  </div>
-                  <div className='flex items-center gap-2'>
-                    <span className='text-xs text-gray-600'>审核状态：</span>
-                    <span
-                      className={`text-xs font-semibold ${
-                        viewingSubmission.status === 'approved'
-                          ? 'text-green-600'
-                          : viewingSubmission.status === 'rejected'
-                            ? 'text-red-600'
-                            : viewingSubmission.status === 'cancelled'
-                              ? 'text-gray-500'
-                              : 'text-yellow-600'
-                      }`}
-                    >
-                      {viewingSubmission.status === 'approved'
-                        ? '已确认'
-                        : viewingSubmission.status === 'rejected'
-                          ? '已拒绝'
-                          : viewingSubmission.status === 'cancelled'
-                            ? '已取消'
-                            : '待审核'}
                     </span>
                   </div>
                   {viewingSubmission.submission_data &&

@@ -79,7 +79,7 @@ const RsvpContactUpsertInput = z.object({
 });
 
 const RsvpInviteeCreateInput = z.object({
-  form_config_id: z.string(),
+  form_config_id: z.string().optional(), // 可选，用于生成专属链接时关联到特定表单
   name: z.string(),
   phone: z.string().optional(),
   email: z.string().email().optional(),
@@ -218,28 +218,43 @@ export const rsvpRouter = router({
             }
           }
 
-          // 查找或创建联系人
-          const existing = await ctx.prisma.rsvpContactEntity.findUnique({
-            where: { phone: phone },
+          // 获取表单配置对应的works的uid（用于创建联系人）
+          const works = await ctx.prisma.worksEntity.findUnique({
+            where: { id: form.works_id },
           });
+          const contactUid = works?.uid;
 
-          if (existing) {
-            // 更新现有联系人的姓名
-            const updated = await ctx.prisma.rsvpContactEntity.update({
-              where: { id: existing.id },
-              data: { name: name },
-            });
-            finalContactId = updated.id;
+          if (!contactUid) {
+            // 如果无法获取uid，跳过联系人创建
+            console.warn('无法获取works的uid，跳过联系人创建');
           } else {
-            // 创建新联系人
-            const created = await ctx.prisma.rsvpContactEntity.create({
-              data: {
+            // 查找或创建联系人（在同一用户下查找）
+            const existing = await ctx.prisma.rsvpContactEntity.findFirst({
+              where: {
                 phone: phone,
-                name: name,
-                form_config_id: input.form_config_id,
+                uid: contactUid,
               },
             });
-            finalContactId = created.id;
+
+            if (existing) {
+              // 更新现有联系人的姓名
+              const updated = await ctx.prisma.rsvpContactEntity.update({
+                where: { id: existing.id },
+                data: { name: name },
+              });
+              finalContactId = updated.id;
+            } else {
+              // 创建新联系人，归属于works的所有者（uid）
+              const created = await ctx.prisma.rsvpContactEntity.create({
+                data: {
+                  phone: phone,
+                  name: name,
+                  uid: contactUid,
+                  form_config_id: input.form_config_id,
+                },
+              });
+              finalContactId = created.id;
+            }
           }
         }
       }
@@ -421,14 +436,29 @@ export const rsvpRouter = router({
     .input(RsvpContactUpsertInput)
     .mutation(async ({ ctx, input }) => {
       // 唯一标识：优先 email，其次 phone；否则按 id 更新，否则创建
+      // 注意：联系人归属于当前用户（uid）
       if (input.id) {
         const { id, ...data } = input;
+        // 检查联系人是否属于当前用户
+        const existing = await ctx.prisma.rsvpContactEntity.findUnique({
+          where: { id },
+        });
+        if (!existing || existing.uid !== ctx.uid) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '联系人不存在',
+          });
+        }
         return ctx.prisma.rsvpContactEntity.update({ where: { id }, data });
       }
 
       if (input.email) {
-        const existing = await ctx.prisma.rsvpContactEntity.findUnique({
-          where: { email: input.email },
+        // 在同一用户下查找
+        const existing = await ctx.prisma.rsvpContactEntity.findFirst({
+          where: {
+            email: input.email,
+            uid: ctx.uid,
+          },
         });
         if (existing) {
           return ctx.prisma.rsvpContactEntity.update({
@@ -439,8 +469,12 @@ export const rsvpRouter = router({
       }
 
       if (input.phone) {
-        const existing = await ctx.prisma.rsvpContactEntity.findUnique({
-          where: { phone: input.phone },
+        // 在同一用户下查找
+        const existing = await ctx.prisma.rsvpContactEntity.findFirst({
+          where: {
+            phone: input.phone,
+            uid: ctx.uid,
+          },
         });
         if (existing) {
           return ctx.prisma.rsvpContactEntity.update({
@@ -450,7 +484,13 @@ export const rsvpRouter = router({
         }
       }
 
-      return ctx.prisma.rsvpContactEntity.create({ data: input });
+      // 创建新联系人，归属于当前用户
+      return ctx.prisma.rsvpContactEntity.create({
+        data: {
+          ...input,
+          uid: ctx.uid,
+        },
+      });
     }),
 
   // 公开接口：根据 contact_id 获取提交记录
@@ -527,7 +567,11 @@ export const rsvpRouter = router({
         .optional()
     )
     .query(async ({ ctx, input }) => {
-      const where: any = { deleted: false };
+      // 联系人归属于用户（uid）
+      const where: any = {
+        uid: ctx.uid,
+        deleted: false,
+      };
       if (input?.keyword) {
         where.OR = [
           { name: { contains: input.keyword, mode: 'insensitive' } },
@@ -547,21 +591,40 @@ export const rsvpRouter = router({
   createInvitee: protectedProcedure
     .input(RsvpInviteeCreateInput)
     .mutation(async ({ ctx, input }) => {
-      // 验证表单配置存在
-      const formConfig = await ctx.prisma.rsvpFormConfigEntity.findUnique({
-        where: { id: input.form_config_id },
-      });
-      if (!formConfig || formConfig.deleted) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: '表单配置不存在',
+      // 如果提供了form_config_id，验证表单配置存在且属于当前用户
+      if (input.form_config_id) {
+        const formConfig = await ctx.prisma.rsvpFormConfigEntity.findUnique({
+          where: { id: input.form_config_id },
+          include: {
+            // 通过works_id关联到works表，获取uid
+          },
         });
+        if (!formConfig || formConfig.deleted) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '表单配置不存在',
+          });
+        }
+
+        // 验证表单配置属于当前用户（通过works_id查询works表）
+        const works = await ctx.prisma.worksEntity.findUnique({
+          where: { id: formConfig.works_id },
+        });
+        if (!works || works.uid !== ctx.uid) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: '无权访问该表单配置',
+          });
+        }
       }
 
-      // 如果提供了手机号，检查是否已存在
+      // 如果提供了手机号，检查是否已存在且属于当前用户
       if (input.phone) {
-        const existing = await ctx.prisma.rsvpContactEntity.findUnique({
-          where: { phone: input.phone },
+        const existing = await ctx.prisma.rsvpContactEntity.findFirst({
+          where: {
+            phone: input.phone,
+            uid: ctx.uid,
+          },
         });
         if (existing) {
           // 如果已存在，更新为嘉宾
@@ -576,10 +639,13 @@ export const rsvpRouter = router({
         }
       }
 
-      // 如果提供了邮箱，检查是否已存在
+      // 如果提供了邮箱，检查是否已存在且属于当前用户
       if (input.email) {
-        const existing = await ctx.prisma.rsvpContactEntity.findUnique({
-          where: { email: input.email },
+        const existing = await ctx.prisma.rsvpContactEntity.findFirst({
+          where: {
+            email: input.email,
+            uid: ctx.uid,
+          },
         });
         if (existing) {
           // 如果已存在，更新为嘉宾
@@ -594,12 +660,13 @@ export const rsvpRouter = router({
         }
       }
 
-      // 创建新嘉宾
+      // 创建新嘉宾，归属于当前用户
       return ctx.prisma.rsvpContactEntity.create({
         data: {
           name: input.name,
           phone: input.phone,
           email: input.email,
+          uid: ctx.uid,
           form_config_id: input.form_config_id,
         },
       });
@@ -610,21 +677,24 @@ export const rsvpRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
 
-      // 检查嘉宾是否存在且是嘉宾（有form_config_id）
+      // 检查嘉宾是否存在且属于当前用户
       const existing = await ctx.prisma.rsvpContactEntity.findUnique({
         where: { id },
       });
-      if (!existing || !existing.form_config_id) {
+      if (!existing || existing.uid !== ctx.uid) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: '嘉宾不存在',
         });
       }
 
-      // 如果更新手机号，检查唯一性
+      // 如果更新手机号，检查唯一性（仅检查同一用户的）
       if (data.phone && data.phone !== existing.phone) {
-        const phoneExists = await ctx.prisma.rsvpContactEntity.findUnique({
-          where: { phone: data.phone },
+        const phoneExists = await ctx.prisma.rsvpContactEntity.findFirst({
+          where: {
+            phone: data.phone,
+            uid: ctx.uid,
+          },
         });
         if (phoneExists && phoneExists.id !== id) {
           throw new TRPCError({
@@ -634,10 +704,13 @@ export const rsvpRouter = router({
         }
       }
 
-      // 如果更新邮箱，检查唯一性
+      // 如果更新邮箱，检查唯一性（仅检查同一用户的）
       if (data.email && data.email !== existing.email) {
-        const emailExists = await ctx.prisma.rsvpContactEntity.findUnique({
-          where: { email: data.email },
+        const emailExists = await ctx.prisma.rsvpContactEntity.findFirst({
+          where: {
+            email: data.email,
+            uid: ctx.uid,
+          },
         });
         if (emailExists && emailExists.id !== id) {
           throw new TRPCError({
@@ -656,6 +729,17 @@ export const rsvpRouter = router({
   deleteInvitee: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      // 检查嘉宾是否存在且属于当前用户
+      const existing = await ctx.prisma.rsvpContactEntity.findUnique({
+        where: { id: input.id },
+      });
+      if (!existing || existing.uid !== ctx.uid) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: '嘉宾不存在',
+        });
+      }
+
       // 软删除
       return ctx.prisma.rsvpContactEntity.update({
         where: { id: input.id },
@@ -666,15 +750,15 @@ export const rsvpRouter = router({
   listInvitees: protectedProcedure
     .input(
       z.object({
-        form_config_id: z.string(),
         keyword: z.string().optional(),
         skip: z.number().optional(),
         take: z.number().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
+      // 嘉宾归属于用户（uid），而不是某个RSVP表单
       const where: any = {
-        form_config_id: input.form_config_id,
+        uid: ctx.uid,
         deleted: false,
       };
 
