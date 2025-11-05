@@ -4,24 +4,32 @@ import { JTBitTables } from '../service/cms/bit_tables/jiantie';
 
 dotenv.config({ path: '.env.local' });
 const buildJStoreV2 = async () => {
-  await syncChannel(JTBitTables['一级-栏目'], '一级-栏目');
+  await syncChannel(JTBitTables['一级-栏目'], '一级栏目');
   await syncChannel(
     JTBitTables['二级-频道'],
-    '二级-频道',
+    '二级频道',
     JTBitTables['一级-栏目'],
     'prod',
     { needThumb: true, needParent: true }
   );
   await syncChannel(
     JTBitTables['三级-热词'],
-    '三级-热词',
+    '三级热词',
     JTBitTables['二级-频道'],
     'prod'
   );
+
   await syncChannel(
-    JTBitTables['四级-集合'],
-    '四级-集合',
+    JTBitTables['四级-楼层'],
+    '四级楼层',
     JTBitTables['三级-热词'],
+    'prod'
+  );
+
+  await syncChannel(
+    JTBitTables['五级-集合'],
+    '五级集合',
+    JTBitTables['四级-楼层'],
     'prod',
     {
       needThumb: true,

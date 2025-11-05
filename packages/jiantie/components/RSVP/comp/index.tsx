@@ -5,21 +5,8 @@ import styled from '@emotion/styled';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { EditorSDK, LayerElemItem } from '@mk/works-store/types';
 import { Button } from '@workspace/ui/components/button';
-import { Checkbox } from '@workspace/ui/components/checkbox';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@workspace/ui/components/form';
-import { Input } from '@workspace/ui/components/input';
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from '@workspace/ui/components/radio-group';
-import { MessageCircle, Minus, Plus } from 'lucide-react';
+import { Form } from '@workspace/ui/components/form';
+import { MessageCircle } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -28,6 +15,7 @@ import { ResponsiveDialog } from '../../Drawer';
 import { RSVPConfigPanel } from '../configPanel';
 import { RSVPProvider, useRSVP } from '../RSVPContext';
 import { RSVPAttrs, RSVPField } from '../type';
+import { RSVPFormFields } from './RSVPFormFields';
 import { SubmissionView } from './SubmissionView';
 
 // Cookie 键名
@@ -54,7 +42,7 @@ function getOrCreateVisitorId(): string {
 }
 
 // 根据字段配置动态生成 zod schema
-function createFormSchema(fields: RSVPField[]) {
+export function createFormSchema(fields: RSVPField[]) {
   const schemaShape: Record<string, z.ZodTypeAny> = {};
 
   // 只处理启用的字段
@@ -154,9 +142,10 @@ const FormCompWrapper = styled.div`
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px;
   background-color: #fff;
-  border-radius: 10px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 `;
 
 // 内部组件：负责纯粹的渲染
@@ -262,6 +251,29 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     defaultValues: getDefaultValues,
     mode: 'onChange',
   });
+
+  useEffect(() => {
+    if (editorSDK) {
+      const worksStore = editorSDK.fullSDK;
+      const isRsvp = worksStore.worksDetail.is_rsvp;
+      if (!isRsvp) {
+        worksStore.api.updateWorksDetail({
+          is_rsvp: true,
+        });
+      }
+      // 确保 URL 上带有 form_config_id 参数（若无则追加并替换，不刷新页面）
+      if (typeof window !== 'undefined' && typeof router !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.has('form_config_id')) {
+          urlParams.set('form_config_id', String(formConfigId));
+          const newUrl = urlParams.toString()
+            ? `${window.location.pathname}?${urlParams.toString()}`
+            : window.location.pathname;
+          router.replace(newUrl, { scroll: false });
+        }
+      }
+    }
+  }, []);
 
   // 初始化访客ID和联系人ID，并处理专属链接分享逻辑
   useEffect(() => {
@@ -390,15 +402,6 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.id, fields.length]);
-
-  // 显示标题：专属链接显示「诚邀{姓名}」，公开链接显示配置的标题
-  const displayTitle = useMemo(() => {
-    if (!config) return '';
-    if (isInviteeLink) {
-      return `诚邀${inviteeName}`;
-    }
-    return config.title; // 公开链接显示原配置标题
-  }, [isInviteeLink, inviteeName, config]);
 
   const handleSubmit = async (willAttendValue: boolean) => {
     if (!config) return;
@@ -605,7 +608,6 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         }}
       >
         <SubmissionView
-          resultMsg={resultMsg}
           latestSubmission={latestSubmission}
           onResubmit={handleResubmit}
           allowMultipleSubmit={config.allow_multiple_submit}
@@ -618,402 +620,112 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
 
   return (
     <>
-      <FormCompWrapper
-        className='w-full max-w-xl mx-auto space-y-4'
+      <div
         style={{
           pointerEvents: editorSDK ? 'none' : 'auto',
         }}
       >
-        {/* 顶部：致 {姓名} 和 消息按钮 */}
-        <div className='flex items-center justify-between mb-4'>
-          <div className='text-base font-medium text-gray-900'>
-            {isInviteeLink ? `致 ${inviteeName}` : displayTitle}
-          </div>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='text-gray-500 hover:text-gray-700'
-            onClick={() => {
-              // TODO: 实现消息功能
-            }}
-          >
-            <MessageCircle className='h-4 w-4 mr-1' />
-            <span className='text-sm'>消息</span>
-          </Button>
-        </div>
-
-        {config.desc ? (
-          <div className='text-sm text-gray-500 mb-4'>{config.desc}</div>
-        ) : null}
-
-        {/* 公开链接：必须填写姓名 */}
-        {!isInviteeLink && (
-          <div className='space-y-2'>
-            <label className='block text-sm font-medium'>
-              您的姓名 <span className='text-red-500'>*</span>
-            </label>
-            <input
-              className='w-full border rounded px-3 py-2 text-sm'
-              type='text'
-              placeholder='请输入您的姓名'
-              value={guestName}
-              onChange={e => setGuestName(e.target.value)}
-            />
-          </div>
-        )}
-
-        {/* 您是否参加？ */}
-        <div className='mb-4'>
-          <div className='text-base font-medium text-gray-900 mb-3'>
-            您是否参加？
-          </div>
-          {/* 出席/不出席选择按钮 */}
-          {!submitting && !resultMsg && (
-            <div className='flex items-center gap-3'>
-              <Button
-                size='lg'
-                disabled={submitting || (!isInviteeLink && !guestName.trim())}
-                onClick={() => setWillAttend(true)}
-                className='flex-1 h-11 rounded-lg'
-                variant={willAttend === true ? 'default' : 'outline'}
-              >
-                参加
-              </Button>
-              <Button
-                size='lg'
-                variant={willAttend === false ? 'default' : 'outline'}
-                disabled={submitting || (!isInviteeLink && !guestName.trim())}
-                onClick={() => handleSubmit(false)}
-                className='flex-1 h-11 rounded-lg'
-              >
-                不参加
-              </Button>
+        <FormCompWrapper className='w-full max-w-xl mx-auto space-y-6'>
+          {/* Header: 致 XXX 和 消息 */}
+          {isInviteeLink && (
+            <div className='flex items-center justify-between'>
+              <div className='text-base font-medium text-gray-900'>
+                致 {inviteeName}
+              </div>
+              <div className='flex items-center gap-1 text-sm text-gray-500 cursor-pointer hover:text-gray-700'>
+                <MessageCircle className='h-4 w-4' />
+                <span>消息</span>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* 如果选择了出席，显示表单 */}
-        {willAttend === true && (
-          <Form {...form}>
-            <form className='space-y-4'>
-              {fields
-                .filter(field => field.enabled !== false)
-                .map(field => (
-                  <FormField
-                    key={field.id}
-                    control={form.control}
-                    name={field.id}
-                    render={({ field: formField }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {field.label}
-                          {field.required ? (
-                            <span className='text-red-500 ml-1'>*</span>
-                          ) : null}
-                        </FormLabel>
-                        <FormControl>
-                          {field.type === 'text' ? (
-                            <Input
-                              placeholder={field.placeholder}
-                              value={formField.value as string}
-                              onChange={formField.onChange}
-                              onBlur={formField.onBlur}
-                              name={formField.name}
-                              ref={formField.ref}
-                            />
-                          ) : field.type === 'radio' ? (
-                            <RadioGroup
-                              value={formField.value as string}
-                              onValueChange={formField.onChange}
-                            >
-                              <div className='space-y-2'>
-                                {field.options?.map(opt => (
-                                  <div
-                                    key={opt.value}
-                                    className='flex items-center gap-2'
-                                  >
-                                    <RadioGroupItem
-                                      value={opt.value}
-                                      id={`${field.id}-${opt.value}`}
-                                    />
-                                    <label
-                                      htmlFor={`${field.id}-${opt.value}`}
-                                      className='text-sm cursor-pointer'
-                                    >
-                                      {opt.label}
-                                    </label>
-                                  </div>
-                                ))}
-                              </div>
-                            </RadioGroup>
-                          ) : field.type === 'checkbox' ? (
-                            <div className='space-y-2'>
-                              {field.options?.map(opt => (
-                                <div
-                                  key={opt.value}
-                                  className='flex items-center gap-2'
-                                >
-                                  <Checkbox
-                                    id={`${field.id}-${opt.value}`}
-                                    checked={(
-                                      formField.value as string[]
-                                    ).includes(opt.value)}
-                                    onCheckedChange={checked => {
-                                      const currentValue =
-                                        (formField.value as string[]) || [];
-                                      if (checked) {
-                                        formField.onChange([
-                                          ...currentValue,
-                                          opt.value,
-                                        ]);
-                                      } else {
-                                        formField.onChange(
-                                          currentValue.filter(
-                                            v => v !== opt.value
-                                          )
-                                        );
-                                      }
-                                    }}
-                                  />
-                                  <label
-                                    htmlFor={`${field.id}-${opt.value}`}
-                                    className='text-sm cursor-pointer'
-                                  >
-                                    {opt.label}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
-                          ) : field.type === 'guest_count' ? (
-                            <div className='space-y-4'>
-                              {field.splitAdultChild ? (
-                                <>
-                                  <div className='mb-3'>
-                                    <label className='block text-sm font-medium text-gray-900 mb-2'>
-                                      客人
-                                    </label>
-                                  </div>
-                                  <div className='flex items-center gap-4'>
-                                    <div className='flex-1'>
-                                      <div className='flex items-center gap-2'>
-                                        <Button
-                                          type='button'
-                                          variant='outline'
-                                          size='icon'
-                                          className='h-9 w-9 shrink-0 rounded'
-                                          onClick={() => {
-                                            const currentValue =
-                                              (formField.value as {
-                                                adult: number;
-                                                child: number;
-                                              }) || { adult: 0, child: 0 };
-                                            const newAdult = Math.max(
-                                              0,
-                                              (currentValue.adult || 0) - 1
-                                            );
-                                            formField.onChange({
-                                              ...currentValue,
-                                              adult: newAdult,
-                                            });
-                                          }}
-                                        >
-                                          <Minus className='h-4 w-4' />
-                                        </Button>
-                                        <div className='flex-1 text-center'>
-                                          <span className='text-base font-semibold text-gray-900'>
-                                            {(
-                                              formField.value as {
-                                                adult: number;
-                                                child: number;
-                                              }
-                                            )?.adult || 0}
-                                          </span>
-                                          <span className='text-sm text-gray-600 ml-1'>
-                                            大人
-                                          </span>
-                                        </div>
-                                        <Button
-                                          type='button'
-                                          variant='outline'
-                                          size='icon'
-                                          className='h-9 w-9 shrink-0 rounded'
-                                          onClick={() => {
-                                            const currentValue =
-                                              (formField.value as {
-                                                adult: number;
-                                                child: number;
-                                              }) || { adult: 0, child: 0 };
-                                            formField.onChange({
-                                              ...currentValue,
-                                              adult:
-                                                (currentValue.adult || 0) + 1,
-                                            });
-                                          }}
-                                        >
-                                          <Plus className='h-4 w-4' />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                    <div className='flex-1'>
-                                      <div className='flex items-center gap-2'>
-                                        <Button
-                                          type='button'
-                                          variant='outline'
-                                          size='icon'
-                                          className='h-9 w-9 shrink-0 rounded'
-                                          onClick={() => {
-                                            const currentValue =
-                                              (formField.value as {
-                                                adult: number;
-                                                child: number;
-                                              }) || { adult: 0, child: 0 };
-                                            const newChild = Math.max(
-                                              0,
-                                              (currentValue.child || 0) - 1
-                                            );
-                                            formField.onChange({
-                                              ...currentValue,
-                                              child: newChild,
-                                            });
-                                          }}
-                                        >
-                                          <Minus className='h-4 w-4' />
-                                        </Button>
-                                        <div className='flex-1 text-center'>
-                                          <span className='text-base font-semibold text-gray-900'>
-                                            {(
-                                              formField.value as {
-                                                adult: number;
-                                                child: number;
-                                              }
-                                            )?.child || 0}
-                                          </span>
-                                          <span className='text-sm text-gray-600 ml-1'>
-                                            小孩
-                                          </span>
-                                        </div>
-                                        <Button
-                                          type='button'
-                                          variant='outline'
-                                          size='icon'
-                                          className='h-9 w-9 shrink-0 rounded'
-                                          onClick={() => {
-                                            const currentValue =
-                                              (formField.value as {
-                                                adult: number;
-                                                child: number;
-                                              }) || { adult: 0, child: 0 };
-                                            formField.onChange({
-                                              ...currentValue,
-                                              child:
-                                                (currentValue.child || 0) + 1,
-                                            });
-                                          }}
-                                        >
-                                          <Plus className='h-4 w-4' />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </>
-                              ) : (
-                                <div className='flex items-center gap-2'>
-                                  <Button
-                                    type='button'
-                                    variant='outline'
-                                    size='icon'
-                                    className='h-9 w-9 shrink-0'
-                                    onClick={() => {
-                                      const currentValue = (formField.value as {
-                                        total: number;
-                                      }) || { total: 0 };
-                                      const newTotal = Math.max(
-                                        0,
-                                        (currentValue.total || 0) - 1
-                                      );
-                                      formField.onChange({
-                                        total: newTotal,
-                                      });
-                                    }}
-                                  >
-                                    <Minus className='h-4 w-4' />
-                                  </Button>
-                                  <Input
-                                    type='number'
-                                    min={0}
-                                    placeholder='请输入人数'
-                                    className='text-center flex-1'
-                                    value={
-                                      (formField.value as { total: number })
-                                        ?.total || 0
-                                    }
-                                    onChange={e => {
-                                      formField.onChange({
-                                        total: parseInt(e.target.value) || 0,
-                                      });
-                                    }}
-                                  />
-                                  <Button
-                                    type='button'
-                                    variant='outline'
-                                    size='icon'
-                                    className='h-9 w-9 shrink-0'
-                                    onClick={() => {
-                                      const currentValue = (formField.value as {
-                                        total: number;
-                                      }) || { total: 0 };
-                                      formField.onChange({
-                                        total: (currentValue.total || 0) + 1,
-                                      });
-                                    }}
-                                  >
-                                    <Plus className='h-4 w-4' />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          ) : null}
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ))}
-            </form>
-          </Form>
-        )}
+          {/* 公开链接：必须填写姓名 */}
+          {!isInviteeLink && (
+            <div className='space-y-2'>
+              <label className='block text-sm font-medium text-gray-900'>
+                您的姓名 <span className='text-red-500'>*</span>
+              </label>
+              <input
+                className='w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400'
+                type='text'
+                placeholder='请输入您的姓名'
+                value={guestName}
+                onChange={e => setGuestName(e.target.value)}
+              />
+            </div>
+          )}
 
-        {resultMsg ? (
-          <div className='text-sm text-gray-600'>{resultMsg}</div>
-        ) : null}
-
-        {/* 如果选择了出席，显示确认按钮 */}
-        {willAttend === true && (
-          <div className='pt-4'>
-            <Button
-              size='lg'
-              disabled={submitting}
-              onClick={() => handleSubmit(true)}
-              className='w-full h-11 rounded-lg'
-            >
-              {submitting ? '提交中...' : '确认'}
-            </Button>
-            {config.max_submit_count != null ? (
-              <div className='text-center mt-2'>
-                <span className='text-xs text-gray-500'>
-                  限制 {config.max_submit_count} 次
-                </span>
+          {/* 您是否参加？ */}
+          <div>
+            <div className='text-base font-medium text-gray-900 mb-3'>
+              您是否参加？
+            </div>
+            {/* 出席/不出席选择按钮 */}
+            {!submitting && !resultMsg && (
+              <div className='flex items-center gap-3'>
+                <Button
+                  size='lg'
+                  disabled={submitting || (!isInviteeLink && !guestName.trim())}
+                  onClick={() => setWillAttend(true)}
+                  className='flex-1 h-11 rounded-lg font-medium'
+                  variant={willAttend === true ? 'default' : 'outline'}
+                >
+                  参加
+                </Button>
+                <Button
+                  size='lg'
+                  variant={willAttend === false ? 'default' : 'outline'}
+                  disabled={submitting || (!isInviteeLink && !guestName.trim())}
+                  onClick={() => handleSubmit(false)}
+                  className='flex-1 h-11 rounded-lg font-medium'
+                >
+                  不参加
+                </Button>
               </div>
-            ) : null}
+            )}
           </div>
-        )}
-        <div
-          id={`hidden_trigger_for_rsvp_config_panel_${formConfigId}`}
-          onClick={() => {
-            setShowEditDialog(true);
-          }}
-        ></div>
-      </FormCompWrapper>
+
+          {/* 如果选择了出席，显示表单 */}
+          {willAttend === true && (
+            <Form {...form}>
+              <form className='space-y-6'>
+                <RSVPFormFields fields={fields} control={form.control} />
+              </form>
+            </Form>
+          )}
+
+          {resultMsg ? (
+            <div className='text-sm text-red-500'>{resultMsg}</div>
+          ) : null}
+
+          {/* 如果选择了出席，显示确认按钮 */}
+          {willAttend === true && (
+            <div className='pt-2'>
+              <Button
+                size='lg'
+                disabled={submitting}
+                onClick={() => handleSubmit(true)}
+                className='w-full h-11 rounded-lg font-medium bg-gray-900 hover:bg-gray-800'
+              >
+                {submitting ? '提交中...' : '确认'}
+              </Button>
+              {config.max_submit_count != null ? (
+                <div className='text-center mt-2'>
+                  <span className='text-xs text-gray-500'>
+                    限制 {config.max_submit_count} 次
+                  </span>
+                </div>
+              ) : null}
+            </div>
+          )}
+          <div
+            id={`hidden_trigger_for_rsvp_config_panel_${formConfigId}`}
+            onClick={() => {
+              setShowEditDialog(true);
+            }}
+          ></div>
+        </FormCompWrapper>
+      </div>
       <ResponsiveDialog
         isOpen={showEditDialog}
         onOpenChange={setShowEditDialog}
