@@ -15,14 +15,14 @@ export const channelRouter = router({
       // 查询"一级-栏目"
       const channels = await ctx.prisma.templateMarketChannelEntity.findMany({
         where: {
-          class: '一级-栏目',
+          class: '一级栏目',
           appid: input.appid,
           locale: input.locale,
         },
         include: {
           children: {
             where: {
-              class: '二级-频道',
+              class: '二级频道',
             },
             orderBy: {
               id: 'asc',
@@ -53,7 +53,7 @@ export const channelRouter = router({
         include: {
           children: {
             where: {
-              class: '三级-热词',
+              class: '三级热词',
               locale: input.locale,
             },
             orderBy: {
@@ -79,7 +79,7 @@ export const channelRouter = router({
         {
           where: {
             parent_id: input.parentId,
-            class: '四级-集合',
+            class: '四级集合',
             locale: input.locale,
           },
           orderBy: {

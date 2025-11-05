@@ -148,9 +148,7 @@ export default function Templates({ collectionId }: TemplatesProps) {
               <h1 className='text-lg font-semibold text-gray-900'>
                 {collection.display_name}
               </h1>
-              <p className='text-sm text-gray-500'>
-                {templates.length} 个模板
-              </p>
+              <p className='text-sm text-gray-500'>{templates.length} 个模板</p>
             </div>
           </div>
         </div>
@@ -172,8 +170,8 @@ export default function Templates({ collectionId }: TemplatesProps) {
                 key={template.id}
                 className='bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer'
                 onClick={() => {
-                  // 跳转到模板详情页或编辑页
-                  router.push(`/maka/mobile/template/${template.id}`);
+                  // 跳转到模板详情页
+                  router.push(`/mobile/template?id=${template.id}`);
                 }}
               >
                 {/* 模板封面 */}
