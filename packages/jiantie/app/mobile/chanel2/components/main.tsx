@@ -93,7 +93,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
                         key={child.id}
                         className='flex flex-col items-center cursor-pointer transition-transform active:scale-95'
                         onClick={() => {
-                          console.log('点击频道:', child);
+                          router.push(`/mobile/chanel2/${child.id}`);
                         }}
                       >
                         {/* 圆形图标容器 */}

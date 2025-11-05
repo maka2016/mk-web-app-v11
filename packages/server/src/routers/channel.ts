@@ -36,4 +36,58 @@ export const channelRouter = router({
 
       return channels;
     }),
+
+  // 获取二级频道详情（包含三级热词）
+  getChannelDetail: publicProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        locale: z.string().default('zh-CN'),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const channel = await ctx.prisma.templateMarketChannelEntity.findUnique({
+        where: {
+          id: input.id,
+        },
+        include: {
+          children: {
+            where: {
+              class: '三级-热词',
+              locale: input.locale,
+            },
+            orderBy: {
+              id: 'asc',
+            },
+          },
+        },
+      });
+
+      return channel;
+    }),
+
+  // 获取四级集合列表
+  getFourthLevelCollections: publicProcedure
+    .input(
+      z.object({
+        parentId: z.number(),
+        locale: z.string().default('zh-CN'),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const collections = await ctx.prisma.templateMarketChannelEntity.findMany(
+        {
+          where: {
+            parent_id: input.parentId,
+            class: '四级-集合',
+            locale: input.locale,
+          },
+          orderBy: {
+            id: 'asc',
+          },
+        }
+      );
+
+      return collections;
+    }),
 });
