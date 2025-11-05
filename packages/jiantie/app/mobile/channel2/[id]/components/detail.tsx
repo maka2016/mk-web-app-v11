@@ -35,6 +35,7 @@ export default function Detail({ channelId }: DetailProps) {
     null
   );
   const [fourthLevelFloors, setFourthLevelFloors] = useState<Channel[]>([]);
+  const [expandedFloors, setExpandedFloors] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -215,65 +216,102 @@ export default function Detail({ channelId }: DetailProps) {
           </div>
         ) : (
           <div className='pt-3 space-y-6'>
-            {fourthLevelFloors.map(floor => (
-              <div key={floor.id}>
-                {/* 四级楼层标题 */}
-                <div className='px-4 mb-3 flex items-center justify-between'>
-                  <h2 className='text-lg font-bold text-gray-900'>
-                    {floor.display_name}
-                  </h2>
-                  <button
-                    onClick={() => {
-                      // TODO: 添加查看全部的跳转逻辑
-                      console.log('查看全部', floor.id);
-                    }}
-                    className='flex items-center text-[#D53933] text-sm'
-                  >
-                    <span>查看全部</span>
-                    <ChevronRight className='w-4 h-4' />
-                  </button>
-                </div>
+            {fourthLevelFloors.map(floor => {
+              const isSingleFloor = fourthLevelFloors.length === 1;
+              const isExpanded = expandedFloors.has(floor.id);
+              const collections = floor.children || [];
+              const hasMore = collections.length > 4;
+              const displayCollections =
+                isSingleFloor || isExpanded
+                  ? collections
+                  : collections.slice(0, 4);
 
-                {/* 五级集合卡片网格 */}
-                {floor.children && floor.children.length > 0 ? (
-                  <div className='px-4 grid grid-cols-2 gap-x-2.5 gap-y-3'>
-                    {floor.children.map(collection => (
-                      <div
-                        key={collection.id}
-                        className='bg-white rounded-tl-lg rounded-tr-lg rounded-bl-lg overflow-hidden active:opacity-80 transition-opacity'
-                        onClick={() => {
-                          router.push(
-                            `/mobile/channel2/collection/${collection.id}`
-                          );
-                        }}
-                      >
-                        {/* 集合缩略图 */}
-                        <div className='aspect-[176/236] bg-gradient-to-br from-gray-100 to-gray-50 relative'>
-                          {collection.thumb_path ? (
-                            <Image
-                              src={cdnApi(collection.thumb_path)}
-                              alt={collection.display_name}
-                              fill
-                              className='object-cover'
-                            />
-                          ) : (
-                            <div className='flex items-center justify-center h-full'>
-                              <span className='text-3xl font-bold text-gray-300'>
-                                {collection.display_name.substring(0, 2)}
-                              </span>
+              return (
+                <div key={floor.id}>
+                  {/* 四级楼层标题 - 只有多个楼层时才显示 */}
+                  {!isSingleFloor && (
+                    <div className='px-4 mb-3 flex items-center justify-between'>
+                      <h2 className='text-lg font-bold text-gray-900'>
+                        {floor.display_name}
+                      </h2>
+                      {hasMore && (
+                        <button
+                          onClick={() => {
+                            setExpandedFloors(prev => {
+                              const newSet = new Set(prev);
+                              if (newSet.has(floor.id)) {
+                                newSet.delete(floor.id);
+                              } else {
+                                newSet.add(floor.id);
+                              }
+                              return newSet;
+                            });
+                          }}
+                          className='flex items-center text-[#D53933] text-sm'
+                        >
+                          <span>{isExpanded ? '收起' : '查看全部'}</span>
+                          <ChevronRight
+                            className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                          />
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 五级集合卡片网格 */}
+                  {displayCollections.length > 0 ? (
+                    <div className='px-4 grid grid-cols-2 gap-x-2.5 gap-y-3 transition-all duration-300'>
+                      {displayCollections.map((collection, index) => {
+                        const isInInitial4 = index < 4;
+                        return (
+                          <div
+                            key={collection.id}
+                            className={`bg-white rounded-tl-lg rounded-tr-lg rounded-bl-lg overflow-hidden active:opacity-80 transition-all duration-300 ${
+                              !isInInitial4 && isExpanded
+                                ? 'animate-fadeInUp'
+                                : ''
+                            }`}
+                            style={{
+                              animationDelay:
+                                !isInInitial4 && isExpanded
+                                  ? `${(index - 4) * 50}ms`
+                                  : '0ms',
+                            }}
+                            onClick={() => {
+                              router.push(
+                                `/mobile/channel2/collection/${collection.id}`
+                              );
+                            }}
+                          >
+                            {/* 集合缩略图 */}
+                            <div className='aspect-[176/236] bg-gradient-to-br from-gray-100 to-gray-50 relative'>
+                              {collection.thumb_path ? (
+                                <Image
+                                  src={cdnApi(collection.thumb_path)}
+                                  alt={collection.display_name}
+                                  fill
+                                  className='object-cover'
+                                />
+                              ) : (
+                                <div className='flex items-center justify-center h-full'>
+                                  <span className='text-3xl font-bold text-gray-300'>
+                                    {collection.display_name.substring(0, 2)}
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className='px-4 py-6 text-center text-gray-400 text-sm'>
-                    该楼层暂无集合
-                  </div>
-                )}
-              </div>
-            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className='px-4 py-6 text-center text-gray-400 text-sm'>
+                      该楼层暂无集合
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
