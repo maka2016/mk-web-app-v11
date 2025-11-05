@@ -158,24 +158,21 @@ export default function Main({ appid = 'jiantie' }: Props) {
                   {channel.display_name}
                 </h2>
 
-                {/* 网格布局 */}
-                <div className='flex flex-wrap justify-between'>
-                  {channel.children && channel.children.length > 0 ? (
+                {/* 网格布局 - 4列 */}
+                <div className='grid grid-cols-4 gap-4'>
+                  {channel.children &&
                     channel.children.map(child => (
                       <div
                         key={child.id}
-                        className='flex flex-col items-center cursor-pointer transition-transform active:scale-95 mb-4'
-                        style={{ width: '72px' }}
+                        className='flex flex-col items-center cursor-pointer transition-transform active:scale-95'
                         onClick={() => {
                           router.push(`/mobile/chanel2/${child.id}`);
                         }}
                       >
                         {/* 圆形图标容器 */}
                         <div
-                          className=' rounded-full bg-gray-100 flex items-center justify-center mb-2 overflow-hidden border border-white'
+                          className='w-full aspect-square rounded-full bg-gray-100 flex items-center justify-center mb-2 overflow-hidden border border-white'
                           style={{
-                            width: '72px',
-                            height: '72px',
                             border: '1px solid #fff',
                             boxShadow:
                               '0 1px 2px -1px rgba(0, 0, 0, 0.10), 0 1px 3px 0 rgba(0, 0, 0, 0.10)',
@@ -198,9 +195,8 @@ export default function Main({ appid = 'jiantie' }: Props) {
                         </div>
                         {/* 分类名称 */}
                         <span
-                          className='font-semibold text-center leading-6'
+                          className='font-semibold text-center leading-6 text-base'
                           style={{
-                            fontSize: '16px',
                             color: 'var(--foreground)',
                             fontFamily: '"PingFang SC"',
                             fontFeatureSettings: '"liga" off, "clig" off',
@@ -209,44 +205,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
                           {child.display_name}
                         </span>
                       </div>
-                    ))
-                  ) : (
-                    // 如果没有子频道，显示父频道本身
-                    <div
-                      className='flex flex-col items-center cursor-pointer transition-transform active:scale-95 mb-4'
-                      style={{ width: 'calc(25% - 6px)' }}
-                      onClick={() => {
-                        console.log('点击频道:', channel);
-                      }}
-                    >
-                      <div className='w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2 overflow-hidden border border-white'>
-                        {channel.thumb_path ? (
-                          <div className='w-full h-full relative'>
-                            <Image
-                              src={cdnApi(channel.thumb_path)}
-                              alt={channel.display_name}
-                              fill
-                              className='object-cover'
-                            />
-                          </div>
-                        ) : (
-                          <span className='text-2xl'>
-                            {channel.display_name.substring(0, 2)}
-                          </span>
-                        )}
-                      </div>
-                      <span
-                        className='text-base font-semibold text-center leading-6'
-                        style={{
-                          color: 'var(--foreground)',
-                          fontFamily: '"PingFang SC"',
-                          fontFeatureSettings: '"liga" off, "clig" off',
-                        }}
-                      >
-                        {channel.display_name}
-                      </span>
-                    </div>
-                  )}
+                    ))}
                 </div>
               </div>
             ))}
