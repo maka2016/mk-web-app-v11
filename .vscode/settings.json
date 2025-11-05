@@ -3,8 +3,12 @@
   "typescript.referencesCodeLens.enabled": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit"
+  },
+  "[typescript]": {
+    "editor.codeActionsOnSave": {
+      "source.removeUnusedImports": "explicit"
+    }
   },
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
@@ -28,8 +32,14 @@
     "typescriptreact": "html"
   },
   "tailwindCSS.experimental.classRegex": [
-    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
-    ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+    [
+      "cva\\(([^)]*)\\)",
+      "[\"'`]([^\"'`]*).*?[\"'`]"
+    ],
+    [
+      "cx\\(([^)]*)\\)",
+      "(?:'|\"|`)([^']*)(?:'|\"|`)"
+    ]
   ],
   "eslint.validate": [
     "javascript",
@@ -58,5 +68,8 @@
   "gitlens.statusBar.enabled": true,
   "gitlens.statusBar.alignment": "left",
   "gitlens.statusBar.command": "gitlens.showQuickRepoStatus",
-  "kiroAgent.configureMCP": "Disabled"
+  "kiroAgent.configureMCP": "Disabled",
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  }
 }

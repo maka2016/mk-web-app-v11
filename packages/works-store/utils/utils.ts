@@ -67,7 +67,6 @@ export const getDefaultLink = (
 export const getDefaultWorksData = (
   override?: Partial<IWorksData>
 ): IWorksData => {
-  // const worksType = getUrlSearchParams({ target: "works_type" }) || "poster"
   const defaultCanvaData = {
     height: 1280,
     width: 720,
@@ -142,7 +141,7 @@ export const findItemFromWorks = (
   if (typeof pageIdx === 'undefined') {
     for (let i = 0; i < pages.length; i++) {
       const currPage = pages[i];
-      // eslint-disable-next-line no-loop-func
+
       deepScanElement(currPage.layers, eachCB, i);
     }
   } else {

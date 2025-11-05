@@ -1,8 +1,8 @@
 import APPBridge from '@mk/app-bridge';
 import { imageUrlToBase64, toOssMiniPCoverUrl } from '@/utils';
 import toast from 'react-hot-toast';
-import { onScreenShot } from '@mk/widgets/GridV3/shared';
-import { CanvaInfo2 } from '@mk/widgets/GridV3/comp/provider/utils';
+import { onScreenShot } from '@/components/GridV3/shared';
+import { CanvaInfo2 } from '@/components/GridV3/comp/provider/utils';
 import { isAndroid } from '@mk/utils';
 
 export type ShareEnv = {

@@ -10,9 +10,9 @@ import { isAndroid, isMakaAppClient, isPc } from '@mk/utils';
 import {
   downloadMultiplePage,
   zipImageFromUrl,
-} from '@mk/widgets/GridV3/DesignerToolForEditor/HeaderV2/services';
-import { getCanvaInfo2 } from '@mk/widgets/GridV3/comp/provider/utils';
-import { getAllBlock, onScreenShot } from '@mk/widgets/GridV3/shared';
+} from '@/components/GridV3/DesignerToolForEditor/HeaderV2/services';
+import { getCanvaInfo2 } from '@/components/GridV3/comp/provider/utils';
+import { getAllBlock, onScreenShot } from '@/components/GridV3/shared';
 import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Button } from '@workspace/ui/components/button';

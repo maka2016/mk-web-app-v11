@@ -11,7 +11,7 @@ import { Button } from '@workspace/ui/components/button';
 import { Parser, Player, DB } from 'svga';
 import { createPortal } from 'react-dom';
 import { formReceiverServiceApi } from '@mk/services';
-import { getViewerSDK } from '@mk/viewer/utils/viewerSDK';
+import { getViewerSDK } from '@/components/viewer/utils/viewerSDK';
 import { EventEmitter, getCookie, setCookie, setCookieExpire } from '@mk/utils';
 import toast from 'react-hot-toast';
 

@@ -287,6 +287,41 @@ export const templateRouter = router({
       return result;
     }),
 
+  // 批量获取模板信息（用于集合落地页）
+  findManyByIds: publicProcedure
+    .input(
+      z.object({
+        template_ids: z.array(z.string()),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      if (input.template_ids.length === 0) {
+        return [];
+      }
+
+      const templates = await ctx.prisma.templateEntity.findMany({
+        where: {
+          id: { in: input.template_ids },
+          deleted: false,
+        },
+        select: {
+          id: true,
+          title: true,
+          desc: true,
+          cover: true,
+          spec_id: true,
+          create_time: true,
+          update_time: true,
+          custom_time: true,
+        },
+        orderBy: {
+          custom_time: 'desc',
+        },
+      });
+
+      return templates;
+    }),
+
   // 从数据创建模板
   createFromData: publicProcedure
     .input(

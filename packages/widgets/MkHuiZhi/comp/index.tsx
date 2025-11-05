@@ -1,7 +1,7 @@
 'use client';
 import { formReceiverServiceApi } from '@mk/services';
 import { getCookie, setCookieExpire } from '@mk/utils';
-import { getViewerSDK } from '@mk/viewer/utils/viewerSDK';
+import { getViewerSDK } from '@/components/viewer/utils/viewerSDK';
 import { PlatformCompProps } from '@mk/widgets-bridge-sdk';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';

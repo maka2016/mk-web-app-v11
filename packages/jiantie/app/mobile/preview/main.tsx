@@ -2,7 +2,7 @@
 import { createWorksStore, getToken, getUid, initWidgetEnv } from '@/services';
 import { useEffect, useRef, useState } from 'react';
 import { WorksStore } from '@mk/works-store/store';
-import WebsiteApp from '@mk/viewer/components/website';
+import WebsiteApp from '@/components/viewer/components/website';
 import { toJS } from 'mobx';
 import { getAppId, getWorksDetailStatic } from '@mk/services';
 import { setStore } from '@/app/editor/useStore';

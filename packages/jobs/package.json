@@ -1,0 +1,19 @@
+{
+  "name": "jobs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@larksuiteoapi/node-sdk": "^1.55.0",
+    "@types/lodash": "^4.17.13",
+    "@workspace/database": "workspace:*",
+    "@workspace/server": "workspace:*",
+    "lodash": "^4.17.21"
+  }
+}

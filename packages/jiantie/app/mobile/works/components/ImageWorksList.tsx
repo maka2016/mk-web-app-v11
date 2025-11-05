@@ -3,7 +3,7 @@ import { getAppId, request } from '@/services';
 import { useStore } from '@/store';
 import { trpc } from '@/utils/trpc';
 import { API, cdnApi } from '@mk/services';
-import { onScreenShot } from '@mk/widgets/GridV3/shared';
+import { onScreenShot } from '@/components/GridV3/shared';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Loading } from '@workspace/ui/components/loading';
