@@ -294,6 +294,10 @@ model RsvpContactEntity {
   /// 嘉宾归属：嘉宾归属于简帖用户（uid），而不是某个RSVP表单
   uid Int @map("uid") /// 用户ID，嘉宾归属于该用户
 
+  /// 邀请分享信息
+  invite_title String? @db.VarChar /// 邀请标题
+  invite_desc  String? @db.VarChar /// 邀请描述
+
   /// 备注：至少需要 email 或 phone 其中一个
 
   /// 状态管理
