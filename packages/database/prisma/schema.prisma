@@ -130,6 +130,7 @@ model WorksEntity {
   offline                Boolean? @default(false)
   spec_id                String?  @map("spec_id") @db.VarChar
   is_title_desc_modified Boolean  @default(true) @map("is_title_desc_modified")
+  is_rsvp                Boolean  @default(false) @map("is_rsvp")
 
   @@index([uid], map: "IDX_121635b71d5f6986874d4c5de4")
   @@index([alias], map: "IDX_d6ed9b7a04fa675847385b649e")
@@ -167,8 +168,8 @@ model RsvpFormConfigEntity {
   update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz
 
   /// 关联关系
-  submissions RsvpSubmissionEntity[]
-  view_logs   RsvpViewLogEntity[] /// 操作记录（访问、提交、重新提交等）
+  submissions          RsvpSubmissionEntity[]
+  view_logs            RsvpViewLogEntity[] /// 操作记录（访问、提交、重新提交等）
   contact_form_configs RsvpContactFormConfigEntity[] /// 关联的嘉宾关系（多对多）
 
   @@index([works_id], map: "IDX_rsvp_form_config_works_id")
@@ -298,8 +299,8 @@ model RsvpContactEntity {
   update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz
 
   /// 关联关系
-  submissions RsvpSubmissionEntity[]
-  action_logs RsvpViewLogEntity[] /// 操作记录
+  submissions          RsvpSubmissionEntity[]
+  action_logs          RsvpViewLogEntity[] /// 操作记录
   contact_form_configs RsvpContactFormConfigEntity[] /// 关联的表单（多对多）
 
   @@unique([email], map: "UQ_rsvp_contact_email")
@@ -315,16 +316,16 @@ model RsvpContactEntity {
 
 /// RSVP 嘉宾与表单的多对多关联表
 model RsvpContactFormConfigEntity {
-  id             String  @id @default(cuid()) @db.Text
-  contact_id     String  @map("contact_id") @db.Text /// 关联的嘉宾ID
-  form_config_id String  @map("form_config_id") @db.Text /// 关联的表单配置ID
+  id             String @id @default(cuid()) @db.Text
+  contact_id     String @map("contact_id") @db.Text /// 关联的嘉宾ID
+  form_config_id String @map("form_config_id") @db.Text /// 关联的表单配置ID
 
   /// 时间戳
   create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
 
   /// 关联关系
-  contact     RsvpContactEntity     @relation(fields: [contact_id], references: [id])
-  form_config RsvpFormConfigEntity  @relation(fields: [form_config_id], references: [id])
+  contact     RsvpContactEntity    @relation(fields: [contact_id], references: [id])
+  form_config RsvpFormConfigEntity @relation(fields: [form_config_id], references: [id])
 
   @@unique([contact_id, form_config_id], map: "UQ_rsvp_contact_form_config")
   @@index([contact_id], map: "IDX_rsvp_contact_form_config_contact_id")

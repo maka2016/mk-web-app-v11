@@ -5,12 +5,21 @@ import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Input } from '@workspace/ui/components/input';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
-import { Separator } from '@workspace/ui/components/separator';
 import { Switch } from '@workspace/ui/components/switch';
 import cls from 'classnames';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckSquare2,
+  ChevronDown,
+  ChevronUp,
+  Circle,
+  GripVertical,
+  Lightbulb,
+  Pencil,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useRSVP } from '../RSVPContext';
 import { FieldType, RSVPAttrs, RSVPField, RSVPFieldOption } from '../type';
 
@@ -48,13 +57,13 @@ export default function RSVPConfigPanelTrigger({
 }
 
 const fieldTypes = [
-  { label: '文本', value: 'text' as FieldType },
-  { label: '单选', value: 'radio' as FieldType },
-  { label: '多选', value: 'checkbox' as FieldType },
+  { label: '文本', value: 'text' as FieldType, icon: Pencil },
+  { label: '单选', value: 'radio' as FieldType, icon: Circle },
+  { label: '多选', value: 'checkbox' as FieldType, icon: CheckSquare2 },
   { label: '访客人数', value: 'guest_count' as FieldType },
 ];
 
-export function RSVPConfigPanel() {
+export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
   const rsvp = useRSVP();
   const router = useRouter();
   const {
@@ -62,7 +71,6 @@ export function RSVPConfigPanel() {
     title,
     fields,
     error,
-    worksId,
     setTitle,
     setConfig,
     setFields,
@@ -106,6 +114,8 @@ export function RSVPConfigPanel() {
     setShowFieldEditor(true);
   };
 
+  // 系统字段不允许删除，保留此函数以备将来使用
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const removeField = (id: string) => {
     // 系统字段不允许删除
     const field = fields.find(f => f.id === id);
@@ -144,151 +154,178 @@ export function RSVPConfigPanel() {
       // 错误已在 Context 中处理
     } finally {
       setSaving(false);
+      onClose?.();
     }
   };
 
   return (
-    <div className='relative'>
-      <div className='px-4 py-3 border-b border-black/[0.06]'>
-        <div className='flex items-center gap-2'>
-          <Icon name='form-fill' />
-          <span className='font-semibold text-lg leading-[26px]'>RSVP配置</span>
-        </div>
-        <div className='mt-0.5 text-[13px] leading-5 text-black/60'>
-          配置报名表单和提交规则
-        </div>
-      </div>
-      <Separator />
-      <div className='px-4 py-3 max-h-[80vh] overflow-y-auto flex flex-col gap-2'>
-        {error ? <div className='text-red-500 text-sm'>{error}</div> : null}
-
-        {/* 是否启用RSVP开关 */}
-        <div className='border border-black/[0.1] rounded-xl p-3'>
-          <div className='flex items-center gap-2 text-sm leading-[18px] text-[#09090B]'>
-            <Switch
-              checked={config.enabled ?? true}
-              onCheckedChange={checked =>
-                setConfig({ ...config, enabled: checked })
-              }
-            />
-            <span className='font-semibold'>是否启用RSVP</span>
-          </div>
-        </div>
-
-        {/* 是否收集表单开关 */}
-        <div className='border border-black/[0.1] rounded-xl p-3'>
-          <div className='flex items-center gap-2 text-sm leading-[18px] text-[#09090B] mb-3'>
-            <Switch checked={collectForm} onCheckedChange={setCollectForm} />
-            <span className='font-semibold'>是否收集表单</span>
-          </div>
-
-          {/* 当收集表单开关打开时，显示自定义字段列表 */}
-          {collectForm && (
-            <>
-              <div className='flex items-center justify-between mb-3'>
-                <div className='font-semibold text-base leading-6 text-[#09090B]'>
-                  自定义字段
-                </div>
-                <Button
-                  variant='outline'
-                  className='text-[#3358D4] h-8 font-semibold hover:bg-transparent'
-                  size='sm'
-                  onClick={addField}
-                >
-                  <Icon name='add-one' size={16} />
-                  添加字段
-                </Button>
-              </div>
-              <div className='flex flex-col gap-2'>
-                {fields.map((f: RSVPField, index: number) => (
-                  <FieldItem
-                    key={f.id}
-                    field={f}
-                    index={index}
-                    onEdit={() => {
-                      setEditingField(f);
-                      setShowFieldEditor(true);
-                    }}
-                    onDelete={() => removeField(f.id)}
-                    onToggleEnabled={(id, enabled) => {
-                      updateField(id, { enabled });
-                    }}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* 基础信息 - 默认折叠 */}
-        <div className='border border-black/[0.1] rounded-xl'>
-          <div
-            className='p-3 flex items-center justify-between cursor-pointer'
-            onClick={() => setIsBasicInfoExpanded(!isBasicInfoExpanded)}
+    <div className='relative flex flex-col h-full max-h-screen overflow-hidden'>
+      {/* 顶部导航栏 - 移动端风格 */}
+      <div className='px-4 py-3 border-b border-black/[0.06] flex items-center justify-between bg-white flex-shrink-0 z-10'>
+        <div className='flex items-center gap-2 flex-1'>
+          <button
+            onClick={() => {
+              onClose?.();
+            }}
+            className='flex items-center gap-1 text-[#09090B]'
           >
-            <div className='font-semibold text-base leading-6 text-[#09090B]'>
-              基础信息
+            <ArrowLeft size={20} />
+            <span className='text-sm'>返回</span>
+          </button>
+          <span className='font-semibold text-lg leading-[26px] text-[#09090B] ml-4'>
+            RSVP配置
+          </span>
+        </div>
+        <Button
+          onClick={handleSaveClick}
+          disabled={saving}
+          size='sm'
+          className='bg-[#09090B] text-white hover:bg-[#09090B]/90 h-8 px-4'
+        >
+          {saving ? '保存中...' : '保存'}
+        </Button>
+      </div>
+
+      <div className='flex-1 overflow-y-auto min-h-0'>
+        <div className='px-4 py-4 flex flex-col gap-4'>
+          {error ? <div className='text-red-500 text-sm'>{error}</div> : null}
+
+          {/* Enable RSVP */}
+          <div className='border border-black/[0.1] rounded-xl p-4'>
+            <div className='flex items-start justify-between mb-2'>
+              <div className='flex-1'>
+                <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
+                  启用RSVP
+                </div>
+                <div className='text-sm leading-5 text-black/60'>
+                  允许访客在线回复是否参加
+                </div>
+              </div>
+              <Switch
+                checked={config.enabled ?? true}
+                onCheckedChange={checked =>
+                  setConfig({ ...config, enabled: checked })
+                }
+                className='ml-4'
+              />
             </div>
-            {isBasicInfoExpanded ? (
-              <ChevronUp className='h-4 w-4 text-gray-500' />
-            ) : (
-              <ChevronDown className='h-4 w-4 text-gray-500' />
+          </div>
+
+          {/* Collect form information */}
+          <div className='border border-black/[0.1] rounded-xl p-4'>
+            <div className='flex items-start justify-between mb-4'>
+              <div className='flex-1'>
+                <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
+                  收集表单信息
+                </div>
+                <div className='text-sm leading-5 text-black/60'>
+                  向访客收集联系方式和相关信息
+                </div>
+              </div>
+              <Switch
+                checked={collectForm}
+                onCheckedChange={setCollectForm}
+                className='ml-4'
+              />
+            </div>
+
+            {/* 当收集表单开关打开时，显示字段列表 */}
+            {collectForm && (
+              <>
+                <div className='flex items-center justify-between mb-3'>
+                  <div className='font-semibold text-base leading-6 text-[#09090B]'>
+                    表单字段
+                  </div>
+                  <button
+                    onClick={addField}
+                    className='text-[#3358D4] text-sm font-semibold hover:underline'
+                  >
+                    + 添加自定义
+                  </button>
+                </div>
+
+                {/* 提示框 */}
+                <div className='bg-[#E6F0FF] border border-[#B3D9FF] rounded-lg p-3 mb-3 flex items-start gap-2'>
+                  <Lightbulb
+                    size={16}
+                    className='text-[#3358D4] mt-0.5 flex-shrink-0'
+                  />
+                  <div className='text-xs leading-5 text-[#09090B]'>
+                    按住并拖拽字段以调整顺序。字段顺序会影响访客填写表单时看到的顺序
+                  </div>
+                </div>
+
+                {/* 字段列表 */}
+                <div className='flex flex-col gap-2'>
+                  {fields.map((f: RSVPField, index: number) => (
+                    <FieldItem
+                      key={f.id}
+                      field={f}
+                      index={index}
+                      onToggleEnabled={(id, enabled) => {
+                        updateField(id, { enabled });
+                      }}
+                      onToggleSplitAdultChild={(id, split) => {
+                        updateField(id, { splitAdultChild: split });
+                      }}
+                      onToggleRequired={(id, required) => {
+                        updateField(id, { required });
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
             )}
           </div>
-          {isBasicInfoExpanded && (
-            <div className='px-3 pb-3 space-y-3'>
-              <div>
-                <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
-                  标题
-                </div>
-                <Input
-                  className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  placeholder='如：我要报名'
-                />
-              </div>
-              <div>
-                <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
-                  描述
-                </div>
-                <textarea
-                  className='h-[72px] resize-none w-full border-none text-xs rounded-md px-3 py-2 outline-none bg-[#F3F3F5]'
-                  value={config.desc ?? ''}
-                  onChange={e =>
-                    setConfig({
-                      ...config,
-                      desc: e.target.value || null,
-                    })
-                  }
-                  placeholder='补充说明（可选）'
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
 
-      <div className='p-4 border-t border-[#e4e4e7] flex items-center gap-3'>
-        <Button
-          variant='outline'
-          onClick={() => {
-            if (!config?.id || !worksId) {
-              return;
-            }
-            router.push(
-              `/mobile/rsvp/invitees?form_config_id=${config.id}&works_id=${worksId}`
-            );
-          }}
-          size='lg'
-          disabled={!config?.id || !worksId}
-        >
-          <Icon name='share' size={16} />
-          分享设置
-        </Button>
-        <Button disabled={saving} onClick={handleSaveClick} size='lg'>
-          {saving ? '保存中...' : '保存配置'}
-        </Button>
+          {/* 基础信息 - 默认折叠 */}
+          <div className='border border-black/[0.1] rounded-xl'>
+            <div
+              className='p-3 flex items-center justify-between cursor-pointer'
+              onClick={() => setIsBasicInfoExpanded(!isBasicInfoExpanded)}
+            >
+              <div className='font-semibold text-base leading-6 text-[#09090B]'>
+                基础信息
+              </div>
+              {isBasicInfoExpanded ? (
+                <ChevronUp className='h-4 w-4 text-gray-500' />
+              ) : (
+                <ChevronDown className='h-4 w-4 text-gray-500' />
+              )}
+            </div>
+            {isBasicInfoExpanded && (
+              <div className='px-3 pb-3 space-y-3'>
+                <div>
+                  <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
+                    标题
+                  </div>
+                  <Input
+                    className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                    placeholder='如：我要报名'
+                  />
+                </div>
+                <div>
+                  <div className='font-semibold text-xs leading-[18px] text-[#0A0A0A] mb-1'>
+                    描述
+                  </div>
+                  <textarea
+                    className='h-[72px] resize-none w-full border-none text-xs rounded-md px-3 py-2 outline-none bg-[#F3F3F5]'
+                    value={config.desc ?? ''}
+                    onChange={e =>
+                      setConfig({
+                        ...config,
+                        desc: e.target.value || null,
+                      })
+                    }
+                    placeholder='补充说明（可选）'
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <FieldEditorDialog
@@ -317,31 +354,83 @@ export function RSVPConfigPanel() {
 interface FieldItemProps {
   field: RSVPField;
   index: number;
-  onEdit: () => void;
-  onDelete: () => void;
   onToggleEnabled: (id: string, enabled: boolean) => void;
+  onToggleSplitAdultChild: (id: string, split: boolean) => void;
+  onToggleRequired: (id: string, required: boolean) => void;
 }
 
 function FieldItem({
   field,
-  onEdit,
-  onDelete,
   onToggleEnabled,
+  onToggleSplitAdultChild,
+  onToggleRequired,
 }: FieldItemProps) {
-  const fieldTypeLabel = fieldTypes.find(t => t.value === field.type)?.label;
+  // 获取字段显示名称
+  const getFieldDisplayLabel = (field: RSVPField) => {
+    if (field.type === 'guest_count') return '访客';
+    if (field.id === 'phone') return '手机';
+    if (field.id === 'email') return '邮箱';
+    if (field.id === 'remark') return '备注';
+    return field.label;
+  };
 
   return (
-    <div className='p-2 flex items-center justify-start border border-[#e4e4e7] rounded-md gap-2'>
-      <div className='flex-1'>
-        <div className='flex items-center font-semibold text-sm leading-5'>
-          {field.label}
-          {field.required && <span className='text-red-500 ml-0.5'>*</span>}
-          <span className='ml-2 font-normal text-xs leading-5 text-black/60'>
-            {fieldTypeLabel}
-          </span>
+    <div className='border border-[#e4e4e7] rounded-md bg-white'>
+      <div className='p-3 flex items-center gap-3'>
+        {/* 拖拽手柄 */}
+        <div className='cursor-grab active:cursor-grabbing text-gray-400'>
+          <GripVertical size={20} />
         </div>
-        {field.options && ['radio', 'checkbox'].includes(field.type) && (
-          <div className='flex items-center gap-1 mt-1 flex-wrap'>
+
+        {/* 开关 */}
+        <Switch
+          checked={field.enabled !== false}
+          onCheckedChange={checked => onToggleEnabled(field.id, checked)}
+        />
+
+        {/* 字段名称 */}
+        <div className='flex-1'>
+          <div className='font-semibold text-sm leading-5 text-[#09090B]'>
+            {getFieldDisplayLabel(field)}
+          </div>
+        </div>
+
+        {/* Required/Optional 标签 - 可点击切换 */}
+        <div className='flex items-center gap-2'>
+          <button
+            onClick={() => onToggleRequired(field.id, !field.required)}
+            className={
+              field.required
+                ? 'px-2 py-0.5 bg-[#09090B] text-white text-xs font-semibold rounded cursor-pointer hover:bg-[#09090B]/90 transition-colors'
+                : 'px-2 py-0.5 bg-[#F4F4F5] text-[#09090B] text-xs font-semibold rounded cursor-pointer hover:bg-[#E4E4E7] transition-colors'
+            }
+          >
+            {field.required ? '必填' : '选填'}
+          </button>
+        </div>
+      </div>
+
+      {/* Guests字段的子选项 */}
+      {field.type === 'guest_count' && field.enabled !== false && (
+        <div className='px-3 pb-3 pl-14'>
+          <div className='flex items-center gap-2'>
+            <Switch
+              checked={field.splitAdultChild ?? false}
+              onCheckedChange={checked =>
+                onToggleSplitAdultChild(field.id, checked)
+              }
+            />
+            <span className='text-sm leading-5 text-[#09090B]'>
+              分别统计大人和小孩
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* 自定义字段的选项预览 */}
+      {field.options && ['radio', 'checkbox'].includes(field.type) && (
+        <div className='px-3 pb-3 pl-14'>
+          <div className='flex items-center gap-1 flex-wrap'>
             {field.options.map((opt, idx) => (
               <div
                 key={idx}
@@ -351,35 +440,8 @@ function FieldItem({
               </div>
             ))}
           </div>
-        )}
-      </div>
-      <div className='flex items-center gap-2'>
-        <div
-          className='flex items-center gap-1 text-[#3358D4] cursor-pointer'
-          onClick={onEdit}
-        >
-          <Icon name='edit' size={16} />
-          <span className='text-xs flex-shrink-0'>编辑</span>
         </div>
-        <div className='flex items-center gap-1'>
-          <Switch
-            checked={field.enabled !== false}
-            onCheckedChange={checked => onToggleEnabled(field.id, checked)}
-          />
-          <span className='text-xs text-gray-500'>
-            {field.enabled !== false ? '开启' : '关闭'}
-          </span>
-        </div>
-        {/* 系统字段不允许删除 */}
-        {!field.isSystem && (
-          <Icon
-            name='delete-g8c551hn'
-            size={16}
-            onClick={onDelete}
-            className='cursor-pointer'
-          />
-        )}
-      </div>
+      )}
     </div>
   );
 }
@@ -397,220 +459,210 @@ function FieldEditorDialog({
   onOpenChange,
   onSave,
 }: FieldEditorDialogProps) {
-  const initialField = field || {
-    id: '',
-    type: 'text',
-    label: '',
-    required: false,
-    placeholder: '',
-    enabled: true,
+  const getInitialField = (): RSVPField => {
+    return (
+      field || {
+        id: '',
+        type: 'text',
+        label: '',
+        required: false,
+        placeholder: '',
+        enabled: true,
+      }
+    );
   };
 
-  const [localField, setLocalField] = useState<RSVPField>(initialField);
+  const [localField, setLocalField] = useState<RSVPField>(getInitialField());
+  // 独立的选项文本输入状态，不立即解析
+  const [optionsInputText, setOptionsInputText] = useState<string>(() => {
+    return field?.options?.map(o => o.label).join(', ') || '';
+  });
+
+  // 当 field 或 open 变化时，重置本地状态
+  useEffect(() => {
+    if (open) {
+      const initialField = field || {
+        id: '',
+        type: 'text',
+        label: '',
+        required: false,
+        placeholder: '',
+        enabled: true,
+      };
+      // 使用 setTimeout 避免在 effect 中同步调用 setState
+      setTimeout(() => {
+        setLocalField(initialField);
+        setOptionsInputText(field?.options?.map(o => o.label).join(', ') || '');
+      }, 0);
+    }
+  }, [field, open]);
 
   const updateLocalField = (patch: Partial<RSVPField>) => {
     setLocalField(prev => ({ ...prev, ...patch }));
   };
 
   const handleSave = () => {
-    if (!localField.label) {
+    if (!localField.label || !localField.label.trim()) {
+      toast.error('请输入字段名称');
       return;
     }
-    onSave(localField);
+
+    // 如果是单选或多选类型，需要验证选项
+    if (['radio', 'checkbox'].includes(localField.type)) {
+      if (!optionsInputText.trim()) {
+        toast.error('请输入选项内容');
+        return;
+      }
+      const parsedOptions = parseOptions(optionsInputText);
+      if (parsedOptions.length === 0) {
+        toast.error('请至少输入一个选项');
+        return;
+      }
+      onSave({ ...localField, options: parsedOptions });
+    } else {
+      onSave(localField);
+    }
   };
 
-  const optionsText =
-    localField.options?.map(o => o.label).join('，') ||
-    '选项一，选项二，选项三';
-
+  // 解析选项文本为选项数组（仅用于预览）
   const parseOptions = (text: string): RSVPFieldOption[] => {
+    if (!text.trim()) return [];
     return text
-      .split(/[，,\s]+/)
+      .split(/[,，\s]+/)
+      .map(s => s.trim())
       .filter(Boolean)
       .map((label, idx) => ({ label, value: String(idx + 1) }));
   };
 
+  // 实时解析选项用于预览
+  const previewOptions = parseOptions(optionsInputText);
+
   return (
     <ResponsiveDialog isOpen={open} onOpenChange={onOpenChange}>
       <div>
-        <div className='font-semibold text-base leading-6 text-[#09090b] text-center py-3 px-4'>
+        <div className='font-semibold text-lg leading-6 text-[#09090b] px-4 py-4'>
           {localField.id ? '修改自定义字段' : '添加自定义字段'}
         </div>
 
         <div className='px-4 mb-5'>
           <div className='font-semibold text-sm leading-5 text-[#09090b] mb-1.5'>
-            字段名称
+            字段名称 <span className='text-red-500'>*</span>
           </div>
           <Input
             value={localField.label}
             onChange={e => updateLocalField({ label: e.target.value })}
-            placeholder='请输入，如：联系方式'
-            className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
+            placeholder='e.g. Contact Info, Preferences'
+            className='w-full bg-white border border-black/[0.06] rounded-md px-3 py-2 text-sm'
           />
         </div>
 
         <div className='px-4 mb-5'>
-          <div className='font-semibold text-sm leading-5 text-[#09090b] mb-1.5'>
+          <div className='font-semibold text-sm leading-5 text-[#09090b] mb-3'>
             字段类型
           </div>
-          <div className='flex items-center gap-2 mb-2'>
-            {fieldTypes.map(type => (
-              <div
-                key={type.value}
-                className={cls(
-                  'relative flex-1 border rounded-md h-[38px] text-center text-sm leading-[38px] cursor-pointer',
-                  localField.type === type.value
-                    ? 'font-semibold text-[var(--theme-color)] border-[var(--theme-color)] bg-[var(--theme-background-color)] pointer-events-none'
-                    : 'border-[#f4f4f5] bg-[#f4f4f5] text-[#18181b]'
-                )}
-                onClick={() => {
-                  updateLocalField({
-                    type: type.value,
-                    options:
-                      type.value === 'radio' || type.value === 'checkbox'
-                        ? localField.options || [
-                            { label: '选项一', value: '1' },
-                            { label: '选项二', value: '2' },
-                          ]
-                        : undefined,
-                  });
-                }}
-              >
-                {type.label}
-                {localField.type === type.value && (
-                  <Icon
-                    className='absolute -bottom-px -right-px'
-                    name='selected'
-                    size={20}
-                  />
-                )}
-              </div>
-            ))}
+          <div className='flex items-center gap-3 mb-2'>
+            {fieldTypes
+              .filter(type => type.value !== 'guest_count' && type.icon)
+              .map(type => {
+                const IconComponent = type.icon!;
+                const isSelected = localField.type === type.value;
+                return (
+                  <div
+                    key={type.value}
+                    className={cls(
+                      'relative flex-1 border rounded-lg bg-white cursor-pointer transition-all',
+                      isSelected
+                        ? 'border-[#09090B] shadow-sm'
+                        : 'border-[#E4E4E7] hover:border-[#09090B]/50'
+                    )}
+                    onClick={() => {
+                      const newType = type.value;
+                      updateLocalField({
+                        type: newType,
+                        options:
+                          newType === 'radio' || newType === 'checkbox'
+                            ? localField.options || []
+                            : undefined,
+                      });
+                      // 如果切换到单选或多选，且没有选项文本，设置默认值
+                      if (
+                        (newType === 'radio' || newType === 'checkbox') &&
+                        !optionsInputText.trim()
+                      ) {
+                        setOptionsInputText('选项一, 选项二');
+                      } else if (newType === 'text') {
+                        // 切换到文本类型时，清空选项文本
+                        setOptionsInputText('');
+                      }
+                    }}
+                  >
+                    <div className='flex flex-col items-center justify-center py-4 px-2'>
+                      <IconComponent
+                        size={24}
+                        className={cls(
+                          'mb-2',
+                          type.value === 'text'
+                            ? 'text-yellow-500'
+                            : 'text-gray-500'
+                        )}
+                      />
+                      <span className='text-xs font-medium text-[#09090B]'>
+                        {type.label}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
           </div>
           {['radio', 'checkbox'].includes(localField.type) && (
-            <div className='p-3 bg-[#fafafa] rounded-lg mt-2'>
+            <div className='mt-3'>
               <div className='font-semibold text-sm leading-5 text-[#09090b] mb-1.5'>
-                选项配置
+                选项内容 <span className='text-red-500'>*</span>
               </div>
-              <textarea
-                className='p-3 w-full border border-black/[0.06] resize-none bg-white rounded-lg text-sm leading-[22px] text-black/[0.88] min-h-[80px]'
-                placeholder='请输入，如：是，否，不确定'
-                value={optionsText}
+              <Input
+                value={optionsInputText}
                 onChange={e => {
-                  updateLocalField({ options: parseOptions(e.target.value) });
+                  // 只更新输入文本，不做任何限制
+                  setOptionsInputText(e.target.value);
                 }}
+                placeholder='e.g., red, blue, green'
+                className='w-full bg-white border border-black/[0.06] rounded-md px-3 py-2 text-sm mb-2'
               />
-              {localField.options && localField.options.length > 0 && (
-                <>
-                  <div className='text-xs leading-5 mt-2 mb-1'>选项预览</div>
-                  <div className='flex items-center gap-1 flex-wrap'>
-                    {localField.options.map((opt, idx) => (
-                      <div
-                        key={idx}
-                        className='border border-[#e4e4e7] bg-[#f4f4f5] rounded px-2 py-0.5 text-xs font-semibold leading-[18px] text-[#09090b]'
-                      >
-                        {opt.label}
-                      </div>
-                    ))}
-                  </div>
-                </>
+              <div className='flex items-start gap-1.5 text-xs text-black/60 mb-2'>
+                <Lightbulb size={14} className='mt-0.5 flex-shrink-0' />
+                <span>提示：多个选项请使用逗号（,）或空格分隔</span>
+              </div>
+              {/* 选项预览标签 */}
+              {previewOptions.length > 0 && (
+                <div className='flex items-center gap-1.5 flex-wrap'>
+                  {previewOptions.map((opt, idx) => (
+                    <div
+                      key={idx}
+                      className='border border-[#e4e4e7] bg-[#f4f4f5] rounded px-2 py-0.5 text-xs font-semibold leading-[18px] text-[#09090b]'
+                    >
+                      {opt.label}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}
         </div>
 
-        <div className='px-4 mb-5'>
-          <div className='font-semibold text-sm leading-5 text-[#09090b] mb-1.5'>
-            占位文本（可选）
-          </div>
-          <Input
-            value={localField.placeholder || ''}
-            onChange={e => updateLocalField({ placeholder: e.target.value })}
-            placeholder='如：请输入您的姓名'
-            className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-xs'
-          />
-        </div>
-
-        {localField.type === 'guest_count' && (
-          <div className='px-4 mb-5'>
-            <div
-              className='flex items-center gap-1 cursor-pointer'
-              onClick={() => {
-                updateLocalField({
-                  splitAdultChild: !localField.splitAdultChild,
-                });
-              }}
-            >
-              {localField.splitAdultChild ? (
-                <Icon
-                  size={20}
-                  name='danxuan-yixuan'
-                  color='var(--theme-color)'
-                />
-              ) : (
-                <Icon size={20} name='danxuan-weixuan' color='#E4E4E7' />
-              )}
-              <span className='text-sm leading-5 text-black/[0.88]'>
-                划分大人和小孩
-              </span>
-            </div>
-          </div>
-        )}
-
-        <div className='px-4 mb-5'>
-          <div
-            className='flex items-center gap-1 cursor-pointer'
-            onClick={() => {
-              updateLocalField({ enabled: !localField.enabled });
-            }}
-          >
-            {localField.enabled !== false ? (
-              <Icon
-                size={20}
-                name='danxuan-yixuan'
-                color='var(--theme-color)'
-              />
-            ) : (
-              <Icon size={20} name='danxuan-weixuan' color='#E4E4E7' />
-            )}
-            <span className='text-sm leading-5 text-black/[0.88]'>
-              启用该字段
-            </span>
-          </div>
-        </div>
-
-        <div className='px-4 mb-5'>
-          <div
-            className='flex items-center gap-1 cursor-pointer'
-            onClick={() => {
-              updateLocalField({ required: !localField.required });
-            }}
-          >
-            {localField.required ? (
-              <Icon
-                size={20}
-                name='danxuan-yixuan'
-                color='var(--theme-color)'
-              />
-            ) : (
-              <Icon size={20} name='danxuan-weixuan' color='#E4E4E7' />
-            )}
-            <span className='text-sm leading-5 text-black/[0.88]'>
-              设为必填字段
-            </span>
-          </div>
-        </div>
-
-        <div className='w-full p-4 flex items-center gap-2 border-t border-[#e4e4e7]'>
+        <div className='w-full p-4 flex items-center gap-3 border-t border-[#e4e4e7]'>
           <Button
             size='lg'
             variant='outline'
-            className='flex-1 hover:bg-transparent'
+            className='flex-1 bg-white hover:bg-gray-50 border border-black/[0.06] text-[#09090B]'
             onClick={() => onOpenChange(false)}
           >
             取消
           </Button>
-          <Button size='lg' className='flex-1' onClick={handleSave}>
+          <Button
+            size='lg'
+            className='flex-1 bg-[#09090B] text-white hover:bg-[#09090B]/90'
+            onClick={handleSave}
+          >
             {localField.id ? '保存' : '添加字段'}
           </Button>
         </div>
