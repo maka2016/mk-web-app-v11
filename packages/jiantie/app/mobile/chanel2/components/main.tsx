@@ -53,15 +53,70 @@ export default function Main({ appid = 'jiantie' }: Props) {
   }, [appid]);
 
   return (
-    <div className='flex flex-col h-dvh bg-gray-50'>
+    <div
+      className='flex flex-col h-dvh'
+      style={{
+        backgroundImage: 'url(https://res.maka.im/assets/jiantie/beijing3.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'top',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* 顶部Logo区 */}
+      <div
+        className='flex
+       items-center justify-between
+        px-6 pt-6 sticky top-0 z-20 '
+      >
+        {/* 左侧Logo */}
+        <div className='flex items-start'>
+          <div className='relative w-14 h-10'>
+            <Image
+              src={cdnApi('/assets/jiantie/logo2.png')}
+              alt='简帖'
+              fill
+              className='object-contain'
+              priority
+            />
+          </div>
+        </div>
+
+        {/* 右侧通知 */}
+        <div className='flex items-center gap-3'>
+          <button
+            style={{
+              borderRadius: '10px',
+            }}
+            className='relative w-8 h-8 flex items-center justify-center bg-white  hover:bg-gray-50 transition-colors'
+            onClick={() => {
+              // TODO: 跳转到通知页面
+              console.log('查看通知');
+            }}
+          >
+            <img
+              src='https://res.maka.im/assets/jiantie/tongzhi.png'
+              alt='通知'
+              className='w-4 h-4'
+            />
+            {/* 通知角标 */}
+            {/* <span className='absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium'></span> */}
+          </button>
+        </div>
+      </div>
+
       {/* 顶部搜索栏 */}
-      <div className='bg-white shadow-sm p-4 sticky top-0 z-10'>
+      <div className=' p-6 sticky top-12 z-10'>
         <div
           onClick={() => router.push('/mobile/chanel2/search')}
-          className='flex items-center gap-3 px-4 py-2.5 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors'
+          className='flex items-center gap-3 px-4 py-4 bg-white rounded-2xl cursor-pointer transition-colors'
+          style={{
+            border: '2px solid rgba(232, 32, 39, 0.30)',
+            boxShadow:
+              '0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -2px rgba(0, 0, 0, 0.10)',
+          }}
         >
           <Search className='w-5 h-5 text-gray-400 flex-shrink-0' />
-          <span className='text-gray-400 text-sm flex-1'>搜索集合...</span>
+          <span className='text-gray-400 text-sm flex-1'>模板搜索</span>
         </div>
       </div>
 
@@ -89,27 +144,43 @@ export default function Main({ appid = 'jiantie' }: Props) {
             </div>
           </div>
         ) : (
-          <div className='p-6 space-y-8'>
+          <div className='p-4 space-y-8'>
             {channels.map(channel => (
               <div key={channel.id}>
                 {/* 分类标题 */}
-                <h2 className='text-sm text-gray-400 mb-4 font-medium'>
+                <h2
+                  className='text-sm text-black/45 mb-4 font-semibold leading-5'
+                  style={{
+                    fontFamily: '"PingFang SC"',
+                    fontFeatureSettings: '"liga" off, "clig" off',
+                  }}
+                >
                   {channel.display_name}
                 </h2>
 
                 {/* 网格布局 */}
-                <div className='grid grid-cols-4 gap-6'>
+                <div className='flex flex-wrap justify-between'>
                   {channel.children && channel.children.length > 0 ? (
                     channel.children.map(child => (
                       <div
                         key={child.id}
-                        className='flex flex-col items-center cursor-pointer transition-transform active:scale-95'
+                        className='flex flex-col items-center cursor-pointer transition-transform active:scale-95 mb-4'
+                        style={{ width: '72px' }}
                         onClick={() => {
                           router.push(`/mobile/chanel2/${child.id}`);
                         }}
                       >
                         {/* 圆形图标容器 */}
-                        <div className='w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2 overflow-hidden'>
+                        <div
+                          className=' rounded-full bg-gray-100 flex items-center justify-center mb-2 overflow-hidden border border-white'
+                          style={{
+                            width: '72px',
+                            height: '72px',
+                            border: '1px solid #fff',
+                            boxShadow:
+                              '0 1px 2px -1px rgba(0, 0, 0, 0.10), 0 1px 3px 0 rgba(0, 0, 0, 0.10)',
+                          }}
+                        >
                           {child.thumb_path ? (
                             <div className='w-full h-full relative'>
                               <Image
@@ -126,7 +197,15 @@ export default function Main({ appid = 'jiantie' }: Props) {
                           )}
                         </div>
                         {/* 分类名称 */}
-                        <span className='text-sm text-gray-700 text-center leading-tight'>
+                        <span
+                          className='font-semibold text-center leading-6'
+                          style={{
+                            fontSize: '16px',
+                            color: 'var(--foreground)',
+                            fontFamily: '"PingFang SC"',
+                            fontFeatureSettings: '"liga" off, "clig" off',
+                          }}
+                        >
                           {child.display_name}
                         </span>
                       </div>
@@ -134,12 +213,13 @@ export default function Main({ appid = 'jiantie' }: Props) {
                   ) : (
                     // 如果没有子频道，显示父频道本身
                     <div
-                      className='flex flex-col items-center cursor-pointer transition-transform active:scale-95'
+                      className='flex flex-col items-center cursor-pointer transition-transform active:scale-95 mb-4'
+                      style={{ width: 'calc(25% - 6px)' }}
                       onClick={() => {
                         console.log('点击频道:', channel);
                       }}
                     >
-                      <div className='w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2 overflow-hidden'>
+                      <div className='w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2 overflow-hidden border border-white'>
                         {channel.thumb_path ? (
                           <div className='w-full h-full relative'>
                             <Image
@@ -155,7 +235,14 @@ export default function Main({ appid = 'jiantie' }: Props) {
                           </span>
                         )}
                       </div>
-                      <span className='text-sm text-gray-700 text-center leading-tight'>
+                      <span
+                        className='text-base font-semibold text-center leading-6'
+                        style={{
+                          color: 'var(--foreground)',
+                          fontFamily: '"PingFang SC"',
+                          fontFeatureSettings: '"liga" off, "clig" off',
+                        }}
+                      >
                         {channel.display_name}
                       </span>
                     </div>

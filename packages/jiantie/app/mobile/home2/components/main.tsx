@@ -7,7 +7,6 @@ import { getUid, request } from '@/services';
 import useIsMobile from '@/utils/use-mobile';
 import APPBridge from '@mk/app-bridge';
 import { API, cdnApi } from '@mk/services';
-import { Icon } from '@workspace/ui/components/Icon';
 import cls from 'classnames';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -122,30 +121,6 @@ const TabLayout = (props: Props) => {
           className={cls([styles.tabContent, styles[appid]])}
           style={{ display: activeTab === index ? 'block' : 'none' }}
         >
-          {tab.key === 'home' && !isMiniProgram && (
-            <div className={styles.head}>
-              <img src={logos[appid]} alt='' className={styles.logo} />
-              <div className='flex items-center gap-3'>
-                {/* {(vipABTest !== 'work' || appid !== 'jiantie') && (
-                  <div
-                    className={styles.vip}
-                    onClick={() => navigateToVipPage()}
-                  >
-                    <img src={cdnApi('/cdn/webstore10/huiyao/icon_vip.png')} />
-                    <span> 企业版</span>
-                  </div>
-                )} */}
-                <div
-                  className={styles.message}
-                  onClick={() => toNotificationCenter()}
-                >
-                  <Icon name='remind1' size={20} />
-                  {unread > 0 && <div className={styles.num}>{unread}</div>}
-                </div>
-              </div>
-            </div>
-          )}
-
           <TabComponent
             storeChannelV1={storeChannelV1}
             active={activeTab === index}
