@@ -1,7 +1,8 @@
 'use client';
 
 import { trpc } from '@/utils/trpc';
-import { cdnApi } from '@mk/services';
+import APPBridge from '@mk/app-bridge';
+import { cdnApi, getAppId } from '@mk/services';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -171,7 +172,20 @@ export default function Templates({ collectionId }: TemplatesProps) {
                 key={template.id}
                 className='bg-white rounded-lg overflow-hidden border border-gray-200 cursor-pointer'
                 onClick={() => {
-                  router.push(`/mobile/template?id=${template.id}`);
+                  const toTemplateDetail = (template_id: string) => {
+                    if (APPBridge.judgeIsInApp()) {
+                      APPBridge.navToPage({
+                        url: `${location.origin}/maka/mobile/template?id=${template_id}&is_full_screen=1`,
+                        type: 'URL',
+                      });
+                    } else {
+                      router.push(
+                        `/maka/mobile/template?id=${template_id}&appid=${getAppId()}`
+                      );
+                    }
+                  };
+                  toTemplateDetail(template.id);
+                  // router.push(`/mobile/template?id=${template.id}`);
                 }}
               >
                 {/* 模板封面 */}

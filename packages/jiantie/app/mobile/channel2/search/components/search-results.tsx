@@ -248,33 +248,33 @@ export default function SearchResults({
           <div className='p-4'>
             {searchHistory.length > 0 ? (
               <div>
-                <div className='flex items-center justify-between mb-4'>
+                <div className='flex items-center justify-between mb-3'>
                   <div className='flex items-center gap-2'>
-                    <Clock className='w-5 h-5 text-gray-400' />
-                    <h3 className='text-base font-medium text-gray-700'>
+                    <Clock className='w-4 h-4 text-gray-400' />
+                    <h3 className='text-sm font-medium text-gray-600'>
                       搜索历史
                     </h3>
                   </div>
                   <button
                     onClick={handleClearHistory}
-                    className='text-sm text-gray-500 hover:text-gray-700'
+                    className='text-xs text-gray-500 hover:text-gray-700'
                   >
                     清空
                   </button>
                 </div>
-                <div className='space-y-2'>
+                <div className='flex flex-wrap gap-2'>
                   {searchHistory.map((item, index) => (
                     <div
                       key={index}
                       onClick={() => handleHistoryClick(item)}
-                      className='flex items-center justify-between bg-white p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors'
+                      className='inline-flex items-center gap-1 bg-white px-3 py-1.5 rounded-full border border-gray-200 hover:border-[#D53933] hover:bg-red-50 cursor-pointer transition-all text-sm text-gray-700 hover:text-[#D53933]'
                     >
-                      <span className='text-gray-700 flex-1'>{item}</span>
+                      <span>{item}</span>
                       <button
                         onClick={e => handleRemoveHistory(e, item)}
-                        className='ml-2 text-gray-400 hover:text-gray-600'
+                        className='ml-0.5 text-gray-400 hover:text-[#D53933]'
                       >
-                        <X className='w-4 h-4' />
+                        <X className='w-3.5 h-3.5' />
                       </button>
                     </div>
                   ))}
