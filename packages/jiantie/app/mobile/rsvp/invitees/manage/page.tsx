@@ -23,6 +23,9 @@ export default function RSVPInviteesManagePage() {
 
   const [invitees, setInvitees] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [linkedInviteeIds, setLinkedInviteeIds] = useState<Set<string>>(
+    new Set()
+  );
 
   // 嘉宾管理相关状态
   const [inviteeDialogOpen, setInviteeDialogOpen] = useState(false);
@@ -60,28 +63,40 @@ export default function RSVPInviteesManagePage() {
 
   // 查询嘉宾列表
   useEffect(() => {
-    const fetchInvitees = async () => {
-      setLoading(true);
-      try {
-        // 嘉宾归属于用户，不再需要form_config_id
-        const data = await trpc.rsvp.listInvitees.query({});
-        setInvitees(data || []);
-      } catch (error: any) {
-        toast.error(error.message || '加载失败');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchInvitees();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formConfigId]);
 
   // 刷新列表函数
   const fetchInvitees = async () => {
     setLoading(true);
     try {
-      // 嘉宾归属于用户，不再需要form_config_id
-      const data = await trpc.rsvp.listInvitees.query({});
+      // 查询归属于当前RSVP的宾客（如果提供了form_config_id）
+      const data = await trpc.rsvp.listInvitees.query({
+        ...(formConfigId ? { form_config_id: formConfigId } : {}),
+      });
       setInvitees(data || []);
+
+      // 如果有formConfigId，查询已关联的嘉宾
+      if (formConfigId) {
+        try {
+          const linkedData =
+            await trpc.rsvp.getInviteesWithResponseStatus.query({
+              form_config_id: formConfigId,
+            });
+          const linkedIds = new Set(
+            (linkedData || []).map((item: any) => item.id)
+          );
+          setLinkedInviteeIds(linkedIds);
+        } catch (error: any) {
+          console.warn('Failed to fetch linked invitees:', error);
+          // 如果查询失败，清空关联状态
+          setLinkedInviteeIds(new Set());
+        }
+      } else {
+        // 没有formConfigId时，清空关联状态
+        setLinkedInviteeIds(new Set());
+      }
     } catch (error: any) {
       toast.error(error.message || '加载失败');
     } finally {
@@ -178,6 +193,8 @@ export default function RSVPInviteesManagePage() {
           contact_id: invitee.id,
           form_config_id: formConfigId,
         });
+        // 关联成功后，更新关联状态
+        setLinkedInviteeIds(prev => new Set(prev).add(invitee.id));
       } catch (error: any) {
         // 关联失败不影响打开分享面板（可能已经关联过了）
         console.warn('关联嘉宾到表单失败:', error);
@@ -205,6 +222,8 @@ export default function RSVPInviteesManagePage() {
           contact_id: currentShareInvitee.id,
           form_config_id: formConfigId,
         });
+        // 关联成功后，更新关联状态
+        setLinkedInviteeIds(prev => new Set(prev).add(currentShareInvitee.id));
       } catch (error: any) {
         console.warn('关联嘉宾到表单失败:', error);
       }
@@ -237,6 +256,8 @@ export default function RSVPInviteesManagePage() {
           contact_id: currentShareInvitee.id,
           form_config_id: formConfigId,
         });
+        // 关联成功后，更新关联状态
+        setLinkedInviteeIds(prev => new Set(prev).add(currentShareInvitee.id));
       } catch (error: any) {
         console.warn('关联嘉宾到表单失败:', error);
       }
@@ -261,7 +282,7 @@ export default function RSVPInviteesManagePage() {
     <div className='relative bg-white'>
       <MobileHeader title={'嘉宾管理'} />
 
-      <div className='px-4 py-3 max-h-[80vh] overflow-y-auto flex flex-col gap-4'>
+      <div className='px-4 py-3 overflow-y-auto flex flex-col gap-4'>
         {/* 指定嘉宾分享 */}
         <div className='border border-black/[0.1] rounded-xl p-3'>
           <div className='flex items-center justify-between mb-3'>
@@ -288,40 +309,46 @@ export default function RSVPInviteesManagePage() {
                 暂无嘉宾，点击&ldquo;添加嘉宾&rdquo;开始邀请
               </div>
             ) : (
-              invitees.map((invitee: any) => (
-                <div
-                  key={invitee.id}
-                  className='flex items-center justify-between p-2 border border-[#e4e4e7] rounded-md'
-                >
-                  <div className='flex-1'>
-                    <div className='font-semibold text-sm leading-5'>
-                      {invitee.name}
+              invitees.map((invitee: any) => {
+                const isInvited =
+                  formConfigId && linkedInviteeIds.has(invitee.id);
+                return (
+                  <div
+                    key={invitee.id}
+                    className='flex items-center justify-between p-2 border border-[#e4e4e7] rounded-md'
+                  >
+                    <div className='flex-1'>
+                      <div className='flex items-center gap-2'>
+                        <div className='font-semibold text-sm leading-5'>
+                          {invitee.name}
+                        </div>
+                      </div>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <Button
+                        size='sm'
+                        variant='ghost'
+                        onClick={() => handleShareInvitee(invitee)}
+                      >
+                        分享
+                      </Button>
+                      <Button
+                        size='sm'
+                        variant='ghost'
+                        onClick={() => handleOpenEditInvitee(invitee)}
+                      >
+                        编辑
+                      </Button>
+                      <Icon
+                        name='delete-g8c551hn'
+                        size={16}
+                        onClick={() => handleDeleteInvitee(invitee.id)}
+                        className='cursor-pointer text-red-500'
+                      />
                     </div>
                   </div>
-                  <div className='flex items-center gap-2'>
-                    <Button
-                      size='sm'
-                      variant='ghost'
-                      onClick={() => handleShareInvitee(invitee)}
-                    >
-                      分享
-                    </Button>
-                    <Button
-                      size='sm'
-                      variant='ghost'
-                      onClick={() => handleOpenEditInvitee(invitee)}
-                    >
-                      编辑
-                    </Button>
-                    <Icon
-                      name='delete-g8c551hn'
-                      size={16}
-                      onClick={() => handleDeleteInvitee(invitee.id)}
-                      className='cursor-pointer text-red-500'
-                    />
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
