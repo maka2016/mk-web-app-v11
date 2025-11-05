@@ -79,7 +79,6 @@ const RsvpContactUpsertInput = z.object({
 });
 
 const RsvpInviteeCreateInput = z.object({
-  form_config_id: z.string().optional(), // 可选，用于生成专属链接时关联到特定表单
   name: z.string(),
   phone: z.string().optional(),
   email: z.string().email().optional(),
@@ -243,6 +242,27 @@ export const rsvpRouter = router({
                 data: { name: name },
               });
               finalContactId = updated.id;
+
+              // 检查是否已关联到当前表单
+              const existingLink =
+                await ctx.prisma.rsvpContactFormConfigEntity.findUnique({
+                  where: {
+                    contact_id_form_config_id: {
+                      contact_id: existing.id,
+                      form_config_id: input.form_config_id,
+                    },
+                  },
+                });
+
+              // 如果未关联，则创建关联
+              if (!existingLink) {
+                await ctx.prisma.rsvpContactFormConfigEntity.create({
+                  data: {
+                    contact_id: existing.id,
+                    form_config_id: input.form_config_id,
+                  },
+                });
+              }
             } else {
               // 创建新联系人，归属于works的所有者（uid）
               const created = await ctx.prisma.rsvpContactEntity.create({
@@ -250,10 +270,17 @@ export const rsvpRouter = router({
                   phone: phone,
                   name: name,
                   uid: contactUid,
-                  form_config_id: input.form_config_id,
                 },
               });
               finalContactId = created.id;
+
+              // 自动关联到当前表单（因为是从该表单提交创建的）
+              await ctx.prisma.rsvpContactFormConfigEntity.create({
+                data: {
+                  contact_id: created.id,
+                  form_config_id: input.form_config_id,
+                },
+              });
             }
           }
         }
@@ -591,33 +618,6 @@ export const rsvpRouter = router({
   createInvitee: protectedProcedure
     .input(RsvpInviteeCreateInput)
     .mutation(async ({ ctx, input }) => {
-      // 如果提供了form_config_id，验证表单配置存在且属于当前用户
-      if (input.form_config_id) {
-        const formConfig = await ctx.prisma.rsvpFormConfigEntity.findUnique({
-          where: { id: input.form_config_id },
-          include: {
-            // 通过works_id关联到works表，获取uid
-          },
-        });
-        if (!formConfig || formConfig.deleted) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: '表单配置不存在',
-          });
-        }
-
-        // 验证表单配置属于当前用户（通过works_id查询works表）
-        const works = await ctx.prisma.worksEntity.findUnique({
-          where: { id: formConfig.works_id },
-        });
-        if (!works || works.uid !== ctx.uid) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: '无权访问该表单配置',
-          });
-        }
-      }
-
       // 如果提供了手机号，检查是否已存在且属于当前用户
       if (input.phone) {
         const existing = await ctx.prisma.rsvpContactEntity.findFirst({
@@ -627,13 +627,12 @@ export const rsvpRouter = router({
           },
         });
         if (existing) {
-          // 如果已存在，更新为嘉宾
+          // 如果已存在，更新嘉宾信息
           return ctx.prisma.rsvpContactEntity.update({
             where: { id: existing.id },
             data: {
               name: input.name,
               email: input.email,
-              form_config_id: input.form_config_id,
             },
           });
         }
@@ -648,25 +647,87 @@ export const rsvpRouter = router({
           },
         });
         if (existing) {
-          // 如果已存在，更新为嘉宾
+          // 如果已存在，更新嘉宾信息
           return ctx.prisma.rsvpContactEntity.update({
             where: { id: existing.id },
             data: {
               name: input.name,
               phone: input.phone,
-              form_config_id: input.form_config_id,
             },
           });
         }
       }
 
-      // 创建新嘉宾，归属于当前用户
+      // 创建新嘉宾，归属于当前用户（不关联任何表单）
       return ctx.prisma.rsvpContactEntity.create({
         data: {
           name: input.name,
           phone: input.phone,
           email: input.email,
           uid: ctx.uid,
+        },
+      });
+    }),
+
+  // 关联嘉宾到表单（用于分享时）
+  linkInviteeToForm: protectedProcedure
+    .input(
+      z.object({
+        contact_id: z.string(),
+        form_config_id: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // 验证嘉宾属于当前用户
+      const contact = await ctx.prisma.rsvpContactEntity.findUnique({
+        where: { id: input.contact_id },
+      });
+      if (!contact || contact.uid !== ctx.uid) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: '嘉宾不存在',
+        });
+      }
+
+      // 验证表单配置属于当前用户
+      const formConfig = await ctx.prisma.rsvpFormConfigEntity.findUnique({
+        where: { id: input.form_config_id },
+      });
+      if (!formConfig || formConfig.deleted) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: '表单配置不存在',
+        });
+      }
+      const works = await ctx.prisma.worksEntity.findUnique({
+        where: { id: formConfig.works_id },
+      });
+      if (!works || works.uid !== ctx.uid) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: '无权访问该表单配置',
+        });
+      }
+
+      // 检查关联是否已存在
+      const existing = await ctx.prisma.rsvpContactFormConfigEntity.findUnique({
+        where: {
+          contact_id_form_config_id: {
+            contact_id: input.contact_id,
+            form_config_id: input.form_config_id,
+          },
+        },
+      });
+
+      if (existing) {
+        // 如果已存在，直接返回
+        return existing;
+      }
+
+      // 创建关联关系
+      return ctx.prisma.rsvpContactFormConfigEntity.create({
+        data: {
+          contact_id: input.contact_id,
           form_config_id: input.form_config_id,
         },
       });
@@ -783,6 +844,78 @@ export const rsvpRouter = router({
     .query(async ({ ctx, input }) => {
       return ctx.prisma.rsvpContactEntity.findUnique({
         where: { id: input.id },
+      });
+    }),
+
+  // 获取当前RSVP下的嘉宾响应状态列表
+  getInviteesWithResponseStatus: protectedProcedure
+    .input(
+      z.object({
+        form_config_id: z.string(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // 1. 通过关联表获取当前RSVP下关联的嘉宾
+      const contactFormConfigs =
+        await ctx.prisma.rsvpContactFormConfigEntity.findMany({
+          where: {
+            form_config_id: input.form_config_id,
+            contact: {
+              uid: ctx.uid,
+              deleted: false,
+            },
+          },
+          include: {
+            contact: true,
+          },
+          orderBy: { create_time: 'desc' },
+        });
+
+      // 提取嘉宾列表
+      const invitees = contactFormConfigs
+        .map(cfc => cfc.contact)
+        .filter(
+          (contact): contact is NonNullable<typeof contact> => contact !== null
+        );
+
+      // 2. 获取该表单的所有提交记录
+      const submissions = await ctx.prisma.rsvpSubmissionEntity.findMany({
+        where: {
+          form_config_id: input.form_config_id,
+          deleted: false,
+        },
+        orderBy: { create_time: 'desc' },
+      });
+
+      // 3. 创建contact_id到提交记录的映射（取最新的一条）
+      const submissionMap = new Map<string, any>();
+      for (const submission of submissions) {
+        if (submission.contact_id) {
+          // 如果该嘉宾还没有记录，或者这条记录更新，则更新
+          if (
+            !submissionMap.has(submission.contact_id) ||
+            submissionMap.get(submission.contact_id).create_time <
+              submission.create_time
+          ) {
+            submissionMap.set(submission.contact_id, submission);
+          }
+        }
+      }
+
+      // 4. 组合数据，返回嘉宾及其响应状态
+      return invitees.map(invitee => {
+        const submission = submissionMap.get(invitee.id);
+        return {
+          id: invitee.id,
+          name: invitee.name,
+          email: invitee.email,
+          phone: invitee.phone,
+          create_time: invitee.create_time,
+          has_response: !!submission, // 是否有响应
+          will_attend: submission?.will_attend ?? null, // 出席状态
+          submission_data: submission?.submission_data ?? null, // 提交数据
+          submission_create_time: submission?.create_time ?? null, // 提交时间
+        };
       });
     }),
 
