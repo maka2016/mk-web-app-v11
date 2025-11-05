@@ -35,6 +35,7 @@ export const worksRouter = router({
         is_folder: z.boolean().optional(),
         is_paied: z.boolean().optional(),
         offline: z.boolean().optional(),
+        is_rsvp: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -387,6 +388,7 @@ export const worksRouter = router({
         deleted: z.boolean().optional(),
         folder_id: z.string().optional(),
         custom_time: z.date().optional(),
+        is_rsvp: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
