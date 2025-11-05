@@ -1,5 +1,7 @@
 import styled from '@emotion/styled';
 import { deepClone } from '@mk/utils';
+import MkCalendarV3ColorSetting from '@mk/widgets/MkCalendarV3/form/colorSetting';
+import MkHuiZhiColorSetting from '@mk/widgets/MkHuiZhi/form/colorSetting';
 import {
   Tabs,
   TabsContent,
@@ -7,8 +9,6 @@ import {
   TabsTrigger,
 } from '@workspace/ui/components/tabs';
 import { useEffect, useState } from 'react';
-import MkCalendarV3ColorSetting from '@mk/widgets/MkCalendarV3/form/colorSetting';
-import MkHuiZhiColorSetting from '@mk/widgets/MkHuiZhi/form/colorSetting';
 
 import AnimationSetting2 from '../animation2/AnimationSetting2';
 import AnimationSetting from './AnimationSetting';
@@ -34,6 +34,7 @@ import {
 } from '../../comp/components/RowRendererV2/LongPageRowEditorV2';
 import { useGridContext } from '../../comp/provider';
 import CoverAnimationManager from '../CoverAnimateLibrary/CoverAnimationManager';
+import LottieSetting from './LottieSetting';
 import PageFlipEffectManager from './PageFlipEffectManager';
 import PictureSetting from './PictureSetting';
 import TextSetting from './TextSetting';
@@ -561,6 +562,22 @@ export default function ElementAttrsEditorV2() {
                   );
                   return (
                     <div style={{ height: '100%', overflow: 'auto' }}>
+                      <div className='paiban_items parallax_scroll_bg_btn flex items-center gap-1'>
+                        <LottieSetting
+                          lottieBgConfig={activeRow?.lottieBgConfig}
+                          lottieFgConfig={activeRow?.lottieFgConfig}
+                          onChangeBg={lottieBgConfig => {
+                            setRowAttrsV2({
+                              lottieBgConfig,
+                            });
+                          }}
+                          onChangeFg={lottieFgConfig => {
+                            setRowAttrsV2({
+                              lottieFgConfig,
+                            });
+                          }}
+                        />
+                      </div>
                       <StyleCustomSetting
                         isList={isRepeatList}
                         useFrontground={true}
