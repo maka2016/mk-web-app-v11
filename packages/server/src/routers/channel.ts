@@ -66,7 +66,7 @@ export const channelRouter = router({
       return channel;
     }),
 
-  // 获取四级集合列表
+  // 获取四级楼层列表（包含五级集合）
   getFourthLevelCollections: publicProcedure
     .input(
       z.object({
@@ -75,20 +75,28 @@ export const channelRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const collections = await ctx.prisma.templateMarketChannelEntity.findMany(
-        {
-          where: {
-            parent_id: input.parentId,
-            class: '四级集合',
-            locale: input.locale,
+      const floors = await ctx.prisma.templateMarketChannelEntity.findMany({
+        where: {
+          parent_id: input.parentId,
+          class: '四级楼层',
+          locale: input.locale,
+        },
+        include: {
+          children: {
+            where: {
+              class: '五级集合',
+            },
+            orderBy: {
+              id: 'asc',
+            },
           },
-          orderBy: {
-            id: 'asc',
-          },
-        }
-      );
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      });
 
-      return collections;
+      return floors;
     }),
 
   // 搜索四级集合
@@ -101,15 +109,21 @@ export const channelRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      // 将关键词拆分成单个字符，支持单字匹配
+      const chars = input.keyword.split('');
+      const orConditions = chars.map(char => ({
+        display_name: {
+          contains: char,
+        },
+      }));
+
       const collections = await ctx.prisma.templateMarketChannelEntity.findMany(
         {
           where: {
-            class: '四级集合',
+            class: '五级集合',
             appid: input.appid,
             locale: input.locale,
-            display_name: {
-              contains: input.keyword,
-            },
+            OR: orConditions,
           },
           orderBy: {
             id: 'asc',
