@@ -189,7 +189,7 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
           {error ? <div className='text-red-500 text-sm'>{error}</div> : null}
 
           {/* Enable RSVP */}
-          <div className='border border-black/[0.1] rounded-xl p-4'>
+          <div className='border-b border-black/[0.1] py-3'>
             <div className='flex items-start justify-between mb-2'>
               <div className='flex-1'>
                 <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
@@ -210,7 +210,7 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
           </div>
 
           {/* Collect form information */}
-          <div className='border border-black/[0.1] rounded-xl p-4'>
+          <div className='border-b border-black/[0.1] py-4'>
             <div className='flex items-start justify-between mb-4'>
               <div className='flex-1'>
                 <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
@@ -373,8 +373,8 @@ function FieldItem({
   };
 
   return (
-    <div className='border border-[#e4e4e7] rounded-md bg-white'>
-      <div className='p-3 flex items-center gap-3'>
+    <div className='border-2 border-[#e4e4e7] rounded-lg bg-white'>
+      <div className='px-3 py-2 flex items-center gap-3'>
         {/* 拖拽手柄 */}
         <div className='cursor-grab active:cursor-grabbing text-gray-400'>
           <GripVertical size={20} />
@@ -399,8 +399,8 @@ function FieldItem({
             onClick={() => onToggleRequired(field.id, !field.required)}
             className={
               field.required
-                ? 'px-2 py-0.5 bg-[#09090B] text-white text-xs font-semibold rounded cursor-pointer hover:bg-[#09090B]/90 transition-colors'
-                : 'px-2 py-0.5 bg-[#F4F4F5] text-[#09090B] text-xs font-semibold rounded cursor-pointer hover:bg-[#E4E4E7] transition-colors'
+                ? 'px-2 py-1 bg-[#09090B] text-white text-xs font-semibold rounded cursor-pointer hover:bg-[#09090B]/90 transition-colors'
+                : 'px-2 py-1 bg-[#F4F4F5] text-[#09090B] text-xs font-semibold rounded cursor-pointer hover:bg-[#E4E4E7] transition-colors'
             }
           >
             {field.required ? '必填' : '选填'}
@@ -410,24 +410,24 @@ function FieldItem({
 
       {/* Guests字段的子选项 */}
       {field.type === 'guest_count' && field.enabled !== false && (
-        <div className='px-3 pb-3 pl-14'>
-          <div className='flex items-center gap-2'>
+        <div className='px-3 pb-3 pl-12'>
+          <div className='flex items-center gap-2 justify-between'>
+            <span className='text-xs leading-5 text-[#09090B]'>
+              分别统计大人和小孩
+            </span>
             <Switch
               checked={field.splitAdultChild ?? false}
               onCheckedChange={checked =>
                 onToggleSplitAdultChild(field.id, checked)
               }
             />
-            <span className='text-sm leading-5 text-[#09090B]'>
-              分别统计大人和小孩
-            </span>
           </div>
         </div>
       )}
 
       {/* 自定义字段的选项预览 */}
       {field.options && ['radio', 'checkbox'].includes(field.type) && (
-        <div className='px-3 pb-3 pl-14'>
+        <div className='px-3 pb-3 pl-12'>
           <div className='flex items-center gap-1 flex-wrap'>
             {field.options.map((opt, idx) => (
               <div

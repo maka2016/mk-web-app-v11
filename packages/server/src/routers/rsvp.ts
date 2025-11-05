@@ -163,6 +163,17 @@ export const rsvpRouter = router({
 
       let finalContactId = input.contact_id;
 
+      // 验证传入的 contact_id 是否有效（防止使用过期或无效的ID）
+      if (finalContactId) {
+        const contactExists = await ctx.prisma.rsvpContactEntity.findUnique({
+          where: { id: finalContactId },
+        });
+        if (!contactExists || contactExists.deleted) {
+          // 如果 contact_id 无效或已删除，清空它，让后续逻辑通过手机号查找/创建
+          finalContactId = undefined;
+        }
+      }
+
       // 优先级：contact_id > 手机号查找 > 创建新联系人
       // 如果已经有 contact_id（专属链接），直接使用，不再查找手机号
       if (!finalContactId && input.will_attend && input.submission_data) {
@@ -577,23 +588,29 @@ export const rsvpRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const where: any = {
-        form_config_id: input.form_config_id,
-        deleted: false,
-      };
-
-      // 优先使用 contact_id，其次 visitor_id
-      if (input.contact_id) {
-        where.contact_id = input.contact_id;
-      } else if (input.visitor_id) {
-        where.visitor_id = input.visitor_id;
-      } else {
+      // 如果既没有 visitor_id 也没有 contact_id，直接返回空
+      if (!input.visitor_id && !input.contact_id) {
         return [];
+      }
+
+      // 构建查询条件：使用 OR 逻辑同时查询 contact_id 和 visitor_id
+      const orConditions: any[] = [];
+
+      if (input.contact_id) {
+        orConditions.push({ contact_id: input.contact_id });
+      }
+
+      if (input.visitor_id) {
+        orConditions.push({ visitor_id: input.visitor_id });
       }
 
       // 获取每个 submission_group_id 的最新记录
       const allSubmissions = await ctx.prisma.rsvpSubmissionEntity.findMany({
-        where,
+        where: {
+          form_config_id: input.form_config_id,
+          deleted: false,
+          OR: orConditions,
+        },
         orderBy: { create_time: 'desc' },
       });
 
@@ -1092,10 +1109,23 @@ export const rsvpRouter = router({
   createActionLog: publicProcedure
     .input(RsvpActionLogCreateInput)
     .mutation(async ({ ctx, input }) => {
+      // 验证 contact_id 是否存在（避免外键约束错误）
+      let validContactId = input.contact_id;
+      if (input.contact_id) {
+        const contactExists = await ctx.prisma.rsvpContactEntity.findUnique({
+          where: { id: input.contact_id },
+          select: { id: true },
+        });
+        if (!contactExists) {
+          // 如果 contact_id 不存在，设为 undefined（数据库中存储为 NULL）
+          validContactId = undefined;
+        }
+      }
+
       return ctx.prisma.rsvpViewLogEntity.create({
         data: {
           form_config_id: input.form_config_id,
-          contact_id: input.contact_id,
+          contact_id: validContactId,
           visitor_id: input.visitor_id,
           action_type: input.action_type,
           submission_id: input.submission_id,
