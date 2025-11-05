@@ -80,7 +80,7 @@ export default function Templates({ collectionId }: TemplatesProps) {
 
   if (loading) {
     return (
-      <div className='flex items-center justify-center h-dvh bg-gray-50'>
+      <div className='flex items-center justify-center h-dvh bg-white'>
         <div className='text-center'>
           <div className='w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-gray-500'>加载中...</p>
@@ -91,14 +91,14 @@ export default function Templates({ collectionId }: TemplatesProps) {
 
   if (error || !collection) {
     return (
-      <div className='flex flex-col items-center justify-center h-dvh bg-gray-50'>
+      <div className='flex flex-col items-center justify-center h-dvh bg-white'>
         <div className='text-center text-red-500'>
           <p className='text-xl mb-2'>❌</p>
           <p>{error || '集合不存在'}</p>
         </div>
         <button
           onClick={() => router.back()}
-          className='mt-6 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors'
+          className='mt-6 px-6 py-2 bg-blue-500 text-white rounded-lg'
         >
           返回
         </button>
@@ -107,51 +107,28 @@ export default function Templates({ collectionId }: TemplatesProps) {
   }
 
   return (
-    <div className='flex flex-col h-dvh bg-gray-50'>
-      {/* 顶部集合信息 */}
-      <div className='bg-white shadow-sm'>
-        <div className='flex items-center p-4 space-x-4'>
-          {/* 返回按钮 */}
-          <button
-            onClick={() => router.back()}
-            className='flex-shrink-0 text-gray-600 hover:text-gray-900'
+    <div className='flex flex-col h-dvh bg-white'>
+      {/* 顶部标题栏 */}
+      <div className='flex items-center px-4 py-4 border-b border-gray-200'>
+        <button
+          onClick={() => router.back()}
+          className='flex-shrink-0 text-gray-600 mr-4'
+        >
+          <svg
+            className='w-6 h-6'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
           >
-            <svg
-              className='w-6 h-6'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M15 19l-7-7 7-7'
-              />
-            </svg>
-          </button>
-
-          {/* 集合信息 */}
-          <div className='flex items-center space-x-3 flex-1'>
-            {collection.thumb_path && (
-              <div className='w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100'>
-                <Image
-                  src={cdnApi(collection.thumb_path)}
-                  alt={collection.display_name}
-                  width={48}
-                  height={48}
-                  className='object-cover'
-                />
-              </div>
-            )}
-            <div>
-              <h1 className='text-lg font-semibold text-gray-900'>
-                {collection.display_name}
-              </h1>
-              <p className='text-sm text-gray-500'>{templates.length} 个模板</p>
-            </div>
-          </div>
-        </div>
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M15 19l-7-7 7-7'
+            />
+          </svg>
+        </button>
+        <h1 className='text-lg font-medium text-gray-900'>选择合适的模板</h1>
       </div>
 
       {/* 主内容区 - 模板列表 */}
@@ -168,9 +145,8 @@ export default function Templates({ collectionId }: TemplatesProps) {
             {templates.map(template => (
               <div
                 key={template.id}
-                className='bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer'
+                className='bg-white rounded-lg overflow-hidden border border-gray-200 cursor-pointer'
                 onClick={() => {
-                  // 跳转到模板详情页
                   router.push(`/mobile/template?id=${template.id}`);
                 }}
               >

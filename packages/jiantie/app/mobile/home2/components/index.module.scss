@@ -112,34 +112,5 @@
         }
       }
     }
-
-    &.huiyao {
-      background: linear-gradient(180deg, #3358d4 0%, #3358d4 50%, #fff 100%);
-      background-size: 100% 300px;
-      background-repeat: no-repeat;
-
-      .head {
-        iconpark-icon[name='remind1'] {
-          color: #fff !important;
-        }
-      }
-    }
-
-    &.xueji {
-      background-image: url('https://img1.maka.im/vertical_app/cms/bg_10_167e7ccae9.png');
-      background-size: 100% 100%;
-
-      .head {
-        .vip {
-          background-color: #b07d15;
-          color: #fff;
-          border: none;
-        }
-
-        iconpark-icon {
-          color: #000;
-        }
-      }
-    }
   }
 }
