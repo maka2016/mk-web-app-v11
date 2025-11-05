@@ -156,7 +156,7 @@ const FormCompWrapper = styled.div`
 
 // 内部组件：负责纯粹的渲染
 function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
-  const { formConfigId } = attrs;
+  const { formConfigId, worksId } = attrs;
   const searchParams = useSearchParams();
   const rsvp = useRSVP();
   const { config, loading, error, fields, showEditDialog, setShowEditDialog } =

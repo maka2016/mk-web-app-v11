@@ -169,7 +169,7 @@ model RsvpFormConfigEntity {
   /// 关联关系
   submissions RsvpSubmissionEntity[]
   view_logs   RsvpViewLogEntity[] /// 操作记录（访问、提交、重新提交等）
-  invitees    RsvpContactEntity[] /// 该表单的嘉宾列表
+  invitees    RsvpContactEntity[] /// 关联到该表单的嘉宾列表（可选关联，嘉宾主要归属于用户）
 
   @@index([works_id], map: "IDX_rsvp_form_config_works_id")
   @@index([deleted], map: "IDX_rsvp_form_config_deleted")
@@ -287,8 +287,11 @@ model RsvpContactEntity {
   email String? @db.VarChar /// 邮箱
   phone String? @db.VarChar /// 电话
 
-  /// 嘉宾相关字段（新增）
-  form_config_id String? @map("form_config_id") @db.Text /// 关联的表单配置ID（如果为null，则为普通联系人；如果存在，则为该表单的嘉宾）
+  /// 嘉宾归属：嘉宾归属于简帖用户（uid），而不是某个RSVP表单
+  uid Int @map("uid") /// 用户ID，嘉宾归属于该用户
+
+  /// 表单关联（可选）：用于生成专属链接时关联到特定表单
+  form_config_id String? @map("form_config_id") @db.Text /// 关联的表单配置ID（可选，用于生成专属链接）
 
   /// 备注：至少需要 email 或 phone 其中一个
 
@@ -307,6 +310,7 @@ model RsvpContactEntity {
   @@index([name], map: "IDX_rsvp_contact_name")
   @@index([email], map: "IDX_rsvp_contact_email")
   @@index([phone], map: "IDX_rsvp_contact_phone")
+  @@index([uid], map: "IDX_rsvp_contact_uid")
   @@index([form_config_id], map: "IDX_rsvp_contact_form_config_id")
   @@index([deleted], map: "IDX_rsvp_contact_deleted")
   @@index([id], map: "IDX_rsvp_contact_id")
