@@ -121,9 +121,13 @@ export default function Detail({ channelId }: DetailProps) {
 
   return (
     <div
-      className='flex flex-col h-dvh bg-cover bg-center bg-no-repeat'
+      className='flex flex-col h-dvh '
       style={{
-        backgroundImage: 'url(https://res.maka.im/assets/jiantie/beijing3.png)',
+        backgroundImage: 'url(https://res.maka.im/assets/jiantie/beijing4.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        // backgroundColor: 'yellow',
       }}
     >
       {/* 顶部导航栏 */}
@@ -151,7 +155,7 @@ export default function Detail({ channelId }: DetailProps) {
             </button>
 
             {channelDetail.thumb_path && (
-              <div className='w-6 h-6 flex-shrink-0'>
+              <div className='w-100 h-6 flex-shrink-0'>
                 <Image
                   src={cdnApi(channelDetail.thumb_path)}
                   alt={channelDetail.display_name}
@@ -159,12 +163,11 @@ export default function Detail({ channelId }: DetailProps) {
                   height={24}
                   className='object-contain'
                 />
+                <h1 className='text-base font-medium text-gray-900 truncate'>
+                  {channelDetail.display_name}
+                </h1>
               </div>
             )}
-
-            <h1 className='text-base font-medium text-gray-900 truncate'>
-              {channelDetail.display_name}
-            </h1>
           </div>
 
           {/* 右侧：搜索按钮 */}
@@ -223,17 +226,17 @@ export default function Detail({ channelId }: DetailProps) {
             {/* 场景名称标题 */}
 
             {/* 模板卡片网格 */}
-            <div className='px-4 grid grid-cols-2 gap-3'>
+            <div className='px-4 grid grid-cols-2 gap-x-2.5 gap-y-3'>
               {fourthLevelCollections.map(collection => (
                 <div
                   key={collection.id}
-                  className='bg-white rounded-lg overflow-hidden active:opacity-80 transition-opacity'
+                  className='bg-white rounded-tl-lg rounded-tr-lg rounded-bl-lg overflow-hidden active:opacity-80 transition-opacity'
                   onClick={() => {
                     router.push(`/mobile/channel2/collection/${collection.id}`);
                   }}
                 >
                   {/* 集合缩略图 */}
-                  <div className='aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-50 relative'>
+                  <div className='aspect-[176/236] bg-gradient-to-br from-gray-100 to-gray-50 relative'>
                     {collection.thumb_path ? (
                       <Image
                         src={cdnApi(collection.thumb_path)}
