@@ -1,31 +1,18 @@
 'use client';
 import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
-import { createFormSchema } from '@/components/RSVP/comp/index';
-import { RSVPFormFields } from '@/components/RSVP/comp/RSVPFormFields';
 import { getGuestCountText } from '@/components/RSVP/comp/SubmissionDataView';
+import { InviteeDetailDialog } from '@/components/RSVP/InviteeDetailDialog';
 import { parseRSVPFormFields, RSVPField } from '@/components/RSVP/type';
 import { getUid } from '@/services';
 import { trpc } from '@/utils/trpc';
-import { zodResolver } from '@hookform/resolvers/zod';
 import APPBridge from '@mk/app-bridge';
 import { Button } from '@workspace/ui/components/button';
-import { Form } from '@workspace/ui/components/form';
 import { Input } from '@workspace/ui/components/input';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
-import {
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
-  Globe,
-  Mail,
-  Share,
-  Target,
-} from 'lucide-react';
+import { ChevronRight, Globe, Target } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import * as z from 'zod';
 import { PublicShareDialog } from './PublicShareDialog';
 
 export default function RSVPInviteesPage() {
@@ -46,6 +33,7 @@ export default function RSVPInviteesPage() {
   const [creatingInvitee, setCreatingInvitee] = useState(false);
 
   // 套餐信息
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [packageQuota, setPackageQuota] = useState<{
     total: number;
     used: number;
@@ -99,6 +87,7 @@ export default function RSVPInviteesPage() {
   };
 
   // 表单配置和字段
+  const [formConfig, setFormConfig] = useState<any>(null);
   const [formFields, setFormFields] = useState<RSVPField[]>([]);
 
   // 从表单配置中提取字段
@@ -109,6 +98,7 @@ export default function RSVPInviteesPage() {
         const config = (await trpc.rsvp.getFormConfigById.query({
           id: formConfigId,
         })) as any;
+        setFormConfig(config);
         if (config?.form_fields) {
           const fields = parseRSVPFormFields(config.form_fields) as RSVPField[];
           setFormFields(fields);
@@ -120,29 +110,6 @@ export default function RSVPInviteesPage() {
     loadFormConfig();
   }, [formConfigId]);
 
-  // 表单 schema
-  const formSchema = useMemo(() => {
-    if (formFields.length === 0) {
-      return z.record(z.string(), z.any());
-    }
-    return createFormSchema(formFields);
-  }, [formFields]);
-
-  // 嘉宾详情编辑相关状态
-  const [isContactSectionExpanded, setIsContactSectionExpanded] =
-    useState<boolean>(true);
-  const [isUpdatingInvitee, setIsUpdatingInvitee] = useState(false);
-
-  // 使用 react-hook-form 管理表单数据
-  type FormValues = Record<
-    string,
-    string | string[] | { adult: number; child: number } | { total: number }
-  >;
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema) as any,
-    defaultValues: {},
-    mode: 'onChange',
-  });
   // 分享面板相关状态
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareMode, setShareMode] = useState<'public' | 'invitee'>('public');
@@ -151,37 +118,6 @@ export default function RSVPInviteesPage() {
     string | undefined
   >();
   const router = useRouter();
-
-  // 当打开嘉宾详情时，初始化编辑数据
-  useEffect(() => {
-    if (viewingInvitee && inviteeDetailOpen && formFields.length > 0) {
-      const submissionData = viewingInvitee.submission_data || {};
-      const defaultValues: FormValues = {};
-
-      // 从提交数据中提取所有字段的值（排除系统字段）
-      formFields
-        .filter(field => field.enabled !== false)
-        .forEach(field => {
-          if (submissionData[field.id] !== undefined) {
-            defaultValues[field.id] = submissionData[field.id];
-          } else if (field.type === 'checkbox') {
-            defaultValues[field.id] = [];
-          } else if (field.type === 'guest_count') {
-            if (field.splitAdultChild) {
-              defaultValues[field.id] = { adult: 0, child: 0 };
-            } else {
-              defaultValues[field.id] = { total: 0 };
-            }
-          } else {
-            defaultValues[field.id] = '';
-          }
-        });
-
-      form.reset(defaultValues);
-      setIsContactSectionExpanded(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewingInvitee, inviteeDetailOpen, formFields]);
 
   // 打开新增嘉宾弹窗
   const handleOpenAddInvitee = () => {
@@ -392,98 +328,6 @@ export default function RSVPInviteesPage() {
     fetchUserInvitees();
   }, []);
 
-  // 更新嘉宾信息
-  const handleUpdateInviteeInfo = async () => {
-    if (!viewingInvitee) return;
-
-    // 验证表单
-    const isValid = await form.trigger();
-    if (!isValid) {
-      toast.error('请检查表单填写是否正确');
-      return;
-    }
-
-    setIsUpdatingInvitee(true);
-    try {
-      // 获取表单数据
-      const formValues = form.getValues();
-
-      // 更新嘉宾基本信息（如果有 phone 字段）
-      const phoneField = formFields.find(f => f.id === 'phone');
-      if (phoneField) {
-        const phoneValue = formValues[phoneField.id] as string;
-        await trpc.rsvp.updateInvitee.mutate({
-          id: viewingInvitee.id,
-          phone: phoneValue?.trim() || undefined,
-        });
-      }
-
-      // 如果有提交记录，需要更新提交数据
-      if (viewingInvitee.has_response && formConfigId) {
-        // 获取提交记录
-        const submissions = await trpc.rsvp.getInviteeSubmissions.query({
-          contact_id: viewingInvitee.id,
-          form_config_id: formConfigId,
-        });
-
-        if (submissions && submissions.length > 0) {
-          const latestSubmission = submissions[0];
-          const submissionData = { ...latestSubmission.submission_data };
-
-          // 更新所有表单字段的值（排除系统字段）
-          formFields
-            .filter(field => field.enabled !== false)
-            .forEach(field => {
-              if (formValues[field.id] !== undefined) {
-                submissionData[field.id] = formValues[field.id];
-              }
-            });
-
-          // 保留系统字段（以 _ 开头）
-          Object.keys(latestSubmission.submission_data).forEach(key => {
-            if (key.startsWith('_')) {
-              submissionData[key] = latestSubmission.submission_data[key];
-            }
-          });
-
-          // 提交新版本
-          await trpc.rsvp.updateSubmissionVersion.mutate({
-            submission_group_id: latestSubmission.submission_group_id,
-            submission_data: submissionData,
-            operator_type: 'admin',
-            operator_name: '管理员',
-          });
-        }
-      }
-
-      toast.success('更新成功');
-      // 刷新数据
-      if (formConfigId) {
-        const data = await trpc.rsvp.getInviteesWithResponseStatus.query({
-          form_config_id: formConfigId,
-        });
-        setInviteeResponses(data || []);
-
-        // 更新宾客总数统计
-        const totalGuests = calculateTotalGuests(data || []);
-        setPackageQuota(prev => ({
-          ...prev,
-          used: totalGuests,
-        }));
-
-        // 更新当前查看的嘉宾信息
-        const updated = data.find((item: any) => item.id === viewingInvitee.id);
-        if (updated) {
-          setViewingInvitee(updated);
-        }
-      }
-    } catch (error: any) {
-      toast.error(error.message || '更新失败');
-    } finally {
-      setIsUpdatingInvitee(false);
-    }
-  };
-
   // 分享嘉宾邀请
   const handleShareInvitee = async () => {
     if (!viewingInvitee) return;
@@ -537,19 +381,19 @@ export default function RSVPInviteesPage() {
         onRightClick={toHome}
       />
 
-      <div className='px-4 py-3 overflow-y-auto flex flex-col gap-4'>
+      <div className='p-3 overflow-y-auto flex flex-col gap-3'>
         {/* 指定嘉宾卡片 */}
-        <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 cursor-pointer hover:shadow-sm transition-all'>
+        <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 cursor-pointer shadow-sm'>
           <div
-            className='flex items-start justify-between'
+            className='flex items-center justify-between'
             onClick={handleOpenAddInvitee}
           >
             <div className='flex items-start gap-3 flex-1'>
-              <div className='w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0'>
+              <div className='w-11 h-11 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0'>
                 <Target size={20} className='text-red-500' />
               </div>
-              <div className='flex-1'>
-                <div className='flex items-center gap-2 mb-1'>
+              <div className='flex-1 flex flex-col justify-center'>
+                <div className='flex items-center gap-2'>
                   <div className='font-semibold text-base text-[#09090B]'>
                     指定嘉宾
                   </div>
@@ -557,12 +401,12 @@ export default function RSVPInviteesPage() {
                     推荐
                   </span>
                 </div>
-                <div className='text-sm text-gray-600'>
+                <div className='text-xs text-gray-600'>
                   向个别嘉宾发送带有专属链接的邀请。
                 </div>
               </div>
             </div>
-            <ArrowRight
+            <ChevronRight
               size={20}
               className='text-gray-400 flex-shrink-0 ml-2'
             />
@@ -570,9 +414,9 @@ export default function RSVPInviteesPage() {
         </div>
 
         {/* 公开分享卡片 */}
-        <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 cursor-pointer hover:shadow-sm transition-all'>
+        <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 cursor-pointer shadow-sm'>
           <div
-            className='flex items-start justify-between'
+            className='flex items-center justify-between'
             onClick={() => {
               setShareMode('public');
               setShareContactId(undefined);
@@ -581,19 +425,19 @@ export default function RSVPInviteesPage() {
             }}
           >
             <div className='flex items-start gap-3 flex-1'>
-              <div className='w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0'>
+              <div className='w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0'>
                 <Globe size={20} className='text-blue-500' />
               </div>
-              <div className='flex-1'>
-                <div className='font-semibold text-base text-[#09090B] mb-1'>
+              <div className='flex-1 flex flex-col justify-center'>
+                <div className='font-semibold text-base text-[#09090B]'>
                   公开分享
                 </div>
-                <div className='text-sm text-gray-600'>
+                <div className='text-xs text-gray-600'>
                   生成公开链接，任何人都可以RSVP。
                 </div>
               </div>
             </div>
-            <ArrowRight
+            <ChevronRight
               size={20}
               className='text-gray-400 flex-shrink-0 ml-2'
             />
@@ -601,8 +445,8 @@ export default function RSVPInviteesPage() {
         </div>
 
         {/* 邀请记录 */}
-        <div className='border border-black/[0.1] rounded-xl p-3 bg-white'>
-          <div className='mb-3'>
+        <div className='border border-black/[0.1] rounded-xl p-4 bg-white shadow-sm flex flex-col gap-3'>
+          <div className=''>
             <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
               已邀请嘉宾
             </div>
@@ -612,7 +456,7 @@ export default function RSVPInviteesPage() {
           </div>
 
           {/* 分类标签 */}
-          <div className='flex items-center gap-2 mb-3'>
+          <div className='flex items-center gap-2'>
             <Button
               size='sm'
               variant={responseFilter === 'all' ? 'default' : 'outline'}
@@ -718,7 +562,7 @@ export default function RSVPInviteesPage() {
                       setInviteeDetailOpen(true);
                     }}
                   >
-                    <div className='flex items-start justify-between'>
+                    <div className='flex items-center justify-between'>
                       <div className='flex-1'>
                         <div className='font-semibold text-sm leading-5 text-[#09090B] mb-2'>
                           {item.name || '未知嘉宾'}
@@ -766,8 +610,8 @@ export default function RSVPInviteesPage() {
                           </div>
                         )}
                       </div>
-                      <ArrowRight
-                        size={16}
+                      <ChevronRight
+                        size={20}
                         className='text-gray-400 flex-shrink-0 ml-2'
                       />
                     </div>
@@ -779,172 +623,38 @@ export default function RSVPInviteesPage() {
         </div>
 
         {/* 嘉宾详情弹窗 */}
-        <ResponsiveDialog
-          fullHeight={true}
+        <InviteeDetailDialog
           isOpen={inviteeDetailOpen}
           onOpenChange={setInviteeDetailOpen}
-          title='嘉宾详情'
-        >
-          {viewingInvitee && (
-            <div className='p-4 overflow-y-auto'>
-              {/* 基本信息卡片 */}
-              <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 mb-4'>
-                <div className='flex items-start justify-between mb-3'>
-                  <div className='flex-1'>
-                    <div className='font-semibold text-base text-[#09090B] mb-1'>
-                      {viewingInvitee.name || '未知嘉宾'}
-                    </div>
-                    {viewingInvitee.has_response &&
-                    viewingInvitee.submission_data ? (
-                      <div className='text-sm text-gray-600'>
-                        {getGuestCountText(
-                          viewingInvitee.submission_data,
-                          formFields
-                        ) || '暂无人数信息'}
-                      </div>
-                    ) : (
-                      <div className='text-sm text-gray-400'>未提交</div>
-                    )}
-                  </div>
-                  <span
-                    className={`text-xs px-2 py-1 rounded ${
-                      viewingInvitee.has_response
-                        ? viewingInvitee.will_attend === true
-                          ? 'bg-green-50 text-green-600'
-                          : viewingInvitee.will_attend === false
-                            ? 'bg-orange-50 text-orange-600'
-                            : 'bg-blue-50 text-blue-600'
-                        : 'bg-gray-50 text-gray-500'
-                    }`}
-                  >
-                    {viewingInvitee.has_response
-                      ? viewingInvitee.will_attend === true
-                        ? '已确认出席'
-                        : viewingInvitee.will_attend === false
-                          ? '已确认不出席'
-                          : '已响应'
-                      : '未响应'}
-                  </span>
-                </div>
-              </div>
+          invitee={viewingInvitee}
+          formConfig={formConfig}
+          onUpdate={async () => {
+            // 刷新数据
+            if (formConfigId) {
+              const data = await trpc.rsvp.getInviteesWithResponseStatus.query({
+                form_config_id: formConfigId,
+              });
+              setInviteeResponses(data || []);
 
-              {/* 分享专属邀请卡片 */}
-              <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 mb-4'>
-                <div className='flex items-center gap-2 mb-2'>
-                  <Mail size={16} className='text-gray-600' />
-                  <div className='font-semibold text-base text-[#09090B]'>
-                    分享专属邀请
-                  </div>
-                </div>
-                <div className='text-sm text-gray-600 mb-3'>
-                  通过微信分享活动链接给嘉宾
-                </div>
-                <Button
-                  className='w-full bg-green-500 hover:bg-green-600 text-white h-10'
-                  onClick={handleShareInvitee}
-                >
-                  <Share size={16} className='mr-2' />
-                  立即发送
-                </Button>
-              </div>
+              // 更新宾客总数统计
+              const totalGuests = calculateTotalGuests(data || []);
+              setPackageQuota(prev => ({
+                ...prev,
+                used: totalGuests,
+              }));
 
-              {/* 联系方式和附加信息卡片 */}
-              <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 mb-4'>
-                <div
-                  className={`flex items-center justify-between mb-3 ${
-                    viewingInvitee.has_response ? 'cursor-pointer' : ''
-                  }`}
-                  onClick={() => {
-                    if (viewingInvitee.has_response) {
-                      setIsContactSectionExpanded(!isContactSectionExpanded);
-                    }
-                  }}
-                >
-                  <div className='font-semibold text-base text-[#09090B]'>
-                    联系方式和附加信息
-                  </div>
-                  {viewingInvitee.has_response && (
-                    <>
-                      {isContactSectionExpanded ? (
-                        <ChevronUp size={20} className='text-gray-400' />
-                      ) : (
-                        <ChevronDown size={20} className='text-gray-400' />
-                      )}
-                    </>
-                  )}
-                </div>
-
-                {viewingInvitee.has_response ? (
-                  isContactSectionExpanded && (
-                    <div className='pt-2'>
-                      {formFields.length > 0 ? (
-                        <Form {...form}>
-                          <form className='space-y-4'>
-                            <RSVPFormFields
-                              fields={formFields}
-                              control={form.control}
-                            />
-                            <Button
-                              type='button'
-                              className='w-full'
-                              onClick={handleUpdateInviteeInfo}
-                              disabled={isUpdatingInvitee}
-                            >
-                              {isUpdatingInvitee ? '保存中...' : '保存'}
-                            </Button>
-                          </form>
-                        </Form>
-                      ) : (
-                        <div className='text-sm text-gray-500 text-center py-4'>
-                          加载表单配置中...
-                        </div>
-                      )}
-                    </div>
-                  )
-                ) : (
-                  <div className='text-sm text-gray-500 text-center py-4'>
-                    暂无联系方式和附加信息
-                  </div>
-                )}
-              </div>
-
-              {/* 交互记录卡片 */}
-              <div className='bg-white border border-[#e4e4e7] rounded-xl p-4'>
-                <div className='font-semibold text-base text-[#09090B] mb-3'>
-                  交互记录
-                </div>
-                <div className='space-y-3'>
-                  {viewingInvitee.has_response && (
-                    <div className='flex items-center gap-3'>
-                      <Mail size={16} className='text-gray-400' />
-                      <div className='flex-1'>
-                        <div className='text-sm text-gray-800'>创建邀请</div>
-                        <div className='text-xs text-gray-400'>
-                          {new Date(
-                            viewingInvitee.submission_create_time ||
-                              viewingInvitee.create_time
-                          ).toLocaleString('zh-CN', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {!viewingInvitee.has_response && (
-                    <div className='text-sm text-gray-500 text-center py-2'>
-                      暂无交互记录
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </ResponsiveDialog>
+              // 更新当前查看的嘉宾信息
+              const updated = data.find(
+                (item: any) => item.id === viewingInvitee?.id
+              );
+              if (updated) {
+                setViewingInvitee(updated);
+              }
+            }
+          }}
+          onShare={handleShareInvitee}
+          showShareButton={true}
+        />
 
         {/* 新增嘉宾弹窗 */}
         <ResponsiveDialog
@@ -958,10 +668,10 @@ export default function RSVPInviteesPage() {
           }}
           title='指定嘉宾'
         >
-          <div className='p-4'>
+          <div className='p-4 bg-gray-50 h-full'>
             <div className='space-y-4'>
-              {/* 套餐信息卡片 */}
-              <div className='bg-purple-50 rounded-xl border border-purple-200 p-4'>
+              {/* 套餐信息卡片，暂时不用 */}
+              {/* <div className='bg-purple-50 rounded-xl border border-purple-200 p-4'>
                 <div className='flex items-start justify-between'>
                   <div className='flex items-start gap-3 flex-1'>
                     <div className='w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0'>
@@ -986,10 +696,10 @@ export default function RSVPInviteesPage() {
                     升级
                   </Button>
                 </div>
-              </div>
+              </div> */}
 
               {/* 创建嘉宾表单 */}
-              <div className='bg-white rounded-xl border border-[#e4e4e7] p-4'>
+              <div className='bg-white rounded-xl border border-[#e4e4e7] p-4 shadow-sm'>
                 <div className='text-base font-semibold text-[#09090B] mb-4'>
                   创建嘉宾
                 </div>

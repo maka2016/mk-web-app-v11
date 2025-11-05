@@ -9,6 +9,7 @@ import {
   FormMessage,
 } from '@workspace/ui/components/form';
 import { Input } from '@workspace/ui/components/input';
+import { cn } from '@workspace/ui/lib/utils';
 import { Minus, Plus } from 'lucide-react';
 import { Control } from 'react-hook-form';
 import { RSVPField } from '../type';
@@ -17,6 +18,52 @@ interface RSVPFormFieldsProps {
   fields: RSVPField[];
   control: Control<any>;
   className?: string;
+}
+
+/**
+ * 计数器控制组件 - 统一管理人数计数器的样式和行为
+ */
+interface CounterControlProps {
+  className?: string;
+  value: number;
+  label: string;
+  onIncrement: () => void;
+  onDecrement: () => void;
+}
+
+function CounterControl({
+  className,
+  value,
+  label,
+  onIncrement,
+  onDecrement,
+}: CounterControlProps) {
+  return (
+    <div className={cn('flex-1 flex items-center gap-2', className)}>
+      <Button
+        type='button'
+        variant='outline'
+        size='icon'
+        className='h-8 w-8 shrink-0 rounded-lg border-gray-200 bg-gray-50'
+        onClick={onDecrement}
+      >
+        <Minus className='h-4 w-4' />
+      </Button>
+      <div className='flex-1 text-center'>
+        <span className='text-base font-semibold text-gray-900'>{value}</span>
+        <span className='text-sm text-gray-500 ml-1'>{label}</span>
+      </div>
+      <Button
+        type='button'
+        variant='outline'
+        size='icon'
+        className='h-8 w-8 shrink-0 rounded-lg border-gray-200 bg-gray-50'
+        onClick={onIncrement}
+      >
+        <Plus className='h-4 w-4' />
+      </Button>
+    </div>
+  );
 }
 
 /**
@@ -29,7 +76,7 @@ export function RSVPFormFields({
   className = '',
 }: RSVPFormFieldsProps) {
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`space-y-3 ${className}`}>
       {fields
         .filter(field => field.enabled !== false)
         .map(field => (
@@ -38,8 +85,11 @@ export function RSVPFormFields({
             control={control}
             name={field.id}
             render={({ field: formField }) => (
-              <FormItem>
-                <FormLabel className='text-sm font-medium text-gray-900 mb-3'>
+              <FormItem className='space-y-1'>
+                <FormLabel
+                  className='text-xs font-medium text-gray-600'
+                  style={{ lineHeight: '18px' }}
+                >
                   {field.label}
                   {field.required ? (
                     <span className='text-red-500 ml-1'>*</span>
@@ -54,7 +104,7 @@ export function RSVPFormFields({
                       onBlur={formField.onBlur}
                       name={formField.name}
                       ref={formField.ref}
-                      className='bg-white border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400 placeholder:text-gray-400'
+                      className='bg-gray-50 border-gray-100 rounded-lg focus:ring-0 focus:ring-gray-400 placeholder:text-gray-400'
                     />
                   ) : field.type === 'radio' ? (
                     <div className='flex flex-wrap items-center gap-3'>
@@ -83,7 +133,7 @@ export function RSVPFormFields({
                       })}
                     </div>
                   ) : field.type === 'checkbox' ? (
-                    <div className='space-y-2'>
+                    <div className='space-y-1'>
                       {field.options?.map(opt => (
                         <div
                           key={opt.value}
@@ -123,166 +173,96 @@ export function RSVPFormFields({
                       {field.splitAdultChild ? (
                         <div className='flex items-center gap-3'>
                           {/* 大人 */}
-                          <div className='flex-1 flex items-center gap-2'>
-                            <Button
-                              type='button'
-                              variant='outline'
-                              size='icon'
-                              className='h-9 w-9 shrink-0 rounded border-gray-300 bg-white'
-                              onClick={() => {
-                                const currentValue = (formField.value as {
+                          <CounterControl
+                            value={
+                              (
+                                formField.value as {
                                   adult: number;
-                                  child: number;
-                                }) || { adult: 0, child: 0 };
-                                const newAdult = Math.max(
-                                  0,
-                                  (currentValue.adult || 0) - 1
-                                );
+                                }
+                              )?.adult || 1
+                            }
+                            label='大人'
+                            onIncrement={() => {
+                              const currentValue = formField.value as {
+                                adult: number;
+                              };
+                              if (currentValue.adult > 0) {
                                 formField.onChange({
                                   ...currentValue,
-                                  adult: newAdult,
+                                  adult: currentValue.adult + 1,
                                 });
-                              }}
-                            >
-                              <Minus className='h-4 w-4' />
-                            </Button>
-                            <div className='flex-1 text-center'>
-                              <span className='text-base font-semibold text-gray-900'>
-                                {(
-                                  formField.value as {
-                                    adult: number;
-                                    child: number;
-                                  }
-                                )?.adult || 0}
-                              </span>
-                              <span className='text-sm text-gray-500 ml-1'>
-                                Adult
-                              </span>
-                            </div>
-                            <Button
-                              type='button'
-                              variant='outline'
-                              size='icon'
-                              className='h-9 w-9 shrink-0 rounded border-gray-300 bg-white'
-                              onClick={() => {
-                                const currentValue = (formField.value as {
-                                  adult: number;
-                                  child: number;
-                                }) || { adult: 0, child: 0 };
-                                formField.onChange({
-                                  ...currentValue,
-                                  adult: (currentValue.adult || 0) + 1,
-                                });
-                              }}
-                            >
-                              <Plus className='h-4 w-4' />
-                            </Button>
-                          </div>
+                              }
+                            }}
+                            onDecrement={() => {
+                              const currentValue = formField.value as {
+                                adult: number;
+                              };
+                              formField.onChange({
+                                ...currentValue,
+                                adult: (currentValue.adult || 0) - 1,
+                              });
+                            }}
+                          />
                           {/* 小孩 */}
-                          <div className='flex-1 flex items-center gap-2'>
-                            <Button
-                              type='button'
-                              variant='outline'
-                              size='icon'
-                              className='h-9 w-9 shrink-0 rounded border-gray-300 bg-white'
-                              onClick={() => {
-                                const currentValue = (formField.value as {
-                                  adult: number;
+                          <CounterControl
+                            value={
+                              (
+                                formField.value as {
                                   child: number;
-                                }) || { adult: 0, child: 0 };
-                                const newChild = Math.max(
-                                  0,
-                                  (currentValue.child || 0) - 1
-                                );
-                                formField.onChange({
-                                  ...currentValue,
-                                  child: newChild,
-                                });
-                              }}
-                            >
-                              <Minus className='h-4 w-4' />
-                            </Button>
-                            <div className='flex-1 text-center'>
-                              <span className='text-base font-semibold text-gray-900'>
-                                {(
-                                  formField.value as {
-                                    adult: number;
-                                    child: number;
-                                  }
-                                )?.child || 0}
-                              </span>
-                              <span className='text-sm text-gray-500 ml-1'>
-                                Child
-                              </span>
-                            </div>
-                            <Button
-                              type='button'
-                              variant='outline'
-                              size='icon'
-                              className='h-9 w-9 shrink-0 rounded border-gray-300 bg-white'
-                              onClick={() => {
-                                const currentValue = (formField.value as {
-                                  adult: number;
-                                  child: number;
-                                }) || { adult: 0, child: 0 };
-                                formField.onChange({
-                                  ...currentValue,
-                                  child: (currentValue.child || 0) + 1,
-                                });
-                              }}
-                            >
-                              <Plus className='h-4 w-4' />
-                            </Button>
-                          </div>
+                                }
+                              )?.child || 0
+                            }
+                            label='小孩'
+                            onIncrement={() => {
+                              const currentValue = formField.value as {
+                                child: number;
+                              };
+                              formField.onChange({
+                                ...currentValue,
+                                child: (currentValue.child || 0) + 1,
+                              });
+                            }}
+                            onDecrement={() => {
+                              const currentValue = formField.value as {
+                                child: number;
+                              };
+                              formField.onChange({
+                                ...currentValue,
+                                child: (currentValue.child || 0) - 1,
+                              });
+                            }}
+                          />
                         </div>
                       ) : (
-                        <div className='flex items-center gap-2 w-1/2'>
-                          <Button
-                            type='button'
-                            variant='outline'
-                            size='icon'
-                            className='h-9 w-9 shrink-0 rounded border-gray-300 bg-white'
-                            onClick={() => {
-                              const currentValue = (formField.value as {
+                        <CounterControl
+                          className='w-1/2'
+                          value={
+                            (
+                              formField.value as {
                                 total: number;
-                              }) || { total: 0 };
-                              const newTotal = Math.max(
-                                0,
-                                (currentValue.total || 0) - 1
-                              );
-                              formField.onChange({
-                                total: newTotal,
-                              });
-                            }}
-                          >
-                            <Minus className='h-4 w-4' />
-                          </Button>
-                          <div className='flex-1 text-center'>
-                            <span className='text-base font-semibold text-gray-900'>
-                              {(formField.value as { total: number })?.total ||
-                                0}
-                            </span>
-                            <span className='text-sm text-gray-500 ml-1'>
-                              人
-                            </span>
-                          </div>
-                          <Button
-                            type='button'
-                            variant='outline'
-                            size='icon'
-                            className='h-9 w-9 shrink-0 rounded border-gray-300 bg-white'
-                            onClick={() => {
-                              const currentValue = (formField.value as {
-                                total: number;
-                              }) || { total: 0 };
-                              formField.onChange({
-                                total: (currentValue.total || 0) + 1,
-                              });
-                            }}
-                          >
-                            <Plus className='h-4 w-4' />
-                          </Button>
-                        </div>
+                              }
+                            )?.total || 0
+                          }
+                          label='人数'
+                          onIncrement={() => {
+                            const currentValue = (formField.value as {
+                              total: number;
+                            }) || { total: 0 };
+                            formField.onChange({
+                              ...currentValue,
+                              total: (currentValue.total || 0) + 1,
+                            });
+                          }}
+                          onDecrement={() => {
+                            const currentValue = (formField.value as {
+                              total: number;
+                            }) || { total: 0 };
+                            formField.onChange({
+                              ...currentValue,
+                              total: (currentValue.total || 0) - 1,
+                            });
+                          }}
+                        />
                       )}
                     </div>
                   ) : null}

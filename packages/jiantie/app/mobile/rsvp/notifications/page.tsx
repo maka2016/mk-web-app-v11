@@ -1,67 +1,13 @@
 'use client';
 import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
+import { InviteeDetailDialog } from '@/components/RSVP/InviteeDetailDialog';
 import { trpc } from '@/utils/trpc';
 import { Button } from '@workspace/ui/components/button';
-import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
-import {
-  Bell,
-  Check,
-  CheckCheck,
-  Edit,
-  MessageSquare,
-  Settings,
-  X,
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { CheckCheck, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-// 双眼睛图标组件
-const EyesIcon = ({ className }: { className?: string }) => (
-  <div
-    className={className}
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '3px',
-      width: '20px',
-      height: '20px',
-    }}
-  >
-    <svg
-      width='10'
-      height='10'
-      viewBox='0 0 24 24'
-      fill='none'
-      stroke='currentColor'
-      strokeWidth='2'
-      strokeLinecap='round'
-      strokeLinejoin='round'
-      style={{ flexShrink: 0 }}
-    >
-      <path d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z' />
-      <circle cx='12' cy='12' r='3' />
-    </svg>
-    <svg
-      width='10'
-      height='10'
-      viewBox='0 0 24 24'
-      fill='none'
-      stroke='currentColor'
-      strokeWidth='2'
-      strokeLinecap='round'
-      strokeLinejoin='round'
-      style={{ flexShrink: 0 }}
-    >
-      <path d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z' />
-      <circle cx='12' cy='12' r='3' />
-    </svg>
-  </div>
-);
-
 export default function NotificationsPage() {
-  const router = useRouter();
   const [selectedNotification, setSelectedNotification] = useState<any>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [showUnreadOnly] = useState(false);
@@ -69,6 +15,9 @@ export default function NotificationsPage() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isMarkingAsRead, setIsMarkingAsRead] = useState(false);
+
+  // 嘉宾详情相关状态
+  const [viewingInvitee, setViewingInvitee] = useState<any>(null);
 
   // TODO: 需要从 session 或 context 获取当前用户 ID
   const userId = 'current_user_id'; // 临时占位
@@ -107,6 +56,7 @@ export default function NotificationsPage() {
 
   const handleNotificationClick = async (notification: any) => {
     setSelectedNotification(notification);
+    setViewingInvitee(notification.contact || null);
     setDetailDialogOpen(true);
 
     // 如果未读，标记为已读
@@ -178,10 +128,9 @@ export default function NotificationsPage() {
       const companions =
         submissionData.companions || submissionData._companions || 0;
       return {
-        icon: Check,
-        iconComponent: null,
+        emoji: '✅',
         iconBgColor: '#22c55e', // green-500
-        cardBgColor: '#f0fdf4', // green-50
+        cardBgColor: '#F0FDF4', // green-50
         borderColor: '#bbf7d0', // green-200
         message: companions > 0 ? `确认出席，${companions}位同行` : '确认出席',
       };
@@ -190,8 +139,7 @@ export default function NotificationsPage() {
     // 确认不出席 - 红色
     if (willAttend === false) {
       return {
-        icon: X,
-        iconComponent: null,
+        emoji: '❌',
         iconBgColor: '#ef4444', // red-500
         cardBgColor: '#fef2f2', // red-50
         borderColor: '#fecaca', // red-200
@@ -202,8 +150,7 @@ export default function NotificationsPage() {
     // 查看邀请（view_page 类型或没有 submission）- 浅紫色
     if (actionType === 'view_page' || !notification.submission) {
       return {
-        icon: null,
-        iconComponent: EyesIcon,
+        emoji: '👀',
         iconBgColor: '#a855f7', // purple-500
         cardBgColor: '#faf5ff', // purple-50
         borderColor: '#e9d5ff', // purple-200
@@ -220,8 +167,7 @@ export default function NotificationsPage() {
       const message =
         submissionData.message || submissionData.comment || submissionData.note;
       return {
-        icon: MessageSquare,
-        iconComponent: null,
+        emoji: '💬',
         iconBgColor: '#3b82f6', // blue-500
         cardBgColor: '#eff6ff', // blue-50
         borderColor: '#bfdbfe', // blue-200
@@ -235,8 +181,7 @@ export default function NotificationsPage() {
     // 更新联系信息（resubmit 且数据有变化）- 浅黄色
     if (actionType === 'resubmit') {
       return {
-        icon: Edit,
-        iconComponent: null,
+        emoji: '✏️',
         iconBgColor: '#eab308', // yellow-500
         cardBgColor: '#fefce8', // yellow-50
         borderColor: '#fde047', // yellow-200
@@ -247,8 +192,7 @@ export default function NotificationsPage() {
     // 系统通知 - 白色/浅灰色，金色铃铛
     if (notification.is_system) {
       return {
-        icon: Bell,
-        iconComponent: null,
+        emoji: '🔔',
         iconBgColor: '#f59e0b', // amber-500 (金色)
         cardBgColor: '#ffffff', // white
         borderColor: '#e5e7eb', // gray-200
@@ -258,8 +202,7 @@ export default function NotificationsPage() {
 
     // 默认：已提交
     return {
-      icon: Check,
-      iconComponent: null,
+      emoji: '✅',
       iconBgColor: '#6b7280', // gray-500
       cardBgColor: '#ffffff', // white
       borderColor: '#e5e7eb', // gray-200
@@ -271,30 +214,13 @@ export default function NotificationsPage() {
     return notification.contact?.name || '访客';
   };
 
-  const getNotificationDesc = (notification: any) => {
-    const config = getNotificationConfig(notification);
-    return config.message;
-  };
-
-  const getStatusColor = (notification: any) => {
-    const config = getNotificationConfig(notification);
-    // 根据图标背景色返回对应的文本颜色
-    if (config.iconBgColor === '#22c55e') return 'text-green-600';
-    if (config.iconBgColor === '#ef4444') return 'text-red-600';
-    if (config.iconBgColor === '#a855f7') return 'text-purple-600';
-    if (config.iconBgColor === '#3b82f6') return 'text-blue-600';
-    if (config.iconBgColor === '#eab308') return 'text-yellow-600';
-    if (config.iconBgColor === '#f59e0b') return 'text-amber-600';
-    return 'text-gray-600';
-  };
-
   return (
     <div className='relative bg-white min-h-screen pb-20'>
       <MobileHeader
         title={unreadCount > 0 ? `通知中心 (${unreadCount} 未读)` : '通知中心'}
       />
 
-      <div className='px-4 py-3'>
+      <div className='p-3'>
         {isInitialLoading ? (
           <div className='text-center py-8 text-gray-500'>加载中...</div>
         ) : notifications.length === 0 ? (
@@ -314,8 +240,6 @@ export default function NotificationsPage() {
             )}
             {notifications.map((notification: any) => {
               const config = getNotificationConfig(notification);
-              const IconComponent = config.icon;
-              const IconCustomComponent = config.iconComponent;
               const senderName = getSenderName(notification);
 
               return (
@@ -324,24 +248,14 @@ export default function NotificationsPage() {
                   style={{
                     backgroundColor: config.cardBgColor,
                     borderColor: config.borderColor,
-                    borderWidth: notification.is_read ? '1px' : '2px',
                   }}
-                  className='p-4 rounded-xl cursor-pointer transition-colors shadow-sm border'
+                  className='p-3 rounded-xl cursor-pointer transition-colors shadow-sm border'
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <div className='flex items-start gap-3'>
                     {/* 图标 */}
-                    <div
-                      style={{
-                        backgroundColor: config.iconBgColor,
-                      }}
-                      className='rounded-full p-2 flex-shrink-0 flex items-center justify-center'
-                    >
-                      {IconCustomComponent ? (
-                        <IconCustomComponent className='h-5 w-5 text-white' />
-                      ) : IconComponent ? (
-                        <IconComponent className='h-5 w-5 text-white' />
-                      ) : null}
+                    <div className='bg-white shadow-md rounded-full w-9 h-9 flex-shrink-0 flex items-center justify-center text-lg'>
+                      {config.emoji}
                     </div>
 
                     {/* 内容 */}
@@ -395,136 +309,14 @@ export default function NotificationsPage() {
         </Button>
       </div>
 
-      {/* 通知详情弹窗 */}
-      <ResponsiveDialog
+      {/* 嘉宾详情弹窗 */}
+      <InviteeDetailDialog
         isOpen={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
-        title='通知详情'
-      >
-        {selectedNotification && (
-          <div className='px-4 pb-4'>
-            <div className='space-y-4'>
-              {/* 表单信息 */}
-              <div className='border-b pb-3'>
-                <div className='text-sm text-gray-600 mb-1'>表单</div>
-                <div className='font-semibold'>
-                  {selectedNotification.form_config?.title}
-                </div>
-              </div>
-
-              {/* 嘉宾信息 */}
-              <div className='border-b pb-3'>
-                <div className='text-sm text-gray-600 mb-1'>嘉宾</div>
-                <div className='font-semibold'>
-                  {selectedNotification.contact?.name || '访客'}
-                </div>
-                {selectedNotification.contact?.phone && (
-                  <div className='text-sm text-gray-500 mt-1'>
-                    {selectedNotification.contact.phone}
-                  </div>
-                )}
-              </div>
-
-              {/* 提交状态 */}
-              <div className='border-b pb-3'>
-                <div className='text-sm text-gray-600 mb-1'>状态</div>
-                <div
-                  className={`font-semibold ${getStatusColor(selectedNotification)}`}
-                >
-                  {getNotificationDesc(selectedNotification)}
-                </div>
-              </div>
-
-              {/* 提交时间 */}
-              <div className='border-b pb-3'>
-                <div className='text-sm text-gray-600 mb-1'>
-                  {selectedNotification.action_type === 'submit'
-                    ? '提交时间'
-                    : '重新提交时间'}
-                </div>
-                <div className='text-sm'>
-                  {new Date(selectedNotification.create_time).toLocaleString(
-                    'zh-CN'
-                  )}
-                </div>
-              </div>
-
-              {/* 表单数据 */}
-              {selectedNotification.submission?.submission_data &&
-                typeof selectedNotification.submission.submission_data ===
-                  'object' &&
-                Object.keys(
-                  selectedNotification.submission.submission_data
-                ).filter(key => !key.startsWith('_')).length > 0 && (
-                  <div>
-                    <div className='text-sm text-gray-600 mb-2'>表单内容</div>
-                    <div className='bg-gray-50 rounded p-3 space-y-2'>
-                      {Object.entries(
-                        selectedNotification.submission.submission_data
-                      ).map(([key, value]) => {
-                        if (key.startsWith('_')) return null;
-                        return (
-                          <div
-                            key={key}
-                            className='flex items-start justify-between text-sm'
-                          >
-                            <span className='text-gray-600 flex-shrink-0 mr-2'>
-                              {key}：
-                            </span>
-                            <span className='text-gray-800 text-right flex-1'>
-                              {typeof value === 'object'
-                                ? JSON.stringify(value)
-                                : String(value)}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-              {/* 操作按钮 */}
-              <div className='flex gap-2 pt-2'>
-                <Button
-                  className='flex-1'
-                  variant='outline'
-                  onClick={() => {
-                    router.push(
-                      `/mobile/rsvp/share?form_config_id=${selectedNotification.form_config?.id}&works_id=${selectedNotification.form_config?.works_id}`
-                    );
-                  }}
-                >
-                  查看详情
-                </Button>
-                {!selectedNotification.is_read && (
-                  <Button
-                    className='flex-1'
-                    onClick={async () => {
-                      if (selectedNotification.submission?.id) {
-                        try {
-                          await trpc.rsvp.markNotificationAsRead.mutate({
-                            user_id: userId,
-                            submission_ids: [
-                              selectedNotification.submission.id,
-                            ],
-                          });
-                          loadNotifications(false);
-                          setDetailDialogOpen(false);
-                        } catch (error: any) {
-                          toast.error(error.message || '操作失败');
-                        }
-                      }
-                    }}
-                  >
-                    <Check className='h-4 w-4 mr-1' />
-                    标记已读
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </ResponsiveDialog>
+        invitee={viewingInvitee}
+        formConfig={selectedNotification?.form_config}
+        onUpdate={() => loadNotifications(false)}
+      />
     </div>
   );
 }

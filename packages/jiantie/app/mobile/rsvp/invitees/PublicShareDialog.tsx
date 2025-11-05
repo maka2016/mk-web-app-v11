@@ -297,9 +297,9 @@ export function PublicShareDialog({
         onOpenChange={onOpenChange}
         title='分享邀请链接'
       >
-        <div className='px-4 pb-4 space-y-4'>
+        <div className='p-4 space-y-4 bg-gray-50 h-full'>
           {/* 编辑标题、描述和封面 */}
-          <div className='bg-white rounded-xl border border-[#e4e4e7] p-4'>
+          <div className='bg-white rounded-xl border border-[#e4e4e7] p-4 shadow-sm'>
             <div className='flex items-center justify-between mb-3'>
               <div className={styles.title}>
                 <span>编辑标题、描述和封面</span>
@@ -334,6 +334,7 @@ export function PublicShareDialog({
                   type='file'
                   accept='image/*'
                   multiple={false}
+                  title='封面上传'
                 />
                 <div className='w-24 h-24 rounded-lg bg-gray-200 overflow-hidden'>
                   {shareCover ? (
@@ -387,7 +388,7 @@ export function PublicShareDialog({
           </div>
 
           {/* 分享功能 */}
-          <div className='bg-white rounded-xl border border-[#e4e4e7] p-4'>
+          <div className='bg-white rounded-xl border border-[#e4e4e7] p-4 shadow-sm'>
             <div className={styles.title}>
               <Icon name='web-page-fill' color='#09090B' size={16} />
               <span>分享</span>
