@@ -2,7 +2,7 @@
 
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
-import { Search } from 'lucide-react';
+import { Clock, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -26,6 +26,58 @@ interface SearchResultsProps {
   keyword: string;
 }
 
+// 搜索历史记录相关的常量和工具函数
+const SEARCH_HISTORY_KEY = 'channel_search_history';
+const MAX_HISTORY_LENGTH = 10;
+
+// 从 localStorage 获取搜索历史
+const getSearchHistory = (): string[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
+    return history ? JSON.parse(history) : [];
+  } catch {
+    return [];
+  }
+};
+
+// 保存搜索历史到 localStorage
+const saveSearchHistory = (history: string[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
+  } catch (error) {
+    console.error('保存搜索历史失败:', error);
+  }
+};
+
+// 添加搜索记录
+const addSearchHistory = (keyword: string) => {
+  if (!keyword.trim()) return;
+
+  const history = getSearchHistory();
+  // 移除重复的关键词
+  const filteredHistory = history.filter(item => item !== keyword.trim());
+  // 添加到开头
+  const newHistory = [keyword.trim(), ...filteredHistory].slice(
+    0,
+    MAX_HISTORY_LENGTH
+  );
+  saveSearchHistory(newHistory);
+};
+
+// 删除单条搜索记录
+const removeSearchHistory = (keyword: string) => {
+  const history = getSearchHistory();
+  const newHistory = history.filter(item => item !== keyword);
+  saveSearchHistory(newHistory);
+};
+
+// 清空所有搜索历史
+const clearSearchHistory = () => {
+  saveSearchHistory([]);
+};
+
 export default function SearchResults({
   keyword: initialKeyword,
 }: SearchResultsProps) {
@@ -35,7 +87,13 @@ export default function SearchResults({
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // 加载搜索历史
+  useEffect(() => {
+    setSearchHistory(getSearchHistory());
+  }, []);
 
   // 尝试自动聚焦输入框（在某些移动浏览器上可能不起作用）
   useEffect(() => {
@@ -78,11 +136,43 @@ export default function SearchResults({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!keyword.trim()) return;
+
+    // 保存搜索历史
+    addSearchHistory(keyword.trim());
+    setSearchHistory(getSearchHistory());
+
     setSearchKeyword(keyword);
     // 更新URL
     router.replace(
       `/mobile/channel2/search?keyword=${encodeURIComponent(keyword)}`
     );
+  };
+
+  // 点击搜索历史记录
+  const handleHistoryClick = (historyKeyword: string) => {
+    setKeyword(historyKeyword);
+    setSearchKeyword(historyKeyword);
+    // 移动到历史记录首位
+    addSearchHistory(historyKeyword);
+    setSearchHistory(getSearchHistory());
+    // 更新URL
+    router.replace(
+      `/mobile/channel2/search?keyword=${encodeURIComponent(historyKeyword)}`
+    );
+  };
+
+  // 删除单条历史记录
+  const handleRemoveHistory = (e: React.MouseEvent, historyKeyword: string) => {
+    e.stopPropagation();
+    removeSearchHistory(historyKeyword);
+    setSearchHistory(getSearchHistory());
+  };
+
+  // 清空所有历史记录
+  const handleClearHistory = () => {
+    clearSearchHistory();
+    setSearchHistory([]);
   };
 
   return (
@@ -154,12 +244,51 @@ export default function SearchResults({
             </div>
           </div>
         ) : !searchKeyword ? (
-          <div className='flex items-center justify-center h-full'>
-            <div className='text-center text-gray-500'>
-              <Search className='w-16 h-16 mx-auto mb-4 text-gray-300' />
-              <p className='text-lg mb-2'>搜索集合</p>
-              <p className='text-sm'>输入关键词搜索你想要的集合</p>
-            </div>
+          // 显示搜索历史记录
+          <div className='p-4'>
+            {searchHistory.length > 0 ? (
+              <div>
+                <div className='flex items-center justify-between mb-4'>
+                  <div className='flex items-center gap-2'>
+                    <Clock className='w-5 h-5 text-gray-400' />
+                    <h3 className='text-base font-medium text-gray-700'>
+                      搜索历史
+                    </h3>
+                  </div>
+                  <button
+                    onClick={handleClearHistory}
+                    className='text-sm text-gray-500 hover:text-gray-700'
+                  >
+                    清空
+                  </button>
+                </div>
+                <div className='space-y-2'>
+                  {searchHistory.map((item, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleHistoryClick(item)}
+                      className='flex items-center justify-between bg-white p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors'
+                    >
+                      <span className='text-gray-700 flex-1'>{item}</span>
+                      <button
+                        onClick={e => handleRemoveHistory(e, item)}
+                        className='ml-2 text-gray-400 hover:text-gray-600'
+                      >
+                        <X className='w-4 h-4' />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className='flex items-center justify-center h-full'>
+                <div className='text-center text-gray-500'>
+                  <Search className='w-16 h-16 mx-auto mb-4 text-gray-300' />
+                  <p className='text-lg mb-2'>搜索集合</p>
+                  <p className='text-sm'>输入关键词搜索你想要的集合</p>
+                </div>
+              </div>
+            )}
           </div>
         ) : collections.length === 0 ? (
           <div className='flex items-center justify-center h-full'>
