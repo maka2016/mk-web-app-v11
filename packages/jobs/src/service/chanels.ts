@@ -14,7 +14,7 @@ export const syncChannel = async (
   ChClassName: string,
 
   parentBit?: DatasheetItem,
-  env = 'prod',
+  env = 'production',
   option?: {
     needThumb?: boolean;
     needParent?: boolean;
@@ -128,7 +128,7 @@ export const syncChannel = async (
 
       return (
         pass &&
-        !!item.fields['内部唯一名称'] &&
+        !!item.fields['alias'] &&
         !!item.fields['显示名'] &&
         !!item.fields['语言']
       );
@@ -144,7 +144,7 @@ export const syncChannel = async (
         }) ?? [];
 
       // 提取内部唯一名称（bitTextRef 类型）
-      const alias = item.fields['内部唯一名称']?.value?.[0]?.text || '';
+      const alias = item.fields['alias']?.value?.[0]?.text || '';
 
       console.log('alias', alias);
       // const alias = aliasField?.[0]?.text || '';

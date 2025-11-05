@@ -1,31 +1,19 @@
 'use client';
 
 import Chanel2 from '@/app/mobile/channel2/page';
-import Home from '@/app/mobile/channel/page';
 import Mine from '@/app/mobile/mine/page';
 import Works from '@/app/mobile/works/page';
 import { getUid, request } from '@/services';
 import useIsMobile from '@/utils/use-mobile';
 import APPBridge from '@mk/app-bridge';
 import { API, cdnApi } from '@mk/services';
-import { Icon } from '@workspace/ui/components/Icon';
 import cls from 'classnames';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import styles from './index.module.scss';
 
 const beian: any = {
-  xueji: {
-    name: '码卡(广州)科技有限公司',
-    no1: '粤ICP备14001206号',
-    no2: '44030502004249',
-  },
   jiantie: {
-    name: '码卡(广州)科技有限公司',
-    no1: '粤ICP备14001206号',
-    no2: '44030502004249',
-  },
-  huiyao: {
     name: '码卡(广州)科技有限公司',
     no1: '粤ICP备14001206号',
     no2: '44030502004249',
@@ -33,8 +21,6 @@ const beian: any = {
 };
 
 const logos: Record<string, string> = {
-  huiyao: cdnApi('/cdn/webstore10/huiyao/huiyao_logo.png'),
-  xueji: cdnApi('/cdn/webstore10/xueji/xueji_logo2.png'),
   jiantie: cdnApi('/cdn/webstore10/jiantie/jiantie_logo2.png?v=1'),
 };
 
@@ -98,19 +84,11 @@ const TabLayout = (props: Props) => {
   }, []);
 
   const getTabs = () => {
-    if (false && appid === 'jiantie') {
-      return [
-        { label: '模板', key: 'home', component: Chanel2 },
-        { label: '作品', key: 'works', component: Works },
-        { label: '我的', key: 'mine', component: Mine },
-      ];
-    } else {
-      return [
-        { label: '模板', key: 'home', component: Home },
-        { label: '作品', key: 'works', component: Works },
-        { label: '我的', key: 'mine', component: Mine },
-      ];
-    }
+    return [
+      { label: '模板', key: 'home', component: Chanel2 },
+      { label: '作品', key: 'works', component: Works },
+      { label: '我的', key: 'mine', component: Mine },
+    ];
   };
 
   const toNotificationCenter = () => {
@@ -143,30 +121,6 @@ const TabLayout = (props: Props) => {
           className={cls([styles.tabContent, styles[appid]])}
           style={{ display: activeTab === index ? 'block' : 'none' }}
         >
-          {tab.key === 'home' && !isMiniProgram && (
-            <div className={styles.head}>
-              <img src={logos[appid]} alt='' className={styles.logo} />
-              <div className='flex items-center gap-3'>
-                {/* {(vipABTest !== 'work' || appid !== 'jiantie') && (
-                  <div
-                    className={styles.vip}
-                    onClick={() => navigateToVipPage()}
-                  >
-                    <img src={cdnApi('/cdn/webstore10/huiyao/icon_vip.png')} />
-                    <span> 企业版</span>
-                  </div>
-                )} */}
-                <div
-                  className={styles.message}
-                  onClick={() => toNotificationCenter()}
-                >
-                  <Icon name='remind1' size={20} />
-                  {unread > 0 && <div className={styles.num}>{unread}</div>}
-                </div>
-              </div>
-            </div>
-          )}
-
           <TabComponent
             storeChannelV1={storeChannelV1}
             active={activeTab === index}

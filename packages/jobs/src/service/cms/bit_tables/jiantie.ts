@@ -48,7 +48,7 @@ export const JTBitTables: BitTables = {
 
 export interface BitChannelItem {
   fields: {
-    内部唯一名称: bitTextRef;
+    alias: bitTextRef;
     显示名: bitTextRaw[];
     封面: bitFileRaw[];
     封面url: bitTextRaw[];
