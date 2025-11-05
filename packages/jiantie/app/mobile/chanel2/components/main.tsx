@@ -125,7 +125,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
         {loading ? (
           <div className='flex items-center justify-center h-full'>
             <div className='text-center'>
-              <div className='w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
+              <div className='w-12 h-12 border-4 border-pink-600 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
               <p className='text-gray-500'>加载中...</p>
             </div>
           </div>
@@ -211,22 +211,6 @@ export default function Main({ appid = 'jiantie' }: Props) {
             ))}
           </div>
         )}
-      </div>
-
-      {/* 底部操作栏 */}
-      <div className='flex items-center justify-between gap-4 p-4 bg-white border-t'>
-        <button
-          onClick={() => router.back()}
-          className='flex-1 px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors'
-        >
-          返回
-        </button>
-        <button
-          onClick={() => window.location.reload()}
-          className='flex-1 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors'
-        >
-          刷新数据
-        </button>
       </div>
     </div>
   );
