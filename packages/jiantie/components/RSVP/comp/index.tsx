@@ -231,9 +231,9 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           defaults[f.id] = [];
         } else if (f.type === 'guest_count') {
           if (f.splitAdultChild) {
-            defaults[f.id] = { adult: 0, child: 0 };
+            defaults[f.id] = { adult: 1, child: 0 };
           } else {
-            defaults[f.id] = { total: 0 };
+            defaults[f.id] = { total: 1 };
           }
         } else {
           defaults[f.id] = '';
@@ -651,8 +651,8 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
 
         {/* 公开链接：必须填写姓名 */}
         {!isInviteeLink && (
-          <div className='space-y-2 header bg-gray-50'>
-            <label className='block text-xs font-medium text-gray-900'>
+          <div className='space-y-1 header bg-gray-50'>
+            <label className='block text-xs font-medium text-gray-600'>
               您的姓名 <span className='text-red-500'>*</span>
             </label>
             <Input
@@ -660,13 +660,14 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
               placeholder='请输入您的姓名'
               value={guestName}
               onChange={e => setGuestName(e.target.value)}
+              className='h-9 border-blue-200'
             />
           </div>
         )}
         <div className='content'>
           {/* 您是否参加？ */}
-          <div>
-            <div className='text-xs font-medium text-gray-600 mb-1'>
+          <div className='space-y-1'>
+            <div className='text-xs font-medium text-gray-600'>
               您是否参加？
             </div>
             {/* 出席/不出席选择按钮 */}
@@ -680,13 +681,13 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                     'flex-1 h-10 rounded-lg font-medium',
                     !willAttend && 'border-2'
                   )}
-                  variant={willAttend === true ? 'default' : 'outline'}
+                  variant={willAttend === true ? 'black' : 'outline'}
                 >
                   参加
                 </Button>
                 <Button
                   size='lg'
-                  variant={willAttend === false ? 'default' : 'outline'}
+                  variant={willAttend === false ? 'black' : 'outline'}
                   disabled={submitting || (!isInviteeLink && !guestName.trim())}
                   onClick={() => handleSubmit(false)}
                   className='flex-1 h-10 rounded-lg font-medium border-2'
@@ -712,12 +713,12 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
 
           {/* 如果选择了出席，显示确认按钮 */}
           {willAttend === true && (
-            <div className='pt-2'>
+            <div className='pt-3'>
               <Button
                 size='lg'
                 disabled={submitting}
                 onClick={() => handleSubmit(true)}
-                className='w-full h-11 rounded-lg font-medium bg-gray-900 hover:bg-gray-800'
+                className='w-full h-10 rounded-lg font-medium bg-gray-900 hover:bg-gray-800'
               >
                 {submitting ? '提交中...' : '确认'}
               </Button>
