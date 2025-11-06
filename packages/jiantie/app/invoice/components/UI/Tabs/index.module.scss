@@ -5,10 +5,15 @@
 
   .tabsWrapper {
     box-shadow: 0px -1px 0px 0px rgba(0, 0, 0, 0.06) inset;
-
     display: flex;
-
     flex: 0 0 auto;
+    padding: 0 12px;
+    overflow-x: auto;
+
+    @media (min-width: 768px) {
+      padding: 0;
+      overflow-x: visible;
+    }
 
     .tabItem {
       padding: 12px 0px;
@@ -16,9 +21,15 @@
       line-height: 24px;
       color: rgba(0, 0, 0, 0.88);
       cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
 
       &:not(:first-child) {
-        margin-left: 24px;
+        margin-left: 16px;
+
+        @media (min-width: 768px) {
+          margin-left: 24px;
+        }
       }
 
       &:hover {
@@ -28,7 +39,6 @@
       &.active {
         color: rgba(21, 94, 239, 1);
         box-shadow: 0px -2px 0px 0px rgba(21, 94, 239, 1) inset;
-
         font-weight: var(--font-semibold);
       }
     }
@@ -38,5 +48,9 @@
     flex: 1;
     margin-top: 4px;
     padding: 12px 0;
+
+    @media (min-width: 768px) {
+      padding: 12px 0;
+    }
   }
 }

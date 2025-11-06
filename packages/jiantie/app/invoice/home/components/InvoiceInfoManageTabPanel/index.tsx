@@ -4,7 +4,7 @@ import styles from './index.module.scss';
 import cls from 'classnames';
 import React, { useEffect, useState } from 'react';
 import EmptyContent from '@/app/invoice/components/UI/EmptyContent';
-import { Button, ConfigProvider, Modal, TableProps } from 'antd';
+import { Button } from '@workspace/ui/components/button';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   getInvoiceTypeShow,
@@ -21,7 +21,15 @@ import {
 } from '@/services/invoice/invoiceInfo';
 import Radio from '@/app/invoice/components/UI/Radio';
 import toast from 'react-hot-toast';
-import Table from '@/app/invoice/components/PC/Table';
+import Table, { ColumnType } from '@/app/invoice/components/PC/Table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@workspace/ui/components/dialog';
 
 interface Props {}
 
@@ -33,10 +41,10 @@ const InvoiceInfoManageTabPanel: React.FC<Props> = props => {
   const [curDataPage, setCurDataPage] = useState(0);
   const [pageNum, setPageNum] = useState(0);
   const [pageSize, setPageSize] = useState(20);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<InvoiceInfo | null>(null);
 
-  const [modal, contextHolder] = Modal.useModal();
-
-  const columns: TableProps<InvoiceInfo>['columns'] = [
+  const columns: ColumnType<InvoiceInfo>[] = [
     {
       title: '设为默认',
       dataIndex: 'is_default',
@@ -129,12 +137,6 @@ const InvoiceInfoManageTabPanel: React.FC<Props> = props => {
       key: 'options',
       render: (value, record, index) => {
         const className = cls(styles.optsBtn, styles.effectiveBtn);
-        const fapiaoCls = cls(
-          styles.optsBtn,
-          record.status === InvoiceStatus.PASS && styles.effectiveBtn
-        );
-        const fapiaoDisabled = !(record.status === InvoiceStatus.PASS);
-
         const editCls = cls(
           styles.optsBtn,
           (record.status === InvoiceStatus.PASS ||
@@ -148,12 +150,8 @@ const InvoiceInfoManageTabPanel: React.FC<Props> = props => {
 
         return (
           <div className={styles.optsCell}>
-            {/* <Button className={fapiaoCls} disabled={fapiaoDisabled} color="default" variant="link">
-              去开发票
-            </Button> */}
             <Button
               className={className}
-              color='default'
               variant='link'
               onClick={() => {
                 router.push(`${pathname}/details/${record.id}`);
@@ -164,7 +162,6 @@ const InvoiceInfoManageTabPanel: React.FC<Props> = props => {
             <Button
               className={editCls}
               disabled={editDisabled}
-              color='default'
               variant='link'
               onClick={() => {
                 router.push(`${pathname}/details?edit_id=${record.id}`);
@@ -175,59 +172,9 @@ const InvoiceInfoManageTabPanel: React.FC<Props> = props => {
             <Button
               className={className}
               onClick={async () => {
-                const confirm = await modal.confirm({
-                  title: '删除信息',
-                  content: `确定删除该${getInvoiceTypeShow(record.invoice_type)}信息吗?`,
-                  maskClosable: true,
-                  styles: {
-                    content: {
-                      borderRadius: 6,
-                      padding: 24,
-                    },
-                  },
-                  centered: true,
-                  icon: (
-                    <Icon
-                      name='warn'
-                      color='rgba(255, 77, 79, 1)'
-                      size={22}
-                      style={{ marginRight: 16 }}
-                    />
-                  ),
-                  okText: '删除',
-                  cancelText: '取消',
-                  okButtonProps: {
-                    danger: true,
-                    autoInsertSpace: false,
-                  },
-
-                  cancelButtonProps: {
-                    color: 'default',
-                    variant: 'outlined',
-                    autoInsertSpace: false,
-                  },
-
-                  footer: (_, { OkBtn, CancelBtn }) => (
-                    <div style={{ marginTop: 16 }}>
-                      <CancelBtn />
-                      <OkBtn />
-                    </div>
-                  ),
-                });
-
-                if (!confirm) return;
-                const res = await deleteInvoiceInfo(record.id);
-                if (!res.success) return toast.error('删除失败');
-                toast.success('删除成功');
-
-                getInvoiceInfos(
-                  (invoiceInfos?.length ?? 0) <= 1
-                    ? curDataPage - 1
-                    : curDataPage
-                );
-                syncPageNum();
+                setDeleteTarget(record);
+                setDeleteDialogOpen(true);
               }}
-              color='default'
               variant='link'
             >
               删除
@@ -258,9 +205,47 @@ const InvoiceInfoManageTabPanel: React.FC<Props> = props => {
   useEffect(() => {
     initData();
   }, []);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    const res = await deleteInvoiceInfo(deleteTarget.id);
+    if (!res.success) return toast.error('删除失败');
+    toast.success('删除成功');
+    setDeleteDialogOpen(false);
+    setDeleteTarget(null);
+    getInvoiceInfos(
+      (invoiceInfos?.length ?? 0) <= 1 ? curDataPage - 1 : curDataPage
+    );
+    syncPageNum();
+  };
+
   return (
     <div className={styles.main}>
-      {contextHolder}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>删除信息</DialogTitle>
+            <DialogDescription>
+              确定删除该{deleteTarget && getInvoiceTypeShow(deleteTarget.invoice_type)}信息吗?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setDeleteTarget(null);
+              }}
+            >
+              取消
+            </Button>
+            <Button variant='destructive' onClick={handleDelete}>
+              删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className={styles.tipsBlock}>
         <div className={styles.tipsTitle}>温馨提示</div>
         <p className={styles.tipsContent}>
@@ -290,7 +275,6 @@ const InvoiceInfoManageTabPanel: React.FC<Props> = props => {
           />
           <div className='text-center'>
             <Button
-              type='primary'
               onClick={() => {
                 router.push(`${pathname}/details`);
               }}
@@ -303,7 +287,6 @@ const InvoiceInfoManageTabPanel: React.FC<Props> = props => {
         <>
           <div>
             <Button
-              type='primary'
               onClick={() => {
                 router.push(`${pathname}/details`);
               }}
@@ -312,22 +295,20 @@ const InvoiceInfoManageTabPanel: React.FC<Props> = props => {
             </Button>
           </div>
           <div>
-            <ConfigProvider>
-              <Table<InvoiceInfo>
-                columns={columns}
-                dataSource={invoiceInfos}
-                rowKey={'id'}
-                size='small'
-                pagination={{
-                  pageSize: pageSize,
-                  hideOnSinglePage: true,
-                  total: pageSize * pageNum,
-                  onChange: (page, pageSize) => {
-                    getInvoiceInfos(page);
-                  },
-                }}
-              />
-            </ConfigProvider>
+            <Table<InvoiceInfo>
+              columns={columns}
+              dataSource={invoiceInfos}
+              rowKey={'id'}
+              size='small'
+              pagination={{
+                pageSize: pageSize,
+                hideOnSinglePage: true,
+                total: pageSize * pageNum,
+                onChange: (page, pageSize) => {
+                  getInvoiceInfos(page);
+                },
+              }}
+            />
           </div>
         </>
       )}

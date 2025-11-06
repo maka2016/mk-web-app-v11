@@ -2,60 +2,64 @@
 import { Icon } from '@workspace/ui/components/Icon';
 import styles from './index.module.scss';
 import cls from 'classnames';
-import React, { useEffect, useState } from 'react';
-import { Breadcrumb } from 'antd';
-import { ItemType } from 'antd/es/breadcrumb/Breadcrumb';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-interface Props {
-  breadcrumbItems: ItemType[];
+export interface BreadcrumbItem {
+  title: string | React.ReactNode;
+  path?: string;
+  href?: string;
+}
 
+interface Props {
+  breadcrumbItems: BreadcrumbItem[];
   children?: React.ReactNode;
 }
 
 export const SecondaryLayoutContext = React.createContext({
-  breadcrumbItems: [] as ItemType[],
-  baseBreadcrumbItems: [] as ItemType[],
-  setBreadcrumbItems: (items: ItemType[]) => {},
-
-  pushBreadcrumbItem: (item: ItemType) => {},
-
+  breadcrumbItems: [] as BreadcrumbItem[],
+  baseBreadcrumbItems: [] as BreadcrumbItem[],
+  setBreadcrumbItems: (items: BreadcrumbItem[]) => {},
+  pushBreadcrumbItem: (item: BreadcrumbItem) => {},
   popBreadcrumbItem: () => {},
-
   setBreadcrumbCurrentTitle: (title: string) => {},
 });
 
 const SecondaryLayout: React.FC<Props> = props => {
   const router = useRouter();
-
-  const [items, setItems] = useState<ItemType[]>(props.breadcrumbItems);
-
+  const [items, setItems] = useState<BreadcrumbItem[]>(props.breadcrumbItems);
   const baseBreadcrumbItems = props.breadcrumbItems;
-
   const lastItem = items.length > 1 ? items[items.length - 1] : undefined;
+
   return (
     <div className={styles.layout}>
-      <Breadcrumb
-        className={styles.breadcrumbWrapper}
-        items={items}
-        itemRender={(route, params) => {
+      <div className={styles.breadcrumbWrapper}>
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
           return (
-            <div
-              className={cls(
-                styles.breadcrumbItem,
-                lastItem?.title === route.title && styles.current
+            <React.Fragment key={index}>
+              <div
+                className={cls(
+                  styles.breadcrumbItem,
+                  isLast && styles.current
+                )}
+                onClick={() => {
+                  if (item.path || item.href) {
+                    router.push(item.path || item.href || '');
+                  }
+                }}
+              >
+                {item.title}
+              </div>
+              {!isLast && (
+                <span className={styles.separator}>
+                  <Icon name='right' size={12} />
+                </span>
               )}
-              onClick={() => {
-                if (route.path) {
-                  router.push(route.path);
-                }
-              }}
-            >
-              {route.title}
-            </div>
+            </React.Fragment>
           );
-        }}
-      />
+        })}
+      </div>
 
       <SecondaryLayoutContext.Provider
         value={{
@@ -72,9 +76,8 @@ const SecondaryLayout: React.FC<Props> = props => {
               ];
             });
           },
-
-          pushBreadcrumbItem: items => {
-            setItems(currentItems => [...currentItems, items]);
+          pushBreadcrumbItem: item => {
+            setItems(currentItems => [...currentItems, item]);
           },
           popBreadcrumbItem: () => {
             setItems(currentItems => currentItems.slice(0, -1));

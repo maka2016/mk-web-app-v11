@@ -27,6 +27,7 @@ import cls from 'classnames';
 import dayjs from 'dayjs';
 import { observer } from 'mobx-react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import styles from './index.module.scss';
@@ -66,6 +67,7 @@ const Mine = (props: Props) => {
     isSVip,
   } = useStore();
   const [isApp, setIsApp] = useState(false);
+  const router = useRouter();
 
   const [isMiniProgram, setIsMiniProgram] = useState(false);
 
@@ -186,8 +188,15 @@ const Mine = (props: Props) => {
   };
 
   const toInvoice = () => {
-    // https://www.wenzhuangyuan.cn/invoice/home
-    setInvoiceShow(true);
+    if (APPBridge.judgeIsInApp()) {
+      APPBridge.navToPage({
+        url: `${location.origin}/invoice/home?appid=${appid}`,
+        type: 'URL',
+      });
+    } else {
+      router.push(`/invoice/home?appid=${appid}`);
+    }
+    // setInvoiceShow(true);
   };
 
   const toTerms = () => {
