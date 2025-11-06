@@ -1,5 +1,4 @@
 // import { Suspense } from 'react';
-import Main from './components/main';
 
 // export default async function Page({
 //   searchParams,
@@ -16,5 +15,6 @@ import Main from './components/main';
 // }
 
 export default function Page(props: any) {
-  return <Main {...props} />;
+  // return <Main {...props} />;
+  return null;
 }
