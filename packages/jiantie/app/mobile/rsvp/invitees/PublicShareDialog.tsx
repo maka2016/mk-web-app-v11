@@ -14,10 +14,13 @@ import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { cdnApi } from '@mk/services';
 import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
+import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Input } from '@workspace/ui/components/input';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import { Textarea } from '@workspace/ui/components/textarea';
+import { ChevronLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import styles from './share.module.scss';
@@ -54,6 +57,7 @@ export function PublicShareDialog({
   const [showPictureSelector, setShowPictureSelector] = useState(false);
   const [showCopyTip, setShowCopyTip] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
 
   const { toPosterShare, toVideoShare } = useShareNavigation();
   const appid = getAppId();
@@ -293,208 +297,240 @@ export function PublicShareDialog({
     <>
       <ResponsiveDialog
         fullHeight={true}
+        handleOnly={true}
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        title='分享邀请链接'
       >
-        <div className='p-4 space-y-4 bg-gray-50 h-full'>
-          {/* 编辑标题、描述和封面 */}
-          <div className='bg-white rounded-xl border border-[#e4e4e7] p-4 shadow-sm'>
-            <div className='flex items-center justify-between mb-3'>
-              <div className={styles.title}>
-                <span>编辑标题、描述和封面</span>
-              </div>
-            </div>
+        <div className='h-full'>
+          <div className='bg-white header text-base flex items-center justify-between px-4 py-2 border-b border-gray-200'>
+            <span
+              className='flex items-center gap-2 text-xs'
+              onClick={() => {
+                onOpenChange(false);
+              }}
+            >
+              <ChevronLeft size={16} />
+              <span>返回</span>
+            </span>
+            <span className='font-semibold'>分享邀请链接</span>
+            <Button
+              size={'sm'}
+              variant={'link'}
+              onClick={() => {
+                onOpenChange(false);
 
-            {/* 标题输入 */}
-            <div className='mb-3'>
-              <div className='relative'>
-                <Input
-                  value={shareTitle}
-                  onChange={e => setShareTitle(e.target.value)}
-                  onBlur={() => updateTitle(shareTitle)}
-                  className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-sm'
-                  placeholder='请输入标题'
-                  maxLength={10}
-                />
-                <div className='absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400'>
-                  {shareTitle.length}/10
-                </div>
-              </div>
-            </div>
-
-            {/* 封面和描述 */}
-            <div className='flex gap-3'>
-              {/* 封面 */}
-              <div className='relative flex-shrink-0'>
-                <input
-                  className='hidden'
-                  ref={inputRef}
-                  onChange={onChangeUpload}
-                  type='file'
-                  accept='image/*'
-                  multiple={false}
-                  title='封面上传'
-                />
-                <div className='w-24 h-24 rounded-lg bg-gray-200 overflow-hidden'>
-                  {shareCover ? (
-                    <img
-                      src={cdnApi(shareCover)}
-                      alt='封面'
-                      className='w-full h-full object-cover'
-                    />
-                  ) : (
-                    <div className='w-full h-full flex items-center justify-center text-xs text-gray-400'>
-                      封面
-                    </div>
-                  )}
-                </div>
-                <div
-                  className='absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs text-center py-1 rounded-b-lg cursor-pointer'
-                  onClick={async () => {
-                    if (await canUseRnChoosePic()) {
-                      showRnChoosePic((url?: string) => {
-                        if (url) {
-                          setCropImageUrl(url);
-                          setShowCrop(true);
-                        }
-                      });
-                    } else if (APPBridge.judgeIsInApp()) {
-                      setShowPictureSelector(true);
-                    } else {
-                      inputRef.current?.click();
-                    }
-                  }}
-                >
-                  更换封面
-                </div>
-              </div>
-
-              {/* 描述 */}
-              <div className='flex-1 relative'>
-                <Textarea
-                  value={shareDesc}
-                  onChange={e => setShareDesc(e.target.value)}
-                  onBlur={() => updateDesc(shareDesc)}
-                  className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-sm min-h-[96px] resize-none'
-                  placeholder='请输入描述'
-                  maxLength={60}
-                />
-                <div className='absolute bottom-2 right-2 text-xs text-gray-400'>
-                  {shareDesc.length}/60
-                </div>
-              </div>
-            </div>
+                if (APPBridge.judgeIsInApp()) {
+                  APPBridge.navToPage({
+                    url: 'maka://home/activity/activityPage',
+                    type: 'NATIVE',
+                  });
+                } else {
+                  router.push('/mobile/home');
+                }
+              }}
+            >
+              回首页
+            </Button>
           </div>
+          <div className='p-4 space-y-4 bg-gray-50 '>
+            {/* 编辑标题、描述和封面 */}
+            <div className='bg-white rounded-xl border border-gray-100 p-4 shadow-sm'>
+              <div className='flex items-center justify-between mb-3'>
+                <div className={styles.title}>
+                  <span>编辑标题、描述和封面</span>
+                </div>
+              </div>
 
-          {/* 分享功能 */}
-          <div className='bg-white rounded-xl border border-[#e4e4e7] p-4 shadow-sm'>
-            <div className={styles.title}>
-              <Icon name='web-page-fill' color='#09090B' size={16} />
-              <span>分享</span>
+              {/* 标题输入 */}
+              <div className='mb-3'>
+                <div className='relative'>
+                  <Input
+                    value={shareTitle}
+                    onChange={e => setShareTitle(e.target.value)}
+                    onBlur={() => updateTitle(shareTitle)}
+                    className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-sm'
+                    placeholder='请输入标题'
+                    maxLength={10}
+                  />
+                  <div className='absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400'>
+                    {shareTitle.length}/10
+                  </div>
+                </div>
+              </div>
+
+              {/* 封面和描述 */}
+              <div className='flex gap-3'>
+                {/* 封面 */}
+                <div className='relative flex-shrink-0'>
+                  <input
+                    className='hidden'
+                    ref={inputRef}
+                    onChange={onChangeUpload}
+                    type='file'
+                    accept='image/*'
+                    multiple={false}
+                    title='封面上传'
+                  />
+                  <div className='w-24 h-24 rounded-lg bg-gray-200 overflow-hidden'>
+                    {shareCover ? (
+                      <img
+                        src={cdnApi(shareCover)}
+                        alt='封面'
+                        className='w-full h-full object-cover'
+                      />
+                    ) : (
+                      <div className='w-full h-full flex items-center justify-center text-xs text-gray-400'>
+                        封面
+                      </div>
+                    )}
+                  </div>
+                  <div
+                    className='absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs text-center py-1 rounded-b-lg cursor-pointer'
+                    onClick={async () => {
+                      if (await canUseRnChoosePic()) {
+                        showRnChoosePic((url?: string) => {
+                          if (url) {
+                            setCropImageUrl(url);
+                            setShowCrop(true);
+                          }
+                        });
+                      } else if (APPBridge.judgeIsInApp()) {
+                        setShowPictureSelector(true);
+                      } else {
+                        inputRef.current?.click();
+                      }
+                    }}
+                  >
+                    更换封面
+                  </div>
+                </div>
+
+                {/* 描述 */}
+                <div className='flex-1 relative'>
+                  <Textarea
+                    value={shareDesc}
+                    onChange={e => setShareDesc(e.target.value)}
+                    onBlur={() => updateDesc(shareDesc)}
+                    className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-sm min-h-[96px] resize-none'
+                    placeholder='请输入描述'
+                    maxLength={60}
+                  />
+                  <div className='absolute bottom-2 right-2 text-xs text-gray-400'>
+                    {shareDesc.length}/60
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className={styles.shareTypes}>
-              {/* 微信分享 */}
-              {isApp && !isMiniP && (
+
+            {/* 分享功能 */}
+            <div className='bg-white rounded-xl border border-gray-100 p-4 shadow-sm'>
+              <div className={styles.title}>
+                <Icon name='web-page-fill' color='#09090B' size={16} />
+                <span>分享</span>
+              </div>
+              <div className={styles.shareTypes}>
+                {/* 微信分享 */}
+                {isApp && !isMiniP && (
+                  <BehaviorBox
+                    behavior={{
+                      object_type:
+                        mode === 'invitee'
+                          ? 'rsvp_share_wechat_btn'
+                          : 'share_wechat_btn',
+                      object_id: worksId,
+                    }}
+                    className={styles.shareItem}
+                    onClick={async () => {
+                      if (executingKey) return;
+                      setExecutingKey('wechat');
+                      try {
+                        await shareToWechat('wechat');
+                      } finally {
+                        setExecutingKey(null);
+                      }
+                    }}
+                  >
+                    <img
+                      src='https://img2.maka.im/cdn/webstore10/jiantie/icon_weixin.png'
+                      alt='微信'
+                    />
+                    <span>微信</span>
+                  </BehaviorBox>
+                )}
+
+                {/* 复制链接 */}
                 <BehaviorBox
                   behavior={{
                     object_type:
                       mode === 'invitee'
-                        ? 'rsvp_share_wechat_btn'
-                        : 'share_wechat_btn',
+                        ? 'rsvp_share_copy_link_btn'
+                        : 'share_copy_link_btn',
                     object_id: worksId,
                   }}
                   className={styles.shareItem}
-                  onClick={async () => {
-                    if (executingKey) return;
-                    setExecutingKey('wechat');
-                    try {
-                      await shareToWechat('wechat');
-                    } finally {
-                      setExecutingKey(null);
-                    }
+                  onClick={() => {
+                    handleCopyLink(shareLink);
                   }}
                 >
                   <img
-                    src='https://img2.maka.im/cdn/webstore10/jiantie/icon_weixin.png'
-                    alt='微信'
+                    src='https://img2.maka.im/cdn/webstore10/jiantie/icon_lianjie.png'
+                    alt='复制链接'
                   />
-                  <span>微信</span>
+                  <span>复制链接</span>
                 </BehaviorBox>
-              )}
 
-              {/* 复制链接 */}
-              <BehaviorBox
-                behavior={{
-                  object_type:
-                    mode === 'invitee'
-                      ? 'rsvp_share_copy_link_btn'
-                      : 'share_copy_link_btn',
-                  object_id: worksId,
-                }}
-                className={styles.shareItem}
-                onClick={() => {
-                  handleCopyLink(shareLink);
-                }}
-              >
-                <img
-                  src='https://img2.maka.im/cdn/webstore10/jiantie/icon_lianjie.png'
-                  alt='复制链接'
-                />
-                <span>复制链接</span>
-              </BehaviorBox>
+                {/* 长图分享（仅公开分享且支持） */}
+                {mode === 'public' && posterSupport && (
+                  <BehaviorBox
+                    behavior={{
+                      object_type: 'share_poster_btn',
+                      object_id: worksId,
+                    }}
+                    className={styles.shareItem}
+                    onClick={async () => {
+                      if (executingKey) return;
+                      setExecutingKey('poster');
+                      try {
+                        await sharePoster();
+                      } finally {
+                        setExecutingKey(null);
+                      }
+                    }}
+                  >
+                    <img
+                      src='https://res.maka.im/cdn/webstore10/jiantie/icon_poster.png'
+                      alt='长图'
+                    />
+                    <span>长图</span>
+                  </BehaviorBox>
+                )}
 
-              {/* 长图分享（仅公开分享且支持） */}
-              {mode === 'public' && posterSupport && (
-                <BehaviorBox
-                  behavior={{
-                    object_type: 'share_poster_btn',
-                    object_id: worksId,
-                  }}
-                  className={styles.shareItem}
-                  onClick={async () => {
-                    if (executingKey) return;
-                    setExecutingKey('poster');
-                    try {
-                      await sharePoster();
-                    } finally {
-                      setExecutingKey(null);
-                    }
-                  }}
-                >
-                  <img
-                    src='https://res.maka.im/cdn/webstore10/jiantie/icon_poster.png'
-                    alt='长图'
-                  />
-                  <span>长图</span>
-                </BehaviorBox>
-              )}
-
-              {/* 导出视频（仅公开分享且支持） */}
-              {mode === 'public' && videoSupport && (
-                <BehaviorBox
-                  behavior={{
-                    object_type: 'share_export_video_btn',
-                    object_id: worksId,
-                  }}
-                  className={styles.shareItem}
-                  onClick={async () => {
-                    if (executingKey) return;
-                    setExecutingKey('video');
-                    try {
-                      await shareVideo();
-                    } finally {
-                      setExecutingKey(null);
-                    }
-                  }}
-                >
-                  <img
-                    src='https://img2.maka.im/cdn/webstore10/jiantie/icon_video_v2.png'
-                    alt='导出视频'
-                  />
-                  <span>导出视频</span>
-                </BehaviorBox>
-              )}
+                {/* 导出视频（仅公开分享且支持） */}
+                {mode === 'public' && videoSupport && (
+                  <BehaviorBox
+                    behavior={{
+                      object_type: 'share_export_video_btn',
+                      object_id: worksId,
+                    }}
+                    className={styles.shareItem}
+                    onClick={async () => {
+                      if (executingKey) return;
+                      setExecutingKey('video');
+                      try {
+                        await shareVideo();
+                      } finally {
+                        setExecutingKey(null);
+                      }
+                    }}
+                  >
+                    <img
+                      src='https://img2.maka.im/cdn/webstore10/jiantie/icon_video_v2.png'
+                      alt='导出视频'
+                    />
+                    <span>导出视频</span>
+                  </BehaviorBox>
+                )}
+              </div>
             </div>
           </div>
         </div>

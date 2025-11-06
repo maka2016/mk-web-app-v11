@@ -750,9 +750,8 @@ const RsvpSetting = ({ formConfigId }: { formConfigId: string }) => {
       <ResponsiveDialog
         isOpen={showEditDialog}
         onOpenChange={setShowEditDialog}
-        contentProps={{
-          className: 'h-screen overflow-hidden rounded-none',
-        }}
+        handleOnly={true}
+        fullHeight={true}
       >
         {config ? (
           <RSVPConfigPanel onClose={() => setShowEditDialog(false)} />
