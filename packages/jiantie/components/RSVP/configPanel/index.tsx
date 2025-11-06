@@ -83,6 +83,8 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
   const [collectForm, setCollectForm] = useState<boolean>(
     config?.collect_form ?? fields.length > 0
   );
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // 同步 collectForm 状态与 config.collect_form
   useEffect(() => {
@@ -137,6 +139,46 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
         return f;
       })
     );
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newFields = [...fields];
+    const draggedField = newFields[draggedIndex];
+    newFields.splice(draggedIndex, 1);
+    newFields.splice(dropIndex, 0, draggedField);
+    setFields(newFields);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
 
   const handleSaveClick = async () => {
@@ -260,6 +302,13 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
                       key={f.id}
                       field={f}
                       index={index}
+                      isDragging={draggedIndex === index}
+                      isDragOver={dragOverIndex === index}
+                      onDragStart={e => handleDragStart(e, index)}
+                      onDragOver={e => handleDragOver(e, index)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={e => handleDrop(e, index)}
+                      onDragEnd={handleDragEnd}
                       onToggleEnabled={(id, enabled) => {
                         updateField(id, { enabled });
                       }}
@@ -352,6 +401,13 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
 interface FieldItemProps {
   field: RSVPField;
   index: number;
+  isDragging?: boolean;
+  isDragOver?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: () => void;
+  onDrop?: (e: React.DragEvent) => void;
+  onDragEnd?: () => void;
   onToggleEnabled: (id: string, enabled: boolean) => void;
   onToggleSplitAdultChild: (id: string, split: boolean) => void;
   onToggleRequired: (id: string, required: boolean) => void;
@@ -359,6 +415,13 @@ interface FieldItemProps {
 
 function FieldItem({
   field,
+  isDragging = false,
+  isDragOver = false,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
   onToggleEnabled,
   onToggleSplitAdultChild,
   onToggleRequired,
@@ -373,10 +436,28 @@ function FieldItem({
   };
 
   return (
-    <div className='border-2 border-[#e4e4e7] rounded-lg bg-white'>
+    <div
+      className={cls(
+        'border-2 rounded-lg bg-white transition-all',
+        isDragOver
+          ? 'border-[#3358D4] border-dashed bg-[#E6F0FF]'
+          : 'border-[#e4e4e7]',
+        isDragging && 'opacity-50'
+      )}
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+    >
       <div className='px-3 py-2 flex items-center gap-3'>
         {/* 拖拽手柄 */}
-        <div className='cursor-grab active:cursor-grabbing text-gray-400'>
+        <div
+          className='cursor-grab active:cursor-grabbing text-gray-400 touch-none flex-shrink-0'
+          onMouseDown={e => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
+        >
           <GripVertical size={20} />
         </div>
 
