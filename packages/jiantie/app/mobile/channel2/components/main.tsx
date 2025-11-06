@@ -36,6 +36,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
         const data = await trpc.channel.getChannels.query({
           appid,
           locale: 'zh-CN',
+          env: 'production',
         });
         setChannels(data);
       } catch (err) {
@@ -174,13 +175,22 @@ export default function Main({ appid = 'jiantie' }: Props) {
                           }}
                         >
                           {child.thumb_path ? (
-                            <div className='w-12 h-12 relative'>
-                              <Image
+                            <div className='w-12 h-12 relative  overflow-hidden'>
+                              {/* <Image
                                 src={cdnApi(child.thumb_path)}
                                 alt={child.display_name}
                                 width={48}
                                 height={48}
-                                className='object-cover'
+                                style={{ objectFit: 'cover' }}
+                                className='object-contain'
+                              /> */}
+                              <img
+                                src={`${cdnApi(child.thumb_path)}`}
+                                alt={child.display_name}
+                                width={48}
+                                height={48}
+                                style={{ objectFit: 'cover' }}
+                                className='object-contain'
                               />
                             </div>
                           ) : (

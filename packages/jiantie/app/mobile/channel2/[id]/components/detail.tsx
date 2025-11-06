@@ -3,7 +3,6 @@
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
 import { ChevronRight, Search } from 'lucide-react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import StatusBar from '../../../../../components/StatusBar';
@@ -132,7 +131,7 @@ export default function Detail({ channelId }: DetailProps) {
       <StatusBar />
       {/* 顶部导航栏 */}
       <div>
-        <div className='bg-white flex items-center justify-between px-4 py-3'>
+        <div className='bg-white flex items-center justify-between px-4 py-3 mb-3'>
           {/* 左侧：返回按钮 + 频道信息 */}
           <div className='flex items-center space-x-3 flex-1'>
             <button
@@ -174,7 +173,7 @@ export default function Detail({ channelId }: DetailProps) {
 
         {/* 三级热词标签 */}
         {thirdLevelKeywords.length > 1 && (
-          <div className='p-3 pb-0  overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
+          <div className='p-3 pt-0 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
             <div className='flex space-x-2'>
               {thirdLevelKeywords.map(keyword => (
                 <button
@@ -187,7 +186,10 @@ export default function Detail({ channelId }: DetailProps) {
                     fontSize: '16px',
                     // fontWeight: 'bold',
                     borderRadius: '75px',
-                    border: '1px solid #FFF',
+                    border:
+                      selectedKeywordId != keyword.id
+                        ? '1px solid #FFF'
+                        : 'none',
                     boxShadow:
                       '0 1px 2px -1px rgba(0, 0, 0, 0.10), 0 1px 3px 0 rgba(0, 0, 0, 0.10)',
                   }}
@@ -215,7 +217,7 @@ export default function Detail({ channelId }: DetailProps) {
             </div>
           </div>
         ) : (
-          <div className='pt-3 space-y-6'>
+          <div className=' space-y-6'>
             {fourthLevelFloors.map(floor => {
               const isSingleFloor = fourthLevelFloors.length === 1;
               const isExpanded = expandedFloors.has(floor.id);
@@ -286,11 +288,10 @@ export default function Detail({ channelId }: DetailProps) {
                             {/* 集合缩略图 */}
                             <div className='aspect-[176/236] bg-gradient-to-br from-gray-100 to-gray-50 relative'>
                               {collection.thumb_path ? (
-                                <Image
+                                <img
                                   src={cdnApi(collection.thumb_path)}
                                   alt={collection.display_name}
-                                  fill
-                                  className='object-cover'
+                                  className='object-cover w-full h-full absolute inset-0'
                                 />
                               ) : (
                                 <div className='flex items-center justify-center h-full'>

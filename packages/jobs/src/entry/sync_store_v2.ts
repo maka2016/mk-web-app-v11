@@ -9,28 +9,28 @@ const buildJStoreV2 = async () => {
     JTBitTables['二级-频道'],
     '二级频道',
     JTBitTables['一级-栏目'],
-    'prod',
+    'production',
     { needThumb: true, needParent: true }
   );
   await syncChannel(
     JTBitTables['三级-热词'],
     '三级热词',
     JTBitTables['二级-频道'],
-    'prod'
+    'production'
   );
 
   await syncChannel(
     JTBitTables['四级-楼层'],
     '四级楼层',
     JTBitTables['三级-热词'],
-    'prod'
+    'production'
   );
 
   await syncChannel(
     JTBitTables['五级-集合'],
     '五级集合',
     JTBitTables['四级-楼层'],
-    'prod',
+    'production',
     {
       needThumb: true,
       needTemplate: true,
