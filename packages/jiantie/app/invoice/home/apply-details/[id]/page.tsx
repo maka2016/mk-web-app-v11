@@ -1,17 +1,10 @@
 'use client';
-import {
-  Breadcrumb,
-  Button,
-  ConfigProvider,
-  Form,
-  Image,
-  TableProps,
-} from 'antd';
+import { Button } from '@workspace/ui/components/button';
 import styles from './index.module.scss';
 import { Icon } from '@workspace/ui/components/Icon';
 import cls from 'classnames';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import { useContext, useEffect, useLayoutEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import TextTips from '../../../components/UI/TextTips';
@@ -28,7 +21,6 @@ import {
 import { SecondaryLayoutContext } from '@/app/invoice/components/PC/Layout/SecondaryLayout';
 import OrderTable from '@/app/invoice/order/components/OrderTable';
 import EmptyContent from '@/app/invoice/components/UI/EmptyContent';
-import Table from '@/app/invoice/components/PC/Table';
 import { InvoiceInfo, InvoiceType } from '@/types/invoice';
 import { getInvoiceInfo } from '@/services/invoice/invoiceInfo';
 
@@ -106,7 +98,7 @@ export default function Details() {
             {applyInvoiceInfo.status == ApplyInvoiceInfoStatus.不通过 ? (
               <TextTips
                 type='error'
-                text={`很抱歉，您的发票审核不通过，问题描述为“${applyInvoiceInfo.reason ?? ''}”。您可以在本页面中修改申请表单并重新提交。`}
+                text={`很抱歉，您的发票审核不通过，问题描述为"${applyInvoiceInfo.reason ?? ''}"。您可以在本页面中修改申请表单并重新提交。`}
               />
             ) : (
               <TextTips text={statusText[applyInvoiceInfo.status]} />
@@ -134,77 +126,72 @@ export default function Details() {
             </span>
           </span>
         </div>
-        <ConfigProvider
-          theme={{
-            components: {
-              Form: {
-                labelColor: 'rgba(0, 0, 0, 0.6)',
-                labelHeight: 22,
-              },
-            },
-          }}
-        >
-          <Form
-            colon={false}
-            labelCol={{
-              style: {
-                display: 'flex',
-                justifyContent: 'end',
-                alignItems: 'center',
-                width: 120,
-                height: 22,
-              },
-            }}
-          >
-            <FormItemsBlock title='发票信息' style={{ marginTop: 24 }}>
-              <Form.Item label={'发票抬头'}>
-                {invoiceInfo?.invoice_title}
-              </Form.Item>
-              <Form.Item label={'税号'}>{invoiceInfo?.tax_no}</Form.Item>
+        <div className='space-y-4'>
+          <FormItemsBlock title='发票信息' style={{ marginTop: 24 }}>
+            <div className='space-y-4'>
+              <div className='flex items-center gap-4'>
+                <label className='text-right w-[120px]'>发票抬头</label>
+                <div>{invoiceInfo?.invoice_title}</div>
+              </div>
+              <div className='flex items-center gap-4'>
+                <label className='text-right w-[120px]'>税号</label>
+                <div>{invoiceInfo?.tax_no}</div>
+              </div>
               {invoiceInfo?.invoice_type === InvoiceType.专用 && (
                 <>
-                  <Form.Item label={'公司注册地址'}>
-                    {invoiceInfo?.address}
-                  </Form.Item>
-                  <Form.Item label={'公司注册电话'}>
-                    {invoiceInfo?.phone}
-                  </Form.Item>
-                  <Form.Item label={'开户银行名称'}>
-                    {invoiceInfo?.bank_name}
-                  </Form.Item>
-                  <Form.Item label={'开户银行账号'}>
-                    {invoiceInfo?.bank_account}
-                  </Form.Item>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>公司注册地址</label>
+                    <div>{invoiceInfo?.address}</div>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>公司注册电话</label>
+                    <div>{invoiceInfo?.phone}</div>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>开户银行名称</label>
+                    <div>{invoiceInfo?.bank_name}</div>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>开户银行账号</label>
+                    <div>{invoiceInfo?.bank_account}</div>
+                  </div>
                 </>
               )}
-            </FormItemsBlock>
+            </div>
+          </FormItemsBlock>
 
-            <FormItemsBlock title='联系方式' style={{ marginTop: 4 }}>
-              <Form.Item label={'联系电话'}>
-                {applyInvoiceInfo?.contact}
-              </Form.Item>
-              <Form.Item label={'联系人'}>
-                {applyInvoiceInfo?.contact_name}
-              </Form.Item>
-            </FormItemsBlock>
+          <FormItemsBlock title='联系方式' style={{ marginTop: 4 }}>
+            <div className='space-y-4'>
+              <div className='flex items-center gap-4'>
+                <label className='text-right w-[120px]'>联系电话</label>
+                <div>{applyInvoiceInfo?.contact}</div>
+              </div>
+              <div className='flex items-center gap-4'>
+                <label className='text-right w-[120px]'>联系人</label>
+                <div>{applyInvoiceInfo?.contact_name}</div>
+              </div>
+            </div>
+          </FormItemsBlock>
 
-            <FormItemsBlock
-              title='授权方式'
-              style={{ marginTop: 4, marginBottom: 4 }}
-            >
-              <Form.Item label={'电子邮箱'}>
-                {applyInvoiceInfo?.email}
-              </Form.Item>
-            </FormItemsBlock>
-            <Form.Item label=' '>
+          <FormItemsBlock
+            title='授权方式'
+            style={{ marginTop: 4, marginBottom: 4 }}
+          >
+            <div className='space-y-4'>
+              <div className='flex items-center gap-4'>
+                <label className='text-right w-[120px]'>电子邮箱</label>
+                <div>{applyInvoiceInfo?.email}</div>
+              </div>
+            </div>
+          </FormItemsBlock>
+          <div className='flex items-center gap-4'>
+            <label className='w-[120px]'></label>
+            <div className='flex gap-3'>
               <Button
-                type='primary'
                 disabled={
                   !applyInvoiceInfo ||
                   applyInvoiceInfo.status != ApplyInvoiceInfoStatus.不通过
                 }
-                autoInsertSpace={false}
-                style={{ width: 76 }}
                 onClick={() => {
                   router.push(`${pathname}/edit`);
                 }}
@@ -212,19 +199,16 @@ export default function Details() {
                 修改
               </Button>
               <Button
-                autoInsertSpace={false}
-                variant='outlined'
-                color='default'
+                variant='outline'
                 onClick={() => {
                   router.back();
                 }}
-                style={{ marginLeft: 12, width: 76 }}
               >
                 返回
               </Button>
-            </Form.Item>
-          </Form>
-        </ConfigProvider>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

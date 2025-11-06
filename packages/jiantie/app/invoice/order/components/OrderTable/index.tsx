@@ -1,37 +1,33 @@
 'use client';
-import { Icon } from '@workspace/ui/components/Icon';
-import styles from './index.module.scss';
-import cls from 'classnames';
-import React, { useEffect, useState } from 'react';
-import { ConfigProvider, TableProps } from 'antd';
-import { Order } from '@/types/invoice/order';
-import Table from '@/app/invoice/components/PC/Table';
-import { getOrderList } from '@/services/invoice/order';
-import toast from 'react-hot-toast';
-import { TableLocale } from 'antd/es/table/interface';
+import Table, {
+  ColumnType,
+  RowSelection,
+} from '@/app/invoice/components/PC/Table';
 import EmptyContent from '@/app/invoice/components/UI/EmptyContent';
+import { Order } from '@/types/invoice/order';
+import React from 'react';
+import toast from 'react-hot-toast';
+import styles from './index.module.scss';
 
 interface Props {
   data: Order[];
-
   rowSelectable?: boolean;
-
-  rowSelection?: TableProps<Order>['rowSelection'];
-
+  rowSelection?: {
+    onChange?: (selectedRowKeys: React.Key[], selectedRows: Order[]) => void;
+  };
   onPaginationChange?: (page: number, pageSize: number) => any;
-
   pagination?: {
     pageSize: number;
     total: number;
   };
-
-  locale?: TableLocale;
-
+  locale?: {
+    emptyText?: React.ReactNode;
+  };
   rowKey?: string;
 }
 
 const OrderTable: React.FC<Props> = props => {
-  const columns: TableProps<Order>['columns'] = [
+  const columns: ColumnType<Order>[] = [
     {
       title: '日期',
       dataIndex: 'datetime',
@@ -71,61 +67,60 @@ const OrderTable: React.FC<Props> = props => {
     },
   ];
 
-  const rowSelection: TableProps<Order>['rowSelection'] = {
-    columnTitle: node => {
-      return (
-        <label className={styles.rowSelectHeadCell} style={{}}>
-          {node}全选
-        </label>
-      );
-    },
-    onCell: () => {
-      return {
-        style: {
-          borderBottom: `1px solid rgba(0, 0, 0, 0.06)`,
+  const rowSelection: RowSelection<Order> | undefined = props.rowSelectable
+    ? {
+        columnTitle: (node: React.ReactNode) => {
+          return (
+            <label className={styles.rowSelectHeadCell} style={{}}>
+              {node}全选
+            </label>
+          ) as React.ReactNode;
         },
-      };
-    },
-
-    renderCell: (
-      value: boolean,
-      record: Order,
-      index: number,
-      originNode: React.ReactNode
-    ) => {
-      return (
-        <label
-          className='flex justify-start items-center'
-          style={{
-            paddingLeft: 8,
-          }}
-          onClick={() => {
-            toast.remove();
-            if (record.is_invoice) {
-              toast.error('已进入申请发票流程的订单无法重复勾选');
-              return;
-            }
-            if (!record.can_request_invoice) {
-              toast.error('只能勾选今年的订单');
-              return;
-            }
-          }}
-        >
-          {originNode}
-        </label>
-      );
-    },
-    getCheckboxProps: (record: Order) => ({
-      disabled: !record.can_request_invoice || record.is_invoice,
-    }),
-    ...props.rowSelection,
-  };
+        onCell: () => {
+          return {
+            borderBottom: `1px solid rgba(0, 0, 0, 0.06)`,
+          } as React.CSSProperties;
+        },
+        renderCell: (
+          value: boolean,
+          record: Order,
+          index: number,
+          originNode: React.ReactNode
+        ): React.ReactNode => {
+          return (
+            <label
+              className='flex justify-start items-center'
+              style={{
+                paddingLeft: 8,
+              }}
+              onClick={() => {
+                toast.remove();
+                if (record.is_invoice) {
+                  toast.error('已进入申请发票流程的订单无法重复勾选');
+                  return;
+                }
+                if (!record.can_request_invoice) {
+                  toast.error('只能勾选今年的订单');
+                  return;
+                }
+              }}
+            >
+              {originNode}
+            </label>
+          );
+        },
+        getCheckboxProps: (record: Order) => ({
+          disabled: !record.can_request_invoice || record.is_invoice,
+        }),
+        onChange: props.rowSelection?.onChange,
+      }
+    : undefined;
 
   return (
     <Table<Order>
       columns={columns}
       dataSource={props.data}
-      rowSelection={props.rowSelectable ? rowSelection : undefined}
+      rowSelection={rowSelection}
       rowKey={props.rowKey ?? 'id'}
       size='small'
       locale={
