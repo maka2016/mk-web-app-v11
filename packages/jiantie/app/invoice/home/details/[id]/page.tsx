@@ -1,5 +1,5 @@
 'use client';
-import { Breadcrumb, Button, ConfigProvider, Form, Image } from 'antd';
+import { Button } from '@workspace/ui/components/button';
 import styles from './index.module.scss';
 import { Icon } from '@workspace/ui/components/Icon';
 import cls from 'classnames';
@@ -36,7 +36,7 @@ export default function Details() {
   useEffect(() => {
     pushBreadcrumbItem({
       title: '发票详情',
-      href: pathname,
+      path: pathname,
     });
 
     const invoice_id = +(params.id ?? 0);
@@ -56,113 +56,120 @@ export default function Details() {
   return (
     <div className={styles.main}>
       <div className={styles.contentWrapper}>
-        <ConfigProvider
-          theme={{
-            components: {
-              Form: {
-                labelColor: 'rgba(0, 0, 0, 0.6)',
-                labelHeight: 22,
-              },
-            },
-          }}
-        >
-          <Form
-            colon={false}
-            labelCol={{
-              style: {
-                display: 'flex',
-                justifyContent: 'end',
-                alignItems: 'center',
-                width: 120,
-                height: 22,
-              },
-            }}
-          >
-            <Form.Item label={'发票类型'}>
+        <div className='space-y-4'>
+          <div className='flex items-center gap-4'>
+            <label className='text-right w-[120px]'>发票类型</label>
+            <div>
               {invoiceInfo?.invoice_type &&
                 getInvoiceTypeShow(invoiceInfo.invoice_type)}
-            </Form.Item>
-            {invoiceInfo?.invoice_type !== InvoiceType.专用 ? (
-              <>
-                <Form.Item label={'普通发票类型'}>
+            </div>
+          </div>
+          {invoiceInfo?.invoice_type !== InvoiceType.专用 ? (
+            <>
+              <div className='flex items-center gap-4'>
+                <label className='text-right w-[120px]'>普通发票类型</label>
+                <div>
                   {invoiceInfo?.invoice_type &&
                     getUserInvoiceTypeShow(invoiceInfo.invoice_type)}
-                </Form.Item>
-                <Form.Item label={'发票抬头'}>
-                  {invoiceInfo?.invoice_title}
-                </Form.Item>
-                {invoiceInfo?.invoice_type === 'company' && (
-                  <Form.Item label={'税号'}>{invoiceInfo?.tax_no}</Form.Item>
-                )}
-              </>
-            ) : (
-              <>
-                {invoiceInfo?.status === InvoiceStatus.REJECT ? (
-                  <TextTips
-                    type='error'
-                    renderIcon={null}
-                    text={`很抱歉，您的增值税专票信息未通过审核，问题描述为“${invoiceInfo.reason}”，如有需要请修改后重新提交`}
-                  />
-                ) : (
-                  invoiceInfo?.status !== InvoiceStatus.PASS && (
-                    <TextTips text='增值税专用发票需要对一般纳税人证明进行审核，约需7个工作日，届时会有工作人员联系您。资质审核通过后，可以申请增值税专用发票。' />
-                  )
-                )}
-                <FormItemsBlock title='详细信息'>
-                  <Form.Item label={'发票抬头'}>
-                    {invoiceInfo?.invoice_title}
-                  </Form.Item>
-                  <Form.Item label={'税号'}>{invoiceInfo?.tax_no}</Form.Item>
-                  <Form.Item label={'公司注册地址'}>
-                    {invoiceInfo?.address}
-                  </Form.Item>
-                  <Form.Item label={'公司注册电话'}>
-                    {invoiceInfo?.phone}
-                  </Form.Item>
-                  <Form.Item label={'开户银行名称'}>
-                    {invoiceInfo?.bank_name}
-                  </Form.Item>
-                  <Form.Item label={'开户银行账号'}>
-                    {invoiceInfo?.bank_account}
-                  </Form.Item>
-                </FormItemsBlock>
-                <FormItemsBlock title='一般纳税人证明' style={{ marginTop: 4 }}>
-                  <Form.Item label={'营业执照'}>
+                </div>
+              </div>
+              <div className='flex items-center gap-4'>
+                <label className='text-right w-[120px]'>发票抬头</label>
+                <div>{invoiceInfo?.invoice_title}</div>
+              </div>
+              {invoiceInfo?.invoice_type === 'company' && (
+                <div className='flex items-center gap-4'>
+                  <label className='text-right w-[120px]'>税号</label>
+                  <div>{invoiceInfo?.tax_no}</div>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {invoiceInfo?.status === InvoiceStatus.REJECT ? (
+                <TextTips
+                  type='error'
+                  renderIcon={null}
+                  text={`很抱歉，您的增值税专票信息未通过审核，问题描述为"${invoiceInfo.reason}"，如有需要请修改后重新提交`}
+                />
+              ) : (
+                invoiceInfo?.status !== InvoiceStatus.PASS && (
+                  <TextTips text='增值税专用发票需要对一般纳税人证明进行审核，约需7个工作日，届时会有工作人员联系您。资质审核通过后，可以申请增值税专用发票。' />
+                )
+              )}
+              <FormItemsBlock title='详细信息'>
+                <div className='space-y-4'>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>发票抬头</label>
+                    <div>{invoiceInfo?.invoice_title}</div>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>税号</label>
+                    <div>{invoiceInfo?.tax_no}</div>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>公司注册地址</label>
+                    <div>{invoiceInfo?.address}</div>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>公司注册电话</label>
+                    <div>{invoiceInfo?.phone}</div>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>开户银行名称</label>
+                    <div>{invoiceInfo?.bank_name}</div>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>开户银行账号</label>
+                    <div>{invoiceInfo?.bank_account}</div>
+                  </div>
+                </div>
+              </FormItemsBlock>
+              <FormItemsBlock title='一般纳税人证明' style={{ marginTop: 4 }}>
+                <div className='space-y-4'>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>营业执照</label>
                     <div className={styles.imgWrapper}>
-                      <Image alt='' src={invoiceInfo.business_license} />
+                      <img alt='' src={invoiceInfo?.business_license} />
                     </div>
-                  </Form.Item>
-                  <Form.Item label={'纳税人资格证'}>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>纳税人资格证</label>
                     <div className={styles.imgWrapper}>
-                      <Image alt='' src={invoiceInfo.certificate} />
+                      <img alt='' src={invoiceInfo?.certificate} />
                     </div>
-                  </Form.Item>
-                  <Form.Item label={'开户许可证'}>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>开户许可证</label>
                     <div className={styles.imgWrapper}>
-                      <Image alt='' src={invoiceInfo.account_license} />
+                      <img alt='' src={invoiceInfo?.account_license} />
                     </div>
-                  </Form.Item>
-                </FormItemsBlock>
-                <FormItemsBlock title='联系人信息' style={{ margin: `4px 0` }}>
-                  <Form.Item label={'联系电话'}>
-                    {invoiceInfo?.contact}
-                  </Form.Item>
-                  <Form.Item label={'联系人'}>
-                    {invoiceInfo?.contact_name}
-                  </Form.Item>
-                </FormItemsBlock>
-              </>
-            )}
+                  </div>
+                </div>
+              </FormItemsBlock>
+              <FormItemsBlock title='联系人信息' style={{ margin: `4px 0` }}>
+                <div className='space-y-4'>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>联系电话</label>
+                    <div>{invoiceInfo?.contact}</div>
+                  </div>
+                  <div className='flex items-center gap-4'>
+                    <label className='text-right w-[120px]'>联系人</label>
+                    <div>{invoiceInfo?.contact_name}</div>
+                  </div>
+                </div>
+              </FormItemsBlock>
+            </>
+          )}
 
-            <Form.Item label=' '>
+          <div className='flex items-center gap-4'>
+            <label className='w-[120px]'></label>
+            <div className='flex gap-3'>
               <Button
                 disabled={
                   !invoiceInfo || invoiceInfo.status === InvoiceStatus.DELETED
                 }
-                style={{ width: 76 }}
-                color='danger'
-                variant='solid'
-                autoInsertSpace={false}
+                variant='destructive'
                 onClick={async () => {
                   const res = await deleteInvoiceInfo(invoiceId);
                   if (!res.success) return toast.error('删除失败');
@@ -173,19 +180,16 @@ export default function Details() {
                 删除
               </Button>
               <Button
-                style={{ width: 76, marginLeft: 12 }}
-                color='default'
-                variant='outlined'
+                variant='outline'
                 onClick={() => {
                   router.back();
                 }}
-                autoInsertSpace={false}
               >
                 返回
               </Button>
-            </Form.Item>
-          </Form>
-        </ConfigProvider>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

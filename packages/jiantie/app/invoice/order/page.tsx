@@ -1,8 +1,7 @@
 'use client';
-import { Button, ConfigProvider, Modal, TableProps } from 'antd';
+import { Button } from '@workspace/ui/components/button';
 import styles from './index.module.scss';
 import { Order } from '@/types/invoice/order';
-import Table from '@/app/invoice/components/PC/Table';
 import { getOrderList } from '@/services/invoice/order';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -11,6 +10,11 @@ import cls from 'classnames';
 import { useRouter } from 'next/navigation';
 import OrderTable from './components/OrderTable';
 import { applyOrderSessionKey } from '../constants';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+} from '@workspace/ui/components/dialog';
 
 export default function Page() {
   const router = useRouter();
@@ -20,8 +24,7 @@ export default function Page() {
   const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [selectedRows, setSelectedRows] = useState<Order[]>([]);
-
-  const [modal, contextHolder] = Modal.useModal();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const getOrders = async (page?: number) => {
     const res = await getOrderList(page);
@@ -41,7 +44,6 @@ export default function Page() {
 
   return (
     <div className={styles.main}>
-      {contextHolder}
       <div className={styles.header}>我的订单</div>
       <div className={styles.content}>
         <div className={styles.tipsBlock}>
@@ -62,84 +64,9 @@ export default function Page() {
         </div>
         <div className={styles.btnRow}>
           <Button
-            type='primary'
             disabled={selectedRows.length === 0}
-            onClick={async () => {
-              const m = modal.confirm({
-                width: 400,
-                className: styles.modalContent,
-
-                content: (
-                  <>
-                    <div className={styles.header}>
-                      请选择发票类型
-                      <div
-                        className={styles.closeBtn}
-                        onClick={() => {
-                          m.destroy();
-                        }}
-                      >
-                        <Icon
-                          name='close'
-                          color='rgba(165, 166, 167, 1)'
-                          size={20}
-                        />
-                      </div>
-                    </div>
-                    <div className={styles.content}>
-                      <div
-                        className={cls(styles.piao)}
-                        onClick={() => {
-                          sessionStorage.setItem(
-                            applyOrderSessionKey,
-                            JSON.stringify(selectedRows)
-                          );
-                          router.push('/invoice/order/apply?special=0');
-                        }}
-                      >
-                        <div className={styles.head}>
-                          <Icon
-                            name='piao1'
-                            size={32}
-                            color='rgba(51, 144, 224, 1)'
-                          />
-                        </div>
-                        增值税普通发票（电子）
-                      </div>
-                      <div
-                        className={cls(styles.piao, styles.bg2)}
-                        onClick={() => {
-                          sessionStorage.setItem(
-                            applyOrderSessionKey,
-                            JSON.stringify(selectedRows)
-                          );
-                          router.push('/invoice/order/apply?special=1');
-                        }}
-                      >
-                        <div className={styles.head}>
-                          <Icon
-                            name='piao2'
-                            size={32}
-                            color='rgba(255, 174, 87, 1)'
-                          />
-                        </div>
-                        增值税专用发票（纸质）
-                      </div>
-                    </div>
-                  </>
-                ),
-                maskClosable: true,
-                styles: {
-                  content: {
-                    borderRadius: 6,
-                    padding: 0,
-                  },
-                },
-                centered: true,
-                icon: null,
-
-                footer: (_, { OkBtn, CancelBtn }) => null,
-              });
+            onClick={() => {
+              setDialogOpen(true);
             }}
           >
             开发票
@@ -183,6 +110,70 @@ export default function Page() {
           />
         </div>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className={styles.modalContent} style={{ padding: 0 }}>
+          <DialogHeader>
+            <div className={styles.header}>
+              请选择发票类型
+              <div
+                className={styles.closeBtn}
+                onClick={() => {
+                  setDialogOpen(false);
+                }}
+              >
+                <Icon
+                  name='close'
+                  color='rgba(165, 166, 167, 1)'
+                  size={20}
+                />
+              </div>
+            </div>
+          </DialogHeader>
+          <div className={styles.content}>
+            <div
+              className={cls(styles.piao)}
+              onClick={() => {
+                sessionStorage.setItem(
+                  applyOrderSessionKey,
+                  JSON.stringify(selectedRows)
+                );
+                router.push('/invoice/order/apply?special=0');
+                setDialogOpen(false);
+              }}
+            >
+              <div className={styles.head}>
+                <Icon
+                  name='piao1'
+                  size={32}
+                  color='rgba(51, 144, 224, 1)'
+                />
+              </div>
+              增值税普通发票（电子）
+            </div>
+            <div
+              className={cls(styles.piao, styles.bg2)}
+              onClick={() => {
+                sessionStorage.setItem(
+                  applyOrderSessionKey,
+                  JSON.stringify(selectedRows)
+                );
+                router.push('/invoice/order/apply?special=1');
+                setDialogOpen(false);
+              }}
+            >
+              <div className={styles.head}>
+                <Icon
+                  name='piao2'
+                  size={32}
+                  color='rgba(255, 174, 87, 1)'
+                />
+              </div>
+              增值税专用发票（纸质）
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import Main from './components/main';
+import Main from './WorksManagerForUser';
 
 export default function Page(props: any) {
   return <Main {...props} />;
