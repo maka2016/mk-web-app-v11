@@ -233,7 +233,7 @@ export default function Detail({ channelId }: DetailProps) {
                   {/* 四级楼层标题 - 只有多个楼层时才显示 */}
                   {!isSingleFloor && (
                     <div className='px-4 mb-3 flex items-center justify-between'>
-                      <h2 className='text-lg font-bold text-gray-900'>
+                      <h2 className='text-base font-bold text-gray-900'>
                         {floor.display_name}
                       </h2>
                       {hasMore && (

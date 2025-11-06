@@ -141,7 +141,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
             </div>
           </div>
         ) : (
-          <div className='p-4 space-y-8'>
+          <div className='py-4 px-6 space-y-8'>
             {channels.map(channel => (
               <div key={channel.id}>
                 {/* 分类标题 */}
@@ -168,9 +168,10 @@ export default function Main({ appid = 'jiantie' }: Props) {
                       >
                         {/* 圆形图标容器 */}
                         <div
-                          className='w-full aspect-square rounded-full bg-gray-100 flex items-center justify-center mb-2 overflow-hidden border border-white'
+                          className='w-full aspect-square  bg-gray-100 flex items-center justify-center mb-2 overflow-hidden border border-white'
                           style={{
                             border: '1px solid #fff',
+                            borderRadius: '12px',
                             boxShadow:
                               '0 1px 2px -1px rgba(0, 0, 0, 0.10), 0 1px 3px 0 rgba(0, 0, 0, 0.10)',
                           }}
