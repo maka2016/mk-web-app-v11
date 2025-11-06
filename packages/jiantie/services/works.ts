@@ -6,7 +6,7 @@ export const createWork = (data: any) => {
 };
 
 /**
- *
+ * @deprecated
  * @param data 创建作品V7
  * @returns
  */
@@ -16,6 +16,7 @@ export const createWorkV7 = (data: any) => {
 };
 
 /**
+ * @deprecated
  * 更新作品detail信息
  * @param data
  * @returns
@@ -28,6 +29,7 @@ export const updateWorksDetal = (uid: number, workId: string, data: any) => {
 };
 
 /**
+ * @deprecated
  * 更新作品detail信息
  * @param data
  * @returns
@@ -38,12 +40,9 @@ export const getWorksDetailV7 = (uid: number, workId: string) => {
   );
 };
 
-export const worksData = (uid: number, workId: string) => {
-  return request.get(
-    `${API('工具服务')}/works-store/v7/works/${uid}/${workId}`
-  );
-};
-
+/**
+ * @deprecated
+ */
 export const getWorksDetail = (uid: number, works_id: string) => {
   return request.post(`${API('主服务API')}/works/works/detail`, {
     uid,
@@ -53,6 +52,7 @@ export const getWorksDetail = (uid: number, works_id: string) => {
 
 /**
  * 删除作品
+ * @deprecated
  * @param uid
  * @param works_id
  * @returns
@@ -66,6 +66,7 @@ export const deleteWork = (uid: number, works_id: string) => {
 
 /**
  * 复制作品
+ * @deprecated
  * @param works_id
  * @returns
  */
@@ -73,25 +74,24 @@ export const copyWork = (works_id: string) => {
   return request.post(`${API('主服务API')}/works/${works_id}/action/copy`);
 };
 
+/**
+ * 更新作品
+ * @deprecated
+ * @param data
+ * @returns
+ */
 export const updateWorks = (data: any) => {
   return request.post(`${API('主服务API')}/works/works/edit`, data);
 };
 
-/** 风控检查 */
+/**
+ * 风控检查
+ * @deprecated
+ * @param data
+ * @returns
+ */
 export const riskCheck = (data: any) => {
   return request.post(`${API('主服务API')}/works/works/risk_check`, data);
-};
-
-export const worksList = (uid: number, params: any) => {
-  return request.get(`${API('工具服务')}/works-store/v7/items/${uid}`, {
-    params,
-  });
-};
-
-export const worksPublishedCount = (uid: number) => {
-  return request.get(
-    `${API('工具服务')}/works-store/v7/works/published-count?uid=${uid}&startDate=2025-03-10T00:00:00Z&endDate=${new Date().toISOString()}`
-  );
 };
 
 export const getStoreCategories = () => {

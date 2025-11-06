@@ -70,7 +70,6 @@ export const UserInfoLoader = () => {
   const getProfile = async () => {
     const uid = getUid();
     const token = getToken();
-    console.log('getProfile', uid, token);
     if (uid && token) {
       const [res, vipRes]: any = await Promise.all([
         getUserProfileV10(appid, uid),

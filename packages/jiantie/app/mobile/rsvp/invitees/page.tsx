@@ -1,30 +1,19 @@
 'use client';
 import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
+import { getGuestCountText } from '@/components/RSVP/comp/SubmissionDataView';
+import { InviteeDetailDialog } from '@/components/RSVP/InviteeDetailDialog';
+import { parseRSVPFormFields, RSVPField } from '@/components/RSVP/type';
 import { getUid } from '@/services';
-import { getWorkData2, updateWorksDetail2 } from '@/services/works2';
-import { useShareNavigation } from '@/utils/share';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
-import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
-import { Textarea } from '@workspace/ui/components/textarea';
-import {
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
-  Globe,
-  Image as ImageIcon,
-  Mail,
-  Share,
-  Target,
-  Video,
-} from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { ChevronRight, Globe, Target } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import styles from './share.module.scss';
+import { PublicShareDialog } from './PublicShareDialog';
 
 export default function RSVPInviteesPage() {
   const searchParams = useSearchParams();
@@ -33,7 +22,7 @@ export default function RSVPInviteesPage() {
 
   const [inviteeResponses, setInviteeResponses] = useState<any[]>([]);
   const [viewingInvitee, setViewingInvitee] = useState<any>(null);
-  const [responseDialogOpen, setResponseDialogOpen] = useState(false);
+  const [inviteeDetailOpen, setInviteeDetailOpen] = useState(false);
   const [responseFilter, setResponseFilter] = useState<
     'all' | 'responded' | 'not_responded'
   >('all');
@@ -44,6 +33,7 @@ export default function RSVPInviteesPage() {
   const [creatingInvitee, setCreatingInvitee] = useState(false);
 
   // 套餐信息
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [packageQuota, setPackageQuota] = useState<{
     total: number;
     used: number;
@@ -96,79 +86,38 @@ export default function RSVPInviteesPage() {
     return totalGuests;
   };
 
-  // 嘉宾详情编辑相关状态
-  const [editingPhone, setEditingPhone] = useState<string>('');
-  const [editingAdultCount, setEditingAdultCount] = useState<number>(0);
-  const [editingChildCount, setEditingChildCount] = useState<number>(0);
-  const [isContactSectionExpanded, setIsContactSectionExpanded] =
-    useState<boolean>(false);
-  const [isUpdatingInvitee, setIsUpdatingInvitee] = useState(false);
-  const [currentShareInvitee, setCurrentShareInvitee] = useState<any>(null);
-  const [shareTitle, setShareTitle] = useState<string>('');
-  const [inviteeShareDialogOpen, setInviteeShareDialogOpen] = useState(false);
-  const [isApp, setIsApp] = useState(false);
+  // 表单配置和字段
+  const [formConfig, setFormConfig] = useState<any>(null);
+  const [formFields, setFormFields] = useState<RSVPField[]>([]);
+
+  // 从表单配置中提取字段
+  useEffect(() => {
+    if (!formConfigId) return;
+    const loadFormConfig = async () => {
+      try {
+        const config = (await trpc.rsvp.getFormConfigById.query({
+          id: formConfigId,
+        })) as any;
+        setFormConfig(config);
+        if (config?.form_fields) {
+          const fields = parseRSVPFormFields(config.form_fields) as RSVPField[];
+          setFormFields(fields);
+        }
+      } catch (error) {
+        console.error('Failed to load form config:', error);
+      }
+    };
+    loadFormConfig();
+  }, [formConfigId]);
 
   // 分享面板相关状态
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [isMiniP, setIsMiniP] = useState(false);
-  const [executingKey, setExecutingKey] = useState<string | null>(null);
-
-  // 公开分享的标题、描述和封面
-  const [publicShareTitle, setPublicShareTitle] = useState<string>('');
-  const [publicShareDesc, setPublicShareDesc] = useState<string>('');
-  const [publicShareCover, setPublicShareCover] = useState<string>('');
-
-  const { toPosterShare, toVideoShare } = useShareNavigation();
-
-  // 生成公开链接
-  const publicLink = useMemo(() => {
-    if (typeof window === 'undefined' || !worksId) return '';
-    const origin = window.location.origin;
-    return `${origin}/viewer2/${worksId}`;
-  }, [worksId]);
-
-  // 初始化 APP 环境判断
-  useEffect(() => {
-    const initAPP = async () => {
-      await APPBridge.init();
-      setIsApp(APPBridge.judgeIsInApp());
-      setIsMiniP(APPBridge.judgeIsInMiniP());
-    };
-    initAPP();
-  }, []);
-
-  // 当打开嘉宾详情时，初始化编辑数据
-  useEffect(() => {
-    if (viewingInvitee && responseDialogOpen) {
-      setEditingPhone(viewingInvitee.phone || '');
-      // 从提交数据中提取人数信息
-      const submissionData = viewingInvitee.submission_data || {};
-      let adultCount = 0;
-      let childCount = 0;
-
-      // 查找guest_count类型的字段
-      for (const [key, value] of Object.entries(submissionData)) {
-        if (
-          typeof value === 'object' &&
-          value !== null &&
-          !key.startsWith('_')
-        ) {
-          if ('adult' in value && 'child' in value) {
-            adultCount = (value as any).adult || 0;
-            childCount = (value as any).child || 0;
-            break;
-          } else if ('total' in value) {
-            adultCount = (value as any).total || 0;
-            break;
-          }
-        }
-      }
-
-      setEditingAdultCount(adultCount);
-      setEditingChildCount(childCount);
-      setIsContactSectionExpanded(false);
-    }
-  }, [viewingInvitee, responseDialogOpen]);
+  const [shareMode, setShareMode] = useState<'public' | 'invitee'>('public');
+  const [shareContactId, setShareContactId] = useState<string | undefined>();
+  const [shareContactName, setShareContactName] = useState<
+    string | undefined
+  >();
+  const router = useRouter();
 
   // 打开新增嘉宾弹窗
   const handleOpenAddInvitee = () => {
@@ -221,33 +170,20 @@ export default function RSVPInviteesPage() {
           used: totalGuests,
         }));
 
-        // 创建成功后，打开宾客详情弹窗
+        // 创建成功后，打开分享页
         if (createdInvitee) {
-          const newInvitee = data.find(
-            (item: any) => item.id === createdInvitee.id
-          );
-          if (newInvitee) {
-            setViewingInvitee(newInvitee);
-            setResponseDialogOpen(true);
-          }
+          setShareMode('invitee');
+          setShareContactId(createdInvitee.id);
+          setShareContactName(createdInvitee.name);
+          setShareDialogOpen(true);
         }
       } else {
-        // 如果没有formConfigId，也需要打开详情弹窗
-        // 需要构造一个基本的invitee对象
+        // 如果没有formConfigId，直接打开分享页
         if (createdInvitee) {
-          const basicInvitee = {
-            id: createdInvitee.id,
-            name: createdInvitee.name,
-            email: createdInvitee.email || null,
-            phone: createdInvitee.phone || null,
-            create_time: createdInvitee.create_time,
-            has_response: false,
-            will_attend: null,
-            submission_data: null,
-            submission_create_time: null,
-          };
-          setViewingInvitee(basicInvitee);
-          setResponseDialogOpen(true);
+          setShareMode('invitee');
+          setShareContactId(createdInvitee.id);
+          setShareContactName(createdInvitee.name);
+          setShareDialogOpen(true);
         }
       }
     } catch (error: any) {
@@ -297,24 +233,32 @@ export default function RSVPInviteesPage() {
         const processedContacts = new Set<string>();
 
         // 批量查询所有嘉宾的提交记录
-        const allSubmissionsArrays: any[][] = [];
-        for (const invitee of allInvitees) {
-          try {
-            const submissions = await trpc.rsvp.getSubmissionsByContactId.query(
-              {
-                contact_id: invitee.id,
-              }
-            );
-            allSubmissionsArrays.push(submissions as any[]);
-          } catch {
-            allSubmissionsArrays.push([]);
-          }
+        const contactIds = allInvitees.map(invitee => invitee.id);
+        let allSubmissions: any[] = [];
+        try {
+          allSubmissions = await trpc.rsvp.getSubmissionsByContactIds.query({
+            contact_ids: contactIds,
+          });
+        } catch (error) {
+          console.error('Failed to fetch submissions:', error);
         }
 
+        // 按 contact_id 分组提交记录
+        const submissionsByContactId = new Map<string, any[]>();
+        allSubmissions.forEach(submission => {
+          if (submission.contact_id) {
+            const existing =
+              submissionsByContactId.get(submission.contact_id) || [];
+            existing.push(submission);
+            submissionsByContactId.set(submission.contact_id, existing);
+          }
+        });
+
         // 处理所有提交记录，统计宾客数
-        allSubmissionsArrays.forEach((submissions, index) => {
-          const invitee = allInvitees[index];
+        allInvitees.forEach(invitee => {
           if (!invitee || processedContacts.has(invitee.id)) return;
+
+          const submissions = submissionsByContactId.get(invitee.id) || [];
 
           // 找到每个表单的最新提交记录
           const submissionsByForm = new Map<string, any>();
@@ -384,169 +328,6 @@ export default function RSVPInviteesPage() {
     fetchUserInvitees();
   }, []);
 
-  const handleCopyLink = (link: string) => {
-    navigator.clipboard.writeText(link);
-    toast.success('复制成功');
-  };
-
-  // 保存长图
-  const savePoster = async () => {
-    if (!worksId) return;
-    toPosterShare(worksId);
-  };
-
-  // 导出视频
-  const exportVideo = async () => {
-    if (!worksId) return;
-    toVideoShare(worksId);
-  };
-
-  // 获取作品信息
-  useEffect(() => {
-    const fetchWorkInfo = async () => {
-      if (!worksId) return;
-      try {
-        const res = (await getWorkData2(worksId)) as any;
-        const detail = res?.detail;
-        if (detail) {
-          setPublicShareTitle(detail.title || '');
-          setPublicShareDesc(detail.desc || '');
-          setPublicShareCover(detail.cover || '');
-        }
-      } catch (error) {
-        console.error('获取作品信息失败:', error);
-      }
-    };
-    if (shareDialogOpen) {
-      fetchWorkInfo();
-    }
-  }, [worksId, shareDialogOpen]);
-
-  // 更新作品标题
-  const updateWorkTitle = async (title: string) => {
-    if (!worksId) return;
-    try {
-      await updateWorksDetail2(worksId, {
-        title,
-        is_title_desc_modified: true,
-      } as any);
-    } catch (error) {
-      console.error('更新标题失败:', error);
-    }
-  };
-
-  // 更新作品描述
-  const updateWorkDesc = async (desc: string) => {
-    if (!worksId) return;
-    try {
-      await updateWorksDetail2(worksId, {
-        desc,
-        is_title_desc_modified: true,
-      } as any);
-    } catch (error) {
-      console.error('更新描述失败:', error);
-    }
-  };
-
-  // 生成嘉宾专属链接
-  const generateInviteeLink = (invitee: any) => {
-    const params = new URLSearchParams();
-    params.set('rsvp_invitee', invitee.name);
-    params.set('rsvp_contact_id', invitee.id);
-    return `${window.location.origin}/viewer2/${worksId}?${params.toString()}`;
-  };
-
-  // 更新嘉宾信息
-  const handleUpdateInviteeInfo = async () => {
-    if (!viewingInvitee) return;
-
-    setIsUpdatingInvitee(true);
-    try {
-      // 更新嘉宾基本信息（电话）
-      await trpc.rsvp.updateInvitee.mutate({
-        id: viewingInvitee.id,
-        phone: editingPhone.trim() || undefined,
-      });
-
-      // 如果有提交记录，需要更新提交数据中的人数信息
-      // 这里需要查询最新的提交记录来更新
-      if (viewingInvitee.has_response && formConfigId) {
-        // 获取提交记录
-        const submissions = await trpc.rsvp.getInviteeSubmissions.query({
-          contact_id: viewingInvitee.id,
-          form_config_id: formConfigId,
-        });
-
-        if (submissions && submissions.length > 0) {
-          const latestSubmission = submissions[0];
-          const submissionData = { ...latestSubmission.submission_data };
-
-          // 更新人数字段（查找guest_count类型字段）
-          let updated = false;
-          for (const [key, value] of Object.entries(submissionData)) {
-            if (
-              typeof value === 'object' &&
-              value !== null &&
-              !key.startsWith('_')
-            ) {
-              if ('adult' in value || 'child' in value || 'total' in value) {
-                // 找到人数字段，更新它
-                if ('adult' in value && 'child' in value) {
-                  submissionData[key] = {
-                    adult: editingAdultCount,
-                    child: editingChildCount,
-                  };
-                } else if ('total' in value) {
-                  submissionData[key] = {
-                    total: editingAdultCount + editingChildCount,
-                  };
-                }
-                updated = true;
-                break;
-              }
-            }
-          }
-
-          // 如果有更新，提交新版本
-          if (updated) {
-            await trpc.rsvp.updateSubmissionVersion.mutate({
-              submission_group_id: latestSubmission.submission_group_id,
-              submission_data: submissionData,
-              operator_type: 'admin',
-              operator_name: '管理员',
-            });
-          }
-        }
-      }
-
-      toast.success('更新成功');
-      // 刷新数据
-      if (formConfigId) {
-        const data = await trpc.rsvp.getInviteesWithResponseStatus.query({
-          form_config_id: formConfigId,
-        });
-        setInviteeResponses(data || []);
-
-        // 更新宾客总数统计
-        const totalGuests = calculateTotalGuests(data || []);
-        setPackageQuota(prev => ({
-          ...prev,
-          used: totalGuests,
-        }));
-
-        // 更新当前查看的嘉宾信息
-        const updated = data.find((item: any) => item.id === viewingInvitee.id);
-        if (updated) {
-          setViewingInvitee(updated);
-        }
-      }
-    } catch (error: any) {
-      toast.error(error.message || '更新失败');
-    } finally {
-      setIsUpdatingInvitee(false);
-    }
-  };
-
   // 分享嘉宾邀请
   const handleShareInvitee = async () => {
     if (!viewingInvitee) return;
@@ -563,41 +344,12 @@ export default function RSVPInviteesPage() {
       }
     }
 
-    setCurrentShareInvitee(viewingInvitee);
-    setShareTitle(`邀请 ${viewingInvitee.name} 参加活动`);
-    setInviteeShareDialogOpen(true);
-  };
-
-  // 分享到微信
-  const shareToWechat = async (to: 'wechat' | 'wechatTimeline') => {
-    if (!currentShareInvitee) return;
-    if (!shareTitle) {
-      toast.error('请填写分享标题');
-      return;
-    }
-
-    const shareLink = generateInviteeLink(currentShareInvitee);
-
-    APPBridge.appCall({
-      type: 'MKShare',
-      appid: 'jiantie',
-      params: {
-        title: shareTitle,
-        content: `诚邀您参加活动`,
-        thumb: '',
-        type: 'link',
-        shareType: to,
-        url: shareLink,
-      },
-    });
-  };
-
-  // 复制专属链接
-  const copyInviteeLink = async () => {
-    if (!currentShareInvitee) return;
-
-    const shareLink = generateInviteeLink(currentShareInvitee);
-    handleCopyLink(shareLink);
+    // 打开专属分享对话框
+    setShareMode('invitee');
+    setShareContactId(viewingInvitee.id);
+    setShareContactName(viewingInvitee.name);
+    setShareDialogOpen(true);
+    setInviteeDetailOpen(false);
   };
 
   // 不再强制要求formConfigId，因为嘉宾归属于用户
@@ -609,23 +361,35 @@ export default function RSVPInviteesPage() {
     (item: any) => item.has_response
   ).length;
 
+  // 回到首页
+  const toHome = () => {
+    if (APPBridge.judgeIsInApp()) {
+      APPBridge.navToPage({
+        url: 'maka://home/activity/activityPage',
+        type: 'NATIVE',
+      });
+    } else {
+      router.push('/mobile/home');
+    }
+  };
+
   return (
     <div className='relative bg-gray-50'>
-      <MobileHeader title={'分享与邀请'} />
+      <MobileHeader title={'分享与邀请'} rightText='' />
 
-      <div className='px-4 py-3 overflow-y-auto flex flex-col gap-4'>
+      <div className='p-3 overflow-y-auto flex flex-col gap-3'>
         {/* 指定嘉宾卡片 */}
-        <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 cursor-pointer hover:shadow-sm transition-all'>
+        <div className='bg-white border border-gray-100 rounded-xl p-4 cursor-pointer shadow-sm'>
           <div
-            className='flex items-start justify-between'
+            className='flex items-center justify-between'
             onClick={handleOpenAddInvitee}
           >
             <div className='flex items-start gap-3 flex-1'>
-              <div className='w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0'>
+              <div className='w-11 h-11 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0'>
                 <Target size={20} className='text-red-500' />
               </div>
-              <div className='flex-1'>
-                <div className='flex items-center gap-2 mb-1'>
+              <div className='flex-1 flex flex-col justify-center'>
+                <div className='flex items-center gap-2'>
                   <div className='font-semibold text-base text-[#09090B]'>
                     指定嘉宾
                   </div>
@@ -633,12 +397,12 @@ export default function RSVPInviteesPage() {
                     推荐
                   </span>
                 </div>
-                <div className='text-sm text-gray-600'>
+                <div className='text-xs text-gray-600'>
                   向个别嘉宾发送带有专属链接的邀请。
                 </div>
               </div>
             </div>
-            <ArrowRight
+            <ChevronRight
               size={20}
               className='text-gray-400 flex-shrink-0 ml-2'
             />
@@ -646,27 +410,30 @@ export default function RSVPInviteesPage() {
         </div>
 
         {/* 公开分享卡片 */}
-        <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 cursor-pointer hover:shadow-sm transition-all'>
+        <div className='bg-white border border-gray-100 rounded-xl p-4 cursor-pointer shadow-sm'>
           <div
-            className='flex items-start justify-between'
+            className='flex items-center justify-between'
             onClick={() => {
+              setShareMode('public');
+              setShareContactId(undefined);
+              setShareContactName(undefined);
               setShareDialogOpen(true);
             }}
           >
             <div className='flex items-start gap-3 flex-1'>
-              <div className='w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0'>
+              <div className='w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0'>
                 <Globe size={20} className='text-blue-500' />
               </div>
-              <div className='flex-1'>
-                <div className='font-semibold text-base text-[#09090B] mb-1'>
+              <div className='flex-1 flex flex-col justify-center'>
+                <div className='font-semibold text-base text-[#09090B]'>
                   公开分享
                 </div>
-                <div className='text-sm text-gray-600'>
+                <div className='text-xs text-gray-600'>
                   生成公开链接，任何人都可以RSVP。
                 </div>
               </div>
             </div>
-            <ArrowRight
+            <ChevronRight
               size={20}
               className='text-gray-400 flex-shrink-0 ml-2'
             />
@@ -674,8 +441,8 @@ export default function RSVPInviteesPage() {
         </div>
 
         {/* 邀请记录 */}
-        <div className='border border-black/[0.1] rounded-xl p-3 bg-white'>
-          <div className='mb-3'>
+        <div className='border border-gray-100 rounded-xl p-4 bg-white shadow-sm flex flex-col gap-3'>
+          <div className=''>
             <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
               已邀请嘉宾
             </div>
@@ -685,7 +452,7 @@ export default function RSVPInviteesPage() {
           </div>
 
           {/* 分类标签 */}
-          <div className='flex items-center gap-2 mb-3'>
+          <div className='flex items-center gap-2'>
             <Button
               size='sm'
               variant={responseFilter === 'all' ? 'default' : 'outline'}
@@ -771,27 +538,12 @@ export default function RSVPInviteesPage() {
                   statusBgColor = 'bg-blue-100';
                 }
 
-                // 从提交数据中提取人数信息
+                // 从提交数据中提取人数信息（使用统一的函数）
                 const submissionData = item.submission_data || {};
-                let adultCount = 0;
-                let childCount = 0;
-
-                for (const [key, value] of Object.entries(submissionData)) {
-                  if (
-                    typeof value === 'object' &&
-                    value !== null &&
-                    !key.startsWith('_')
-                  ) {
-                    if ('adult' in value && 'child' in value) {
-                      adultCount = (value as any).adult || 0;
-                      childCount = (value as any).child || 0;
-                      break;
-                    } else if ('total' in value) {
-                      adultCount = (value as any).total || 0;
-                      break;
-                    }
-                  }
-                }
+                const guestCountText = getGuestCountText(
+                  submissionData,
+                  formFields
+                );
 
                 // 获取最近活动时间
                 const recentTime =
@@ -803,26 +555,29 @@ export default function RSVPInviteesPage() {
                     className='bg-white border border-[#e4e4e7] rounded-lg p-4 cursor-pointer hover:shadow-sm transition-all'
                     onClick={() => {
                       setViewingInvitee(item);
-                      setResponseDialogOpen(true);
+                      setInviteeDetailOpen(true);
                     }}
                   >
-                    <div className='flex items-start justify-between'>
+                    <div className='flex items-center justify-between'>
                       <div className='flex-1'>
                         <div className='font-semibold text-sm leading-5 text-[#09090B] mb-2'>
                           {item.name || '未知嘉宾'}
                         </div>
                         <div className='flex items-center gap-2 mb-2'>
                           <span
-                            className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor} ${statusBgColor}`}
+                            className={`border-1 text-xs px-2 py-1 rounded-full font-medium ${statusColor} ${statusBgColor}`}
                           >
                             {statusText}
                           </span>
+                          {/* 人数信息显示在状态标签同一行，参考图片样式 */}
+                          {item.has_response &&
+                            item.will_attend === true &&
+                            guestCountText && (
+                              <span className='text-xs text-gray-600'>
+                                {guestCountText}
+                              </span>
+                            )}
                         </div>
-                        {(adultCount > 0 || childCount > 0) && (
-                          <div className='text-xs text-gray-600 mb-1'>
-                            成人 {adultCount} · 儿童 {childCount}
-                          </div>
-                        )}
                         {recentTime && (
                           <div className='text-xs text-gray-400'>
                             最近：{' '}
@@ -851,8 +606,8 @@ export default function RSVPInviteesPage() {
                           </div>
                         )}
                       </div>
-                      <ArrowRight
-                        size={16}
+                      <ChevronRight
+                        size={20}
                         className='text-gray-400 flex-shrink-0 ml-2'
                       />
                     </div>
@@ -864,277 +619,44 @@ export default function RSVPInviteesPage() {
         </div>
 
         {/* 嘉宾详情弹窗 */}
-        <ResponsiveDialog
-          isOpen={responseDialogOpen}
-          onOpenChange={setResponseDialogOpen}
-          title='嘉宾详情'
-        >
-          {viewingInvitee && (
-            <div className='p-4 max-h-[80vh] overflow-y-auto'>
-              {/* 基本信息卡片 */}
-              <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 mb-4'>
-                <div className='flex items-start justify-between mb-3'>
-                  <div className='flex-1'>
-                    <div className='font-semibold text-base text-[#09090B] mb-1'>
-                      {viewingInvitee.name || '未知嘉宾'}
-                    </div>
-                    <div className='text-sm text-gray-600'>
-                      成人 {editingAdultCount} · 儿童 {editingChildCount}
-                    </div>
-                  </div>
-                  <span
-                    className={`text-xs px-2 py-1 rounded ${
-                      viewingInvitee.has_response
-                        ? viewingInvitee.will_attend === true
-                          ? 'bg-green-50 text-green-600'
-                          : viewingInvitee.will_attend === false
-                            ? 'bg-orange-50 text-orange-600'
-                            : 'bg-blue-50 text-blue-600'
-                        : 'bg-gray-50 text-gray-500'
-                    }`}
-                  >
-                    {viewingInvitee.has_response
-                      ? viewingInvitee.will_attend === true
-                        ? '已确认出席'
-                        : viewingInvitee.will_attend === false
-                          ? '已确认不出席'
-                          : '已响应'
-                      : '未响应'}
-                  </span>
-                </div>
-              </div>
+        <InviteeDetailDialog
+          isOpen={inviteeDetailOpen}
+          onOpenChange={setInviteeDetailOpen}
+          invitee={viewingInvitee}
+          formConfig={formConfig}
+          onUpdate={async () => {
+            // 刷新数据
+            if (formConfigId) {
+              const data = await trpc.rsvp.getInviteesWithResponseStatus.query({
+                form_config_id: formConfigId,
+              });
+              setInviteeResponses(data || []);
 
-              {/* 分享专属邀请卡片 */}
-              <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 mb-4'>
-                <div className='flex items-center gap-2 mb-2'>
-                  <Mail size={16} className='text-gray-600' />
-                  <div className='font-semibold text-base text-[#09090B]'>
-                    分享专属邀请
-                  </div>
-                </div>
-                <div className='text-sm text-gray-600 mb-3'>
-                  通过微信分享活动链接给嘉宾
-                </div>
-                <Button
-                  className='w-full bg-green-500 hover:bg-green-600 text-white h-10'
-                  onClick={handleShareInvitee}
-                >
-                  <Share size={16} className='mr-2' />
-                  立即发送
-                </Button>
-              </div>
+              // 更新宾客总数统计
+              const totalGuests = calculateTotalGuests(data || []);
+              setPackageQuota(prev => ({
+                ...prev,
+                used: totalGuests,
+              }));
 
-              {/* 联系方式和附加信息卡片 */}
-              <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 mb-4'>
-                <div
-                  className={`flex items-center justify-between mb-3 ${
-                    viewingInvitee.has_response ? 'cursor-pointer' : ''
-                  }`}
-                  onClick={() => {
-                    if (viewingInvitee.has_response) {
-                      setIsContactSectionExpanded(!isContactSectionExpanded);
-                    }
-                  }}
-                >
-                  <div className='font-semibold text-base text-[#09090B]'>
-                    联系方式和附加信息
-                  </div>
-                  {viewingInvitee.has_response && (
-                    <>
-                      {isContactSectionExpanded ? (
-                        <ChevronUp size={20} className='text-gray-400' />
-                      ) : (
-                        <ChevronDown size={20} className='text-gray-400' />
-                      )}
-                    </>
-                  )}
-                </div>
-
-                {viewingInvitee.has_response ? (
-                  isContactSectionExpanded && (
-                    <div className='space-y-4 pt-2'>
-                      <div>
-                        <div className='text-sm text-gray-600 mb-1'>
-                          手机号码
-                        </div>
-                        <Input
-                          className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-sm'
-                          value={editingPhone}
-                          onChange={e => setEditingPhone(e.target.value)}
-                          placeholder='可选'
-                        />
-                      </div>
-
-                      <div>
-                        <div className='text-sm text-gray-600 mb-1'>人数</div>
-                        <div className='flex items-center gap-3'>
-                          <div className='flex-1'>
-                            <div className='text-xs text-gray-500 mb-1'>
-                              成人
-                            </div>
-                            <Input
-                              type='number'
-                              min='0'
-                              className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-sm'
-                              value={editingAdultCount}
-                              onChange={e =>
-                                setEditingAdultCount(
-                                  parseInt(e.target.value) || 0
-                                )
-                              }
-                            />
-                          </div>
-                          <div className='flex-1'>
-                            <div className='text-xs text-gray-500 mb-1'>
-                              儿童
-                            </div>
-                            <Input
-                              type='number'
-                              min='0'
-                              className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-sm'
-                              value={editingChildCount}
-                              onChange={e =>
-                                setEditingChildCount(
-                                  parseInt(e.target.value) || 0
-                                )
-                              }
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <Button
-                        className='w-full'
-                        onClick={handleUpdateInviteeInfo}
-                        disabled={isUpdatingInvitee}
-                      >
-                        {isUpdatingInvitee ? '保存中...' : '保存'}
-                      </Button>
-                    </div>
-                  )
-                ) : (
-                  <div className='text-sm text-gray-500 text-center py-4'>
-                    暂无联系方式和附加信息
-                  </div>
-                )}
-              </div>
-
-              {/* 交互记录卡片 */}
-              <div className='bg-white border border-[#e4e4e7] rounded-xl p-4'>
-                <div className='font-semibold text-base text-[#09090B] mb-3'>
-                  交互记录
-                </div>
-                <div className='space-y-3'>
-                  {viewingInvitee.has_response && (
-                    <div className='flex items-center gap-3'>
-                      <Mail size={16} className='text-gray-400' />
-                      <div className='flex-1'>
-                        <div className='text-sm text-gray-800'>创建邀请</div>
-                        <div className='text-xs text-gray-400'>
-                          {new Date(
-                            viewingInvitee.submission_create_time ||
-                              viewingInvitee.create_time
-                          ).toLocaleString('zh-CN', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {!viewingInvitee.has_response && (
-                    <div className='text-sm text-gray-500 text-center py-2'>
-                      暂无交互记录
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </ResponsiveDialog>
-
-        {/* 嘉宾分享设置面板 */}
-        <ResponsiveDialog
-          isOpen={inviteeShareDialogOpen}
-          onOpenChange={setInviteeShareDialogOpen}
-          title='分享设置'
-        >
-          <div className='px-4 pb-4'>
-            <div className={styles.shareTypesWrap}>
-              <div className={styles.title}>
-                <span>分享标题</span>
-              </div>
-              <div className='mb-4'>
-                <Input
-                  value={shareTitle}
-                  className={styles.input}
-                  onChange={e => setShareTitle(e.target.value)}
-                  placeholder='请输入分享标题'
-                />
-              </div>
-
-              <div className={styles.title}>
-                <Share size={16} color='#09090B' />
-                <span>分享方式</span>
-              </div>
-              <div className={styles.shareTypes}>
-                {/* 微信好友 */}
-                {isApp && !isMiniP && (
-                  <BehaviorBox
-                    behavior={{
-                      object_type: 'rsvp_share_wechat_btn',
-                      object_id: worksId,
-                    }}
-                    className={styles.shareItem}
-                    onClick={async () => {
-                      if (executingKey) return;
-                      setExecutingKey('wechat');
-                      try {
-                        await shareToWechat('wechat');
-                        setInviteeShareDialogOpen(false);
-                      } finally {
-                        setExecutingKey(null);
-                      }
-                    }}
-                  >
-                    <img
-                      src='https://img2.maka.im/cdn/webstore10/jiantie/icon_weixin.png'
-                      alt='微信'
-                    />
-                    <span>微信</span>
-                  </BehaviorBox>
-                )}
-
-                {/* 复制链接 */}
-                <BehaviorBox
-                  behavior={{
-                    object_type: 'rsvp_share_copy_link_btn',
-                    object_id: worksId,
-                  }}
-                  className={styles.shareItem}
-                  onClick={() => {
-                    copyInviteeLink();
-                    setInviteeShareDialogOpen(false);
-                  }}
-                >
-                  <img
-                    src='https://img2.maka.im/cdn/webstore10/jiantie/icon_lianjie.png'
-                    alt='复制链接'
-                  />
-                  <span>复制链接</span>
-                </BehaviorBox>
-              </div>
-            </div>
-          </div>
-        </ResponsiveDialog>
+              // 更新当前查看的嘉宾信息
+              const updated = data.find(
+                (item: any) => item.id === viewingInvitee?.id
+              );
+              if (updated) {
+                setViewingInvitee(updated);
+              }
+            }
+          }}
+          onShare={handleShareInvitee}
+          showShareButton={true}
+        />
 
         {/* 新增嘉宾弹窗 */}
         <ResponsiveDialog
+          fullHeight={true}
           isOpen={inviteeDialogOpen}
+          handleOnly={true}
           onOpenChange={open => {
             setInviteeDialogOpen(open);
             if (!open) {
@@ -1143,10 +665,10 @@ export default function RSVPInviteesPage() {
           }}
           title='指定嘉宾'
         >
-          <div className='p-4'>
+          <div className='p-4 bg-gray-50 h-full border-t border-gray-200'>
             <div className='space-y-4'>
-              {/* 套餐信息卡片 */}
-              <div className='bg-purple-50 rounded-xl border border-purple-200 p-4'>
+              {/* 套餐信息卡片，暂时不用 */}
+              {/* <div className='bg-purple-50 rounded-xl border border-purple-200 p-4'>
                 <div className='flex items-start justify-between'>
                   <div className='flex items-start gap-3 flex-1'>
                     <div className='w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0'>
@@ -1171,20 +693,20 @@ export default function RSVPInviteesPage() {
                     升级
                   </Button>
                 </div>
-              </div>
+              </div> */}
 
               {/* 创建嘉宾表单 */}
-              <div className='bg-white rounded-xl border border-[#e4e4e7] p-4'>
-                <div className='text-base font-semibold text-[#09090B] mb-4'>
+              <div className='bg-white rounded-xl border border-gray-100 p-4 shadow-sm'>
+                <div className='text-base font-semibold text-gray-900 mb-4'>
                   创建嘉宾
                 </div>
 
                 <div className='mb-4'>
-                  <div className='text-sm font-medium text-[#0A0A0A] mb-2'>
+                  <div className='text-sm font-medium text-gray-500 mb-2'>
                     姓名（必填）
                   </div>
                   <Input
-                    className='w-full bg-[#F3F3F5] border border-gray-200 rounded-md px-3 py-2 text-sm'
+                    className='w-full h-11'
                     value={inviteeName}
                     onChange={e => setInviteeName(e.target.value)}
                     placeholder='例如：王小明'
@@ -1192,7 +714,7 @@ export default function RSVPInviteesPage() {
                 </div>
 
                 <Button
-                  className='w-full bg-gray-800 hover:bg-gray-900 text-white h-12 text-base font-medium'
+                  className='w-full bg-gray-800 hover:bg-gray-900 text-white h-11 text-base font-medium'
                   onClick={handleCreateInvitee}
                   disabled={creatingInvitee || !inviteeName.trim()}
                 >
@@ -1207,195 +729,15 @@ export default function RSVPInviteesPage() {
           </div>
         </ResponsiveDialog>
 
-        {/* 分享设置面板 - 用于公开链接分享 */}
-        <ResponsiveDialog
+        {/* 分享面板 */}
+        <PublicShareDialog
           isOpen={shareDialogOpen}
           onOpenChange={setShareDialogOpen}
-          title='分享邀请链接'
-        >
-          <div className='px-4 pb-4 space-y-4'>
-            {/* 编辑标题、描述和封面 */}
-            <div className='bg-white rounded-xl border border-[#e4e4e7] p-4'>
-              <div className='flex items-center justify-between mb-3'>
-                <div className={styles.title}>
-                  <span>编辑标题、描述和封面</span>
-                </div>
-                <span className='text-sm text-blue-500 cursor-pointer'>
-                  自动
-                </span>
-              </div>
-
-              {/* 标题输入 */}
-              <div className='mb-3'>
-                <div className='relative'>
-                  <Input
-                    value={publicShareTitle}
-                    onChange={e => setPublicShareTitle(e.target.value)}
-                    onBlur={() => updateWorkTitle(publicShareTitle)}
-                    className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-sm'
-                    placeholder='请输入标题'
-                    maxLength={36}
-                  />
-                  <div className='absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400'>
-                    {publicShareTitle.length}/36
-                  </div>
-                </div>
-              </div>
-
-              {/* 封面和描述 */}
-              <div className='flex gap-3'>
-                {/* 封面 */}
-                <div className='relative flex-shrink-0'>
-                  <div className='w-24 h-24 rounded-lg bg-gray-200 overflow-hidden'>
-                    {publicShareCover ? (
-                      <img
-                        src={publicShareCover}
-                        alt='封面'
-                        className='w-full h-full object-cover'
-                      />
-                    ) : (
-                      <div className='w-full h-full flex items-center justify-center text-xs text-gray-400'>
-                        封面
-                      </div>
-                    )}
-                  </div>
-                  <div
-                    className='absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs text-center py-1 rounded-b-lg cursor-pointer'
-                    onClick={() => {
-                      toast('封面更换功能开发中');
-                    }}
-                  >
-                    更换封面
-                  </div>
-                </div>
-
-                {/* 描述 */}
-                <div className='flex-1 relative'>
-                  <Textarea
-                    value={publicShareDesc}
-                    onChange={e => setPublicShareDesc(e.target.value)}
-                    onBlur={() => updateWorkDesc(publicShareDesc)}
-                    className='w-full bg-[#F3F3F5] border-none rounded-md px-3 py-2 text-sm min-h-[96px] resize-none'
-                    placeholder='请输入描述'
-                    maxLength={60}
-                  />
-                  <div className='absolute bottom-2 right-2 text-xs text-gray-400'>
-                    {publicShareDesc.length}/60
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 导出其他格式 */}
-            <div className='bg-white rounded-xl border border-[#e4e4e7] p-4'>
-              <div className={styles.title}>
-                <span>导出其他格式</span>
-              </div>
-              <div className={styles.shareTypes}>
-                {/* 图片 */}
-                {!isMiniP && (
-                  <BehaviorBox
-                    behavior={{
-                      object_type: 'rsvp_share_poster_btn',
-                      object_id: worksId,
-                    }}
-                    className={styles.shareItem}
-                    onClick={async () => {
-                      if (executingKey) return;
-                      setExecutingKey('poster');
-                      try {
-                        await savePoster();
-                      } finally {
-                        setExecutingKey(null);
-                      }
-                    }}
-                  >
-                    <div className='w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center'>
-                      <ImageIcon size={20} className='text-gray-600' />
-                    </div>
-                    <span>图片</span>
-                  </BehaviorBox>
-                )}
-
-                {/* 视频 */}
-                {!isMiniP && (
-                  <BehaviorBox
-                    behavior={{
-                      object_type: 'rsvp_share_video_btn',
-                      object_id: worksId,
-                    }}
-                    className={styles.shareItem}
-                    onClick={async () => {
-                      if (executingKey) return;
-                      setExecutingKey('video');
-                      try {
-                        await exportVideo();
-                      } finally {
-                        setExecutingKey(null);
-                      }
-                    }}
-                  >
-                    <div className='w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center'>
-                      <Video size={20} className='text-gray-600' />
-                    </div>
-                    <span>视频</span>
-                  </BehaviorBox>
-                )}
-
-                {/* 复制链接 */}
-                <BehaviorBox
-                  behavior={{
-                    object_type: 'rsvp_share_copy_link_btn',
-                    object_id: worksId,
-                  }}
-                  className={styles.shareItem}
-                  onClick={() => {
-                    if (publicLink) {
-                      handleCopyLink(publicLink);
-                    }
-                  }}
-                >
-                  <img
-                    src='https://img2.maka.im/cdn/webstore10/jiantie/icon_lianjie.png'
-                    alt='复制链接'
-                  />
-                  <span>复制链接</span>
-                </BehaviorBox>
-              </div>
-            </div>
-
-            {/* 分享专属邀请 */}
-            <div className='bg-white rounded-xl border border-[#e4e4e7] p-4'>
-              <div className='flex items-center gap-2 mb-2'>
-                <div className='w-4 h-4 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0'>
-                  <Share size={12} className='text-white' />
-                </div>
-                <div className={styles.title}>
-                  <span>分享专属邀请</span>
-                </div>
-              </div>
-              <div className='text-sm text-gray-600 mb-3'>
-                通过微信向嘉宾分享活动链接
-              </div>
-              <Button
-                className='w-full bg-green-500 hover:bg-green-600 text-white h-10'
-                onClick={() => {
-                  // 这里可以添加分享到微信的逻辑
-                  toast('请在微信中打开进行分享');
-                }}
-              >
-                <div className='flex items-center justify-center gap-2'>
-                  <img
-                    src='https://img2.maka.im/cdn/webstore10/jiantie/icon_weixin.png'
-                    alt='微信'
-                    className='w-5 h-5'
-                  />
-                  <span>立即发送</span>
-                </div>
-              </Button>
-            </div>
-          </div>
-        </ResponsiveDialog>
+          worksId={worksId}
+          mode={shareMode}
+          contactId={shareContactId}
+          contactName={shareContactName}
+        />
       </div>
     </div>
   );

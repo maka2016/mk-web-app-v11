@@ -10,8 +10,6 @@ import cls from 'classnames';
 import {
   ArrowLeft,
   CheckSquare2,
-  ChevronDown,
-  ChevronUp,
   Circle,
   GripVertical,
   Lightbulb,
@@ -85,6 +83,8 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
   const [collectForm, setCollectForm] = useState<boolean>(
     config?.collect_form ?? fields.length > 0
   );
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // 同步 collectForm 状态与 config.collect_form
   useEffect(() => {
@@ -141,6 +141,46 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
     );
   };
 
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newFields = [...fields];
+    const draggedField = newFields[draggedIndex];
+    newFields.splice(draggedIndex, 1);
+    newFields.splice(dropIndex, 0, draggedField);
+    setFields(newFields);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   const handleSaveClick = async () => {
     setSaving(true);
     try {
@@ -161,18 +201,18 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
   return (
     <div className='relative flex flex-col h-full max-h-screen overflow-hidden'>
       {/* 顶部导航栏 - 移动端风格 */}
-      <div className='px-4 py-3 border-b border-black/[0.06] flex items-center justify-between bg-white flex-shrink-0 z-10'>
-        <div className='flex items-center gap-2 flex-1'>
-          <button
-            onClick={() => {
-              onClose?.();
-            }}
-            className='flex items-center gap-1 text-[#09090B]'
-          >
-            <ArrowLeft size={20} />
-            <span className='text-sm'>返回</span>
-          </button>
-          <span className='font-semibold text-lg leading-[26px] text-[#09090B] ml-4'>
+      <div className='px-4 py-2 border-b border-black/[0.06] flex items-center justify-between bg-white flex-shrink-0 z-10'>
+        <button
+          onClick={() => {
+            onClose?.();
+          }}
+          className='flex items-center gap-1 text-[#09090B]'
+        >
+          <ArrowLeft size={20} />
+          <span className='text-sm'>返回</span>
+        </button>
+        <div className='flex items-center gap-2 flex-1 justify-center'>
+          <span className='font-semibold text-lg leading-[26px] text-[#09090B]'>
             RSVP配置
           </span>
         </div>
@@ -191,7 +231,7 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
           {error ? <div className='text-red-500 text-sm'>{error}</div> : null}
 
           {/* Enable RSVP */}
-          <div className='border border-black/[0.1] rounded-xl p-4'>
+          <div className='border-b border-black/[0.1] py-3'>
             <div className='flex items-start justify-between mb-2'>
               <div className='flex-1'>
                 <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
@@ -212,7 +252,7 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
           </div>
 
           {/* Collect form information */}
-          <div className='border border-black/[0.1] rounded-xl p-4'>
+          <div className='border-b border-black/[0.1] py-4'>
             <div className='flex items-start justify-between mb-4'>
               <div className='flex-1'>
                 <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
@@ -262,6 +302,13 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
                       key={f.id}
                       field={f}
                       index={index}
+                      isDragging={draggedIndex === index}
+                      isDragOver={dragOverIndex === index}
+                      onDragStart={e => handleDragStart(e, index)}
+                      onDragOver={e => handleDragOver(e, index)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={e => handleDrop(e, index)}
+                      onDragEnd={handleDragEnd}
                       onToggleEnabled={(id, enabled) => {
                         updateField(id, { enabled });
                       }}
@@ -278,8 +325,8 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
             )}
           </div>
 
-          {/* 基础信息 - 默认折叠 */}
-          <div className='border border-black/[0.1] rounded-xl'>
+          {/* 基础信息 - 暂时不需要 */}
+          {/* <div className='border border-black/[0.1] rounded-xl'>
             <div
               className='p-3 flex items-center justify-between cursor-pointer'
               onClick={() => setIsBasicInfoExpanded(!isBasicInfoExpanded)}
@@ -324,7 +371,7 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
                 </div>
               </div>
             )}
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -354,6 +401,13 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
 interface FieldItemProps {
   field: RSVPField;
   index: number;
+  isDragging?: boolean;
+  isDragOver?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: () => void;
+  onDrop?: (e: React.DragEvent) => void;
+  onDragEnd?: () => void;
   onToggleEnabled: (id: string, enabled: boolean) => void;
   onToggleSplitAdultChild: (id: string, split: boolean) => void;
   onToggleRequired: (id: string, required: boolean) => void;
@@ -361,6 +415,13 @@ interface FieldItemProps {
 
 function FieldItem({
   field,
+  isDragging = false,
+  isDragOver = false,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
   onToggleEnabled,
   onToggleSplitAdultChild,
   onToggleRequired,
@@ -375,10 +436,28 @@ function FieldItem({
   };
 
   return (
-    <div className='border border-[#e4e4e7] rounded-md bg-white'>
-      <div className='p-3 flex items-center gap-3'>
+    <div
+      className={cls(
+        'border-2 rounded-lg bg-white transition-all',
+        isDragOver
+          ? 'border-[#3358D4] border-dashed bg-[#E6F0FF]'
+          : 'border-[#e4e4e7]',
+        isDragging && 'opacity-50'
+      )}
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+    >
+      <div className='px-3 py-2 flex items-center gap-3'>
         {/* 拖拽手柄 */}
-        <div className='cursor-grab active:cursor-grabbing text-gray-400'>
+        <div
+          className='cursor-grab active:cursor-grabbing text-gray-400 touch-none flex-shrink-0'
+          onMouseDown={e => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
+        >
           <GripVertical size={20} />
         </div>
 
@@ -401,8 +480,8 @@ function FieldItem({
             onClick={() => onToggleRequired(field.id, !field.required)}
             className={
               field.required
-                ? 'px-2 py-0.5 bg-[#09090B] text-white text-xs font-semibold rounded cursor-pointer hover:bg-[#09090B]/90 transition-colors'
-                : 'px-2 py-0.5 bg-[#F4F4F5] text-[#09090B] text-xs font-semibold rounded cursor-pointer hover:bg-[#E4E4E7] transition-colors'
+                ? 'px-2 py-1 bg-[#09090B] text-white text-xs font-semibold rounded cursor-pointer hover:bg-[#09090B]/90 transition-colors'
+                : 'px-2 py-1 bg-[#F4F4F5] text-[#09090B] text-xs font-semibold rounded cursor-pointer hover:bg-[#E4E4E7] transition-colors'
             }
           >
             {field.required ? '必填' : '选填'}
@@ -412,24 +491,24 @@ function FieldItem({
 
       {/* Guests字段的子选项 */}
       {field.type === 'guest_count' && field.enabled !== false && (
-        <div className='px-3 pb-3 pl-14'>
-          <div className='flex items-center gap-2'>
+        <div className='px-3 pb-3 pl-12'>
+          <div className='flex items-center gap-2 justify-between'>
+            <span className='text-xs leading-5 text-[#09090B]'>
+              分别统计大人和小孩
+            </span>
             <Switch
               checked={field.splitAdultChild ?? false}
               onCheckedChange={checked =>
                 onToggleSplitAdultChild(field.id, checked)
               }
             />
-            <span className='text-sm leading-5 text-[#09090B]'>
-              分别统计大人和小孩
-            </span>
           </div>
         </div>
       )}
 
       {/* 自定义字段的选项预览 */}
       {field.options && ['radio', 'checkbox'].includes(field.type) && (
-        <div className='px-3 pb-3 pl-14'>
+        <div className='px-3 pb-3 pl-12'>
           <div className='flex items-center gap-1 flex-wrap'>
             {field.options.map((opt, idx) => (
               <div

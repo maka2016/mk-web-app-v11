@@ -1,7 +1,9 @@
 'use client';
 
+import { onScreenShot } from '@/components/GridV3/shared';
 import { showSelector } from '@/components/showSelector';
 import { getAppId, getUid } from '@/services';
+import { updateWorksDetail2 } from '@/services/works2';
 import { useStore } from '@/store';
 import { trpc } from '@/utils/trpc';
 import {
@@ -353,11 +355,16 @@ const WorksManager = () => {
 
     setGeneratingCover(true);
     try {
-      const coverUrl = await genTemplateCover(
-        workToEditCover.id,
-        String(workToEditCover.uid)
-      );
-      setNewCover(coverUrl);
+      const coverUrl = await onScreenShot({
+        id: workToEditCover.id,
+        width: 540,
+        height: 960,
+        appid: getAppId(),
+      });
+      setNewCover(coverUrl[0]);
+      updateWorksDetail2(workToEditCover.id, {
+        cover: coverUrl[0],
+      });
       toast.success('封面生成成功');
     } catch (error) {
       toast.error('封面生成失败');

@@ -12,7 +12,7 @@ import {
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import { ResponsiveTooltip } from '@workspace/ui/components/responsive-tooltip';
 import cls from 'classnames';
-import { Download, FileText, Image, Store } from 'lucide-react';
+import { Download, FileText, Image } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useGridContext } from '../../comp/provider';
@@ -302,7 +302,7 @@ export default function DesignerToolHeader() {
                   <Image className='w-4 h-4 mr-2' />
                   封面管理
                 </Button>
-                <Button
+                {/* <Button
                   variant='ghost'
                   size='sm'
                   className='justify-start w-full h-8 px-2'
@@ -312,7 +312,7 @@ export default function DesignerToolHeader() {
                 >
                   <Store className='w-4 h-4 mr-2' />
                   商城展示设置
-                </Button>
+                </Button> */}
                 <Button
                   variant='ghost'
                   size='sm'
