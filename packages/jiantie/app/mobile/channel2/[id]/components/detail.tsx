@@ -37,6 +37,7 @@ export default function Detail({ channelId }: DetailProps) {
   const [expandedFloors, setExpandedFloors] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
 
   // 获取二级频道详情和三级热词
   useEffect(() => {
@@ -217,7 +218,7 @@ export default function Detail({ channelId }: DetailProps) {
             </div>
           </div>
         ) : (
-          <div className=' space-y-6'>
+          <div className=' space-y-6 pb-6'>
             {fourthLevelFloors.map(floor => {
               const isSingleFloor = fourthLevelFloors.length === 1;
               const isExpanded = expandedFloors.has(floor.id);
@@ -289,9 +290,23 @@ export default function Detail({ channelId }: DetailProps) {
                             <div className='aspect-[176/236] bg-gradient-to-br from-gray-100 to-gray-50 relative'>
                               {collection.thumb_path ? (
                                 <img
-                                  src={cdnApi(collection.thumb_path)}
+                                  src={cdnApi(collection.thumb_path, {
+                                    resizeWidth: 176,
+                                    resizeHeight: 236,
+                                  })}
                                   alt={collection.display_name}
-                                  className='object-cover w-full h-full absolute inset-0'
+                                  className={`object-cover w-full h-full absolute inset-0 transition-opacity duration-300 ${
+                                    loadedImages.has(collection.id)
+                                      ? 'opacity-100'
+                                      : 'opacity-0'
+                                  }`}
+                                  onLoad={() => {
+                                    setLoadedImages(prev => {
+                                      const newSet = new Set(prev);
+                                      newSet.add(collection.id);
+                                      return newSet;
+                                    });
+                                  }}
                                 />
                               ) : (
                                 <div className='flex items-center justify-center h-full'>
