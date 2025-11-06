@@ -104,7 +104,7 @@ export function RSVPFormFields({
                       onBlur={formField.onBlur}
                       name={formField.name}
                       ref={formField.ref}
-                      className='bg-gray-50 border-gray-100 rounded-lg focus:ring-0 focus:ring-gray-400 placeholder:text-gray-400'
+                      className='h-11 bg-gray-50 border-gray-100 rounded-lg focus:ring-0 focus:ring-gray-400 placeholder:text-gray-400'
                     />
                   ) : field.type === 'radio' ? (
                     <div className='flex flex-wrap items-center gap-3'>

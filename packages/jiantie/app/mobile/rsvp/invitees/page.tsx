@@ -375,15 +375,11 @@ export default function RSVPInviteesPage() {
 
   return (
     <div className='relative bg-gray-50'>
-      <MobileHeader
-        title={'分享与邀请'}
-        rightText='首页'
-        onRightClick={toHome}
-      />
+      <MobileHeader title={'分享与邀请'} rightText='' />
 
       <div className='p-3 overflow-y-auto flex flex-col gap-3'>
         {/* 指定嘉宾卡片 */}
-        <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 cursor-pointer shadow-sm'>
+        <div className='bg-white border border-gray-100 rounded-xl p-4 cursor-pointer shadow-sm'>
           <div
             className='flex items-center justify-between'
             onClick={handleOpenAddInvitee}
@@ -414,7 +410,7 @@ export default function RSVPInviteesPage() {
         </div>
 
         {/* 公开分享卡片 */}
-        <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 cursor-pointer shadow-sm'>
+        <div className='bg-white border border-gray-100 rounded-xl p-4 cursor-pointer shadow-sm'>
           <div
             className='flex items-center justify-between'
             onClick={() => {
@@ -445,7 +441,7 @@ export default function RSVPInviteesPage() {
         </div>
 
         {/* 邀请记录 */}
-        <div className='border border-black/[0.1] rounded-xl p-4 bg-white shadow-sm flex flex-col gap-3'>
+        <div className='border border-gray-100 rounded-xl p-4 bg-white shadow-sm flex flex-col gap-3'>
           <div className=''>
             <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
               已邀请嘉宾
@@ -569,7 +565,7 @@ export default function RSVPInviteesPage() {
                         </div>
                         <div className='flex items-center gap-2 mb-2'>
                           <span
-                            className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor} ${statusBgColor}`}
+                            className={`border-1 text-xs px-2 py-1 rounded-full font-medium ${statusColor} ${statusBgColor}`}
                           >
                             {statusText}
                           </span>
@@ -660,6 +656,7 @@ export default function RSVPInviteesPage() {
         <ResponsiveDialog
           fullHeight={true}
           isOpen={inviteeDialogOpen}
+          handleOnly={true}
           onOpenChange={open => {
             setInviteeDialogOpen(open);
             if (!open) {
@@ -668,7 +665,7 @@ export default function RSVPInviteesPage() {
           }}
           title='指定嘉宾'
         >
-          <div className='p-4 bg-gray-50 h-full'>
+          <div className='p-4 bg-gray-50 h-full border-t border-gray-200'>
             <div className='space-y-4'>
               {/* 套餐信息卡片，暂时不用 */}
               {/* <div className='bg-purple-50 rounded-xl border border-purple-200 p-4'>
@@ -699,17 +696,17 @@ export default function RSVPInviteesPage() {
               </div> */}
 
               {/* 创建嘉宾表单 */}
-              <div className='bg-white rounded-xl border border-[#e4e4e7] p-4 shadow-sm'>
-                <div className='text-base font-semibold text-[#09090B] mb-4'>
+              <div className='bg-white rounded-xl border border-gray-100 p-4 shadow-sm'>
+                <div className='text-base font-semibold text-gray-900 mb-4'>
                   创建嘉宾
                 </div>
 
                 <div className='mb-4'>
-                  <div className='text-sm font-medium text-[#0A0A0A] mb-2'>
+                  <div className='text-sm font-medium text-gray-500 mb-2'>
                     姓名（必填）
                   </div>
                   <Input
-                    className='w-full bg-[#F3F3F5] border border-gray-200 rounded-md px-3 py-2 text-sm'
+                    className='w-full h-11'
                     value={inviteeName}
                     onChange={e => setInviteeName(e.target.value)}
                     placeholder='例如：王小明'
@@ -717,7 +714,7 @@ export default function RSVPInviteesPage() {
                 </div>
 
                 <Button
-                  className='w-full bg-gray-800 hover:bg-gray-900 text-white h-12 text-base font-medium'
+                  className='w-full bg-gray-800 hover:bg-gray-900 text-white h-11 text-base font-medium'
                   onClick={handleCreateInvitee}
                   disabled={creatingInvitee || !inviteeName.trim()}
                 >

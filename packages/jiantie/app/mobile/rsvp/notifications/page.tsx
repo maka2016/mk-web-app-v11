@@ -1,13 +1,18 @@
 'use client';
 import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
 import { InviteeDetailDialog } from '@/components/RSVP/InviteeDetailDialog';
+import { getAppId, getUid } from '@/services';
+import { getUrlWithParam } from '@/utils';
 import { trpc } from '@/utils/trpc';
+import APPBridge from '@mk/app-bridge';
 import { Button } from '@workspace/ui/components/button';
-import { CheckCheck, Settings } from 'lucide-react';
+import { CheckCheck, ExternalLink, Settings } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const [selectedNotification, setSelectedNotification] = useState<any>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [showUnreadOnly] = useState(false);
@@ -214,6 +219,35 @@ export default function NotificationsPage() {
     return notification.contact?.name || '访客';
   };
 
+  // 跳转到作品预览页面
+  const handleGoToWork = (
+    e: React.MouseEvent,
+    worksId: string | null | undefined
+  ) => {
+    e.stopPropagation(); // 阻止触发通知卡片的点击事件
+    if (!worksId) {
+      toast.error('作品ID不存在');
+      return;
+    }
+
+    const uid = getUid();
+    const appid = getAppId();
+
+    if (APPBridge.judgeIsInApp()) {
+      APPBridge.navToPage({
+        url: `${location.origin}/mobile/preview?works_id=${worksId}&uid=${uid}&is_full_screen=1&back=1`,
+        type: 'URL',
+      });
+    } else {
+      router.push(
+        getUrlWithParam(
+          `/mobile/preview?works_id=${worksId}&uid=${uid}&appid=${appid}`,
+          'clickid'
+        )
+      );
+    }
+  };
+
   return (
     <div className='relative bg-white min-h-screen pb-20'>
       <MobileHeader
@@ -241,6 +275,8 @@ export default function NotificationsPage() {
             {notifications.map((notification: any) => {
               const config = getNotificationConfig(notification);
               const senderName = getSenderName(notification);
+              const rsvpTitle = notification.form_config?.title || 'RSVP邀请';
+              const worksId = notification.form_config?.works_id;
 
               return (
                 <div
@@ -273,8 +309,28 @@ export default function NotificationsPage() {
                           {formatRelativeTime(notification.create_time)}
                         </div>
                       </div>
-                      <div className='text-sm text-gray-700 leading-5'>
+                      <div className='text-sm text-gray-700 leading-5 mb-2'>
                         {config.message}
+                      </div>
+
+                      {/* RSVP信息和跳转按钮 */}
+                      <div className='flex items-center justify-between gap-2 pt-2 border-t border-gray-200/50'>
+                        <div className='flex-1 min-w-0'>
+                          <div className='text-xs text-gray-500 truncate'>
+                            {rsvpTitle}
+                          </div>
+                        </div>
+                        {worksId && (
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='h-7 px-2 text-xs flex-shrink-0'
+                            onClick={e => handleGoToWork(e, worksId)}
+                          >
+                            <ExternalLink className='h-3 w-3 mr-1' />
+                            查看作品
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>

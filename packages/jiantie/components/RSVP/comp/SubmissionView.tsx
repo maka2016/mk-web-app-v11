@@ -45,11 +45,11 @@ export function SubmissionView({
     <FormCompWrapper className='w-full max-w-xl mx-auto'>
       <div className='text-center py-8'>
         {/* 图标 */}
-        <div className='flex justify-center mb-4'>
+        <div className='flex justify-center mb-8'>
           {willAttend ? (
-            <div className='text-6xl'>✅</div>
+            <div className='text-5xl'>✅</div>
           ) : (
-            <div className='text-6xl'>📝</div>
+            <div className='text-5xl'>📝</div>
           )}
         </div>
 

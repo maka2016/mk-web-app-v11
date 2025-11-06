@@ -17,7 +17,6 @@ import {
   Mail,
   RefreshCw,
   Share,
-  UserPlus,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -201,9 +200,9 @@ export function InviteeDetailDialog({
       onOpenChange={onOpenChange}
       title='嘉宾详情'
     >
-      <div className='p-4 overflow-y-auto bg-gray-50 h-full'>
+      <div className='p-4 overflow-y-auto bg-gray-50 h-full border-t border-gray-200'>
         {/* 基本信息卡片 */}
-        <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 mb-4 shadow-sm'>
+        <div className='bg-white border border-gray-100 rounded-xl p-4 mb-4 shadow-sm'>
           <div className='flex items-start justify-between mb-3'>
             <div className='flex-1'>
               <div className='font-semibold text-base text-[#09090B] mb-1'>
@@ -242,10 +241,10 @@ export function InviteeDetailDialog({
 
         {/* 分享专属邀请卡片 */}
         {showShareButton && onShare && (
-          <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 mb-4 shadow-sm'>
+          <div className='border border-blue-50 rounded-xl p-4 mb-4 shadow-sm bg-blue-50'>
             <div className='flex items-center gap-2 mb-2'>
               <Mail size={16} className='text-gray-600' />
-              <div className='font-semibold text-base text-[#09090B]'>
+              <div className='font-semibold text-base text-gray-900'>
                 分享专属邀请
               </div>
             </div>
@@ -253,7 +252,7 @@ export function InviteeDetailDialog({
               通过微信分享活动链接给嘉宾
             </div>
             <Button
-              className='w-full bg-green-500 hover:bg-green-600 text-white h-10'
+              className='w-full bg-[#00BC00] hover:bg-green-600 text-white h-10'
               onClick={onShare}
             >
               <Share size={16} className='mr-2' />
@@ -263,7 +262,7 @@ export function InviteeDetailDialog({
         )}
 
         {/* 联系方式和附加信息卡片 */}
-        <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 mb-4 shadow-sm'>
+        <div className='bg-white border border-gray-100 rounded-xl p-4 mb-4 shadow-sm'>
           <div
             className={`flex items-center justify-between mb-3 ${
               invitee.has_response ? 'cursor-pointer' : ''
@@ -274,7 +273,7 @@ export function InviteeDetailDialog({
               }
             }}
           >
-            <div className='font-semibold text-base text-[#09090B]'>
+            <div className='font-semibold text-base text-gray-900'>
               联系方式和附加信息
             </div>
             {invitee.has_response && (
@@ -323,8 +322,8 @@ export function InviteeDetailDialog({
         </div>
 
         {/* 交互记录卡片 */}
-        <div className='bg-white border border-[#e4e4e7] rounded-xl p-4 shadow-sm'>
-          <div className='font-semibold text-base text-[#09090B] mb-3'>
+        <div className='bg-white border border-gray-100 rounded-xl p-4 shadow-sm'>
+          <div className='font-semibold text-base text-gray-900 mb-3'>
             交互记录
           </div>
           <div className='flex flex-col gap-3'>
@@ -334,23 +333,6 @@ export function InviteeDetailDialog({
               </div>
             ) : actionLogs.length > 0 ? (
               <>
-                {/* 创建邀请记录 */}
-                <div className='flex items-start gap-3 pb-3 border-b border-gray-100'>
-                  <UserPlus size={16} className='text-gray-400 mt-0.5' />
-                  <div className='flex-1'>
-                    <div className='text-sm text-gray-800'>创建邀请</div>
-                    <div className='text-xs text-gray-400'>
-                      {new Date(invitee.create_time).toLocaleString('zh-CN', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </div>
-                  </div>
-                </div>
-
                 {/* 操作日志列表 */}
                 {actionLogs.map((log, index) => {
                   const Icon =
@@ -372,6 +354,12 @@ export function InviteeDetailDialog({
                         ? 'text-green-400'
                         : 'text-orange-400';
 
+                  // 判断是否为提交类型的操作
+                  const isSubmitAction =
+                    log.action_type === 'submit' ||
+                    log.action_type === 'resubmit';
+                  const willAttend = log.submission?.will_attend;
+
                   return (
                     <div
                       key={log.id || index}
@@ -392,6 +380,26 @@ export function InviteeDetailDialog({
                             minute: '2-digit',
                           })}
                         </div>
+                        {isSubmitAction && willAttend !== undefined && (
+                          <div className='text-xs text-gray-400 mt-0.5'>
+                            是否出席：
+                            <span
+                              className={
+                                willAttend === true
+                                  ? 'text-green-500 ml-1'
+                                  : willAttend === false
+                                    ? 'text-orange-500 ml-1'
+                                    : 'text-gray-500 ml-1'
+                              }
+                            >
+                              {willAttend === true
+                                ? '是'
+                                : willAttend === false
+                                  ? '否'
+                                  : '未确定'}
+                            </span>
+                          </div>
+                        )}
                         {log.device_type && (
                           <div className='text-xs text-gray-400 mt-0.5'>
                             设备：
