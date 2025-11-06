@@ -1,10 +1,10 @@
-import { cdnApi } from '@mk/services';
+import { cdnApi, getAppId } from '@mk/services';
 import { deepClone } from '@mk/utils';
 import { Button } from '@workspace/ui/components/button';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useGridContext } from '../../comp/provider';
-import { genTemplateCover } from './services';
+import { onScreenShot } from '../../shared';
 
 const CoverManager = ({
   onCoverChange,
@@ -39,13 +39,15 @@ const CoverManager = ({
           variant={'outline'}
           onClick={async () => {
             setLoading(true);
-            const coverUrl = await genTemplateCover(
-              worksStore?.worksDetail.id,
-              worksStore?.worksDetail.uid?.toString() || ''
-            );
+            const coverUrl = await onScreenShot({
+              id: worksStore?.worksDetail.id,
+              width: 540,
+              height: 960,
+              appid: getAppId(),
+            });
             setCover(coverUrl);
             setLoading(false);
-            toast.success('封面重新生成成功，重新刷新页面可以看到最新的封面');
+            toast.success('封面重新生成成功');
           }}
         >
           {!loading ? '重新生成封面' : '重新生成封面中...'}

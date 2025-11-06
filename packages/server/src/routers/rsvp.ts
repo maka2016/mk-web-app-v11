@@ -30,7 +30,6 @@ const SubmissionDataSchema = z.any();
 
 const RsvpSubmissionCreateInput = z.object({
   form_config_id: z.string(),
-  visitor_id: z.string().optional(),
   contact_id: z.string().optional(),
   will_attend: z.boolean(),
   submission_data: SubmissionDataSchema,
@@ -40,6 +39,7 @@ const RsvpSubmissionCreateInput = z.object({
 const RsvpSubmissionUpdateInput = z.object({
   submission_group_id: z.string(),
   submission_data: SubmissionDataSchema,
+  will_attend: z.boolean().optional(), // 是否出席（可选，如果提供则更新）
   changed_fields: z.any().optional(),
   operator_type: z.enum(['visitor', 'admin', 'system']).optional(),
   operator_id: z.string().optional(),
@@ -57,7 +57,6 @@ const RsvpSubmissionStatusChangeInput = z.object({
 const RsvpActionLogCreateInput = z.object({
   form_config_id: z.string(),
   contact_id: z.string().optional(),
-  visitor_id: z.string().optional(),
   action_type: z.enum(['view_page', 'submit', 'resubmit']),
   submission_id: z.string().optional(),
   ip_address: z.string().optional(),
@@ -89,6 +88,8 @@ const RsvpInviteeUpdateInput = z.object({
   name: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email().optional(),
+  invite_title: z.string().optional(),
+  invite_desc: z.string().optional(),
 });
 
 export const rsvpRouter = router({
@@ -161,120 +162,46 @@ export const rsvpRouter = router({
 
       let finalContactId = input.contact_id;
 
-      // 优先级：contact_id > 手机号查找 > 创建新联系人
-      // 如果已经有 contact_id（专属链接），直接使用，不再查找手机号
-      if (!finalContactId && input.will_attend && input.submission_data) {
+      // 验证传入的 contact_id 是否有效（防止使用过期或无效的ID）
+      if (finalContactId) {
+        const contactExists = await ctx.prisma.rsvpContactEntity.findUnique({
+          where: { id: finalContactId },
+        });
+        if (!contactExists || contactExists.deleted) {
+          // 如果 contact_id 无效或已删除，清空它
+          finalContactId = undefined;
+        }
+      }
+
+      // 如果没有 contact_id，且是公开链接提交（有 _guestInfo），则自动创建 contact
+      // 无论是否出席，都应该创建 contact（根据需求）
+      if (!finalContactId && input.submission_data) {
         const submissionData = input.submission_data as Record<string, any>;
 
-        // 从提交数据中提取手机号
-        let phone: string | null = null;
-        for (const [key, value] of Object.entries(submissionData)) {
-          if (typeof value === 'string') {
-            const lowerKey = key.toLowerCase();
-            if (
-              lowerKey.includes('phone') ||
-              lowerKey.includes('mobile') ||
-              lowerKey.includes('tel') ||
-              lowerKey.includes('手机') ||
-              lowerKey.includes('电话') ||
-              lowerKey.includes('联系方式')
-            ) {
-              const phoneMatch = value.replace(/\D/g, '');
-              if (phoneMatch.length >= 7) {
-                phone = phoneMatch;
-                break;
-              }
-            }
-          }
-        }
+        // 检查是否是公开链接提交（有 _guestInfo）
+        if (submissionData._guestInfo?.guestName) {
+          const guestName = submissionData._guestInfo.guestName.trim();
 
-        // 如果有手机号，创建/更新联系人
-        if (phone) {
-          // 从提交数据中提取姓名
-          let name = '访客'; // 默认名称
-
-          // 优先从 _guestInfo 中获取
-          if (submissionData._guestInfo?.guestName) {
-            name = submissionData._guestInfo.guestName;
-          } else if (submissionData._inviteeInfo?.inviteeName) {
-            // 从被邀请人信息中获取
-            name = submissionData._inviteeInfo.inviteeName;
-          } else {
-            // 查找姓名字段
-            for (const [key, value] of Object.entries(submissionData)) {
-              if (typeof value === 'string') {
-                const lowerKey = key.toLowerCase();
-                if (
-                  (lowerKey.includes('name') ||
-                    lowerKey.includes('姓名') ||
-                    lowerKey.includes('名字')) &&
-                  value.trim()
-                ) {
-                  name = value.trim();
-                  break;
-                }
-              }
-            }
-          }
-
-          // 获取表单配置对应的works的uid（用于创建联系人）
-          const works = await ctx.prisma.worksEntity.findUnique({
-            where: { id: form.works_id },
-          });
-          const contactUid = works?.uid;
-
-          if (!contactUid) {
-            // 如果无法获取uid，跳过联系人创建
-            console.warn('无法获取works的uid，跳过联系人创建');
-          } else {
-            // 查找或创建联系人（在同一用户下查找）
-            const existing = await ctx.prisma.rsvpContactEntity.findFirst({
-              where: {
-                phone: phone,
-                uid: contactUid,
-              },
+          if (guestName) {
+            // 获取表单配置对应的works的uid（用于创建联系人）
+            const works = await ctx.prisma.worksEntity.findUnique({
+              where: { id: form.works_id },
             });
+            const contactUid = works?.uid;
 
-            if (existing) {
-              // 更新现有联系人的姓名
-              const updated = await ctx.prisma.rsvpContactEntity.update({
-                where: { id: existing.id },
-                data: { name: name },
-              });
-              finalContactId = updated.id;
-
-              // 检查是否已关联到当前表单
-              const existingLink =
-                await ctx.prisma.rsvpContactFormConfigEntity.findUnique({
-                  where: {
-                    contact_id_form_config_id: {
-                      contact_id: existing.id,
-                      form_config_id: input.form_config_id,
-                    },
-                  },
-                });
-
-              // 如果未关联，则创建关联
-              if (!existingLink) {
-                await ctx.prisma.rsvpContactFormConfigEntity.create({
-                  data: {
-                    contact_id: existing.id,
-                    form_config_id: input.form_config_id,
-                  },
-                });
-              }
-            } else {
-              // 创建新联系人，归属于works的所有者（uid）
+            if (contactUid) {
+              // 创建新联系人（无需手机号，仅基于姓名）
               const created = await ctx.prisma.rsvpContactEntity.create({
                 data: {
-                  phone: phone,
-                  name: name,
+                  name: guestName,
+                  phone: null, // 公开链接提交时无需手机号
+                  email: null,
                   uid: contactUid,
                 },
               });
               finalContactId = created.id;
 
-              // 自动关联到当前表单（因为是从该表单提交创建的）
+              // 自动关联到当前表单
               await ctx.prisma.rsvpContactFormConfigEntity.create({
                 data: {
                   contact_id: created.id,
@@ -290,7 +217,6 @@ export const rsvpRouter = router({
       const created = await ctx.prisma.rsvpSubmissionEntity.create({
         data: {
           form_config_id: input.form_config_id,
-          visitor_id: input.visitor_id,
           contact_id: finalContactId,
           will_attend: input.will_attend,
           submission_group_id: '',
@@ -312,7 +238,6 @@ export const rsvpRouter = router({
           data: {
             form_config_id: input.form_config_id,
             contact_id: finalContactId,
-            visitor_id: input.visitor_id,
             action_type: 'submit',
             submission_id: updated.id,
           },
@@ -347,7 +272,6 @@ export const rsvpRouter = router({
       const newVersion = await ctx.prisma.rsvpSubmissionEntity.create({
         data: {
           form_config_id: latest.form_config_id,
-          visitor_id: latest.visitor_id,
           contact_id: latest.contact_id,
           submission_group_id: latest.submission_group_id,
           submission_data: input.submission_data,
@@ -357,7 +281,11 @@ export const rsvpRouter = router({
           operator_name: input.operator_name,
           remark: input.remark,
           status: latest.status, // 版本化修改不改变审核状态
-          will_attend: latest.will_attend,
+          // 如果提供了新的 will_attend，使用新值；否则使用旧值
+          will_attend:
+            input.will_attend !== undefined
+              ? input.will_attend
+              : latest.will_attend,
         },
       });
 
@@ -367,7 +295,6 @@ export const rsvpRouter = router({
           data: {
             form_config_id: latest.form_config_id,
             contact_id: latest.contact_id,
-            visitor_id: latest.visitor_id,
             action_type: 'resubmit',
             submission_id: newVersion.id,
           },
@@ -541,33 +468,51 @@ export const rsvpRouter = router({
       });
     }),
 
-  // 公开接口：根据 visitor_id 或 contact_id 查询当前表单的提交记录
+  // 批量查询：根据多个 contact_ids 获取提交记录
+  getSubmissionsByContactIds: protectedProcedure
+    .input(z.object({ contact_ids: z.array(z.string()) }))
+    .query(async ({ ctx, input }) => {
+      if (input.contact_ids.length === 0) {
+        return [];
+      }
+      return ctx.prisma.rsvpSubmissionEntity.findMany({
+        where: {
+          contact_id: { in: input.contact_ids },
+          deleted: false,
+        },
+        orderBy: { create_time: 'desc' },
+        include: {
+          form_config: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      });
+    }),
+
+  // 公开接口：根据 contact_id 查询当前表单的提交记录
   getMySubmissionByFormConfig: publicProcedure
     .input(
       z.object({
         form_config_id: z.string(),
-        visitor_id: z.string().optional(),
         contact_id: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
-      const where: any = {
-        form_config_id: input.form_config_id,
-        deleted: false,
-      };
-
-      // 优先使用 contact_id，其次 visitor_id
-      if (input.contact_id) {
-        where.contact_id = input.contact_id;
-      } else if (input.visitor_id) {
-        where.visitor_id = input.visitor_id;
-      } else {
+      // 如果没有 contact_id，直接返回空
+      if (!input.contact_id) {
         return [];
       }
 
       // 获取每个 submission_group_id 的最新记录
       const allSubmissions = await ctx.prisma.rsvpSubmissionEntity.findMany({
-        where,
+        where: {
+          form_config_id: input.form_config_id,
+          contact_id: input.contact_id,
+          deleted: false,
+        },
         orderBy: { create_time: 'desc' },
       });
 
@@ -1066,11 +1011,23 @@ export const rsvpRouter = router({
   createActionLog: publicProcedure
     .input(RsvpActionLogCreateInput)
     .mutation(async ({ ctx, input }) => {
+      // 验证 contact_id 是否存在（避免外键约束错误）
+      let validContactId = input.contact_id;
+      if (input.contact_id) {
+        const contactExists = await ctx.prisma.rsvpContactEntity.findUnique({
+          where: { id: input.contact_id },
+          select: { id: true },
+        });
+        if (!contactExists) {
+          // 如果 contact_id 不存在，设为 undefined（数据库中存储为 NULL）
+          validContactId = undefined;
+        }
+      }
+
       return ctx.prisma.rsvpViewLogEntity.create({
         data: {
           form_config_id: input.form_config_id,
-          contact_id: input.contact_id,
-          visitor_id: input.visitor_id,
+          contact_id: validContactId,
           action_type: input.action_type,
           submission_id: input.submission_id,
           ip_address: input.ip_address,

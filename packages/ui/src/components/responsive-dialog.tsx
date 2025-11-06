@@ -1,32 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Button } from '@workspace/ui/components/button';
+import { random } from '@mk/utils';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@workspace/ui/components/dialog';
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from '@workspace/ui/components/drawer';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { Drawer, DrawerContent } from '@workspace/ui/components/drawer';
 import { Icon } from '@workspace/ui/components/Icon';
-import { cn } from '@workspace/ui/lib/utils';
 import VaulDrawer from '@workspace/ui/components/side-drawer';
-import { random } from '@mk/utils';
+import { cn } from '@workspace/ui/lib/utils';
+import React, { useEffect, useRef, useState } from 'react';
 
 export interface ResponsiveDialogProps {
+  fullHeight?: boolean;
   title?: string;
   description?: string;
   triggerText?: string;
@@ -72,6 +61,7 @@ export function ResponsiveDialog({
   triggerText,
   direction,
   children,
+  fullHeight = false,
   isOpen = false,
   dismissible = true,
   contentProps = {},
@@ -126,7 +116,13 @@ export function ResponsiveDialog({
   if (_isDialog) {
     return (
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent {...contentProps}>
+        <DialogContent
+          {...contentProps}
+          className={cn(
+            contentProps.className,
+            fullHeight && 'h-screen overflow-hidden rounded-none'
+          )}
+        >
           {title && (
             <DialogHeader className='p-4 border-b border-b-slate-200 max-h-[56px]'>
               <DialogTitle>{title}</DialogTitle>
@@ -161,7 +157,11 @@ export function ResponsiveDialog({
     >
       <DrawerContent
         {...contentProps}
-        className={cn(contentProps.className, className)}
+        className={cn(
+          contentProps.className,
+          className,
+          fullHeight && 'h-screen overflow-hidden rounded-none'
+        )}
         showHandler={showHandler}
         showOverlay={showOverlay}
         overlayClassName={overlayClassName}

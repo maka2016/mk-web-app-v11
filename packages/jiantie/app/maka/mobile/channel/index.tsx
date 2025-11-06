@@ -26,6 +26,7 @@ import SearchFacets, {
 } from './components/SearchFacets';
 import TemplateFlatFloor from './components/TemplateFlateFloor';
 import Waterfall from './components/Waterfall';
+import HotwordFloorLayout from './components/HotwordFloorLayout';
 import styles from './home.module.scss';
 
 const PAGE_SIZE = 20;
@@ -832,11 +833,10 @@ const Home = () => {
             ?.filter((item: any) => item.online === true)
             ?.sort((a: any, b: any) => (a.sort || 0) - (b.sort || 0))
             .map((item: Channel) => (
-              <TemplateChannelFloor
+              <HotwordFloorLayout
                 key={item.documentId}
-                channel={item}
+                hotword={item}
                 color='var(--theme-color)'
-                showMore={true}
               />
             ))}
         </div>

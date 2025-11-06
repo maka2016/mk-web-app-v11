@@ -45,6 +45,7 @@ const HeaderForUser = () => {
   const [showMusicLib, setShowMusicLib] = useState(false);
   const object_id = searchParams.get('object_id');
   const worksStore = useWorksStore();
+  const isRsvp = worksStore.worksDetail.is_rsvp;
   const worksId = worksStore.worksDetail.id;
   const [creating, setCreating] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
@@ -124,6 +125,17 @@ const HeaderForUser = () => {
     );
   };
 
+  const toRsvp = () => {
+    const form_config_id = searchParams.get('form_config_id');
+    console.log('form_config_id', form_config_id);
+    router.push(
+      getUrlWithParam(
+        `/mobile/rsvp/invitees?works_id=${worksId}&uid=${getUid()}&appid=${appid}&form_config_id=${form_config_id}`,
+        'clickid'
+      )
+    );
+  };
+
   const handleSave = async () => {
     try {
       toast.loading(t('saving'));
@@ -136,7 +148,10 @@ const HeaderForUser = () => {
       await worksStore.api.saveWorks('manual');
       toast.dismiss();
 
-      if (!isPoster) {
+      if (isRsvp) {
+        toRsvp();
+        return;
+      } else if (!isPoster) {
         // 预览页
         toPreview();
       } else {
