@@ -1,19 +1,9 @@
 'use client';
-import {
-  Breadcrumb,
-  Button,
-  Checkbox,
-  ConfigProvider,
-  Form,
-  FormProps,
-  Input,
-  Radio as AntdRadio,
-  FormInstance,
-} from 'antd';
+import { Button } from '@workspace/ui/components/button';
 import styles from './index.module.scss';
 import { Icon } from '@workspace/ui/components/Icon';
 import cls from 'classnames';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   AddInvoiceInfo,
   InvoiceInfo,
@@ -21,7 +11,7 @@ import {
   InvoiceType,
   UserInvoiceType,
 } from '@/types/invoice';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useContext, useEffect, useState } from 'react';
 import {
   addInvoiceInfo,
   getInvoiceInfo,
@@ -31,20 +21,84 @@ import toast from 'react-hot-toast';
 import Radio from '../../components/UI/Radio';
 import FormItemsBlock from '../../components/UI/FormItemsBlock';
 import Upload from '../../components/UI/Upload';
-import { Rule } from 'antd/lib/form';
 import TextTips from '../../components/UI/TextTips';
+import { SecondaryLayoutContext } from '../../components/PC/Layout/SecondaryLayout';
+import { useForm } from 'react-hook-form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@workspace/ui/components/form';
+import { Input } from '@workspace/ui/components/input';
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '@workspace/ui/components/radio-group';
+import { Label } from '@workspace/ui/components/label';
+import * as z from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 type FieldType = AddInvoiceInfo;
+
+// 创建表单验证 schema
+const createFormSchema = (invoiceType: InvoiceType) => {
+  const baseSchema = z.object({
+    invoice_title: z.string().min(1, '请输入发票抬头'),
+    invoice_type: z.string(),
+    user_invoice_type: z.string().optional(),
+    tax_no: z.string().optional(),
+  });
+
+  if (invoiceType === InvoiceType.专用) {
+    return baseSchema.extend({
+      tax_no: z
+        .string()
+        .min(1, '请输入税号')
+        .regex(/^[A-Za-z0-9]{15,20}$/, '请输入正确的税号'),
+      address: z.string().min(1, '请输入公司地址'),
+      phone: z.string().min(1, '请输入公司注册电话'),
+      bank_name: z.string().min(1, '请输入开户银行名称'),
+      bank_account: z.string().min(1, '请输入银行账户'),
+      business_license: z.string().min(1, '请上传营业执照'),
+      certificate: z.string().min(1, '请上传纳税人资格'),
+      account_license: z.string().min(1, '请上传开户许可'),
+      contact: z
+        .string()
+        .min(1, '请输入联系电话')
+        .regex(/^(?:(?:\+|00)86)?1[3-9]\d{9}$/, '请输入正确的联系电话'),
+      contact_name: z.string().min(1, '请输入联系人'),
+    });
+  } else {
+    return baseSchema;
+  }
+};
 
 // 发票信息操作页面，携带edit_id查询参数即为编辑模式
 export default function InvoiceOperation() {
   const router = useRouter();
-
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { pushBreadcrumbItem } = useContext(SecondaryLayoutContext);
 
   const [editId, setEditId] = useState<number>();
   const [mode, setMode] = useState<'add' | 'edit'>();
   const [invoiceInfo, setInvoiceInfo] = useState<InvoiceInfo>();
+  const [invoiceType, setInvoiceType] = useState<InvoiceType>(
+    InvoiceType.普通
+  );
+
+  const form = useForm<FieldType>({
+    resolver: zodResolver(createFormSchema(invoiceType)) as any,
+    defaultValues: {
+      invoice_title: '',
+      invoice_type: InvoiceType.普通,
+      user_invoice_type: UserInvoiceType.个人,
+      tax_no: '',
+    },
+  });
 
   const fetchInvoiceInfo = async (id: number) => {
     const res = await getInvoiceInfo(id);
@@ -52,17 +106,32 @@ export default function InvoiceOperation() {
 
     if (res.data?.status !== InvoiceStatus.DELETED) {
       if (res.data && res.data?.invoice_type !== InvoiceType.专用) {
-        // TODO: 这里要处理一下
         res.data.user_invoice_type = res.data.invoice_type as UserInvoiceType;
         res.data.invoice_type = InvoiceType.普通;
       }
-      formRef.current?.setFieldsValue(res.data as any);
-      setInvoiceInfo(res.data);
+      if (res.data) {
+        setInvoiceType(res.data.invoice_type as InvoiceType);
+        form.reset(res.data as any);
+        setInvoiceInfo(res.data);
+      }
     }
   };
 
   const init = () => {
     const id = +(searchParams.get('edit_id') ?? 0);
+
+    let curTitle = '';
+    if (id) {
+      curTitle = '修改发票信息';
+    } else {
+      curTitle = '添加发票信息';
+    }
+
+    pushBreadcrumbItem({
+      title: curTitle,
+      path: pathname,
+    });
+
     if (id) {
       setMode('edit');
       setEditId(id);
@@ -76,7 +145,7 @@ export default function InvoiceOperation() {
     init();
   }, []);
 
-  const onFinish: FormProps<FieldType>['onFinish'] = async values => {
+  const onSubmit = async (values: FieldType) => {
     console.log('Finish:', values);
     if (mode) {
       const res = await (mode === 'edit'
@@ -95,288 +164,373 @@ export default function InvoiceOperation() {
     }
   };
 
-  const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = errorInfo => {
-    console.log('Failed:', errorInfo);
-  };
+  const watchedInvoiceType = form.watch('invoice_type');
+  const watchedUserInvoiceType = form.watch('user_invoice_type');
 
-  const formRef = useRef<FormInstance<FieldType>>(null);
-  const form = Form.useFormInstance<FieldType>();
-  const [formData, setFormData] = useState<FieldType>({
-    invoice_title: '',
-    invoice_type: InvoiceType.普通,
-    user_invoice_type: UserInvoiceType.个人,
-    tax_no: '',
-  });
-
-  const renderInvoiceTitleFormItem = () => {
-    return renderInputFormItems([
-      {
-        label: '发票抬头',
-        field: 'invoice_title',
-      },
-    ]);
-  };
-
-  const renderTaxNoFormItem = () => {
-    return renderInputFormItems([
-      {
-        label: '税号',
-        field: 'tax_no',
-        rules: [
-          {
-            required: true,
-            message: '请输入税号',
-            validateTrigger: 'onChange',
-          },
-          {
-            validator: (rule, value) => {
-              if (!value) {
-                return Promise.resolve();
-              }
-              if (!/^[A-Za-z0-9]{15,20}$/.test(value)) {
-                return Promise.reject('请输入正确的税号');
-              }
-              return Promise.resolve();
-            },
-            validateTrigger: 'onBlur',
-          },
-        ],
-      },
-    ]);
-  };
-
-  interface renderItemsParam {
-    label: string;
-    field: keyof AddInvoiceInfo;
-
-    rules?: Rule[];
-  }
-
-  const renderInputFormItems = (list: renderItemsParam[]) => {
-    return list.map((item, idx) => (
-      <Form.Item<FieldType>
-        key={idx}
-        label={item.label}
-        name={item.field}
-        validateTrigger={['onBlur', 'onChange']}
-        rules={
-          item.rules ?? [
-            {
-              required: true,
-              message: '请输入' + item.label,
-              validateTrigger: 'onChange',
-            },
-          ]
-        }
-      >
-        <Input style={{ width: 330 }} />
-      </Form.Item>
-    ));
-  };
-
-  const renderImgUploadFormItems = (list: renderItemsParam[]) => {
-    return list.map((item, idx) => (
-      <Form.Item<FieldType>
-        key={idx}
-        label={item.label}
-        required
-        name={item.field}
-        rules={[{ required: true, message: '请上传相应图片' }]}
-      >
-        <Upload
-          defaultUrl={formRef.current?.getFieldValue(item.field)}
-          onComplete={url => {
-            formRef.current?.setFieldValue(item.field, url);
-          }}
-        />
-      </Form.Item>
-    ));
-  };
+  useEffect(() => {
+    if (watchedInvoiceType) {
+      setInvoiceType(watchedInvoiceType as InvoiceType);
+    }
+  }, [watchedInvoiceType]);
 
   return (
-    <div className={styles.main}>
-      <div className={styles.formWrapper}>
-        <ConfigProvider
-          theme={{
-            components: {
-              Form: {
-                labelColor: 'black',
-                labelHeight: 22,
-              },
-              Radio: {
-                radioSize: 18,
-              },
-            },
-          }}
-        >
+    <Suspense>
+      <div className={styles.main}>
+        <div className={styles.formWrapper}>
           {mode && (
-            <Form
-              initialValues={formData}
-              form={form}
-              ref={formRef}
-              colon={false}
-              name='invoice_add'
-              labelCol={{
-                style: {
-                  display: 'flex',
-                  justifyContent: 'end',
-                  width: 120,
-                  height: 30,
-                },
-              }}
-              onFinish={onFinish}
-              onFinishFailed={onFinishFailed}
-              autoComplete='off'
-            >
-              {
-                <Form.Item<FieldType>
-                  label='发票类型'
-                  hidden={mode !== 'add'}
-                  name='invoice_type'
-                  rules={[{ required: true, message: '请选择发票类型' }]}
-                >
-                  <AntdRadio.Group>
-                    <Radio value={InvoiceType.普通}>普通发票</Radio>
-                    <Radio value={InvoiceType.专用}>专用发票</Radio>
-                  </AntdRadio.Group>
-                </Form.Item>
-              }
-              <Form.Item dependencies={['invoice_type']} noStyle>
-                {({ getFieldValue }) => {
-                  if (getFieldValue('invoice_type') !== InvoiceType.专用)
-                    return (
-                      <>
-                        {
-                          <Form.Item<FieldType>
-                            hidden={mode !== 'add'}
-                            label='普通发票类型'
-                            name='user_invoice_type'
-                            rules={[
-                              { required: true, message: '请选择普通发票类型' },
-                            ]}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                {mode === 'add' && (
+                  <FormField
+                    control={form.control}
+                    name='invoice_type'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>发票类型</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            className='flex gap-4'
                           >
-                            <AntdRadio.Group>
-                              <Radio value={UserInvoiceType.个人}>个人</Radio>
-                              <Radio value={UserInvoiceType.单位}>单位</Radio>
-                            </AntdRadio.Group>
-                          </Form.Item>
-                        }
-                        {renderInvoiceTitleFormItem()}
-                        <Form.Item dependencies={['user_invoice_type']} noStyle>
-                          {({ getFieldValue }) => {
-                            if (
-                              getFieldValue('user_invoice_type') ===
-                              UserInvoiceType.单位
-                            )
-                              return renderTaxNoFormItem();
-                            else {
-                              return null;
-                            }
-                          }}
-                        </Form.Item>
-                      </>
-                    );
-                  else {
-                    return (
-                      <>
-                        {invoiceInfo?.status !== InvoiceStatus.PASS && (
-                          <TextTips text='增值税专用发票需要对一般纳税人证明进行审核，约需7个工作日，届时会有工作人员联系您。资质审核通过后，可以申请增值税专用发票。' />
+                            <div className='flex items-center gap-2'>
+                              <RadioGroupItem value={InvoiceType.普通} />
+                              <Label>普通发票</Label>
+                            </div>
+                            <div className='flex items-center gap-2'>
+                              <RadioGroupItem value={InvoiceType.专用} />
+                              <Label>专用发票</Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {watchedInvoiceType !== InvoiceType.专用 ? (
+                  <>
+                    {mode === 'add' && (
+                      <FormField
+                        control={form.control}
+                        name='user_invoice_type'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>普通发票类型</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                className='flex gap-4'
+                              >
+                                <div className='flex items-center gap-2'>
+                                  <RadioGroupItem value={UserInvoiceType.个人} />
+                                  <Label>个人</Label>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                  <RadioGroupItem value={UserInvoiceType.单位} />
+                                  <Label>单位</Label>
+                                </div>
+                              </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
                         )}
-                        <FormItemsBlock title='详细信息'>
-                          {renderInvoiceTitleFormItem()}
-                          {renderTaxNoFormItem()}
-                          {renderInputFormItems([
-                            {
-                              label: '公司地址',
-                              field: 'address',
-                            },
-                            {
-                              label: '公司注册电话',
-                              field: 'phone',
-                            },
-                            {
-                              label: '开户银行名称',
-                              field: 'bank_name',
-                            },
-                            {
-                              label: '银行账户',
-                              field: 'bank_account',
-                            },
-                          ])}
-                        </FormItemsBlock>
+                      />
+                    )}
 
-                        <FormItemsBlock
-                          style={{ marginTop: 4 }}
-                          title='一般纳税人证明'
-                          desc='图片大小不超过10M，支持jpg,jpeg,png格式'
-                        >
-                          {renderImgUploadFormItems([
-                            { label: '营业执照', field: 'business_license' },
-                            { label: '纳税人资格', field: 'certificate' },
-                            { label: '开户许可', field: 'account_license' },
-                          ])}
-                        </FormItemsBlock>
+                    <FormField
+                      control={form.control}
+                      name='invoice_title'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                            发票抬头
+                          </FormLabel>
+                          <FormControl>
+                            <Input {...field} className='w-full md:w-[330px]' />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                        <FormItemsBlock
-                          title='联系人信息'
-                          style={{ margin: `4px 0` }}
-                        >
-                          {renderInputFormItems([
-                            {
-                              label: '联系电话',
-                              field: 'contact',
-                              rules: [
-                                {
-                                  required: true,
-                                  message: '请输入联系电话',
-                                  validateTrigger: 'onChange',
-                                },
-                                {
-                                  validator: (rule, value) => {
-                                    if (!value) {
-                                      return Promise.resolve();
+                    {watchedUserInvoiceType === UserInvoiceType.单位 && (
+                      <FormField
+                        control={form.control}
+                        name='tax_no'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                              税号
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                className='w-full md:w-[330px]'
+                                onBlur={e => {
+                                  field.onBlur();
+                                  if (e.target.value) {
+                                    if (!/^[A-Za-z0-9]{15,20}$/.test(e.target.value)) {
+                                      form.setError('tax_no', {
+                                        message: '请输入正确的税号',
+                                      });
                                     }
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {invoiceInfo?.status !== InvoiceStatus.PASS && (
+                      <TextTips text='增值税专用发票需要对一般纳税人证明进行审核，约需7个工作日，届时会有工作人员联系您。资质审核通过后，可以申请增值税专用发票。' />
+                    )}
+                    <FormItemsBlock title='详细信息'>
+                      <FormField
+                        control={form.control}
+                        name='invoice_title'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                              发票抬头
+                            </FormLabel>
+                            <FormControl>
+                              <Input {...field} className='w-full md:w-[330px]' />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='tax_no'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='text-left md:text-right w-full md:w-[120px]'>税号</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                className='w-full md:w-[330px]'
+                                onBlur={e => {
+                                  field.onBlur();
+                                  if (e.target.value) {
+                                    if (!/^[A-Za-z0-9]{15,20}$/.test(e.target.value)) {
+                                      form.setError('tax_no', {
+                                        message: '请输入正确的税号',
+                                      });
+                                    }
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='address'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                              公司地址
+                            </FormLabel>
+                            <FormControl>
+                              <Input {...field} className='w-full md:w-[330px]' />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='phone'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                              公司注册电话
+                            </FormLabel>
+                            <FormControl>
+                              <Input {...field} className='w-full md:w-[330px]' />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='bank_name'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                              开户银行名称
+                            </FormLabel>
+                            <FormControl>
+                              <Input {...field} className='w-full md:w-[330px]' />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='bank_account'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                              银行账户
+                            </FormLabel>
+                            <FormControl>
+                              <Input {...field} className='w-full md:w-[330px]' />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </FormItemsBlock>
 
+                    <FormItemsBlock
+                      style={{ marginTop: 4 }}
+                      title='一般纳税人证明'
+                      desc='图片大小不超过10M，支持jpg,jpeg,png格式'
+                    >
+                      <FormField
+                        control={form.control}
+                        name='business_license'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                              营业执照
+                            </FormLabel>
+                            <FormControl>
+                              <Upload
+                                defaultUrl={field.value}
+                                onComplete={url => {
+                                  field.onChange(url);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='certificate'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                              纳税人资格
+                            </FormLabel>
+                            <FormControl>
+                              <Upload
+                                defaultUrl={field.value}
+                                onComplete={url => {
+                                  field.onChange(url);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='account_license'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                              开户许可
+                            </FormLabel>
+                            <FormControl>
+                              <Upload
+                                defaultUrl={field.value}
+                                onComplete={url => {
+                                  field.onChange(url);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </FormItemsBlock>
+
+                    <FormItemsBlock
+                      title='联系人信息'
+                      style={{ margin: `4px 0` }}
+                    >
+                      <FormField
+                        control={form.control}
+                        name='contact'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                              联系电话
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                className='w-full md:w-[330px]'
+                                onBlur={e => {
+                                  field.onBlur();
+                                  if (e.target.value) {
                                     if (
                                       !/^(?:(?:\+|00)86)?1[3-9]\d{9}$/.test(
-                                        value
+                                        e.target.value
                                       )
                                     ) {
-                                      return Promise.reject(
-                                        '请输入正确的联系电话'
-                                      );
+                                      form.setError('contact', {
+                                        message: '请输入正确的联系电话',
+                                      });
                                     }
-                                    return Promise.resolve();
-                                  },
-                                  validateTrigger: 'onBlur',
-                                },
-                              ],
-                            },
-                            {
-                              label: '联系人',
-                              field: 'contact_name',
-                            },
-                          ])}
-                        </FormItemsBlock>
-                      </>
-                    );
-                  }
-                }}
-              </Form.Item>
-              <Form.Item label={' '}>
-                <Button
-                  style={{ width: 76 }}
-                  type='primary'
-                  htmlType='submit'
-                  autoInsertSpace={false}
-                >
-                  {`确定`}
-                </Button>
-              </Form.Item>
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='contact_name'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                              联系人
+                            </FormLabel>
+                            <FormControl>
+                              <Input {...field} className='w-full md:w-[330px]' />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </FormItemsBlock>
+                  </>
+                )}
+
+                <FormItem>
+                  <FormLabel className='w-[120px]'></FormLabel>
+                  <FormControl>
+                    <Button type='submit' style={{ width: 76 }}>
+                      确定
+                    </Button>
+                  </FormControl>
+                </FormItem>
+              </form>
             </Form>
           )}
-        </ConfigProvider>
+        </div>
       </div>
-    </div>
+    </Suspense>
   );
 }

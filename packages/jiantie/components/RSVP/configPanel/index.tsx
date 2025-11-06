@@ -16,7 +16,7 @@ import {
   Pencil,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useRSVP } from '../RSVPContext';
 import { FieldType, RSVPAttrs, RSVPField, RSVPFieldOption } from '../type';
@@ -85,6 +85,9 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
   );
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchCurrentY, setTouchCurrentY] = useState<number | null>(null);
+  const fieldRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   // 同步 collectForm 状态与 config.collect_form
   useEffect(() => {
@@ -179,6 +182,79 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
   const handleDragEnd = () => {
     setDraggedIndex(null);
     setDragOverIndex(null);
+    setTouchStartY(null);
+    setTouchCurrentY(null);
+  };
+
+  // 移动端触摸拖拽处理
+  const handleTouchStart = (index: number, y: number) => {
+    setDraggedIndex(index);
+    setTouchStartY(y);
+    setTouchCurrentY(y);
+  };
+
+  const handleTouchMove = (y: number) => {
+    if (draggedIndex === null || touchStartY === null) return;
+    setTouchCurrentY(y);
+
+    // 计算当前触摸位置对应的索引
+    const fieldElements = Array.from(fieldRefs.current.entries());
+    let targetIndex = draggedIndex;
+
+    // 按索引排序
+    fieldElements.sort((a, b) => a[0] - b[0]);
+
+    // 遍历所有字段元素，找到触摸位置对应的目标索引
+    for (let i = 0; i < fieldElements.length; i++) {
+      const [idx, element] = fieldElements[i];
+      if (!element || idx === draggedIndex) continue;
+
+      const rect = element.getBoundingClientRect();
+      const centerY = rect.top + rect.height / 2;
+
+      // 如果触摸位置在当前元素的上半部分，则插入到该元素之前
+      if (y >= rect.top && y < centerY) {
+        targetIndex = idx;
+        break;
+      }
+      // 如果触摸位置在当前元素的下半部分，则插入到该元素之后
+      if (y >= centerY && y <= rect.bottom) {
+        targetIndex = idx + 1;
+      }
+    }
+
+    // 边界处理
+    if (targetIndex < 0) targetIndex = 0;
+    if (targetIndex >= fields.length) targetIndex = fields.length - 1;
+
+    // 如果目标索引等于拖拽索引，则不需要更新
+    if (targetIndex === draggedIndex) {
+      setDragOverIndex(null);
+      return;
+    }
+
+    if (targetIndex !== dragOverIndex) {
+      setDragOverIndex(targetIndex);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (
+      draggedIndex !== null &&
+      dragOverIndex !== null &&
+      draggedIndex !== dragOverIndex
+    ) {
+      const newFields = [...fields];
+      const draggedField = newFields[draggedIndex];
+      newFields.splice(draggedIndex, 1);
+
+      // 调整插入位置（如果拖拽向下，需要减1）
+      const insertIndex =
+        dragOverIndex > draggedIndex ? dragOverIndex - 1 : dragOverIndex;
+      newFields.splice(insertIndex, 0, draggedField);
+      setFields(newFields);
+    }
+    handleDragEnd();
   };
 
   const handleSaveClick = async () => {
@@ -304,11 +380,28 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
                       index={index}
                       isDragging={draggedIndex === index}
                       isDragOver={dragOverIndex === index}
+                      touchOffsetY={
+                        draggedIndex === index &&
+                        touchStartY !== null &&
+                        touchCurrentY !== null
+                          ? touchCurrentY - touchStartY
+                          : 0
+                      }
+                      fieldRef={el => {
+                        if (el) {
+                          fieldRefs.current.set(index, el);
+                        } else {
+                          fieldRefs.current.delete(index);
+                        }
+                      }}
                       onDragStart={e => handleDragStart(e, index)}
                       onDragOver={e => handleDragOver(e, index)}
                       onDragLeave={handleDragLeave}
                       onDrop={e => handleDrop(e, index)}
                       onDragEnd={handleDragEnd}
+                      onTouchStart={(y: number) => handleTouchStart(index, y)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
                       onToggleEnabled={(id, enabled) => {
                         updateField(id, { enabled });
                       }}
@@ -403,11 +496,16 @@ interface FieldItemProps {
   index: number;
   isDragging?: boolean;
   isDragOver?: boolean;
+  touchOffsetY?: number;
+  fieldRef?: (el: HTMLDivElement | null) => void;
   onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDragLeave?: () => void;
   onDrop?: (e: React.DragEvent) => void;
   onDragEnd?: () => void;
+  onTouchStart?: (y: number) => void;
+  onTouchMove?: (y: number) => void;
+  onTouchEnd?: () => void;
   onToggleEnabled: (id: string, enabled: boolean) => void;
   onToggleSplitAdultChild: (id: string, split: boolean) => void;
   onToggleRequired: (id: string, required: boolean) => void;
@@ -417,15 +515,23 @@ function FieldItem({
   field,
   isDragging = false,
   isDragOver = false,
+  touchOffsetY = 0,
+  fieldRef,
   onDragStart,
   onDragOver,
   onDragLeave,
   onDrop,
   onDragEnd,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
   onToggleEnabled,
   onToggleSplitAdultChild,
   onToggleRequired,
 }: FieldItemProps) {
+  const touchStartRef = useRef<number | null>(null);
+  const isDraggingRef = useRef(false);
+
   // 获取字段显示名称
   const getFieldDisplayLabel = (field: RSVPField) => {
     if (field.type === 'guest_count') return '访客';
@@ -435,26 +541,81 @@ function FieldItem({
     return field.label;
   };
 
+  // 触摸事件处理
+  const handlePointerDown = (e: React.PointerEvent) => {
+    // 只在触摸设备上处理，鼠标设备使用原生拖拽
+    if (e.pointerType === 'mouse') return;
+
+    // 检查是否点击在拖拽手柄上
+    const target = e.target as HTMLElement;
+    const isHandle = target.closest('[data-drag-handle]');
+    if (!isHandle) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    touchStartRef.current = e.clientY;
+    isDraggingRef.current = true;
+    onTouchStart?.(e.clientY);
+
+    const element = e.currentTarget as HTMLElement;
+    element.setPointerCapture(e.pointerId);
+
+    // 防止页面滚动
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      if (!isDraggingRef.current) return;
+      moveEvent.preventDefault();
+      onTouchMove?.(moveEvent.clientY);
+    };
+
+    const handlePointerUp = () => {
+      isDraggingRef.current = false;
+      onTouchEnd?.();
+      element.releasePointerCapture(e.pointerId);
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+    };
+
+    document.addEventListener('pointermove', handlePointerMove, {
+      passive: false,
+    });
+    document.addEventListener('pointerup', handlePointerUp);
+  };
+
   return (
     <div
+      ref={fieldRef}
       className={cls(
-        'border-2 rounded-lg bg-white transition-all',
+        'border-2 rounded-lg bg-white transition-all relative',
         isDragOver
           ? 'border-[#3358D4] border-dashed bg-[#E6F0FF]'
           : 'border-[#e4e4e7]',
-        isDragging && 'opacity-50'
+        isDragging && 'opacity-50 z-50'
       )}
+      style={{
+        transform:
+          isDragging && touchOffsetY !== 0
+            ? `translateY(${touchOffsetY}px)`
+            : undefined,
+        transition: isDragging ? 'none' : 'all 0.2s ease',
+      }}
       draggable
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
+      onPointerDown={handlePointerDown}
     >
       <div className='px-3 py-2 flex items-center gap-3'>
         {/* 拖拽手柄 */}
         <div
-          className='cursor-grab active:cursor-grabbing text-gray-400 touch-none flex-shrink-0'
+          data-drag-handle
+          className='cursor-grab active:cursor-grabbing text-gray-400 touch-none flex-shrink-0 select-none'
           onMouseDown={e => e.stopPropagation()}
           onClick={e => e.stopPropagation()}
         >

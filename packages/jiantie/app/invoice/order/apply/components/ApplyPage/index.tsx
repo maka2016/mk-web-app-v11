@@ -1,7 +1,13 @@
 'use client';
-import styles from './index.module.scss';
+import {
+  AddApplyInvoiceInfo,
+  ApplyInvoiceInfo,
+  ApplyInvoiceInfoStatus,
+  InvoiceContent,
+  Order,
+  UpdateApplyInvoiceInfo,
+} from '@/types/invoice/order';
 import { Icon } from '@workspace/ui/components/Icon';
-import cls from 'classnames';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Suspense,
@@ -11,46 +17,61 @@ import {
   useRef,
   useState,
 } from 'react';
-import {
-  AddApplyInvoiceInfo,
-  ApplyInvoiceInfo,
-  ApplyInvoiceInfoStatus,
-  InvoiceContent,
-  Order,
-  UpdateApplyInvoiceInfo,
-} from '@/types/invoice/order';
+import styles from './index.module.scss';
 
+import { SecondaryLayoutContext } from '@/app/invoice/components/PC/Layout/SecondaryLayout';
+import Table, { ColumnType } from '@/app/invoice/components/PC/Table';
+import EmptyContent from '@/app/invoice/components/UI/EmptyContent';
+import FormItemsBlock from '@/app/invoice/components/UI/FormItemsBlock';
+import Radio from '@/app/invoice/components/UI/Radio';
+import { applyOrderSessionKey } from '@/app/invoice/constants';
 import {
   applyInvoice,
   getApplyInvoiceInfo,
   getApplyInvoiceInfoOrders,
   updateApplyInvoiceInfo,
 } from '@/services/invoice/applyInvoice';
-import { SecondaryLayoutContext } from '@/app/invoice/components/PC/Layout/SecondaryLayout';
-import EmptyContent from '@/app/invoice/components/UI/EmptyContent';
-import FormItemsBlock from '@/app/invoice/components/UI/FormItemsBlock';
 import {
   getInvoiceInfo,
-  getInvoiceInfoListPageNum,
   getInvoiceInfoList,
+  getInvoiceInfoListPageNum,
 } from '@/services/invoice/invoiceInfo';
-import { InvoiceInfo, InvoiceType, InvoiceStatus } from '@/types/invoice';
+import { InvoiceInfo, InvoiceStatus, InvoiceType } from '@/types/invoice';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@workspace/ui/components/button';
 import {
-  FormInstance,
-  TableProps,
-  FormProps,
-  Button,
   Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@workspace/ui/components/form';
+import { Input } from '@workspace/ui/components/input';
+import {
   Select,
-  Input,
-} from 'antd';
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@workspace/ui/components/select';
+import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
+import * as z from 'zod';
 import OrderTable from '../../../components/OrderTable';
-import Radio from '@/app/invoice/components/UI/Radio';
-import Table from '@/app/invoice/components/PC/Table';
-import { applyOrderSessionKey } from '@/app/invoice/constants';
 
 type FieldType = AddApplyInvoiceInfo;
+
+// 创建表单验证 schema
+const formSchema = z.object({
+  content: z.string().min(1, '请选择发票内容'),
+  email: z.string().min(1, '请输入电子邮件').email('请输入正确的电子邮件'),
+  contact: z
+    .string()
+    .min(1, '请输入联系电话')
+    .regex(/^(?:(?:\+|00)86)?1[3-9]\d{9}$/, '请输入正确的联系电话'),
+  contact_name: z.string().min(1, '请输入联系人'),
+});
 
 interface Props {
   /** 如果属性存在且有效，则为其他页面引用一个组件时会使用，此时此页面组件的某些逻辑需要改变 */
@@ -78,7 +99,15 @@ export default function ApplyPage(props: Props) {
 
   const { pushBreadcrumbItem } = useContext(SecondaryLayoutContext);
 
-  const formRef = useRef<FormInstance<FieldType>>(null);
+  const form = useForm<FieldType>({
+    resolver: zodResolver(formSchema) as any,
+    defaultValues: {
+      content: InvoiceContent.软件服务费,
+      email: '',
+      contact: '',
+      contact_name: '',
+    },
+  });
 
   const refs = useRef({
     defaultCheckedRowId: 0,
@@ -115,7 +144,14 @@ export default function ApplyPage(props: Props) {
     fetchAppInvoiceOrders(id);
     const res = await getApplyInvoiceInfo(id);
     if (!res.success || !res.data) return toast.error('获取开票信息失败');
-    formRef.current?.setFieldsValue(res.data);
+    // 只重置表单字段，排除不需要的字段
+    const formData: Partial<FieldType> = {
+      content: res.data.content as InvoiceContent,
+      email: res.data.email,
+      contact: res.data.contact,
+      contact_name: res.data.contact_name,
+    };
+    form.reset(formData);
     setEditApplyInfo(res.data);
     refs.current.defaultCheckedRowId = +res.data.user_invoice_id;
     const res1 = await getInvoiceInfo(res.data.user_invoice_id);
@@ -211,7 +247,7 @@ export default function ApplyPage(props: Props) {
     setCheckedInvoiceInfo(res.data);
   };
 
-  const columns: TableProps<InvoiceInfo>['columns'] = [
+  const columns: ColumnType<InvoiceInfo>[] = [
     {
       title: '',
       width: 88,
@@ -242,7 +278,7 @@ export default function ApplyPage(props: Props) {
     },
   ];
 
-  const onFinish: FormProps<FieldType>['onFinish'] = async values => {
+  const onSubmit = async (values: FieldType) => {
     if (props.mode === 'edit') {
       if (!editApplyInfo) return toast.error('待编辑的开票记录不存在');
 
@@ -259,7 +295,7 @@ export default function ApplyPage(props: Props) {
 
       console.log(data);
       const res = await updateApplyInvoiceInfo(data);
-      if (!res.success) return toast.success('提交失败');
+      if (!res.success) return toast.error('提交失败');
       toast.success('修改成功');
       router.back();
     } else {
@@ -277,7 +313,7 @@ export default function ApplyPage(props: Props) {
       };
       console.log(data);
       const res = await applyInvoice(data);
-      if (!res.success) return toast.success('提交失败');
+      if (!res.success) return toast.error('提交失败');
       toast.success('申请成功');
       router.back();
     }
@@ -325,8 +361,7 @@ export default function ApplyPage(props: Props) {
               <div className='flex items-center justify-between flex-1'>
                 选择发票信息
                 <Button
-                  variant='outlined'
-                  color='primary'
+                  variant='outline'
                   style={{ padding: '4px 12px' }}
                   onClick={() => {
                     router.push('/invoice/home?tabIdx=1');
@@ -351,177 +386,195 @@ export default function ApplyPage(props: Props) {
             />
           </FormItemsBlock>
 
-          <Form<FieldType>
-            initialValues={{
-              content: InvoiceContent.软件服务费,
-            }}
-            // form={form}
-            ref={formRef}
-            colon={false}
-            name='invoice_add'
-            labelCol={{
-              style: {
-                display: 'flex',
-                justifyContent: 'end',
-                width: 120,
-                height: 30,
-              },
-            }}
-            onFinish={onFinish}
-            // onFinishFailed={onFinishFailed}
-            autoComplete='off'
-          >
-            <FormItemsBlock
-              styles={{ header: { marginBottom: 16 } }}
-              title={'发票内容'}
-              style={{ marginTop: 24 }}
-            >
-              <Form.Item<FieldType>
-                label={'发票内容'}
-                name={'content'}
-                rules={[
-                  {
-                    required: true,
-                    message: '请选择发票内容',
-                  },
-                ]}
-              >
-                <Select
-                  style={{ width: 330 }}
-                  suffixIcon={<Icon name='down' size={16} />}
-                  options={[
-                    { value: InvoiceContent.软件服务费, label: '软件服务费' },
-                    { value: InvoiceContent.软件制作费, label: '软件制作费' },
-                    { value: InvoiceContent.技术服务费, label: '技术服务费' },
-                    { value: InvoiceContent.设计服务费, label: '设计服务费' },
-                  ]}
-                />
-              </Form.Item>
-            </FormItemsBlock>
-
-            {applyType === 'special' && (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
               <FormItemsBlock
-                title={'增值税专票资质信息'}
-                style={{ marginTop: 4 }}
+                styles={{ header: { marginBottom: 16 } }}
+                title={'发票内容'}
+                style={{ marginTop: 24 }}
               >
-                {checkedInvoiceInfo && (
-                  <>
-                    <Form.Item label={'发票抬头'}>
-                      {checkedInvoiceInfo.invoice_title}
-                    </Form.Item>
-                    <Form.Item label={'税号'}>
-                      {checkedInvoiceInfo.tax_no}
-                    </Form.Item>
-                    <Form.Item label={'公司注册地址'}>
-                      {checkedInvoiceInfo.address}
-                    </Form.Item>
-                    <Form.Item label={'公司注册电话'}>
-                      {checkedInvoiceInfo.phone}
-                    </Form.Item>
-                    <Form.Item label={'开户银行名称'}>
-                      {checkedInvoiceInfo.bank_name}
-                    </Form.Item>
-                    <Form.Item label={'银行账号'}>
-                      {checkedInvoiceInfo.bank_account}
-                    </Form.Item>
-                    <Form.Item label={'联系人'}>
-                      {checkedInvoiceInfo.contact_name}
-                    </Form.Item>
-                    <Form.Item label={'联系方式'}>
-                      {checkedInvoiceInfo.contact}
-                    </Form.Item>
-                  </>
-                )}
+                <FormField
+                  control={form.control}
+                  name='content'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                        发票内容
+                      </FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger className='w-full md:w-[330px]'>
+                            <SelectValue placeholder='请选择发票内容' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={InvoiceContent.软件服务费}>
+                              软件服务费
+                            </SelectItem>
+                            <SelectItem value={InvoiceContent.软件制作费}>
+                              软件制作费
+                            </SelectItem>
+                            <SelectItem value={InvoiceContent.技术服务费}>
+                              技术服务费
+                            </SelectItem>
+                            <SelectItem value={InvoiceContent.设计服务费}>
+                              设计服务费
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </FormItemsBlock>
-            )}
 
-            <FormItemsBlock
-              title={'详细信息'}
-              style={{ marginTop: 4, marginBottom: 4 }}
-            >
-              <Form.Item<FieldType>
-                label={'电子邮件'}
-                name={'email'}
-                validateTrigger={['onBlur', 'onChange']}
-                rules={[
-                  {
-                    required: true,
-                    message: '请输入电子邮件',
-                    validateTrigger: 'onChange',
-                  },
-                  {
-                    validator: (rule, value) => {
-                      if (!value) {
-                        return Promise.resolve();
-                      }
-                      if (
-                        !/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
-                          value
-                        )
-                      ) {
-                        return Promise.reject('请输入正确的电子邮件');
-                      }
-                      return Promise.resolve();
-                    },
-                    validateTrigger: 'onBlur',
-                  },
-                ]}
-              >
-                <Input style={{ width: 330 }} />
-              </Form.Item>
-              <Form.Item<FieldType>
-                label={'联系电话'}
-                name={'contact'}
-                validateTrigger={['onBlur', 'onChange']}
-                rules={[
-                  {
-                    required: true,
-                    message: '请输入联系电话',
-                    validateTrigger: 'onChange',
-                  },
-                  {
-                    validator: (rule, value) => {
-                      if (!value) {
-                        return Promise.resolve();
-                      }
+              {applyType === 'special' && (
+                <FormItemsBlock
+                  title={'增值税专票资质信息'}
+                  style={{ marginTop: 4 }}
+                >
+                  {checkedInvoiceInfo && (
+                    <div className='space-y-4'>
+                      <div className='flex items-center gap-4'>
+                        <label className='text-right w-[120px]'>发票抬头</label>
+                        <div>{checkedInvoiceInfo.invoice_title}</div>
+                      </div>
+                      <div className='flex items-center gap-4'>
+                        <label className='text-right w-[120px]'>税号</label>
+                        <div>{checkedInvoiceInfo.tax_no}</div>
+                      </div>
+                      <div className='flex items-center gap-4'>
+                        <label className='text-right w-[120px]'>
+                          公司注册地址
+                        </label>
+                        <div>{checkedInvoiceInfo.address}</div>
+                      </div>
+                      <div className='flex items-center gap-4'>
+                        <label className='text-right w-[120px]'>
+                          公司注册电话
+                        </label>
+                        <div>{checkedInvoiceInfo.phone}</div>
+                      </div>
+                      <div className='flex items-center gap-4'>
+                        <label className='text-right w-[120px]'>
+                          开户银行名称
+                        </label>
+                        <div>{checkedInvoiceInfo.bank_name}</div>
+                      </div>
+                      <div className='flex items-center gap-4'>
+                        <label className='text-right w-[120px]'>银行账号</label>
+                        <div>{checkedInvoiceInfo.bank_account}</div>
+                      </div>
+                      <div className='flex items-center gap-4'>
+                        <label className='text-right w-[120px]'>联系人</label>
+                        <div>{checkedInvoiceInfo.contact_name}</div>
+                      </div>
+                      <div className='flex items-center gap-4'>
+                        <label className='text-right w-[120px]'>联系方式</label>
+                        <div>{checkedInvoiceInfo.contact}</div>
+                      </div>
+                    </div>
+                  )}
+                </FormItemsBlock>
+              )}
 
-                      if (!/^(?:(?:\+|00)86)?1[3-9]\d{9}$/.test(value)) {
-                        return Promise.reject('请输入正确的联系电话');
-                      }
-                      return Promise.resolve();
-                    },
-                    validateTrigger: 'onBlur',
-                  },
-                ]}
+              <FormItemsBlock
+                title={'详细信息'}
+                style={{ marginTop: 4, marginBottom: 4 }}
               >
-                <Input style={{ width: 330 }} />
-              </Form.Item>
-              <Form.Item<FieldType>
-                label={'联系人'}
-                name={'contact_name'}
-                validateTrigger={['onBlur', 'onChange']}
-                rules={[
-                  {
-                    required: true,
-                    message: '请输入联系人',
-                    validateTrigger: 'onChange',
-                  },
-                ]}
-              >
-                <Input style={{ width: 330 }} />
-              </Form.Item>
-            </FormItemsBlock>
+                <FormField
+                  control={form.control}
+                  name='email'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                        电子邮件
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          className='w-full md:w-[330px]'
+                          onBlur={e => {
+                            field.onBlur();
+                            if (e.target.value) {
+                              if (
+                                !/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
+                                  e.target.value
+                                )
+                              ) {
+                                form.setError('email', {
+                                  message: '请输入正确的电子邮件',
+                                });
+                              }
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='contact'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                        联系电话
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          className='w-full md:w-[330px]'
+                          onBlur={e => {
+                            field.onBlur();
+                            if (e.target.value) {
+                              if (
+                                !/^(?:(?:\+|00)86)?1[3-9]\d{9}$/.test(
+                                  e.target.value
+                                )
+                              ) {
+                                form.setError('contact', {
+                                  message: '请输入正确的联系电话',
+                                });
+                              }
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='contact_name'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className='text-left md:text-right w-full md:w-[120px]'>
+                        联系人
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} className='w-full md:w-[330px]' />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </FormItemsBlock>
 
-            <Form.Item label={' '}>
-              <Button
-                style={{ width: 76 }}
-                type='primary'
-                htmlType='submit'
-                autoInsertSpace={false}
-              >
-                {`确定`}
-              </Button>
-            </Form.Item>
+              <FormItem>
+                <FormLabel className='w-[120px]'></FormLabel>
+                <FormControl>
+                  <Button type='submit' style={{ width: 76 }}>
+                    确定
+                  </Button>
+                </FormControl>
+              </FormItem>
+            </form>
           </Form>
         </div>
       </div>
