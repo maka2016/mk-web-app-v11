@@ -17,7 +17,6 @@ import {
   Mail,
   RefreshCw,
   Share,
-  UserPlus,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -334,23 +333,6 @@ export function InviteeDetailDialog({
               </div>
             ) : actionLogs.length > 0 ? (
               <>
-                {/* 创建邀请记录 */}
-                <div className='flex items-start gap-3 pb-3 border-b border-gray-100'>
-                  <UserPlus size={16} className='text-gray-400 mt-0.5' />
-                  <div className='flex-1'>
-                    <div className='text-sm text-gray-800'>创建邀请</div>
-                    <div className='text-xs text-gray-400'>
-                      {new Date(invitee.create_time).toLocaleString('zh-CN', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </div>
-                  </div>
-                </div>
-
                 {/* 操作日志列表 */}
                 {actionLogs.map((log, index) => {
                   const Icon =
@@ -372,6 +354,12 @@ export function InviteeDetailDialog({
                         ? 'text-green-400'
                         : 'text-orange-400';
 
+                  // 判断是否为提交类型的操作
+                  const isSubmitAction =
+                    log.action_type === 'submit' ||
+                    log.action_type === 'resubmit';
+                  const willAttend = log.submission?.will_attend;
+
                   return (
                     <div
                       key={log.id || index}
@@ -392,6 +380,26 @@ export function InviteeDetailDialog({
                             minute: '2-digit',
                           })}
                         </div>
+                        {isSubmitAction && willAttend !== undefined && (
+                          <div className='text-xs text-gray-400 mt-0.5'>
+                            是否出席：
+                            <span
+                              className={
+                                willAttend === true
+                                  ? 'text-green-500 ml-1'
+                                  : willAttend === false
+                                    ? 'text-orange-500 ml-1'
+                                    : 'text-gray-500 ml-1'
+                              }
+                            >
+                              {willAttend === true
+                                ? '是'
+                                : willAttend === false
+                                  ? '否'
+                                  : '未确定'}
+                            </span>
+                          </div>
+                        )}
                         {log.device_type && (
                           <div className='text-xs text-gray-400 mt-0.5'>
                             设备：

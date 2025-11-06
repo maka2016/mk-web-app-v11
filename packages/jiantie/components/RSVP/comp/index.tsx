@@ -360,6 +360,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
 
       // 查询是否有提交记录（基于 contact_id）
       if (contactId) {
+        console.log('contactId1', contactId);
         trpc.rsvp.getMySubmissionByFormConfig
           .query({
             form_config_id: config.id,
@@ -497,6 +498,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         result = await trpc.rsvp.updateSubmissionVersion.mutate({
           submission_group_id: lastSubmissionGroupId,
           submission_data: submissionData,
+          will_attend: willAttendValue, // 传递新的 will_attend 值
           operator_type: 'visitor',
           operator_id: contactId || undefined,
         });
@@ -532,7 +534,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         setResultMsg('提交成功');
       }
 
-      // 提交成功后重新加载最新提交记录
+      // 提交成功后重新加载最新提交记录（无论是首次提交还是重新提交）
       const finalContactId = contactId || result?.contact_id;
       if (isViewerMode && finalContactId && config.id) {
         try {
@@ -542,7 +544,10 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
               contact_id: finalContactId,
             });
           if (submissionData && submissionData.length > 0) {
-            setLatestSubmission(submissionData[0]);
+            const latest = submissionData[0];
+            setLatestSubmission(latest);
+            // 更新 willAttend 状态以匹配最新的提交记录
+            setWillAttend(latest.will_attend);
           }
         } catch {
           // 忽略错误
