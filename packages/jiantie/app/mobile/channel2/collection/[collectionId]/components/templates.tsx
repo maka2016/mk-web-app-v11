@@ -224,8 +224,8 @@ export default function Templates({ collectionId }: TemplatesProps) {
                   </div>
 
                   {/* 模板信息 */}
-                  <div className='p-3 bg-white relative'>
-                    <h3 className='text-sm font-medium text-gray-900 mb-1 line-clamp-2 text-center'>
+                  <div className='p-1 bg-white relative'>
+                    <h3 className='text-sm font-medium text-gray-900 mb-1 line-clamp-2 text-left'>
                       {template.title}
                     </h3>
                   </div>
