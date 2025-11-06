@@ -278,13 +278,24 @@ export function PublicShareDialog({
       return;
     }
 
+    // 微信分享缩略图尺寸限制：建议 500x400 (5:4 比例)，使用 cdnApi 调整尺寸
+    const thumbUrl = shareCover
+      ? cdnApi(shareCover, {
+          resizeWidth: 500,
+          resizeHeight: 400,
+          format: 'webp',
+          quality: 85,
+          mode: 'lfit',
+        })
+      : '';
+
     APPBridge.appCall({
       type: 'MKShare',
       appid: 'jiantie',
       params: {
         title: shareTitle,
         content: shareDesc || '诚邀您参加活动',
-        thumb: shareCover || '',
+        thumb: thumbUrl,
         type: 'link',
         shareType: to,
         url: shareLink,

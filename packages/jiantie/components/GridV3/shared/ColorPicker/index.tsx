@@ -171,6 +171,7 @@ const ColorPicker: React.FC<ColorPickerProps> = props => {
                   onChange={colorCode => {
                     try {
                       const rgb = colorCode.rgb || { r: 0, g: 0, b: 0, a: 1 };
+                      const alpha = rgb.a ?? 1;
                       const changeValue: ColorPickerChangeValue = {
                         colors: null,
                         type: 'color',
@@ -179,10 +180,10 @@ const ColorPicker: React.FC<ColorPickerProps> = props => {
                           r: rgb.r || 0,
                           g: rgb.g || 0,
                           b: rgb.b || 0,
-                          a: rgb.a || 1,
+                          a: alpha,
                         },
                         value: colorCode.hex,
-                        valueRgba: `rgba(${rgb.r || 0},${rgb.g || 0},${rgb.b || 0},${rgb.a || 1})`,
+                        valueRgba: `rgba(${rgb.r || 0},${rgb.g || 0},${rgb.b || 0},${alpha})`,
                       };
                       handleColorChange(changeValue);
                     } catch (error) {
