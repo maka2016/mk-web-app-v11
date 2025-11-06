@@ -1103,13 +1103,42 @@ export const rsvpRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      // 1. 查询用户的所有 RSVP 表单（通过 works_id 关联）
-      // 这里假设 works 表有 user_id 字段，实际需要根据你的数据结构调整
+      // 将 user_id (string) 转换为 uid (number)
+      const uid = parseInt(input.user_id, 10);
+      if (isNaN(uid)) {
+        return {
+          notifications: [],
+          total: 0,
+          unreadCount: 0,
+        };
+      }
+
+      // 1. 查询用户的所有作品ID
+      const userWorks = await ctx.prisma.worksEntity.findMany({
+        where: {
+          uid: uid,
+          deleted: false,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const worksIds = userWorks.map(w => w.id);
+
+      if (worksIds.length === 0) {
+        return {
+          notifications: [],
+          total: 0,
+          unreadCount: 0,
+        };
+      }
+
+      // 2. 查询这些作品下的所有 RSVP 表单
       const formConfigs = await ctx.prisma.rsvpFormConfigEntity.findMany({
         where: {
+          works_id: { in: worksIds },
           deleted: false,
-          // TODO: 需要通过 works 表关联查询用户的表单
-          // 暂时返回所有表单，实际应该加上 user_id 过滤
         },
         select: {
           id: true,
@@ -1254,9 +1283,33 @@ export const rsvpRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // 查询用户的所有表单
+      // 将 user_id (string) 转换为 uid (number)
+      const uid = parseInt(input.user_id, 10);
+      if (isNaN(uid)) {
+        return { count: 0 };
+      }
+
+      // 查询用户的所有作品ID
+      const userWorks = await ctx.prisma.worksEntity.findMany({
+        where: {
+          uid: uid,
+          deleted: false,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const worksIds = userWorks.map(w => w.id);
+
+      if (worksIds.length === 0) {
+        return { count: 0 };
+      }
+
+      // 查询这些作品下的所有表单
       const formConfigs = await ctx.prisma.rsvpFormConfigEntity.findMany({
         where: {
+          works_id: { in: worksIds },
           deleted: false,
         },
         select: {
@@ -1265,6 +1318,10 @@ export const rsvpRouter = router({
       });
 
       const formConfigIds = formConfigs.map(f => f.id);
+
+      if (formConfigIds.length === 0) {
+        return { count: 0 };
+      }
 
       // 查询所有提交记录
       const submissions = await ctx.prisma.rsvpSubmissionEntity.findMany({
@@ -1278,6 +1335,10 @@ export const rsvpRouter = router({
       });
 
       const submissionIds = submissions.map(s => s.id);
+
+      if (submissionIds.length === 0) {
+        return { count: 0 };
+      }
 
       // 批量标记为已读
       const results = await Promise.all(
@@ -1311,9 +1372,33 @@ export const rsvpRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      // 查询用户的所有表单
+      // 将 user_id (string) 转换为 uid (number)
+      const uid = parseInt(input.user_id, 10);
+      if (isNaN(uid)) {
+        return { count: 0 };
+      }
+
+      // 查询用户的所有作品ID
+      const userWorks = await ctx.prisma.worksEntity.findMany({
+        where: {
+          uid: uid,
+          deleted: false,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const worksIds = userWorks.map(w => w.id);
+
+      if (worksIds.length === 0) {
+        return { count: 0 };
+      }
+
+      // 查询这些作品下的所有表单
       const formConfigs = await ctx.prisma.rsvpFormConfigEntity.findMany({
         where: {
+          works_id: { in: worksIds },
           deleted: false,
         },
         select: {
@@ -1342,6 +1427,10 @@ export const rsvpRouter = router({
       const submissionIds = [
         ...new Set(actionLogs.map(log => log.submission_id).filter(Boolean)),
       ] as string[];
+
+      if (submissionIds.length === 0) {
+        return { count: 0 };
+      }
 
       // 查询已读记录
       const readCount = await ctx.prisma.rsvpNotificationReadEntity.count({
