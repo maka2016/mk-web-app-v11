@@ -1,5 +1,10 @@
 'use client';
 
+import {
+  CanvaInfo2,
+  getCanvaInfo2,
+} from '@/components/GridV3/comp/provider/utils';
+import { onScreenShot } from '@/components/GridV3/shared';
 import { RSVPShareOptions } from '@/components/RSVP/RSVPShareOptions';
 import { getAppId, getUid, request } from '@/services';
 import { useStore } from '@/store';
@@ -8,7 +13,8 @@ import { useCheckPublish } from '@/utils/checkPubulish';
 import { toVipPage } from '@/utils/jiantie';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
-import { API } from '@mk/services';
+import { API, cdnApi } from '@mk/services';
+import { isAndroid } from '@mk/utils';
 import type { WorksEntity } from '@workspace/database/generated/client';
 import {
   AlertDialog,
@@ -36,9 +42,12 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import {
   ChevronRight,
   Copy,
+  Download,
   Eye,
   FileText,
+  MessageCircle,
   Pencil,
+  Share2,
   Trash2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -98,6 +107,8 @@ export default function WorksManagerForUser() {
     Map<string, boolean>
   >(new Map());
   const [canShare, setCanShare] = useState<boolean>(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [canvaInfo2, setCanvaInfo2] = useState<CanvaInfo2 | null>(null);
 
   // 获取已购作品列表
   const getPurchasedWorks = async (worksIds: string[]) => {
@@ -261,6 +272,19 @@ export default function WorksManagerForUser() {
             setCanShare(false);
           }
         }
+      } else {
+        // 非 RSVP 作品也需要检查分享权限
+        if (isVip) {
+          setCanShare(true);
+        } else {
+          try {
+            const hasPermission = await canShareWithoutWatermark(work.id);
+            setCanShare(hasPermission);
+          } catch (error) {
+            console.error('Failed to check share permission:', error);
+            setCanShare(false);
+          }
+        }
       }
 
       // 如果是 RSVP 类型，获取统计信息
@@ -294,6 +318,21 @@ export default function WorksManagerForUser() {
       } else {
         setFormConfigId(null);
         setRsvpStats(null);
+
+        // 非 RSVP 作品，加载 canvaInfo2 用于分享
+        try {
+          const result = await trpc.works.getWorksData.query({ id: work.id });
+          if (result?.work_data) {
+            const info = getCanvaInfo2(
+              result.detail as any,
+              result.work_data as any
+            );
+            setCanvaInfo2(info);
+          }
+        } catch (error) {
+          console.error('Failed to load canva info:', error);
+          setCanvaInfo2(null);
+        }
       }
 
       setSelectedWork(workDetail);
@@ -430,6 +469,216 @@ export default function WorksManagerForUser() {
   const openDeleteDialog = (work: WorksDetail) => {
     setWorkToDelete(work);
     setDeleteDialogOpen(true);
+  };
+
+  // 检查是否支持海报分享
+  const isSupportSharePosterFunc = async () => {
+    if (isAndroid()) {
+      let APPLETSV2Enable = await APPBridge.featureDetect([
+        'WechatSharePoster',
+      ]);
+      return APPLETSV2Enable.WechatSharePoster;
+    } else {
+      return true;
+    }
+  };
+
+  // 生成海报图片
+  const generatePosterImages = async (
+    workId: string
+  ): Promise<string[] | undefined> => {
+    if (!canvaInfo2) {
+      toast.error('画布信息获取失败');
+      return;
+    }
+    const { viewportWidth, canvaVisualHeight = 1, viewportScale } = canvaInfo2;
+    const screenshotWidth = viewportWidth;
+    const screenshotHeight = viewportScale * canvaVisualHeight;
+    const res = await onScreenShot({
+      id: workId,
+      width: screenshotWidth,
+      height: screenshotHeight,
+      appid,
+    }).catch(() => {
+      throw new Error('图片生成失败');
+    });
+    return res;
+  };
+
+  // 微信分享
+  const handleWechatShare = async () => {
+    if (!selectedWork) return;
+    if (isSharing) return;
+
+    setIsSharing(true);
+    try {
+      const isSupportPosterImgShare = await isSupportSharePosterFunc();
+      const shareTitle = selectedWork.title || '我的作品';
+      const shareContent = selectedWork.desc || '';
+      const shareIcon = selectedWork.cover || '';
+      const shareLink = `${location.origin}/viewer2/${selectedWork.id}?appid=${appid}`;
+
+      if (canvaInfo2?.shareInfo?.posterSupport) {
+        if (isSupportPosterImgShare) {
+          // 支持海报分享
+          toast.loading('图片生成中...');
+          const urls = await generatePosterImages(selectedWork.id);
+          toast.dismiss();
+
+          if (!urls || urls.length === 0) {
+            toast.error('图片生成失败');
+            return;
+          }
+
+          APPBridge.appCall({
+            type: 'MKShare',
+            appid: 'jiantie',
+            params: {
+              title: shareTitle,
+              type: 'images',
+              shareType: 'wechat',
+              urls,
+            },
+          });
+        } else {
+          // 降级为链接分享
+          const thumbUrl = shareIcon
+            ? cdnApi(shareIcon, {
+                resizeWidth: 500,
+                resizeHeight: 400,
+                format: 'webp',
+                quality: 85,
+                mode: 'lfit',
+              })
+            : '';
+
+          APPBridge.appCall({
+            type: 'MKShare',
+            appid: 'jiantie',
+            params: {
+              title: shareTitle,
+              content: shareContent,
+              thumb: thumbUrl,
+              type: 'link',
+              shareType: 'wechat',
+              url: shareLink,
+            },
+          });
+        }
+      } else {
+        toast.error('当前内容不支持分享');
+      }
+    } catch (error) {
+      console.error('Wechat share failed:', error);
+      toast.error('分享失败');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  // 保存到相册
+  const handleSaveToAlbum = async () => {
+    if (!selectedWork) return;
+    if (isSharing) return;
+
+    setIsSharing(true);
+    try {
+      if (!canvaInfo2?.shareInfo?.posterSupport) {
+        toast.error('当前内容不支持保存');
+        return;
+      }
+
+      toast.loading('图片生成中...');
+      const urls = await generatePosterImages(selectedWork.id);
+      toast.dismiss();
+
+      if (!urls || urls.length === 0) {
+        toast.error('图片生成失败');
+        return;
+      }
+
+      // 保存图片到相册
+      APPBridge.appCall({
+        type: 'MKSaveImage',
+        appid: 'jiantie',
+        params: {
+          urls,
+        },
+      });
+
+      toast.success('已保存到相册');
+    } catch (error) {
+      console.error('Save to album failed:', error);
+      toast.error('保存失败');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  // 系统分享
+  const handleSystemShare = async () => {
+    if (!selectedWork) return;
+    if (isSharing) return;
+
+    setIsSharing(true);
+    try {
+      const shareTitle = selectedWork.title || '我的作品';
+      const shareContent = selectedWork.desc || '';
+      const shareIcon = selectedWork.cover || '';
+      const shareLink = `${location.origin}/viewer2/${selectedWork.id}?appid=${appid}`;
+
+      if (canvaInfo2?.shareInfo?.posterSupport) {
+        toast.loading('图片生成中...');
+        const urls = await generatePosterImages(selectedWork.id);
+        toast.dismiss();
+
+        if (!urls || urls.length === 0) {
+          toast.error('图片生成失败');
+          return;
+        }
+
+        // 调用系统分享（图片方式）
+        APPBridge.appCall({
+          type: 'MKShare',
+          appid: 'jiantie',
+          params: {
+            title: shareTitle,
+            type: 'images',
+            shareType: 'system',
+            urls,
+          },
+        });
+      } else {
+        // 调用系统分享（链接方式）
+        const thumbUrl = shareIcon
+          ? cdnApi(shareIcon, {
+              resizeWidth: 500,
+              resizeHeight: 400,
+              format: 'webp',
+              quality: 85,
+              mode: 'lfit',
+            })
+          : '';
+
+        APPBridge.appCall({
+          type: 'MKShare',
+          appid: 'jiantie',
+          params: {
+            title: shareTitle,
+            content: shareContent,
+            thumb: thumbUrl,
+            type: 'link',
+            shareType: 'system',
+            url: shareLink,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('System share failed:', error);
+      toast.error('分享失败');
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   useEffect(() => {
@@ -687,6 +936,113 @@ export default function WorksManagerForUser() {
                     </div>
                     <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* 分享邀请（非 RSVP 类型） */}
+            {getWorkType(selectedWork) !== 'rsvp' && (
+              <div className='space-y-3'>
+                <h3 className='text-sm font-semibold text-[#09090B]'>
+                  分享邀请
+                </h3>
+                <div className='space-y-3'>
+                  {canShare ? (
+                    <>
+                      {/* 微信分享 */}
+                      <button
+                        onClick={handleWechatShare}
+                        disabled={isSharing}
+                        className='w-full flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-100 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                      >
+                        <div className='w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0'>
+                          <MessageCircle className='w-5 h-5 text-green-600' />
+                        </div>
+                        <div className='flex-1 text-left'>
+                          <span className='text-sm font-medium text-[#09090B]'>
+                            分享给微信好友
+                          </span>
+                          <p className='text-xs text-gray-500 mt-1'>
+                            生成可直接发送给好友的邀请函
+                          </p>
+                        </div>
+                        <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
+                      </button>
+
+                      {/* 保存到相册 */}
+                      <button
+                        onClick={handleSaveToAlbum}
+                        disabled={isSharing}
+                        className='w-full flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-100 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                      >
+                        <div className='w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0'>
+                          <Download className='w-5 h-5 text-blue-600' />
+                        </div>
+                        <div className='flex-1 text-left'>
+                          <span className='text-sm font-medium text-[#09090B]'>
+                            保存到手机相册
+                          </span>
+                          <p className='text-xs text-gray-500 mt-1'>
+                            保存高清海报至相册,便于转发分享
+                          </p>
+                        </div>
+                        <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
+                      </button>
+
+                      {/* 系统分享 */}
+                      <button
+                        onClick={handleSystemShare}
+                        disabled={isSharing}
+                        className='w-full flex items-center justify-center gap-2 p-4 bg-white rounded-lg border border-gray-100 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                      >
+                        <div className='w-6 h-6 rounded bg-gray-100 flex items-center justify-center flex-shrink-0'>
+                          <Share2 className='w-4 h-4 text-gray-600' />
+                        </div>
+                        <span className='text-sm font-medium text-[#09090B]'>
+                          更多分享方式
+                        </span>
+                      </button>
+                    </>
+                  ) : (
+                    <div className='bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-4 border border-purple-100'>
+                      <div className='flex flex-col items-center text-center py-4'>
+                        <div className='w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3'>
+                          <svg
+                            className='w-6 h-6 text-purple-600'
+                            fill='none'
+                            viewBox='0 0 24 24'
+                            stroke='currentColor'
+                          >
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
+                            />
+                          </svg>
+                        </div>
+                        <h4 className='text-base font-semibold text-[#09090B] mb-2'>
+                          升级解锁分享功能
+                        </h4>
+                        <p className='text-sm text-gray-600 mb-4'>
+                          升级会员或购买作品后即可使用分享功能
+                        </p>
+                        <Button
+                          onClick={() => {
+                            toVipPage({
+                              works_id: selectedWork.id,
+                              ref_object_id: selectedWork.template_id || '',
+                              tab: appid === 'xueji' ? 'business' : 'personal',
+                              vipType: 'h5',
+                            });
+                          }}
+                          className='px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-medium hover:from-purple-700 hover:to-blue-700 shadow-md'
+                        >
+                          立即升级
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
