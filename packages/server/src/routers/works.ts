@@ -35,6 +35,7 @@ export const worksRouter = router({
         is_folder: z.boolean().optional(),
         is_paied: z.boolean().optional(),
         offline: z.boolean().optional(),
+        is_rsvp: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -387,6 +388,7 @@ export const worksRouter = router({
         deleted: z.boolean().optional(),
         folder_id: z.string().optional(),
         custom_time: z.date().optional(),
+        is_rsvp: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -653,12 +655,14 @@ export const worksRouter = router({
       // 创建副本（排除 id 和时间字段）
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id, create_time, update_time, ...workData } = originalWork;
+      const newWorksId = await generateWorksId(ctx.prisma, ctx.uid);
 
       const newWork = await ctx.prisma.worksEntity.create({
         data: {
           ...workData,
           title: `${originalWork.title} (副本)`,
           child_works_id: null, // 副本不继承发布状态
+          id: newWorksId,
         },
       });
 

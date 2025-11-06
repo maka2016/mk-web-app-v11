@@ -1,4 +1,10 @@
-import { DatasheetItem, bitRecRef, bitTextRaw } from './types';
+import {
+  DatasheetItem,
+  bitFileRaw,
+  bitRecRef,
+  bitTextRaw,
+  bitTextRef,
+} from './types';
 
 type BitTables = Record<string, DatasheetItem>;
 
@@ -25,12 +31,21 @@ export const JTBitTables: BitTables = {
     viewId: 'vewkBW3EJf',
   },
   // https://www.feishu.cn/wiki/SKy7wPvIFiA8sokZTC1ccdbfnHf?base_hp_from=larktab&table=tbldiS12dLzHYpTu&view=vewkBW3EJf
-  '四级-集合': {
-    name: '四级-集合',
+  '四级-楼层': {
+    name: '四级-楼层',
     baseId: 'SKy7wPvIFiA8sokZTC1ccdbfnHf',
     tableId: 'tbldiS12dLzHYpTu',
     viewId: 'vewkBW3EJf',
   },
+
+  // https://www.feishu.cn/wiki/SKy7wPvIFiA8sokZTC1ccdbfnHf?base_hp_from=larktab&table=tblIAzooWiAC7uVj&view=vewkBW3EJf
+  '五级-集合': {
+    name: '五级-集合',
+    baseId: 'SKy7wPvIFiA8sokZTC1ccdbfnHf',
+    tableId: 'tblIAzooWiAC7uVj',
+    viewId: 'vewkBW3EJf',
+  },
+
   // https://www.feishu.cn/wiki/SKy7wPvIFiA8sokZTC1ccdbfnHf?base_hp_from=larktab&table=tblQHmefOcyLQ9Mg&view=vewnxG8K7a
   模版生产: {
     name: '模版生产',
@@ -42,14 +57,17 @@ export const JTBitTables: BitTables = {
 
 export interface BitChannelItem {
   fields: {
-    内部唯一名称: bitTextRaw[];
+    alias: bitTextRef;
     显示名: bitTextRaw[];
+    封面: bitFileRaw[];
+    封面url: bitTextRaw[];
     语言: string;
     子级: bitRecRef;
     父级?: bitRecRef;
     包含模版?: bitRecRef;
     状态: string;
     id: bitTextRaw[];
+    上线: string;
   };
   record_id: string;
 }

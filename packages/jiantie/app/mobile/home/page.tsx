@@ -23,7 +23,11 @@ export default async function Page({
   const isStoreV1 =
     appid === 'jiantie' || appid === 'xueji' || storeChannelV1 === 'true';
 
-  if (isStoreV1) {
+  const isPrisma = false && appid === 'jiantie';
+
+  if (isPrisma) {
+    templateChannels = {};
+  } else if (isStoreV1) {
     templateChannels = await getStoreChannelV1({ appid });
   } else {
     templateChannels = await getChannelData({ appid });

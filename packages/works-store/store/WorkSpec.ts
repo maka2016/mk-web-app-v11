@@ -1,4 +1,5 @@
 import { queryToObj } from '@mk/utils';
+
 // export interface WorksDetailEntity
 //   extends Omit<
 //     WorksEntity,
@@ -13,6 +14,7 @@ import { queryToObj } from '@mk/utils';
 //   cover: string;
 // }
 export interface WorksDetailEntity {
+  is_rsvp: boolean;
   id: string;
   uid?: number;
   works_id: string;

@@ -102,45 +102,25 @@ export const getAllRecord = async (
 };
 
 export const updateRecordById = async (
-  larkClient: any,
-  app_token: string,
-  table_id: string,
-  recordId: string,
+  table: DatasheetItem,
+  record_id: string,
   filedsData: any
 ) => {
+  const larkClient = await getLarkClient();
+  const pmdatasheet = await listTablesView(table);
   // const datasheet = await listTablesView(datasheetItem);
   // const larkClient = await getLarkClient();
   let wRes = await larkClient.bitable.v1.appTableRecord.update({
     path: {
-      app_token: app_token,
-      table_id: table_id,
-      record_id: recordId,
-    },
-    data: {
-      fields: filedsData,
-    },
-  });
-};
-
-export const updateRecordByIdV1 = async (
-  larkClient: any,
-  table: DatasheetItem,
-  recordId: string,
-  filedsData: any
-) => {
-  const datasheet = await listTablesView(table);
-  let wRes = await larkClient.bitable.v1.appTableRecord.update({
-    path: {
-      app_token: datasheet.nodeData.obj_token || '',
+      app_token: pmdatasheet.nodeData.obj_token || '',
       table_id: table.tableId,
-      record_id: recordId,
+      record_id: record_id,
     },
     data: {
       fields: filedsData,
     },
   });
-
-  return wRes;
+  console.log('wRes', wRes);
 };
 
 interface FeishuRecord {

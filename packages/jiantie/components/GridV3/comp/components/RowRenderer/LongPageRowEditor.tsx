@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { GridCell, oddRowListReverseV3 } from '../../../shared';
-import { IWorksData } from '@mk/works-store/types';
-import { deepClone, queryToObj } from '@mk/utils';
-import clas from 'classnames';
-import { getWorksDetailStatic } from '@mk/services';
-import { getAllLayers } from '../../utils';
 import styled from '@emotion/styled';
-import { useGridContext } from '../../provider';
+import { getWorksDetailStatic } from '@mk/services';
+import { deepClone, queryToObj } from '@mk/utils';
+import { IWorksData } from '@mk/works-store/types';
+import clas from 'classnames';
+import React, { useState } from 'react';
 import { SettingBlock } from '../../../DesignerToolForEditor/DesignerOperator/SettingPopover/SettingBlock';
+import { GridCell, oddRowListReverseV3 } from '../../../shared';
 import ContainerWithBg from '../../ContainerWithBg';
+import { useGridContext } from '../../provider';
+import { getAllLayers } from '../../utils';
 import { takeBlockStyle, takeRowStyle } from './LongPageRowRender';
 
 const BlockWrapper = styled.div`
@@ -50,7 +50,7 @@ export default function LongPageRowEditor(props: FlatPageRowRenderProps) {
   const { editorSDK, widgetState, cellsMap, rowsGroup, getStyleByTag2 } =
     useGridContext();
   const worksDetail = getWorksDetailStatic();
-  const isFlipPage = worksDetail?.specInfo?.is_flip_page;
+  const isFlipPage = worksDetail?.specInfo?.is_flip_page || false;
   const editable = !!editorSDK && !readonly;
   const [screenshotBlock] = useState(queryToObj().screenshot_block);
   const { activeRowId, activeCellId, editingElemId } = widgetState;

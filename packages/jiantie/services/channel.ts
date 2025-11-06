@@ -3,6 +3,18 @@ import request from './request';
 import qs from 'qs';
 import { getCmsApiHost, requestCMS } from './prompt';
 
+/**
+ * Channel 接口 - 支持多级嵌套结构
+ *
+ * 数据层级结构：
+ * - 一级：应用根频道
+ * - 二级：频道分类
+ * - 三级：热词（Hotword）
+ * - 四级：楼层（Floor）
+ * - 五级：集合（Collection）
+ *
+ * 通过递归的 children 属性实现多级嵌套
+ */
 export interface Channel {
   documentId: string;
   id: number;
