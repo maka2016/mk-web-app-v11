@@ -3,7 +3,6 @@
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { cdnApi, getAppId } from '@mk/services';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import StatusBar from '../../../../../../components/StatusBar';
@@ -31,6 +30,11 @@ interface Template {
   create_time: string;
   update_time: string;
   custom_time: string;
+  spec?: {
+    id: string;
+    preview_width: number | null;
+    preview_height: number | null;
+  } | null;
 }
 
 interface TemplatesProps {
@@ -167,66 +171,67 @@ export default function Templates({ collectionId }: TemplatesProps) {
           </div>
         ) : (
           <div className='grid grid-cols-2 gap-4'>
-            {templates.map(template => (
-              <div
-                key={template.id}
-                className='bg-white rounded-lg overflow-hidden border border-gray-200 cursor-pointer'
-                onClick={() => {
-                  const toTemplateDetail = (template_id: string) => {
-                    if (APPBridge.judgeIsInApp()) {
-                      APPBridge.navToPage({
-                        url: `${location.origin}/maka/mobile/template?id=${template_id}&is_full_screen=1`,
-                        type: 'URL',
-                      });
-                    } else {
-                      router.push(
-                        `/maka/mobile/template?id=${template_id}&appid=${getAppId()}`
-                      );
-                    }
-                  };
-                  toTemplateDetail(template.id);
-                  // router.push(`/mobile/template?id=${template.id}`);
-                }}
-              >
-                {/* 模板封面 */}
-                <div className='aspect-[270/400] bg-gray-100 relative'>
-                  {template.cover ? (
-                    <>
-                      {/* 底层模糊背景图 */}
-                      <Image
-                        src={cdnApi(template.cover)}
-                        alt=''
-                        fill
-                        className='object-cover blur-md scale-110'
-                      />
-                      {/* 上层清晰居中图 */}
-                      <Image
-                        src={cdnApi(template.cover)}
-                        alt={template.title}
-                        fill
-                        className='object-contain'
-                      />
-                    </>
-                  ) : (
-                    <div className=' flex items-center justify-center h-full text-4xl text-gray-400'>
-                      📄
-                    </div>
-                  )}
-                </div>
+            {templates.map(template => {
+              // 计算显示比例，优先使用规格数据，否则使用默认值 270/400
+              const aspectRatio =
+                template.spec?.preview_width && template.spec?.preview_height
+                  ? `${template.spec.preview_width}/${template.spec.preview_height}`
+                  : '270/400';
 
-                {/* 模板信息 */}
-                <div className='p-3 bg-white relative'>
-                  <h3 className='text-sm font-medium text-gray-900 mb-1 line-clamp-2 text-center'>
-                    {template.title}
-                  </h3>
-                  {template.desc && (
-                    <p className='text-xs text-gray-500 line-clamp-1'>
-                      {template.desc}
-                    </p>
-                  )}
+              return (
+                <div
+                  key={template.id}
+                  className='bg-white rounded-lg overflow-hidden border border-gray-200 cursor-pointer'
+                  onClick={() => {
+                    const toTemplateDetail = (template_id: string) => {
+                      if (APPBridge.judgeIsInApp()) {
+                        APPBridge.navToPage({
+                          url: `${location.origin}/maka/mobile/template?id=${template_id}&is_full_screen=1`,
+                          type: 'URL',
+                        });
+                      } else {
+                        router.push(
+                          `/maka/mobile/template?id=${template_id}&appid=${getAppId()}`
+                        );
+                      }
+                    };
+                    toTemplateDetail(template.id);
+                    // router.push(`/mobile/template?id=${template.id}`);
+                  }}
+                >
+                  {/* 模板封面 */}
+                  <div className='bg-gray-100 relative' style={{ aspectRatio }}>
+                    {template.cover ? (
+                      <>
+                        {/* 底层模糊背景图 */}
+                        <img
+                          src={cdnApi(template.cover)}
+                          alt=''
+                          className='absolute inset-0 w-full h-full object-cover blur-md scale-110'
+                        />
+                        {/* 上层清晰居中图 */}
+                        <img
+                          src={cdnApi(template.cover)}
+                          alt={template.title}
+                          className='absolute inset-0 w-full h-full object-contain'
+                        />
+                      </>
+                    ) : (
+                      <div className=' flex items-center justify-center h-full text-4xl text-gray-400'>
+                        📄
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 模板信息 */}
+                  <div className='p-3 bg-white relative'>
+                    <h3 className='text-sm font-medium text-gray-900 mb-1 line-clamp-2 text-center'>
+                      {template.title}
+                    </h3>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
