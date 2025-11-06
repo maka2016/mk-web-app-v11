@@ -20,22 +20,8 @@ import { RSVPFormFields } from './RSVPFormFields';
 import { SubmissionView } from './SubmissionView';
 
 // Cookie 键名
-const COOKIE_VISITOR_ID = 'rsvp_visitor_id';
 const COOKIE_CONTACT_ID = 'rsvp_contact_id';
 const COOKIE_EXPIRE_DAYS = 365; // Cookie 有效期1年
-
-// 生成或获取访客ID
-function getOrCreateVisitorId(): string {
-  if (typeof window === 'undefined') return '';
-
-  let visitorId = getCookie(COOKIE_VISITOR_ID);
-  if (!visitorId) {
-    // 生成基于时间戳和随机数的ID
-    visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    setCookie(COOKIE_VISITOR_ID, visitorId, COOKIE_EXPIRE_DAYS);
-  }
-  return visitorId;
-}
 
 // 根据字段配置动态生成 zod schema
 export function createFormSchema(fields: RSVPField[]) {
@@ -185,8 +171,8 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
   // 没有在编辑器时，就是访客模式，需要根据访客的设备生成访客的ID
   const isViewerMode = !editorSDK;
 
-  // 判断链接类型：如果有邀请人姓名，则是专属邀请链接；否则是公开链接
-  const isInviteeLink = !!inviteeName;
+  // 判断链接类型：如果有邀请人姓名，且没有 viewed 标记，则是专属邀请链接；否则是公开链接
+  const isInviteeLink = !!inviteeName && !searchParams.get('rsvp_viewed');
 
   // 公开链接模式下的访客姓名（专属链接不需要）
   const [guestName, setGuestName] = useState<string>('');
@@ -200,15 +186,12 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
   const [submitted, setSubmitted] = useState<boolean>(false); // 是否已提交成功
   const [latestSubmission, setLatestSubmission] = useState<any | null>(null); // 最新提交记录
 
-  // 访客模式下的访客ID和联系人ID
-  const [visitorId, setVisitorId] = useState<string>('');
+  // 联系人ID（由后端生成，前端只负责保存）
   const [contactId, setContactId] = useState<string | null>(null);
 
-  const deadlinePassed = useMemo(() => {
-    if (!config?.submit_deadline) return false;
-    const d = new Date(config.submit_deadline);
-    return Date.now() > d.getTime();
-  }, [config?.submit_deadline]);
+  // 是否首次访问（用于判断是否需要记录访问日志）
+  const [hasCheckedFirstVisit, setHasCheckedFirstVisit] =
+    useState<boolean>(false);
 
   // 动态生成表单 schema
   const formSchema = useMemo(() => {
@@ -275,67 +258,62 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 初始化访客ID和联系人ID，并处理专属链接分享逻辑
+  // 初始化联系人ID，并处理专属链接分享逻辑
   useEffect(() => {
     if (isViewerMode && typeof window !== 'undefined') {
-      const vid = getOrCreateVisitorId();
-      setVisitorId(vid);
-
       // 优先从 URL 参数读取 contact_id，确保专属链接能精确关联嘉宾
       const urlContactId = searchParams.get('rsvp_contact_id');
       const urlInviteeName = inviteeName; // 从 URL 参数获取的邀请人姓名
       const urlViewed = searchParams.get('rsvp_viewed'); // 链接是否已被查看过
 
-      // 如果是专属链接（有邀请人姓名和联系人ID）
-      if (urlInviteeName && urlContactId) {
+      // 如果是专属链接（有邀请人姓名和联系人ID，且没有 viewed 标记）
+      if (urlInviteeName && urlContactId && !urlViewed) {
+        // 场景1: 链接首次被打开（没有 viewed 标记）
+        // 认为是原始被邀请人A第一次打开
+        setContactId(urlContactId);
+        setCookie(COOKIE_CONTACT_ID, urlContactId, COOKIE_EXPIRE_DAYS);
+
+        // 在URL上添加 viewed 标记，表示该链接已被查看
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('rsvp_viewed', 'true');
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        router.replace(newUrl, { scroll: false });
+      } else if (urlInviteeName && urlContactId && urlViewed) {
+        // 场景2: 链接带有 viewed 标记（已被查看过）
         const existingContactId = getCookie(COOKIE_CONTACT_ID);
 
-        if (!urlViewed) {
-          // 场景1: 链接首次被打开（没有 viewed 标记）
-          // 认为是原始被邀请人A第一次打开
+        // 如果当前state已经有正确的contactId，说明是刚设置完viewed后的重新执行，直接跳过
+        if (contactId === urlContactId) {
+          return;
+        }
+
+        if (existingContactId === urlContactId) {
+          // 是原始被邀请人A再次访问，保持专属链接
           setContactId(urlContactId);
-          setCookie(COOKIE_CONTACT_ID, urlContactId, COOKIE_EXPIRE_DAYS);
-
-          // 在URL上添加 viewed 标记，表示该链接已被查看
-          const params = new URLSearchParams(searchParams.toString());
-          params.set('rsvp_viewed', 'true');
-          const newUrl = `${window.location.pathname}?${params.toString()}`;
-          router.replace(newUrl, { scroll: false });
         } else {
-          // 场景2: 链接带有 viewed 标记（已被查看过）
-          // 检查当前设备的 contact_id 是否与链接的 contact_id 匹配
-          // 如果当前state已经有正确的contactId，说明是刚设置完viewed后的重新执行，直接跳过
-          if (contactId === urlContactId) {
-            return;
-          }
+          // 不是原始被邀请人（是B通过A的分享打开）
+          // 清除所有URL参数，转为公开链接
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete('rsvp_invitee');
+          params.delete('invitee');
+          params.delete('name');
+          params.delete('rsvp_phone');
+          params.delete('rsvp_email');
+          params.delete('rsvp_contact_id');
+          params.delete('rsvp_viewed');
 
-          if (existingContactId === urlContactId) {
-            // 是原始被邀请人A再次访问，保持专属链接
-            setContactId(urlContactId);
-          } else {
-            // 不是原始被邀请人（是B通过A的分享打开）
-            // 清除所有URL参数，转为公开链接
-            const params = new URLSearchParams(searchParams.toString());
-            params.delete('rsvp_invitee');
-            params.delete('invitee');
-            params.delete('name');
-            params.delete('rsvp_phone');
-            params.delete('rsvp_email');
-            params.delete('rsvp_contact_id');
-            params.delete('rsvp_viewed');
+          // 使用 router.replace 更新 URL，不刷新页面
+          const newUrl = params.toString()
+            ? `${window.location.pathname}?${params.toString()}`
+            : window.location.pathname;
+          router.replace(newUrl, { scroll: false });
 
-            // 使用 router.replace 更新 URL，不刷新页面
-            const newUrl = params.toString()
-              ? `${window.location.pathname}?${params.toString()}`
-              : window.location.pathname;
-            router.replace(newUrl, { scroll: false });
-
-            // 如果有现有的 contact_id，使用它
-            if (existingContactId) {
-              setContactId(existingContactId);
-            }
+          // 如果有现有的 contact_id，使用它
+          if (existingContactId) {
+            setContactId(existingContactId);
           }
         }
       } else if (urlContactId) {
@@ -353,59 +331,107 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isViewerMode, searchParams, inviteeName, router]);
 
-  // 记录访问日志（访客打开页面）
+  // 查询是否有提交记录，并判断是否需要记录访问日志
   useEffect(() => {
-    if (isViewerMode && config?.id && typeof window !== 'undefined') {
-      trpc.rsvp.createActionLog
-        .mutate({
-          form_config_id: config.id,
-          contact_id: contactId || undefined,
-          visitor_id: visitorId || undefined,
-          action_type: 'view_page',
-          user_agent: navigator.userAgent,
-          device_type: /Mobile/.test(navigator.userAgent)
-            ? 'mobile'
-            : 'desktop',
-          referer: document.referrer || undefined,
-        })
-        .catch(() => {
-          // 忽略错误，不影响用户体验
-        });
-    }
-  }, [isViewerMode, config?.id, contactId, visitorId]);
+    if (
+      isViewerMode &&
+      config?.id &&
+      typeof window !== 'undefined' &&
+      !hasCheckedFirstVisit
+    ) {
+      // 对于邀请链接，直接记录访问日志
+      if (isInviteeLink && contactId) {
+        trpc.rsvp.createActionLog
+          .mutate({
+            form_config_id: config.id,
+            contact_id: contactId,
+            action_type: 'view_page',
+            user_agent: navigator.userAgent,
+            device_type: /Mobile/.test(navigator.userAgent)
+              ? 'mobile'
+              : 'desktop',
+            referer: document.referrer || undefined,
+          })
+          .catch(() => {
+            // 忽略错误，不影响用户体验
+          });
+        setHasCheckedFirstVisit(true);
+      }
 
-  // 查询访客是否有提交记录（如果有则显示提交信息页）
-  useEffect(() => {
-    if (isViewerMode && config?.id && (visitorId || contactId)) {
-      trpc.rsvp.getMySubmissionByFormConfig
-        .query({
-          form_config_id: config.id,
-          visitor_id: visitorId || undefined,
-          contact_id: contactId || undefined,
-        })
-        .then((data: any) => {
-          if (data && data.length > 0) {
-            // 有提交记录，显示提交信息页
-            const submissions = data as any[];
-            const latest = submissions[0];
+      // 查询是否有提交记录（基于 contact_id）
+      if (contactId) {
+        trpc.rsvp.getMySubmissionByFormConfig
+          .query({
+            form_config_id: config.id,
+            contact_id: contactId,
+          })
+          .then((data: any) => {
+            if (data && data.length > 0) {
+              // 有提交记录，显示提交信息页
+              const submissions = data as any[];
+              const latest = submissions[0];
 
-            setLatestSubmission(latest);
-            setSubmitted(true);
+              setLatestSubmission(latest);
+              setSubmitted(true);
 
-            if (latest) {
-              setLastSubmissionGroupId(latest.submission_group_id);
-              setWillAttend(latest.will_attend);
+              if (latest) {
+                setLastSubmissionGroupId(latest.submission_group_id);
+                setWillAttend(latest.will_attend);
 
-              // 设置结果消息
-              setResultMsg('提交成功');
+                // 设置结果消息
+                setResultMsg('提交成功');
+              }
+            } else {
+              // 公开链接：如果没有提交记录，说明是首次访问，记录访问日志
+              if (!isInviteeLink && config.id) {
+                trpc.rsvp.createActionLog
+                  .mutate({
+                    form_config_id: config.id,
+                    // 公开链接首次访问时还没有 contact_id，不传递
+                    action_type: 'view_page',
+                    user_agent: navigator.userAgent,
+                    device_type: /Mobile/.test(navigator.userAgent)
+                      ? 'mobile'
+                      : 'desktop',
+                    referer: document.referrer || undefined,
+                  })
+                  .catch(() => {
+                    // 忽略错误，不影响用户体验
+                  });
+              }
             }
-          }
-        })
-        .catch(() => {
-          // 忽略错误
-        });
+            setHasCheckedFirstVisit(true);
+          })
+          .catch(() => {
+            // 忽略错误
+            setHasCheckedFirstVisit(true);
+          });
+      } else if (!isInviteeLink && config.id) {
+        // 公开链接且没有 contact_id，说明是首次访问，记录访问日志
+        trpc.rsvp.createActionLog
+          .mutate({
+            form_config_id: config.id,
+            // 公开链接首次访问时还没有 contact_id，不传递
+            action_type: 'view_page',
+            user_agent: navigator.userAgent,
+            device_type: /Mobile/.test(navigator.userAgent)
+              ? 'mobile'
+              : 'desktop',
+            referer: document.referrer || undefined,
+          })
+          .catch(() => {
+            // 忽略错误，不影响用户体验
+          });
+        setHasCheckedFirstVisit(true);
+      }
     }
-  }, [isViewerMode, visitorId, contactId, config?.id]);
+  }, [
+    isViewerMode,
+    config?.id,
+    contactId,
+    isInviteeLink,
+    hasCheckedFirstVisit,
+  ]);
 
   // 当字段变化时，重置表单默认值
   useEffect(() => {
@@ -472,13 +498,12 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           submission_group_id: lastSubmissionGroupId,
           submission_data: submissionData,
           operator_type: 'visitor',
-          operator_id: contactId || visitorId,
+          operator_id: contactId || undefined,
         });
       } else {
         // 首次提交（后端会自动记录 submit 日志）
         result = await trpc.rsvp.createSubmission.mutate({
           form_config_id: config.id!,
-          visitor_id: isViewerMode ? visitorId : undefined,
           contact_id: isViewerMode && contactId ? contactId : undefined,
           will_attend: willAttendValue,
           submission_data: submissionData,
@@ -514,8 +539,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           const submissionData =
             await trpc.rsvp.getMySubmissionByFormConfig.query({
               form_config_id: config.id,
-              visitor_id: visitorId || undefined,
-              contact_id: finalContactId || undefined,
+              contact_id: finalContactId,
             });
           if (submissionData && submissionData.length > 0) {
             setLatestSubmission(submissionData[0]);
@@ -603,14 +627,6 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     );
   }
 
-  if (deadlinePassed) {
-    return (
-      <div className='w-full py-6 text-center text-sm text-gray-500'>
-        已截止
-      </div>
-    );
-  }
-
   // 提交成功页面（如果有提交记录或已提交）
   if (submitted && resultMsg) {
     return (
@@ -659,7 +675,25 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
               type='text'
               placeholder='请输入您的姓名'
               value={guestName}
-              onChange={e => setGuestName(e.target.value)}
+              onChange={e => {
+                setGuestName(e.target.value);
+                // 记录姓名填写操作（仅第一次填写时记录）
+                if (e.target.value.trim() && !guestName.trim() && config?.id) {
+                  trpc.rsvp.createActionLog
+                    .mutate({
+                      form_config_id: config.id,
+                      contact_id: contactId || undefined,
+                      action_type: 'view_page', // 使用 view_page 类型，通过 metadata 记录详细操作
+                      metadata: {
+                        action: 'fill_name',
+                        name: e.target.value.trim(),
+                      },
+                    })
+                    .catch(() => {
+                      // 忽略错误
+                    });
+                }
+              }}
               className='h-9 border-blue-200'
             />
           </div>
@@ -676,7 +710,25 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                 <Button
                   size='lg'
                   disabled={submitting || (!isInviteeLink && !guestName.trim())}
-                  onClick={() => setWillAttend(true)}
+                  onClick={() => {
+                    setWillAttend(true);
+                    // 记录选择出席操作
+                    if (config?.id) {
+                      trpc.rsvp.createActionLog
+                        .mutate({
+                          form_config_id: config.id,
+                          contact_id: contactId || undefined,
+                          action_type: 'view_page', // 使用 view_page 类型，通过 metadata 记录详细操作
+                          metadata: {
+                            action: 'select_attend',
+                            will_attend: true,
+                          },
+                        })
+                        .catch(() => {
+                          // 忽略错误
+                        });
+                    }
+                  }}
                   className={cn(
                     'flex-1 h-10 rounded-lg font-medium',
                     !willAttend && 'border-2'
@@ -689,7 +741,25 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                   size='lg'
                   variant={willAttend === false ? 'black' : 'outline'}
                   disabled={submitting || (!isInviteeLink && !guestName.trim())}
-                  onClick={() => handleSubmit(false)}
+                  onClick={() => {
+                    // 记录选择不出席操作
+                    if (config?.id) {
+                      trpc.rsvp.createActionLog
+                        .mutate({
+                          form_config_id: config.id,
+                          contact_id: contactId || undefined,
+                          action_type: 'view_page', // 使用 view_page 类型，通过 metadata 记录详细操作
+                          metadata: {
+                            action: 'select_attend',
+                            will_attend: false,
+                          },
+                        })
+                        .catch(() => {
+                          // 忽略错误
+                        });
+                    }
+                    handleSubmit(false);
+                  }}
                   className='flex-1 h-10 rounded-lg font-medium border-2'
                 >
                   不参加
