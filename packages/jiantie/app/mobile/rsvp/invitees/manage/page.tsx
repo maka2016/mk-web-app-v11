@@ -1,6 +1,7 @@
 'use client';
 import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
 import { getIsOverSeas } from '@/services';
+import { getWorkDetail2 } from '@/services/works2';
 import { useShareNavigation } from '@/utils/share';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
@@ -201,9 +202,29 @@ export default function RSVPInviteesManagePage() {
       }
     }
 
+    // 获取作品标题
+    let worksTitle = '';
+    if (worksId) {
+      try {
+        const res = await getWorkDetail2(worksId);
+        worksTitle = res?.title || '';
+      } catch (error) {
+        console.warn('获取作品标题失败:', error);
+      }
+    }
+
     // 打开分享面板
     setCurrentShareInvitee(invitee);
-    setShareTitle(`邀请 ${invitee.name} 参加活动`);
+    // 检查是否有自定义标题，如果没有则使用默认格式
+    const inviteTitle = invitee.invite_title;
+    if (!inviteTitle) {
+      const defaultTitle = worksTitle
+        ? `诚邀 ${invitee.name} - ${worksTitle}`
+        : `邀请 ${invitee.name} 参加活动`;
+      setShareTitle(defaultTitle);
+    } else {
+      setShareTitle(inviteTitle);
+    }
     setShareDialogOpen(true);
   };
 

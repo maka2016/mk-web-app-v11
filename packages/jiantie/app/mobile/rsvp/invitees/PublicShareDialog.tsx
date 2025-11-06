@@ -99,17 +99,18 @@ export function PublicShareDialog({
             invite_desc?: string;
             name: string;
           };
-          if (contact) {
-            setShareTitle(
-              contact.invite_title ||
-                `邀请 ${contact.name || contactName} 参加活动`
-            );
-            setShareDesc(contact.invite_desc || '诚邀您参加活动');
-          }
           // 封面仍然使用作品的封面
           const res = (await getWorkData2(worksId)) as any;
           const detail = res?.detail;
           const worksData = res?.work_data;
+          if (contact) {
+            const worksTitle = detail?.title || '';
+            const defaultTitle = worksTitle
+              ? `诚邀 ${contact.name || contactName} - ${worksTitle}`
+              : `邀请 ${contact.name || contactName} 参加活动`;
+            setShareTitle(contact.invite_title || defaultTitle);
+            setShareDesc(contact.invite_desc || '诚邀您参加活动');
+          }
           if (detail) {
             setShareCover(detail.cover || '');
             const canvaInfo2 = getCanvaInfo2(detail, worksData);
@@ -304,7 +305,7 @@ export function PublicShareDialog({
         <div className='h-full'>
           <div className='bg-white header text-base flex items-center justify-between px-4 py-2 border-b border-gray-200'>
             <span
-              className='flex items-center gap-2 text-xs'
+              className='flex items-center gap-1 text-sm'
               onClick={() => {
                 onOpenChange(false);
               }}
@@ -317,8 +318,6 @@ export function PublicShareDialog({
               size={'sm'}
               variant={'link'}
               onClick={() => {
-                onOpenChange(false);
-
                 if (APPBridge.judgeIsInApp()) {
                   APPBridge.navToPage({
                     url: 'maka://home/activity/activityPage',
