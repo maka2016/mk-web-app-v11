@@ -208,7 +208,7 @@ export default function SearchResults({
               type='text'
               value={keyword}
               onChange={e => setKeyword(e.target.value)}
-              placeholder='搜索模板...'
+              placeholder='搜索模板集合...'
               style={{
                 border: '1px solid rgba(232, 32, 39, 0.30)',
                 height: '38px',
@@ -232,7 +232,7 @@ export default function SearchResults({
         {loading ? (
           <div className='flex items-center justify-center h-full'>
             <div className='text-center'>
-              <div className='w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
+              <div className='w-12 h-12 border-4 border-[#D53933] border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
               <p className='text-gray-500'>搜索中...</p>
             </div>
           </div>
@@ -284,8 +284,8 @@ export default function SearchResults({
               <div className='flex items-center justify-center h-full'>
                 <div className='text-center text-gray-500'>
                   <Search className='w-16 h-16 mx-auto mb-4 text-gray-300' />
-                  <p className='text-lg mb-2'>搜索集合</p>
-                  <p className='text-sm'>输入关键词搜索你想要的集合</p>
+                  <p className='text-lg mb-2'>搜索模板集合</p>
+                  <p className='text-sm'>输入关键词搜索你想要的模板集合</p>
                 </div>
               </div>
             )}
@@ -294,7 +294,7 @@ export default function SearchResults({
           <div className='flex items-center justify-center h-full'>
             <div className='text-center text-gray-500'>
               <p className='text-xl mb-2'>🔍</p>
-              <p className='text-lg mb-2'>未找到相关集合</p>
+              <p className='text-lg mb-2'>未找到相关模板集合</p>
               <p className='text-sm'>试试其他关键词</p>
             </div>
           </div>
@@ -305,7 +305,7 @@ export default function SearchResults({
               <span className='font-semibold text-[#D53933]'>
                 {collections.length}
               </span>{' '}
-              个模板
+              个模板集合
             </div>
 
             <div className='grid grid-cols-2 gap-4'>

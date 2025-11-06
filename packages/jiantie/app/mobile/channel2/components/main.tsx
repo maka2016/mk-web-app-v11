@@ -36,6 +36,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
         const data = await trpc.channel.getChannels.query({
           appid,
           locale: 'zh-CN',
+          env: 'production',
         });
         setChannels(data);
       } catch (err) {
@@ -120,7 +121,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
         {loading ? (
           <div className='flex items-center justify-center h-full'>
             <div className='text-center'>
-              <div className='w-12 h-12 border-4 border-pink-600 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
+              <div className='w-12 h-12 border-4 border-[#D53933] border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
               <p className='text-gray-500'>加载中...</p>
             </div>
           </div>
@@ -174,13 +175,22 @@ export default function Main({ appid = 'jiantie' }: Props) {
                           }}
                         >
                           {child.thumb_path ? (
-                            <div className='w-12 h-12 relative'>
-                              <Image
+                            <div className='w-12 h-12 relative  overflow-hidden'>
+                              {/* <Image
                                 src={cdnApi(child.thumb_path)}
                                 alt={child.display_name}
                                 width={48}
                                 height={48}
-                                className='object-cover'
+                                style={{ objectFit: 'cover' }}
+                                className='object-contain'
+                              /> */}
+                              <img
+                                src={`${cdnApi(child.thumb_path)}`}
+                                alt={child.display_name}
+                                width={48}
+                                height={48}
+                                style={{ objectFit: 'cover' }}
+                                className='object-contain'
                               />
                             </div>
                           ) : (

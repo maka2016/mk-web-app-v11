@@ -51,6 +51,9 @@ model WorksSpecEntity {
   fixed_height         Boolean?                 @map("fixed_height")
   export_format        String?                  @map("export_format")
 
+  preview_width  Int? @map("preview_width")
+  preview_height Int? @map("preview_height")
+
   @@index([alias], map: "IDX_b4e878a9d7962422e5c968abda")
   @@index([deleted], map: "IDX_fa6660065ae44e94a7cf8abce9")
   @@index([appid], map: "IDX_cb4295fef52621f89102b0049d")
