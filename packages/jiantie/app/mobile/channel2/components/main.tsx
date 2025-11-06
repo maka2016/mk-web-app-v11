@@ -4,7 +4,6 @@ import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
 import { TemplateMarketChannelEntity } from '@workspace/database/generated/client/client';
 import { Search } from 'lucide-react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import StatusBar from '../../../../components/StatusBar';
@@ -69,12 +68,10 @@ export default function Main({ appid = 'jiantie' }: Props) {
         {/* 左侧Logo */}
         <div className='flex items-start'>
           <div className='relative w-14 h-10'>
-            <Image
+            <img
               src={cdnApi('/assets/jiantie/logo2.png')}
               alt='简帖'
-              fill
-              className='object-contain'
-              priority
+              className='w-full h-full object-contain'
             />
           </div>
         </div>
