@@ -1,9 +1,10 @@
-import APPBridge from '@mk/app-bridge';
-import { imageUrlToBase64, toOssMiniPCoverUrl } from '@/utils';
-import toast from 'react-hot-toast';
-import { onScreenShot } from '@/components/GridV3/shared';
 import { CanvaInfo2 } from '@/components/GridV3/comp/provider/utils';
+import { onScreenShot } from '@/components/GridV3/shared';
+import { imageUrlToBase64, toOssMiniPCoverUrl } from '@/utils';
+import APPBridge from '@mk/app-bridge';
+import { cdnApi } from '@mk/services';
 import { isAndroid } from '@mk/utils';
+import toast from 'react-hot-toast';
 
 export type ShareEnv = {
   // runtime & capability
@@ -106,13 +107,24 @@ export function buildShareButtons(env: ShareEnv): ShareButton[] {
     }
     // 全局执行锁在外层 main.tsx 维护，这里仅返回 Promise
     if (websiteSupport) {
+      // 微信分享缩略图尺寸限制：建议 500x400 (5:4 比例)，使用 cdnApi 调整尺寸
+      const thumbUrl = shareIcon
+        ? cdnApi(shareIcon, {
+            resizeWidth: 500,
+            resizeHeight: 400,
+            format: 'webp',
+            quality: 85,
+            mode: 'lfit',
+          })
+        : '';
+
       APPBridge.appCall({
         type: 'MKShare',
         appid: 'jiantie',
         params: {
           title: shareTitle,
           content: shareContent,
-          thumb: shareIcon,
+          thumb: thumbUrl,
           type: 'link',
           shareType: to,
           url: shareLink,
@@ -139,13 +151,24 @@ export function buildShareButtons(env: ShareEnv): ShareButton[] {
         return;
       } else {
         //降级为链接分享
+        // 微信分享缩略图尺寸限制：建议 500x400 (5:4 比例)，使用 cdnApi 调整尺寸
+        const thumbUrl = shareIcon
+          ? cdnApi(shareIcon, {
+              resizeWidth: 500,
+              resizeHeight: 400,
+              format: 'webp',
+              quality: 85,
+              mode: 'lfit',
+            })
+          : '';
+
         APPBridge.appCall({
           type: 'MKShare',
           appid: 'jiantie',
           params: {
             title: shareTitle,
             content: shareContent,
-            thumb: shareIcon,
+            thumb: thumbUrl,
             type: 'link',
             shareType: to,
             url: shareLink,

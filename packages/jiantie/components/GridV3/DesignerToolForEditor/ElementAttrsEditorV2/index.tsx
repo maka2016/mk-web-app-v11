@@ -28,6 +28,7 @@ import { Separator } from '@workspace/ui/components/separator';
 import { Switch } from '@workspace/ui/components/switch';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import RSVPThemeSetting from '../../../RSVP/ThemeSetting';
 import {
   takeBlockStyle,
   takeRowStyle,
@@ -410,65 +411,104 @@ export default function ElementAttrsEditorV2() {
                           >
                             重置样式
                           </Button>
-                          {editingElemId && layer?.elementRef === 'Text' && (
-                            <TextSetting
-                              attrs={{
-                                ...themeStyle,
-                                ...(elemLayer?.attrs || {}),
-                              }}
-                              onChange={nextVal => {
-                                // console.log('nextVal', editingElemId, nextVal);
-                                editorSDK?.changeCompAttr(editingElemId, {
-                                  // 不需要带上elemLayer?.attrs，函数会自动合并
-                                  // ...elemLayer?.attrs,
-                                  ...nextVal,
-                                });
-                              }}
-                            />
-                          )}
-                          {editingElemId && layer?.elementRef === 'Picture' && (
-                            <PictureSetting
-                              attrs={{
-                                ...themeStyle,
-                                ...(elemLayer?.attrs || {}),
-                              }}
-                              onChange={nextVal => {
-                                // console.log('PictureSetting onChange', nextVal);
-                                editorSDK?.changeCompAttr(editingElemId, {
-                                  // ...elemLayer?.attrs,
-                                  ...nextVal,
-                                });
-                              }}
-                            />
-                          )}
-                          {editingElemId &&
-                            layer?.elementRef === 'MkHuiZhi' && (
-                              <MkHuiZhiColorSetting
-                                onFormValueChange={values => {
-                                  editorSDK?.changeCompAttr(editingElemId, {
-                                    // ...elemLayer?.attrs,
-                                    ...values,
-                                  });
-                                }}
-                                formControledValues={
-                                  elemLayer?.attrs || ({} as any)
-                                }
-                              />
-                            )}
-                          {editingElemId &&
-                            layer?.elementRef === 'MkCalendarV3' && (
-                              <MkCalendarV3ColorSetting
-                                onFormValueChange={values => {
-                                  editorSDK?.changeCompAttr(editingElemId, {
-                                    // ...elemLayer?.attrs,
-                                    ...values,
-                                  });
-                                }}
-                                formControledValues={
-                                  elemLayer?.attrs || ({} as any)
-                                }
-                              />
-                            )}
+                          {(() => {
+                            if (editingElemId) {
+                              switch (layer?.elementRef) {
+                                case 'Text':
+                                  return (
+                                    <TextSetting
+                                      attrs={{
+                                        ...themeStyle,
+                                        ...(elemLayer?.attrs || {}),
+                                      }}
+                                      onChange={nextVal => {
+                                        // console.log('nextVal', editingElemId, nextVal);
+                                        editorSDK?.changeCompAttr(
+                                          editingElemId,
+                                          {
+                                            // 不需要带上elemLayer?.attrs，函数会自动合并
+                                            // ...elemLayer?.attrs,
+                                            ...nextVal,
+                                          }
+                                        );
+                                      }}
+                                    />
+                                  );
+                                case 'Picture':
+                                  return (
+                                    <PictureSetting
+                                      attrs={{
+                                        ...themeStyle,
+                                        ...(elemLayer?.attrs || {}),
+                                      }}
+                                      onChange={nextVal => {
+                                        // console.log('PictureSetting onChange', nextVal);
+                                        editorSDK?.changeCompAttr(
+                                          editingElemId,
+                                          {
+                                            // ...elemLayer?.attrs,
+                                            ...nextVal,
+                                          }
+                                        );
+                                      }}
+                                    />
+                                  );
+                                case 'MkHuiZhi':
+                                  return (
+                                    <MkHuiZhiColorSetting
+                                      onFormValueChange={values => {
+                                        editorSDK?.changeCompAttr(
+                                          editingElemId,
+                                          {
+                                            // ...elemLayer?.attrs,
+                                            ...values,
+                                          }
+                                        );
+                                      }}
+                                      formControledValues={
+                                        elemLayer?.attrs || ({} as any)
+                                      }
+                                    />
+                                  );
+                                case 'MkCalendarV3':
+                                  return (
+                                    <MkCalendarV3ColorSetting
+                                      onFormValueChange={values => {
+                                        editorSDK?.changeCompAttr(
+                                          editingElemId,
+                                          {
+                                            // ...elemLayer?.attrs,
+                                            ...values,
+                                          }
+                                        );
+                                      }}
+                                      formControledValues={
+                                        elemLayer?.attrs || ({} as any)
+                                      }
+                                    />
+                                  );
+                                case 'RSVP1':
+                                  return (
+                                    <RSVPThemeSetting
+                                      onFormValueChange={values => {
+                                        editorSDK?.changeCompAttr(
+                                          editingElemId,
+                                          {
+                                            // ...elemLayer?.attrs,
+                                            ...values,
+                                          }
+                                        );
+                                      }}
+                                      formControledValues={
+                                        elemLayer?.attrs || ({} as any)
+                                      }
+                                    />
+                                  );
+                                default:
+                                  return null;
+                              }
+                            }
+                          })()}
                           <StyleCustomSetting
                             useFrontground={false}
                             showAutoLayout={false}
