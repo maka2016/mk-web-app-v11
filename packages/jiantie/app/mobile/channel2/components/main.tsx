@@ -89,6 +89,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
             onClick={() => {
               // TODO: 跳转到通知页面
               console.log('查看通知');
+              router.push('/mobile/rsvp/notifications?appid=jiantie');
             }}
           >
             <img
