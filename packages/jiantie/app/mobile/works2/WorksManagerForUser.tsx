@@ -20,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@workspace/ui/components/alert-dialog';
+import { Button } from '@workspace/ui/components/button';
 import {
   Pagination,
   PaginationContent,
@@ -439,99 +440,101 @@ export default function WorksManagerForUser() {
   const totalPages = Math.ceil(total / pageSize);
 
   return (
-    <div className='flex flex-col h-full bg-[#f4f4f5]'>
-      {/* 头部 */}
-      <div className='bg-white px-4 py-3 border-b border-gray-200'>
-        <h1 className='text-lg font-semibold text-[#09090B]'>我的邀请函</h1>
-      </div>
+    <>
+      <div className='flex flex-col h-full bg-gray-50'>
+        {/* 头部 */}
+        <div className='bg-white px-4 py-3 border-b border-gray-200'>
+          <h1 className='text-lg font-semibold text-[#09090B]'>我的邀请函</h1>
+        </div>
 
-      {/* 作品列表 */}
-      <div
-        className={`flex-1 overflow-y-auto px-4 py-3 ${totalPages > 1 && !loading ? 'pb-[60px]' : ''}`}
-      >
-        {loading && worksList.length === 0 ? (
-          <div className='flex justify-center items-center h-64'>
-            <div className='text-sm text-gray-500'>加载中...</div>
-          </div>
-        ) : worksList.length === 0 ? (
-          <div className='flex flex-col items-center justify-center h-64'>
-            <div className='text-sm text-gray-400'>还没有作品</div>
-          </div>
-        ) : (
-          <div className='space-y-3'>
-            {worksList.map(work => (
-              <WorkInfoCard
-                key={work.id}
-                work={work}
-                purchaseStatus={getPurchaseStatus(work.id)}
-                rsvpStats={rsvpStatsMap.get(work.id)}
-                onClick={() => loadWorkDetail(work)}
-              />
-            ))}
+        {/* 作品列表 */}
+        <div
+          className={`flex-1 overflow-y-auto px-4 py-3 ${totalPages > 1 && !loading ? 'pb-[60px]' : ''}`}
+        >
+          {loading && worksList.length === 0 ? (
+            <div className='flex justify-center items-center h-64'>
+              <div className='text-sm text-gray-500'>加载中...</div>
+            </div>
+          ) : worksList.length === 0 ? (
+            <div className='flex flex-col items-center justify-center h-64'>
+              <div className='text-sm text-gray-400'>还没有作品</div>
+            </div>
+          ) : (
+            <div className='space-y-3'>
+              {worksList.map(work => (
+                <WorkInfoCard
+                  key={work.id}
+                  work={work}
+                  purchaseStatus={getPurchaseStatus(work.id)}
+                  rsvpStats={rsvpStatsMap.get(work.id)}
+                  onClick={() => loadWorkDetail(work)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 分页 - 固定在底部 */}
+        {totalPages > 1 && !loading && (
+          <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 z-10'>
+            <Pagination className='justify-center'>
+              <PaginationContent className='gap-0.5'>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => page > 1 && setPage(page - 1)}
+                    className={`h-8 px-2 text-xs ${page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
+                  />
+                </PaginationItem>
+                {(() => {
+                  const pages: (number | 'ellipsis')[] = [];
+                  const maxVisible = 3; // 减少可见页码数量
+
+                  if (totalPages <= maxVisible) {
+                    for (let i = 1; i <= totalPages; i++) {
+                      pages.push(i);
+                    }
+                  } else {
+                    if (page === 1) {
+                      pages.push(1, 2, 'ellipsis', totalPages);
+                    } else if (page === totalPages) {
+                      pages.push(1, 'ellipsis', totalPages - 1, totalPages);
+                    } else {
+                      pages.push(1, 'ellipsis', page, 'ellipsis', totalPages);
+                    }
+                  }
+
+                  return pages.map((item, index) => {
+                    if (item === 'ellipsis') {
+                      return (
+                        <PaginationItem key={`ellipsis-${index}`}>
+                          <PaginationEllipsis className='h-8 w-8' />
+                        </PaginationItem>
+                      );
+                    }
+                    return (
+                      <PaginationItem key={item}>
+                        <PaginationLink
+                          onClick={() => setPage(item)}
+                          isActive={page === item}
+                          className='cursor-pointer h-8 w-8 text-xs'
+                        >
+                          {item}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  });
+                })()}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => page < totalPages && setPage(page + 1)}
+                    className={`h-8 px-2 text-xs ${page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
       </div>
-
-      {/* 分页 - 固定在底部 */}
-      {totalPages > 1 && !loading && (
-        <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 z-10'>
-          <Pagination className='justify-center'>
-            <PaginationContent className='gap-0.5'>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => page > 1 && setPage(page - 1)}
-                  className={`h-8 px-2 text-xs ${page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
-                />
-              </PaginationItem>
-              {(() => {
-                const pages: (number | 'ellipsis')[] = [];
-                const maxVisible = 3; // 减少可见页码数量
-
-                if (totalPages <= maxVisible) {
-                  for (let i = 1; i <= totalPages; i++) {
-                    pages.push(i);
-                  }
-                } else {
-                  if (page === 1) {
-                    pages.push(1, 2, 'ellipsis', totalPages);
-                  } else if (page === totalPages) {
-                    pages.push(1, 'ellipsis', totalPages - 1, totalPages);
-                  } else {
-                    pages.push(1, 'ellipsis', page, 'ellipsis', totalPages);
-                  }
-                }
-
-                return pages.map((item, index) => {
-                  if (item === 'ellipsis') {
-                    return (
-                      <PaginationItem key={`ellipsis-${index}`}>
-                        <PaginationEllipsis className='h-8 w-8' />
-                      </PaginationItem>
-                    );
-                  }
-                  return (
-                    <PaginationItem key={item}>
-                      <PaginationLink
-                        onClick={() => setPage(item)}
-                        isActive={page === item}
-                        className='cursor-pointer h-8 w-8 text-xs'
-                      >
-                        {item}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                });
-              })()}
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => page < totalPages && setPage(page + 1)}
-                  className={`h-8 px-2 text-xs ${page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
 
       {/* 作品详情弹窗 */}
       <ResponsiveDialog
@@ -540,7 +543,7 @@ export default function WorksManagerForUser() {
         title='邀请函详情'
       >
         {selectedWork && (
-          <div className='p-4 space-y-4'>
+          <div className='p-4 space-y-4 bg-gray-50'>
             {/* 作品信息卡片 */}
             <WorkInfoCard
               work={selectedWork}
@@ -550,53 +553,51 @@ export default function WorksManagerForUser() {
             />
 
             {/* 编辑操作 */}
-            <div className='bg-white rounded-lg border border-gray-200'>
-              <div className='px-4 py-3 border-b border-gray-200'>
-                <h3 className='text-sm font-semibold text-[#09090B]'>
-                  编辑操作
-                </h3>
-              </div>
-              <div className='grid grid-cols-4 gap-2 p-3'>
-                <button
+            <div className='space-y-3'>
+              <h3 className='text-sm font-semibold text-[#09090B]'>编辑操作</h3>
+              <div className='grid grid-cols-4 gap-2 '>
+                <Button
+                  variant='outline'
                   onClick={() => selectedWork && handlePreview(selectedWork)}
-                  className='flex flex-col items-center gap-1 p-2 rounded hover:bg-gray-50 active:bg-gray-100'
+                  className='flex items-center justify-center gap-1 h-auto py-2 px-2'
                 >
-                  <Eye className='w-5 h-5 text-gray-600' />
+                  <Eye className='w-4 h-4 text-gray-600' />
                   <span className='text-xs text-gray-600'>预览</span>
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant='outline'
                   onClick={() => selectedWork && handleEdit(selectedWork)}
-                  className='flex flex-col items-center gap-1 p-2 rounded hover:bg-gray-50 active:bg-gray-100'
+                  className='flex items-center justify-center gap-1 h-auto py-2 px-2'
                 >
-                  <Pencil className='w-5 h-5 text-gray-600' />
+                  <Pencil className='w-4 h-4 text-gray-600' />
                   <span className='text-xs text-gray-600'>编辑</span>
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant='outline'
                   onClick={() => selectedWork && handleCopy(selectedWork)}
-                  className='flex flex-col items-center gap-1 p-2 rounded hover:bg-gray-50 active:bg-gray-100'
+                  className='flex items-center justify-center gap-1 h-auto py-2 px-2'
                 >
-                  <Copy className='w-5 h-5 text-gray-600' />
+                  <Copy className='w-4 h-4 text-gray-600' />
                   <span className='text-xs text-gray-600'>复制</span>
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant='outline'
                   onClick={() => selectedWork && openDeleteDialog(selectedWork)}
-                  className='flex flex-col items-center gap-1 p-2 rounded hover:bg-gray-50 active:bg-gray-100'
+                  className='flex items-center justify-center gap-1 h-auto py-2 px-2'
                 >
-                  <Trash2 className='w-5 h-5 text-red-500' />
+                  <Trash2 className='w-4 h-4 text-red-500' />
                   <span className='text-xs text-red-500'>删除</span>
-                </button>
+                </Button>
               </div>
             </div>
 
             {/* 分享邀请（仅 RSVP 类型） */}
             {getWorkType(selectedWork) === 'rsvp' && (
-              <div className='bg-white rounded-lg border border-gray-200'>
-                <div className='px-4 py-3 border-b border-gray-200'>
-                  <h3 className='text-sm font-semibold text-[#09090B]'>
-                    分享邀请
-                  </h3>
-                </div>
-                <div className='p-4 space-y-3'>
+              <div className='space-y-3'>
+                <h3 className='text-sm font-semibold text-[#09090B]'>
+                  分享邀请
+                </h3>
+                <div className='space-y-3'>
                   {canShare ? (
                     <RSVPShareOptions
                       worksId={selectedWork.id}
@@ -626,7 +627,7 @@ export default function WorksManagerForUser() {
                         <p className='text-sm text-gray-600 mb-4'>
                           升级会员或购买作品后即可使用分享邀请功能
                         </p>
-                        <button
+                        <Button
                           onClick={() => {
                             toVipPage({
                               works_id: selectedWork.id,
@@ -635,10 +636,10 @@ export default function WorksManagerForUser() {
                               vipType: 'rsvp',
                             });
                           }}
-                          className='px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-medium hover:from-purple-700 hover:to-blue-700 active:scale-95 transition-all shadow-md'
+                          className='px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-medium hover:from-purple-700 hover:to-blue-700 shadow-md'
                         >
                           立即升级
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -648,26 +649,45 @@ export default function WorksManagerForUser() {
 
             {/* 宾客回执（仅 RSVP 类型） */}
             {getWorkType(selectedWork) === 'rsvp' && (
-              <div className='bg-white rounded-lg border border-gray-200'>
-                <div className='px-4 py-3 border-b border-gray-200'>
-                  <h3 className='text-sm font-semibold text-[#09090B]'>
-                    宾客回执
-                  </h3>
+              <div className='space-y-3'>
+                <h3 className='text-sm font-semibold text-[#09090B]'>
+                  宾客回执
+                </h3>
+                <div className='space-y-3 bg-white rounded-lg border border-gray-100 shadow-sm'>
+                  <button
+                    onClick={() => {
+                      if (!formConfigId) {
+                        toast.error('表单配置未找到');
+                        return;
+                      }
+                      const url = `/mobile/rsvp/invitees?works_id=${selectedWork.id}&form_config_id=${formConfigId}`;
+                      if (APPBridge.judgeIsInApp()) {
+                        APPBridge.navToPage({
+                          url: `${location.origin}${url}&is_full_screen=1`,
+                          type: 'URL',
+                        });
+                      } else {
+                        router.push(
+                          getUrlWithParam(`${url}&appid=${appid}`, 'clickid')
+                        );
+                      }
+                    }}
+                    className='w-full flex items-center gap-3 p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors'
+                  >
+                    <div className='w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0'>
+                      <FileText className='w-5 h-5 text-gray-600' />
+                    </div>
+                    <div className='flex-1 text-left'>
+                      <span className='text-sm font-medium text-[#09090B]'>
+                        管理宾客回执
+                      </span>
+                      <p className='text-xs text-gray-500 mt-1'>
+                        查看宾客列表和回执信息
+                      </p>
+                    </div>
+                    <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
+                  </button>
                 </div>
-                <button className='w-full flex items-center gap-3 p-4 hover:bg-gray-50 active:bg-gray-100'>
-                  <div className='w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0'>
-                    <FileText className='w-5 h-5 text-gray-600' />
-                  </div>
-                  <div className='flex-1 text-left'>
-                    <span className='text-sm font-medium text-[#09090B]'>
-                      管理宾客回执
-                    </span>
-                    <p className='text-xs text-gray-500 mt-1'>
-                      查看宾客列表和回执信息
-                    </p>
-                  </div>
-                  <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
-                </button>
               </div>
             )}
           </div>
@@ -703,6 +723,6 @@ export default function WorksManagerForUser() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }
