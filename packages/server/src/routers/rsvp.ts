@@ -39,6 +39,7 @@ const RsvpSubmissionCreateInput = z.object({
 const RsvpSubmissionUpdateInput = z.object({
   submission_group_id: z.string(),
   submission_data: SubmissionDataSchema,
+  will_attend: z.boolean().optional(), // 是否出席（可选，如果提供则更新）
   changed_fields: z.any().optional(),
   operator_type: z.enum(['visitor', 'admin', 'system']).optional(),
   operator_id: z.string().optional(),
@@ -280,7 +281,11 @@ export const rsvpRouter = router({
           operator_name: input.operator_name,
           remark: input.remark,
           status: latest.status, // 版本化修改不改变审核状态
-          will_attend: latest.will_attend,
+          // 如果提供了新的 will_attend，使用新值；否则使用旧值
+          will_attend:
+            input.will_attend !== undefined
+              ? input.will_attend
+              : latest.will_attend,
         },
       });
 

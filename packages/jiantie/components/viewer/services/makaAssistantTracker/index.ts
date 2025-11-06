@@ -1,6 +1,6 @@
-import { WechatClientInfo, WorksDetail } from '../../types/interface';
 import { cdnApi, getProcessEnv, request } from '@mk/services';
 import { queryToObj } from '@mk/utils';
+import { WechatClientInfo, WorksDetail } from '../../types/interface';
 import MA from '../ma';
 
 class MakaAssistantTracker {
@@ -27,6 +27,15 @@ class MakaAssistantTracker {
 
   async init(worksDetail: WorksDetail, wechatClientInfo: WechatClientInfo) {
     if (this.isReady) return;
+
+    // 如果是 127.0.0.1 或 localhost，直接返回
+    if (
+      typeof window !== 'undefined' &&
+      (window.location.hostname === '127.0.0.1' ||
+        window.location.hostname === 'localhost')
+    ) {
+      return;
+    }
 
     await this.initHash(
       worksDetail.uid || '',
