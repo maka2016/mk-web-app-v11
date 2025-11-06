@@ -1,5 +1,6 @@
 'use client';
 
+import { RSVPShareOptions } from '@/components/RSVP/RSVPShareOptions';
 import { getAppId, getUid } from '@/services';
 import { useStore } from '@/store';
 import { getUrlWithParam } from '@/utils';
@@ -35,10 +36,8 @@ import {
   Copy,
   Eye,
   FileText,
-  Globe,
   Pencil,
   Trash2,
-  Users,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -84,9 +83,57 @@ export default function WorksManagerForUser() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedWork, setSelectedWork] = useState<WorksDetail | null>(null);
   const [rsvpStats, setRsvpStats] = useState<RSVPStats | null>(null);
+  const [rsvpStatsMap, setRsvpStatsMap] = useState<Map<string, RSVPStats>>(
+    new Map()
+  );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [workToDelete, setWorkToDelete] =
     useState<SerializedWorksEntity | null>(null);
+  const [formConfigId, setFormConfigId] = useState<string | null>(null);
+
+  // 获取 RSVP 统计信息
+  const loadRSVPStats = async (worksIds: string[]) => {
+    if (worksIds.length === 0) return;
+
+    const statsMap = new Map<string, RSVPStats>();
+
+    // 批量获取所有 RSVP 作品的统计信息
+    await Promise.all(
+      worksIds.map(async worksId => {
+        try {
+          const formConfig = await trpc.rsvp.getFormConfigByWorksId.query({
+            works_id: worksId,
+          });
+
+          if (formConfig) {
+            const invitees =
+              await trpc.rsvp.getInviteesWithResponseStatus.query({
+                form_config_id: formConfig.id,
+              });
+
+            const invited = invitees?.length || 0;
+            const replied =
+              invitees?.filter((item: any) => item.has_response).length || 0;
+
+            statsMap.set(worksId, { invited, replied });
+          } else {
+            statsMap.set(worksId, { invited: 0, replied: 0 });
+          }
+        } catch (error) {
+          console.error(`Failed to load RSVP stats for ${worksId}:`, error);
+          statsMap.set(worksId, { invited: 0, replied: 0 });
+        }
+      })
+    );
+
+    setRsvpStatsMap(prev => {
+      const newMap = new Map(prev);
+      statsMap.forEach((value, key) => {
+        newMap.set(key, value);
+      });
+      return newMap;
+    });
+  };
 
   // 加载作品列表
   const loadWorks = async (pageNum = page) => {
@@ -112,6 +159,14 @@ export default function WorksManagerForUser() {
 
       setWorksList(works);
       setTotal(count);
+
+      // 为所有 RSVP 类型的作品加载统计信息
+      const rsvpWorksIds = works
+        .filter(work => work.is_rsvp)
+        .map(work => work.id);
+      if (rsvpWorksIds.length > 0) {
+        loadRSVPStats(rsvpWorksIds);
+      }
     } catch (error) {
       toast.error('加载作品列表失败');
       console.error(error);
@@ -134,6 +189,7 @@ export default function WorksManagerForUser() {
           });
 
           if (formConfig) {
+            setFormConfigId(formConfig.id);
             const invitees =
               await trpc.rsvp.getInviteesWithResponseStatus.query({
                 form_config_id: formConfig.id,
@@ -145,13 +201,16 @@ export default function WorksManagerForUser() {
 
             setRsvpStats({ invited, replied });
           } else {
+            setFormConfigId(null);
             setRsvpStats({ invited: 0, replied: 0 });
           }
         } catch (error) {
           console.error('Failed to load RSVP stats:', error);
+          setFormConfigId(null);
           setRsvpStats({ invited: 0, replied: 0 });
         }
       } else {
+        setFormConfigId(null);
         setRsvpStats(null);
       }
 
@@ -314,7 +373,7 @@ export default function WorksManagerForUser() {
                 >
                   <div className='flex gap-3'>
                     {/* 缩略图 */}
-                    <div className='relative w-16 h-16 flex-shrink-0 rounded overflow-hidden border border-gray-200'>
+                    <div className='relative w-16 flex-shrink-0 rounded overflow-hidden border border-gray-200 self-stretch'>
                       {work.cover ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -332,7 +391,7 @@ export default function WorksManagerForUser() {
                     {/* 内容 */}
                     <div className='flex-1 min-w-0'>
                       <div className='flex items-start justify-between gap-2 mb-1'>
-                        <h3 className='text-sm font-medium text-[#09090B] line-clamp-2 flex-1'>
+                        <h3 className='text-base font-medium text-[#09090B] line-clamp-2 flex-1'>
                           {work.title}
                         </h3>
                         {purchaseStatus && (
@@ -357,10 +416,16 @@ export default function WorksManagerForUser() {
                       {work.is_rsvp && (
                         <div className='flex items-center gap-3 mt-1 text-xs'>
                           <span className='text-[#09090B] font-medium'>
-                            <span className='font-semibold'>0</span> 已邀请
+                            <span className='font-semibold'>
+                              {rsvpStatsMap.get(work.id)?.invited ?? 0}
+                            </span>{' '}
+                            已邀请
                           </span>
                           <span className='text-green-600 font-medium'>
-                            <span className='font-semibold'>0</span> 已回复
+                            <span className='font-semibold'>
+                              {rsvpStatsMap.get(work.id)?.replied ?? 0}
+                            </span>{' '}
+                            已回复
                           </span>
                         </div>
                       )}
@@ -375,9 +440,9 @@ export default function WorksManagerForUser() {
 
       {/* 分页 */}
       {totalPages > 1 && !loading && (
-        <div className='bg-white border-t border-gray-200 px-4 py-3'>
+        <div className='bg-white border-t border-gray-200 px-2 py-3'>
           <Pagination className='justify-center'>
-            <PaginationContent>
+            <PaginationContent className='flex-wrap gap-1'>
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() => page > 1 && setPage(page - 1)}
@@ -388,71 +453,59 @@ export default function WorksManagerForUser() {
                   }
                 />
               </PaginationItem>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum: number;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (page <= 3) {
-                  pageNum = i + 1;
-                } else if (page >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
+              {(() => {
+                const pages: (number | 'ellipsis')[] = [];
+                const maxVisible = 5;
+
+                if (totalPages <= maxVisible) {
+                  for (let i = 1; i <= totalPages; i++) {
+                    pages.push(i);
+                  }
                 } else {
-                  pageNum = page - 2 + i;
+                  if (page <= 3) {
+                    for (let i = 1; i <= 4; i++) {
+                      pages.push(i);
+                    }
+                    pages.push('ellipsis');
+                    pages.push(totalPages);
+                  } else if (page >= totalPages - 2) {
+                    pages.push(1);
+                    pages.push('ellipsis');
+                    for (let i = totalPages - 3; i <= totalPages; i++) {
+                      pages.push(i);
+                    }
+                  } else {
+                    pages.push(1);
+                    pages.push('ellipsis');
+                    for (let i = page - 1; i <= page + 1; i++) {
+                      pages.push(i);
+                    }
+                    pages.push('ellipsis');
+                    pages.push(totalPages);
+                  }
                 }
 
-                if (i === 0 && page > 3 && totalPages > 5) {
-                  return (
-                    <>
-                      <PaginationItem key={1}>
-                        <PaginationLink
-                          onClick={() => setPage(1)}
-                          className='cursor-pointer'
-                        >
-                          1
-                        </PaginationLink>
-                      </PaginationItem>
-                      <PaginationItem key='ellipsis-1'>
+                return pages.map((item, index) => {
+                  if (item === 'ellipsis') {
+                    return (
+                      <PaginationItem key={`ellipsis-${index}`}>
                         <PaginationEllipsis />
                       </PaginationItem>
-                    </>
-                  );
-                }
-
-                if (
-                  i === 4 &&
-                  page < totalPages - 2 &&
-                  totalPages > 5 &&
-                  pageNum !== totalPages
-                ) {
+                    );
+                  }
                   return (
-                    <>
-                      <PaginationItem key='ellipsis-2'>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                      <PaginationItem key={totalPages}>
-                        <PaginationLink
-                          onClick={() => setPage(totalPages)}
-                          className='cursor-pointer'
-                        >
-                          {totalPages}
-                        </PaginationLink>
-                      </PaginationItem>
-                    </>
+                    <PaginationItem key={item}>
+                      <PaginationLink
+                        onClick={() => setPage(item)}
+                        isActive={page === item}
+                        className='cursor-pointer min-w-[32px]'
+                      >
+                        {item}
+                      </PaginationLink>
+                    </PaginationItem>
                   );
-                }
-
-                return (
-                  <PaginationItem key={pageNum}>
-                    <PaginationLink
-                      onClick={() => setPage(pageNum)}
-                      isActive={page === pageNum}
-                      className='cursor-pointer'
-                    >
-                      {pageNum}
-                    </PaginationLink>
-                  </PaginationItem>
-                );
-              })}
+                });
+              })()}
               <PaginationItem>
                 <PaginationNext
                   onClick={() => page < totalPages && setPage(page + 1)}
@@ -480,7 +533,7 @@ export default function WorksManagerForUser() {
             <div className='bg-white rounded-lg p-4 border border-gray-200'>
               <div className='flex gap-3'>
                 {/* 缩略图 */}
-                <div className='relative w-20 h-28 flex-shrink-0 rounded overflow-hidden border border-gray-200'>
+                <div className='relative w-20 flex-shrink-0 rounded overflow-hidden border border-gray-200 self-stretch'>
                   {selectedWork.cover ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -589,40 +642,11 @@ export default function WorksManagerForUser() {
                     分享邀请
                   </h3>
                 </div>
-                <div className='divide-y divide-gray-200'>
-                  <button className='w-full flex items-center gap-3 p-4 hover:bg-gray-50 active:bg-gray-100'>
-                    <div className='w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0'>
-                      <Users className='w-5 h-5 text-purple-600' />
-                    </div>
-                    <div className='flex-1 text-left'>
-                      <div className='flex items-center gap-2 mb-1'>
-                        <span className='text-sm font-medium text-[#09090B]'>
-                          指定宾客
-                        </span>
-                        <span className='text-xs px-1.5 py-0.5 rounded bg-purple-100 text-purple-600'>
-                          推荐
-                        </span>
-                      </div>
-                      <p className='text-xs text-gray-500'>
-                        为某位嘉宾创建专属链接并单独邀请
-                      </p>
-                    </div>
-                    <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
-                  </button>
-                  <button className='w-full flex items-center gap-3 p-4 hover:bg-gray-50 active:bg-gray-100'>
-                    <div className='w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0'>
-                      <Globe className='w-5 h-5 text-blue-600' />
-                    </div>
-                    <div className='flex-1 text-left'>
-                      <span className='text-sm font-medium text-[#09090B]'>
-                        公开分享
-                      </span>
-                      <p className='text-xs text-gray-500 mt-1'>
-                        生成公开链接,任何人可填写回执
-                      </p>
-                    </div>
-                    <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
-                  </button>
+                <div className='p-4 space-y-3'>
+                  <RSVPShareOptions
+                    worksId={selectedWork.id}
+                    formConfigId={formConfigId || undefined}
+                  />
                 </div>
               </div>
             )}
