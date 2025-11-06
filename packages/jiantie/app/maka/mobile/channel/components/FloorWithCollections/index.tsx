@@ -1,14 +1,14 @@
 'use client';
 import { Channel, getAppId, getCmsApiHost, requestCMS } from '@/services';
-import { useEffect, useState } from 'react';
-import styles from './index.module.scss';
-import cls from 'classnames';
-import qs from 'qs';
+import APPBridge from '@mk/app-bridge';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Loading } from '@workspace/ui/components/loading';
-import TemplateCard, { TemplateCardData } from '../TemplateCard';
-import APPBridge from '@mk/app-bridge';
+import cls from 'classnames';
 import { useRouter } from 'next/navigation';
+import qs from 'qs';
+import { useEffect, useState } from 'react';
+import TemplateCard, { TemplateCardData } from '../TemplateCard';
+import styles from './index.module.scss';
 
 interface Props {
   floor: Channel; // 四级楼层
@@ -66,11 +66,7 @@ const FloorWithCollections = (props: Props) => {
     <div className={cls([styles.floorContainer, styles[appid]])}>
       <div className={styles.floorHeader}>
         <div className={styles.floorTitle}>{floor.name}</div>
-        <div
-          className={styles.more}
-          onClick={toFloorDetail}
-          style={{ color }}
-        >
+        <div className={styles.more} onClick={toFloorDetail} style={{ color }}>
           查看全部
           <Icon name='right-bold' size={20} />
         </div>
@@ -83,7 +79,7 @@ const FloorWithCollections = (props: Props) => {
           </div>
         ) : collections.length > 0 ? (
           <div className={styles.collectionsList}>
-            {collections.map((collection) => (
+            {collections.map(collection => (
               <CollectionItem
                 key={collection.documentId}
                 collection={collection}
@@ -103,7 +99,13 @@ const FloorWithCollections = (props: Props) => {
  * 单个集合项组件
  * 展示集合名称和前几个模板
  */
-const CollectionItem = ({ collection, color }: { collection: Channel; color?: string }) => {
+const CollectionItem = ({
+  collection,
+  color,
+}: {
+  collection: Channel;
+  color?: string;
+}) => {
   const [templates, setTemplates] = useState<TemplateCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -190,15 +192,12 @@ const CollectionItem = ({ collection, color }: { collection: Channel; color?: st
       <div className={styles.templateList}>
         {loading ? (
           <div className={styles.templateLoading}>
-            <Loading size='small' />
+            <Loading size={16} />
           </div>
         ) : (
           <>
-            {templates.map((template) => (
-              <TemplateCard
-                key={template.template_id}
-                template={template}
-              />
+            {templates.map(template => (
+              <TemplateCard key={template.template_id} template={template} />
             ))}
           </>
         )}
