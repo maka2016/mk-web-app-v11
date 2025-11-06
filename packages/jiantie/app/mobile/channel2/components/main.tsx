@@ -174,11 +174,12 @@ export default function Main({ appid = 'jiantie' }: Props) {
                           }}
                         >
                           {child.thumb_path ? (
-                            <div className='w-full h-full relative'>
+                            <div className='w-12 h-12 relative'>
                               <Image
                                 src={cdnApi(child.thumb_path)}
                                 alt={child.display_name}
-                                fill
+                                width={48}
+                                height={48}
                                 className='object-cover'
                               />
                             </div>
