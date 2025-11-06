@@ -109,7 +109,10 @@ export function SubmissionDataView({
       if (showEmptyState) {
         return (
           <div
-            className={`text-sm text-gray-500 text-center py-2 ${className}`}
+            className={`text-sm text-center py-2 ${className}`}
+            style={{
+              color: 'var(--rsvp-label-color, #6b7280)',
+            }}
           >
             暂无提交信息
           </div>
@@ -123,14 +126,28 @@ export function SubmissionDataView({
         {fieldsWithValues.map(({ field, value }, index) => (
           <div
             key={field.id}
-            className={`flex items-center justify-between py-2 ${
-              index < fieldsWithValues.length - 1
-                ? 'border-b border-gray-200'
-                : ''
-            } ${itemClassName}`}
+            className={`flex items-center justify-between py-2 ${itemClassName}`}
+            style={{
+              borderBottom:
+                index < fieldsWithValues.length - 1
+                  ? '1px solid var(--rsvp-input-border-color, #e5e7eb)'
+                  : 'none',
+            }}
           >
-            <div className='text-sm text-gray-700'>{field.label}</div>
-            <div className='text-sm font-medium text-gray-900 text-right flex-1 ml-4'>
+            <div
+              className='text-sm'
+              style={{
+                color: 'var(--rsvp-label-color, #374151)',
+              }}
+            >
+              {field.label}
+            </div>
+            <div
+              className='text-sm font-medium text-right flex-1 ml-4'
+              style={{
+                color: 'var(--rsvp-text-color, #111827)',
+              }}
+            >
               {value}
             </div>
           </div>
@@ -147,12 +164,28 @@ export function SubmissionDataView({
         return (
           <div
             key={field.id}
-            className={`flex items-center justify-between py-2 ${
-              index < enabledFields.length - 1 ? 'border-b border-gray-200' : ''
-            } ${itemClassName}`}
+            className={`flex items-center justify-between py-2 ${itemClassName}`}
+            style={{
+              borderBottom:
+                index < enabledFields.length - 1
+                  ? '1px solid var(--rsvp-input-border-color, #e5e7eb)'
+                  : 'none',
+            }}
           >
-            <div className='text-sm text-gray-700'>{field.label}</div>
-            <div className='text-sm font-medium text-gray-900 text-right flex-1 ml-4'>
+            <div
+              className='text-sm'
+              style={{
+                color: 'var(--rsvp-label-color, #374151)',
+              }}
+            >
+              {field.label}
+            </div>
+            <div
+              className='text-sm font-medium text-right flex-1 ml-4'
+              style={{
+                color: 'var(--rsvp-text-color, #111827)',
+              }}
+            >
               {value}
             </div>
           </div>
