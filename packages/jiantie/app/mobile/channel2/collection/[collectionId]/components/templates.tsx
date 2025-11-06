@@ -18,8 +18,8 @@ interface Channel {
   template_ids: string[];
   parent_id: number | null;
   appid: string | null;
-  create_time: Date;
-  update_time: Date;
+  create_time: string;
+  update_time: string;
 }
 
 interface Template {
@@ -28,9 +28,9 @@ interface Template {
   desc: string | null;
   cover: string | null;
   spec_id: string | null;
-  create_time: Date;
-  update_time: Date;
-  custom_time: Date;
+  create_time: string;
+  update_time: string;
+  custom_time: string;
 }
 
 interface TemplatesProps {

@@ -18,8 +18,8 @@ interface Channel {
   template_ids: string[];
   parent_id: number | null;
   appid: string | null;
-  create_time: Date;
-  update_time: Date;
+  create_time: string;
+  update_time: string;
   children?: Channel[];
 }
 
