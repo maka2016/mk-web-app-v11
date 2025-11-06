@@ -9,6 +9,7 @@ export const channelRouter = router({
       z.object({
         appid: z.string().default('jiantie'),
         locale: z.string().default('zh-CN'),
+        env: z.string().default('production'),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -18,6 +19,8 @@ export const channelRouter = router({
           class: '一级栏目',
           appid: input.appid,
           locale: input.locale,
+          env: input.env,
+          online: true,
         },
         include: {
           children: {
@@ -55,6 +58,7 @@ export const channelRouter = router({
             where: {
               class: '三级热词',
               locale: input.locale,
+              online: true,
             },
             orderBy: {
               id: 'asc',
@@ -80,11 +84,13 @@ export const channelRouter = router({
           parent_id: input.parentId,
           class: '四级楼层',
           locale: input.locale,
+          online: true,
         },
         include: {
           children: {
             where: {
               class: '五级集合',
+              online: true,
             },
             orderBy: {
               id: 'asc',
@@ -123,6 +129,7 @@ export const channelRouter = router({
             class: '五级集合',
             appid: input.appid,
             locale: input.locale,
+            online: true,
             OR: orConditions,
           },
           orderBy: {

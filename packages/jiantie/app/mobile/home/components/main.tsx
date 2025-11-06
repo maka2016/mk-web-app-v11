@@ -71,6 +71,8 @@ const TabLayout = (props: Props) => {
     router.replace(`?${newParams.toString()}`, { scroll: false });
   };
   const [unread, setUnread] = useState(0);
+  const [doubleClickCount, setDoubleClickCount] = useState(0);
+  const [clickTimer, setClickTimer] = useState<NodeJS.Timeout | null>(null);
 
   const getUnReadNotifications = async () => {
     try {
@@ -96,7 +98,14 @@ const TabLayout = (props: Props) => {
     // (window as any)?.["MKAPPCloseModal"] = () => {
     //   // setVipShow(false);
     // };
-  }, []);
+
+    // 清理定时器
+    return () => {
+      if (clickTimer) {
+        clearTimeout(clickTimer);
+      }
+    };
+  }, [clickTimer]);
 
   const getTabs = () => {
     if (false && appid === 'jiantie') {
@@ -133,6 +142,36 @@ const TabLayout = (props: Props) => {
     // }
   };
 
+  // 后门：三次双击跳转到 home2（仅 jiantie 应用）
+  const handleLogoDoubleClick = () => {
+    // 只在 jiantie 应用中启用
+    if (appid !== 'jiantie') {
+      return;
+    }
+
+    const newCount = doubleClickCount + 1;
+    setDoubleClickCount(newCount);
+
+    // 清除之前的定时器
+    if (clickTimer) {
+      clearTimeout(clickTimer);
+    }
+
+    // 如果达到3次双击，跳转到 home2
+    if (newCount >= 3) {
+      console.log('触发后门：跳转到 home2');
+      router.push('/mobile/home2');
+      setDoubleClickCount(0);
+      return;
+    }
+
+    // 设置定时器，3秒后重置计数
+    const timer = setTimeout(() => {
+      setDoubleClickCount(0);
+    }, 3000);
+    setClickTimer(timer);
+  };
+
   // 渲染每个 tab 对应的页面
   const renderTabContent = () =>
     getTabs().map((tab, index) => {
@@ -146,7 +185,12 @@ const TabLayout = (props: Props) => {
         >
           {tab.key === 'home' && !isMiniProgram && (
             <div className={styles.head}>
-              <img src={logos[appid]} alt='' className={styles.logo} />
+              <img
+                src={logos[appid]}
+                alt=''
+                className={styles.logo}
+                onDoubleClick={handleLogoDoubleClick}
+              />
               <div className='flex items-center gap-3'>
                 {/* {(vipABTest !== 'work' || appid !== 'jiantie') && (
                   <div

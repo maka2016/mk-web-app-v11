@@ -19,7 +19,7 @@ interface RSVPThemeSettingProps {
 const primaryColorItems: Array<{
   label: string;
   value: keyof RSVPTheme;
-  type?: 'color' | 'number';
+  type?: 'color' | 'number' | 'text';
 }> = [
   {
     label: '容器背景',

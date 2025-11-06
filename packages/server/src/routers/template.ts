@@ -319,7 +319,28 @@ export const templateRouter = router({
         },
       });
 
-      return templates;
+      // 获取规格数据
+      const specIds = templates.map(t => t.spec_id).filter(Boolean) as string[];
+
+      const specs = await ctx.prisma.worksSpecEntity.findMany({
+        where: {
+          id: { in: specIds },
+        },
+        select: {
+          id: true,
+          preview_width: true,
+          preview_height: true,
+        },
+      });
+
+      // 构建规格数据映射
+      const specMap = new Map(specs.map(s => [s.id, s]));
+
+      // 合并规格数据到模板
+      return templates.map(template => ({
+        ...template,
+        spec: template.spec_id ? specMap.get(template.spec_id) : null,
+      }));
     }),
 
   // 从数据创建模板
