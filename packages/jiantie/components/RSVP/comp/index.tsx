@@ -811,7 +811,14 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                     });
                 }
               }}
-              className='h-9 border-blue-200'
+              className='border-2 h-9 focus:ring-0 [&::placeholder]:text-[var(--rsvp-input-placeholder-color)]'
+              style={{
+                borderRadius: 'var(--rsvp-border-radius)',
+                borderWidth: '2px',
+                backgroundColor: 'var(--rsvp-input-bg-color)',
+                borderColor: 'var(--rsvp-border-color)',
+                color: 'var(--rsvp-input-text-color)',
+              }}
             />
           </div>
         )}

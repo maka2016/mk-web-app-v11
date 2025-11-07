@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import { showSelector } from '@/components/showSelector';
 import styled from '@emotion/styled';
 import { cdnApi, getPageId, getPermissionData } from '@mk/services';
 import { isPc } from '@mk/utils';
@@ -386,7 +387,7 @@ export default function ImgLiteCompV2({
         style={getContainerStyle()}
         onClick={e => {
           if (active && userEditable && !isDesigner) {
-            editorCtx?.utils.showSelector({
+            showSelector({
               onSelected: async (params: any) => {
                 const { url, type, ossPath } = params;
                 const nextImgInfo = await getImgInfo2(ossPath);

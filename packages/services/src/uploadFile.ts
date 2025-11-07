@@ -1,5 +1,7 @@
 import { API } from './apis';
+import { getAppId, getToken2, getUid2 } from './env';
 import { request2 } from './request';
+import { startupStsOssClient, uploadFileToOSS } from './sts-client';
 
 const getBaseUrl = () => {
   return API('apiv10');
@@ -145,5 +147,69 @@ export const moveFile = async (id: number, targetFolderId: number) => {
   const response = await request2.put(`${getBaseUrl()}/user-files/${id}`, {
     targetFolderId,
   });
+  return response.data;
+};
+
+/**
+ * 使用 STS OSS 直接上传文件（不经过后端中转）
+ * @param params 上传参数
+ * @param onProgress 上传进度回调
+ * @returns 文件信息
+ */
+export const uploadFile2 = async (
+  params: UploadFileParams,
+  onProgress?: (progress: number) => void
+) => {
+  const {
+    file,
+    folderId = 0,
+    worksId,
+    originName,
+    type = 'picture',
+    shareToCommunity,
+  } = params;
+
+  // 1. 初始化 STS OSS 客户端
+  const appid = getAppId();
+  const uid = getUid2();
+  const token = getToken2();
+
+  await startupStsOssClient({
+    appid,
+    uid,
+    token,
+  });
+
+  // 2. 生成文件路径
+  const getFileExtension = (filename: string) => {
+    const reg = /\.[^.]+$/;
+    const matches = reg.exec(filename);
+    return matches ? matches[0] : '';
+  };
+
+  const timestamp = new Date().valueOf();
+  const extension = getFileExtension(file.name);
+  const fileName = `${timestamp}${extension}`;
+
+  // 根据类型决定文件夹
+  const folder = type === 'music' ? 'musics' : 'timages';
+  const ossKey = `${folder}/${fileName}`;
+
+  // 3. 直接上传文件到 OSS
+  const uploadResult = await uploadFileToOSS(file, ossKey, onProgress);
+
+  // 4. 调用后端接口记录文件信息
+  const response = await request2.post<FileItem>(`${getBaseUrl()}/user-files`, {
+    folderId,
+    worksId,
+    ossKey: uploadResult.name, // 使用 OSS 返回的完整路径
+    originName: originName || file.name,
+    type,
+    mimeType: file.type,
+    size: String(file.size),
+    url: uploadResult.url,
+    shareToCommunity,
+  });
+
   return response.data;
 };
