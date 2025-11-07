@@ -36,6 +36,8 @@ export const worksRouter = router({
         is_paied: z.boolean().optional(),
         offline: z.boolean().optional(),
         is_rsvp: z.boolean().optional(),
+        envelope_enabled: z.boolean().optional(),
+        envelope_images: z.any().optional(), // JSON: 信封图片列表
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -73,11 +75,29 @@ export const worksRouter = router({
             });
           }
 
-          // 设置规格ID
+          // 继承模板配置
           if (template.spec_id) {
             finalInput.spec_id = template.spec_id;
             console.log('[Step 3] 设置规格ID:', template.spec_id);
           }
+
+          // 继承信封配置（只在模板没有被 input 覆盖时继承）
+          if (
+            input.envelope_enabled === undefined &&
+            template.envelope_enabled != null
+          ) {
+            finalInput.envelope_enabled = template.envelope_enabled;
+          }
+          if (
+            input.envelope_images === undefined &&
+            template.envelope_images != null
+          ) {
+            finalInput.envelope_images = template.envelope_images;
+          }
+          console.log('[Step 3] 继承信封配置:', {
+            envelope_enabled: finalInput.envelope_enabled,
+            has_envelope_images: !!finalInput.envelope_images,
+          });
 
           console.log('[Step 4] 计算资源路径...');
           const worksAssetPath = getUserWorksAssetsPath(ctx.uid, worksId);
@@ -389,6 +409,8 @@ export const worksRouter = router({
         folder_id: z.string().optional(),
         custom_time: z.date().optional(),
         is_rsvp: z.boolean().optional(),
+        envelope_enabled: z.boolean().optional(),
+        envelope_images: z.any().optional(), // JSON: 信封图片列表
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -663,7 +685,7 @@ export const worksRouter = router({
           title: `${originalWork.title} (副本)`,
           child_works_id: null, // 副本不继承发布状态
           id: newWorksId,
-        },
+        } as any,
       });
 
       // 复制 OSS 资源

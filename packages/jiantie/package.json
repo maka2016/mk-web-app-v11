@@ -16,7 +16,6 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "immer": "^9.0.6",
-    "lodash": "^4.17.21",
     "mobx": "^6.13.5",
     "mobx-react": "^9.1.1",
     "next-intl": "^4.0.2",
@@ -27,7 +26,6 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "@types/lodash": "^4.17.13",
     "@types/node": "^20",
     "@types/qs": "^6.9.17"
   }

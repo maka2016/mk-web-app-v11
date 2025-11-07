@@ -1,6 +1,5 @@
 'use client';
 import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
-import { InviteeDetailDialog } from '@/components/RSVP/InviteeDetailDialog';
 import { getAppId, getUid } from '@/services';
 import { getUrlWithParam } from '@/utils';
 import { trpc } from '@/utils/trpc';
@@ -13,16 +12,11 @@ import toast from 'react-hot-toast';
 
 export default function NotificationsPage() {
   const router = useRouter();
-  const [selectedNotification, setSelectedNotification] = useState<any>(null);
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [showUnreadOnly] = useState(false);
   const [notificationsData, setNotificationsData] = useState<any>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isMarkingAsRead, setIsMarkingAsRead] = useState(false);
-
-  // 嘉宾详情相关状态
-  const [viewingInvitee, setViewingInvitee] = useState<any>(null);
 
   // TODO: 需要从 session 或 context 获取当前用户 ID
   const userId = 'current_user_id'; // 临时占位
@@ -60,10 +54,6 @@ export default function NotificationsPage() {
   }, [showUnreadOnly]);
 
   const handleNotificationClick = async (notification: any) => {
-    setSelectedNotification(notification);
-    setViewingInvitee(notification.contact || null);
-    setDetailDialogOpen(true);
-
     // 如果未读，标记为已读
     if (!notification.is_read && notification.submission?.id) {
       try {
@@ -76,6 +66,31 @@ export default function NotificationsPage() {
       } catch (error: any) {
         console.error('Failed to mark as read:', error);
       }
+    }
+
+    // 获取联系人 ID
+    const contactId = notification.contact?.id || notification.contact_id;
+    if (!contactId) {
+      toast.error('无法找到联系人信息');
+      return;
+    }
+
+    // 跳转到嘉宾详情页面
+    const uid = getUid();
+    const appid = getAppId();
+
+    if (APPBridge.judgeIsInApp()) {
+      APPBridge.navToPage({
+        url: `${location.origin}/mobile/rsvp/invitees/${contactId}?uid=${uid}&back=1`,
+        type: 'URL',
+      });
+    } else {
+      router.push(
+        getUrlWithParam(
+          `/mobile/rsvp/invitees/${contactId}?uid=${uid}&appid=${appid}`,
+          'clickid'
+        )
+      );
     }
   };
 
@@ -364,15 +379,6 @@ export default function NotificationsPage() {
           通知设置
         </Button>
       </div>
-
-      {/* 嘉宾详情弹窗 */}
-      <InviteeDetailDialog
-        isOpen={detailDialogOpen}
-        onOpenChange={setDetailDialogOpen}
-        invitee={viewingInvitee}
-        formConfig={selectedNotification?.form_config}
-        onUpdate={() => loadNotifications(false)}
-      />
     </div>
   );
 }

@@ -1,9 +1,8 @@
+import { getLocale } from '@/services';
+import { canUseRnChoosePic, showRnChoosePic } from '@/utils/rnChoosePic';
 import { cdnApi } from '@mk/services';
 import { ShowDrawerV2 } from '@workspace/ui/components/ShowDrawerV2';
 import LibPictureV2 from './LibPicture';
-import { useTranslations } from 'next-intl';
-import { getLocale } from '@/services';
-import { canUseRnChoosePic, showRnChoosePic } from '@/utils/rnChoosePic';
 
 interface OnSelectedParams {
   ossPath: string;

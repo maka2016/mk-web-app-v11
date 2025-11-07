@@ -1,11 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import styles from './index.module.scss';
-import isEqual from 'lodash/isEqual';
 import APPBridge from '@mk/app-bridge';
-import { API } from '@mk/services';
-import InfiniteScroll from 'react-infinite-scroller';
 import { Loading } from '@workspace/ui/components/loading';
 import { useTranslations } from 'next-intl';
+import { useEffect, useRef, useState } from 'react';
+import InfiniteScroll from 'react-infinite-scroller';
+import styles from './index.module.scss';
 
 interface Props {
   columns: any[];
@@ -17,6 +15,37 @@ interface Props {
   type?: string;
   formId?: string;
 }
+
+// 深度比较函数
+const deepEqual = (a: any, b: any): boolean => {
+  if (a === b) return true;
+
+  if (a == null || b == null) return false;
+
+  if (typeof a !== 'object' || typeof b !== 'object') return false;
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) return false;
+    }
+    return true;
+  }
+
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+
+  if (keysA.length !== keysB.length) return false;
+
+  for (const key of keysA) {
+    if (!keysB.includes(key)) return false;
+    if (!deepEqual(a[key], b[key])) return false;
+  }
+
+  return true;
+};
 
 const Table = (props: Props) => {
   const {
@@ -46,8 +75,8 @@ const Table = (props: Props) => {
     return ref.current;
   };
 
-  const compareColumns = useCampare(columns, isEqual);
-  const compareList = useCampare(data, isEqual);
+  const compareColumns = useCampare(columns, deepEqual);
+  const compareList = useCampare(data, deepEqual);
 
   useEffect(() => {
     setList(compareList);
