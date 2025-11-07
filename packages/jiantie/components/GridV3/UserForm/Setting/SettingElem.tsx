@@ -1,6 +1,5 @@
 import styled from '@emotion/styled';
-import { getPermissionData, getWidgetMeta } from '@mk/services';
-import { isPc, LoadWidget } from '@mk/utils';
+import MkCalendarV3Form from '@mk/widgets/MkCalendarV3/form';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import {
   ArrowDownFromLine,
@@ -12,13 +11,9 @@ import {
   MoveUp,
 } from 'lucide-react';
 import { useState } from 'react';
-import MkCalendarV3Form from '@mk/widgets/MkCalendarV3/form';
-import MkHuiZhiForm from '@mk/widgets/MkHuiZhi/form';
 
-import MkImageGroupForm from '@mk/widgets/MkImageGroup_v2/form-wap';
 import MkMapV4Form from '@mk/widgets/MkMapV4/form-wap';
 import { useGridContext } from '../../comp/provider';
-import { useWidgetsAttrs } from '../../comp/WidgetLoader';
 import { BtnLite, Sep } from '../../shared/style-comps';
 import '../form.scss';
 import PictureEdit from './PictureEdit';
@@ -73,24 +68,15 @@ export const SettingElemV1 = () => {
   } = useGridContext();
   const { editingElemId, activeCellId, activeRowId } = widgetState || {};
   const [finetuneMode, setFinetuneMode] = useState(false);
-  const { compAttrsMap } = useWidgetsAttrs({
-    needInit: false,
-    worksData: getWorksData(),
-  });
 
   if (!editingElemId) {
     return <></>;
   }
 
-  const isDesigner = getPermissionData().materialProduct;
-
   // 有选中元素
   const layer = editorSDK?.getLayer(editingElemId);
   const layerLink = editorSDK?.getLink(editingElemId);
   if (!layer) return <></>;
-  const widgetMeta = getWidgetMeta(layer.elementRef);
-  const { disabledDelete = false, disabledCommonOperator = false } =
-    widgetMeta?.editorApply || {};
   let elemTag = layerLink?.tag;
   if (layer.elementRef === 'Text') {
     if (!elemTag) elemTag = 'text';
@@ -229,25 +215,6 @@ export const SettingElemV1 = () => {
             />
           </div>
         );
-      case /MkHuiZhi/gi.test(layer.elementRef):
-        return (
-          <div
-            style={{
-              maxHeight: 400,
-              overflow: 'auto',
-            }}
-          >
-            <MkHuiZhiForm
-              compAttrsMap={compAttrsMap}
-              formControledValues={editorSDK?.getLayer(layer.elemId)?.attrs}
-              onFormValueChange={(nextVal: any) => {
-                editorSDK?.changeCompAttr(layer.elemId, nextVal);
-              }}
-              editorSDK={editorSDK}
-              editorCtx={editorCtx}
-            />
-          </div>
-        );
       case /MkCalendarV3/gi.test(layer.elementRef):
         return (
           <div
@@ -265,66 +232,6 @@ export const SettingElemV1 = () => {
               editorCtx={editorCtx}
             />
           </div>
-        );
-      default:
-        // return <></>
-        let WebForm = isPc()
-          ? LoadWidget(getWidgetMeta(layer.elementRef)?.editorApply?.webFormRef)
-          : LoadWidget(
-              getWidgetMeta(layer.elementRef)?.editorApply?.wapFormRef
-            );
-
-        if (layer.elementRef === 'MkImageGroup_v2') {
-          WebForm = MkImageGroupForm;
-        }
-
-        const FormComp = typeof WebForm === 'function' ? WebForm : undefined;
-        const elemProps = editorSDK?.getLayer(layer.elemId)?.attrs;
-        return (
-          <>
-            {FormComp && (
-              <div
-                style={{
-                  maxHeight: 400,
-                  overflow: 'auto',
-                }}
-              >
-                <FormComp
-                  key={layer.elemId}
-                  entityInfo={{ id: layer.elemId }}
-                  pageInfo={editorSDK?.getPageData(
-                    editorSDK.getActivePageIdx()
-                  )}
-                  canvaInfo={{
-                    canvaW: 375,
-                    canvaH: 667,
-                    scaleRate: 1,
-                  }}
-                  changeOperatorHandle={() => {}}
-                  useCropV2={true} // 用户图片v2版本裁剪
-                  getOperatorHandle={editorSDK?.getOperatorHandle}
-                  changeContainer={() => {}}
-                  containerInfo={{
-                    width: '100%',
-                    height: '100%',
-                  }}
-                  editorCtx={editorCtx}
-                  formControledValues={elemProps}
-                  onFormValueChange={(nextVal: any) => {
-                    editorSDK?.changeCompAttr(layer.elemId, nextVal);
-                  }}
-                  onDeleteGridComp={() => {
-                    deleteComp();
-                    editorSDK?.changeWidgetState({
-                      editingElemId: undefined,
-                      activeCellId: undefined,
-                      activeRowId: undefined,
-                    });
-                  }}
-                />
-              </div>
-            )}
-          </>
         );
     }
   };
@@ -510,18 +417,14 @@ export const SettingElemV1 = () => {
         >
           <span>复制</span>
         </BtnLite>
-        {!disabledDelete && (
-          <>
-            <BtnLite
-              onClick={() => {
-                deleteComp();
-                clearActiveStatus?.();
-              }}
-            >
-              <span>删除</span>
-            </BtnLite>
-          </>
-        )}
+        <BtnLite
+          onClick={() => {
+            deleteComp();
+            clearActiveStatus?.();
+          }}
+        >
+          <span>删除</span>
+        </BtnLite>
         <BtnLite
           style={{
             borderLeft: '1px solid #0000000f',

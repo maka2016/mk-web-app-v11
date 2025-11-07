@@ -1,17 +1,18 @@
+import EnvelopeLoading from '@/components/Envelope/EnvelopeLoading';
+import { EnvelopeConfig } from '@/components/Envelope/types';
+import { getShareInfo } from '@/components/GridV3/comp/provider/utils';
+import MiniPShare from '@/components/MiniPShare';
 import { generateMetadataFac } from '@/components/viewer/components/getMeta';
 import WebsiteApp from '@/components/viewer/components/website';
-import { getInitialPropsCommonAppRouter } from '@/components/viewer/utils/getInitialPropsCommon2';
-import { headers } from 'next/headers';
-
-import MiniPShare from '@/components/MiniPShare';
+import {
+  getUserPermissions,
+  getViewerData,
+} from '@/components/viewer/utils/getViewerData';
 import JiantieExpired from '@/components/ViewerComp/JiantieExpired';
 import { worksServerV2 } from '@/services/jiantie-services';
 import { toOssMiniPCoverUrl } from '@/utils';
-import { treeNodeCounter2 } from '@/utils/works';
 import { API, getAppId } from '@mk/services';
-import { getShareInfo } from '@/components/GridV3/comp/provider/utils';
-import EnvelopeLoading from '@/components/Envelope/EnvelopeLoading';
-import { EnvelopeConfig } from '@/components/Envelope/types';
+import { headers } from 'next/headers';
 
 export const generateMetadata = async ({
   params,
@@ -86,88 +87,127 @@ const getUserBand = async (paramsRes: { uid: string; appid: string }) => {
 
 async function getWorksData(paramsRes: {
   worksId: string;
-  uid: string;
+  uid?: string;
   appid: string;
+  version?: string;
+  back_door?: string;
 }) {
   if (!paramsRes.worksId) {
     return null;
   }
-  const head = await headers();
-  const headObj = Object.fromEntries(head.entries()) as any;
-  const pathname = headObj['x-pathname'] || '';
-  const uid = paramsRes.worksId.split('_')[1];
 
-  const [initData] = await Promise.all([
-    getInitialPropsCommonAppRouter({
-      headers: headObj,
-      pathname: pathname,
-      query: paramsRes,
-    }),
-  ]);
-  paramsRes.uid = initData.worksDetail.uid;
+  // 1. 获取基础数据（纯数据层）
+  const viewerData = await getViewerData({
+    worksId: paramsRes.worksId,
+    uid: paramsRes.uid,
+    version: paramsRes.version,
+  });
 
-  if (initData.permissionData?.custom_logo) {
-    const userBrand = await getUserBand(paramsRes);
+  // 更新 uid（从作品详情中获取）
+  paramsRes.uid = viewerData.worksDetail.uid.toString();
 
+  // 2. 获取用户权限
+  const permissionData = await getUserPermissions({
+    uid: viewerData.worksDetail.uid,
+    worksId: paramsRes.worksId,
+    appid: paramsRes.appid,
+  });
+
+  // 3. 初始化网站控制参数
+  const websiteControl = {
+    isTempLink: false,
+    isExpire: false,
+    viewMode: 'viewer' as const,
+    showWatermark: false,
+    floatAD: false,
+    brandLogoUrl: undefined as string | undefined,
+    brandText: undefined as string | undefined,
+  };
+
+  // 4. 处理品牌信息（核心业务逻辑）
+  if (permissionData?.custom_logo) {
+    const userBrand = await getUserBand(paramsRes as any);
     if (userBrand) {
-      initData.websiteControl.brandLogoUrl = userBrand?.brandLogoUrl;
-      initData.websiteControl.brandText = userBrand?.brandText;
+      websiteControl.brandLogoUrl = userBrand?.brandLogoUrl;
+      websiteControl.brandText = userBrand?.brandText;
     }
   }
 
-  if (initData.query.back_door) {
-    initData.websiteControl.isTempLink = false;
-    initData.websiteControl.isExpire = false;
-    initData.websiteControl.showWatermark = false;
-  } else if (initData.worksDetail.template_id) {
+  // 5. 处理权限控制（核心业务逻辑）
+  if (paramsRes.back_door) {
+    // 后门模式：无限制
+    websiteControl.isTempLink = false;
+    websiteControl.isExpire = false;
+    websiteControl.showWatermark = false;
+    websiteControl.floatAD = false;
+  } else if (viewerData.worksDetail.template_id) {
+    // 从模板创建的作品：根据分享类型判断权限
     const { websiteSupport, videoSupport, posterSupport } = getShareInfo(
-      initData.worksDetail
+      viewerData.worksDetail as any
     );
 
     if (websiteSupport) {
-      const canShare = await checkCanShare(paramsRes);
+      const canShare = await checkCanShare(paramsRes as any);
       if (canShare) {
-        initData.websiteControl.showWatermark = false;
-        initData.websiteControl.isExpire = false;
-        initData.websiteControl.isTempLink = false;
-        initData.websiteControl.floatAD = false;
+        // 有分享权限：无水印、无限制
+        websiteControl.showWatermark = false;
+        websiteControl.isExpire = false;
+        websiteControl.isTempLink = false;
+        websiteControl.floatAD = false;
       } else {
-        initData.websiteControl.showWatermark = false;
-        initData.websiteControl.isExpire = true;
-        initData.websiteControl.isTempLink = true;
-        initData.websiteControl.floatAD = true;
+        // 无分享权限：显示广告、临时链接
+        websiteControl.showWatermark = false;
+        websiteControl.isExpire = true;
+        websiteControl.isTempLink = true;
+        websiteControl.floatAD = true;
       }
     } else {
-      const canExport = await checkCanExport(paramsRes);
+      const canExport = await checkCanExport(paramsRes as any);
       if (videoSupport) {
-        if (canExport) {
-          initData.websiteControl.showWatermark = false;
-          initData.websiteControl.isExpire = false;
-          initData.websiteControl.isTempLink = false;
-          initData.websiteControl.floatAD = false;
-        } else {
-          initData.websiteControl.showWatermark = false;
-          initData.websiteControl.isExpire = false;
-          initData.websiteControl.isTempLink = false;
-          initData.websiteControl.floatAD = true;
-        }
+        // 视频类型
+        websiteControl.showWatermark = false;
+        websiteControl.isExpire = false;
+        websiteControl.isTempLink = false;
+        websiteControl.floatAD = !canExport; // 有导出权限则无广告
       } else if (posterSupport) {
-        if (canExport) {
-          initData.websiteControl.showWatermark = false;
-          initData.websiteControl.isExpire = false;
-          initData.websiteControl.isTempLink = false;
-          initData.websiteControl.floatAD = false;
-        } else {
-          initData.websiteControl.showWatermark = true;
-          initData.websiteControl.isExpire = false;
-          initData.websiteControl.isTempLink = false;
-          initData.websiteControl.floatAD = false;
-        }
+        // 海报类型
+        websiteControl.showWatermark = !canExport; // 有导出权限则无水印
+        websiteControl.isExpire = false;
+        websiteControl.isTempLink = false;
+        websiteControl.floatAD = false;
       }
     }
   }
-  initData.websiteControl.viewMode = 'viewer';
-  return initData;
+
+  // 6. 构造返回数据
+  const head = await headers();
+  const headObj = Object.fromEntries(head.entries()) as any;
+
+  return {
+    ...viewerData,
+    // 平铺 websiteControl 字段
+    viewMode: websiteControl.viewMode,
+    isExpire: websiteControl.isExpire,
+    trialExpired: false, // 如果需要可以从其他地方获取
+    floatAD: websiteControl.floatAD,
+    showWatermark: websiteControl.showWatermark,
+    brandLogoUrl: websiteControl.brandLogoUrl,
+    brandText: websiteControl.brandText,
+    // 平铺 permissionData 字段
+    removeProductIdentifiers: !!permissionData?.remove_product_identifiers,
+    customLogo: !!permissionData?.custom_logo,
+    userAgent: headObj['user-agent'] || '',
+    pathname: headObj['x-pathname'] || '',
+    query: {
+      uid: paramsRes.uid || viewerData.worksDetail.uid.toString(),
+      version: paramsRes.version || '',
+      host: '',
+      screenshot: '',
+      type: '',
+      ...paramsRes,
+      worksId: paramsRes.worksId, // 确保 worksId 在最后，覆盖可能的值
+    },
+  };
 }
 
 export default async function Page({
@@ -206,7 +246,6 @@ export default async function Page({
       />
     );
   }
-  const widgetRely = treeNodeCounter2(initProps?.worksData);
 
   // 获取信封配置（如果启用）
   const envelopeConfig = initProps.worksDetail.envelope_enabled
@@ -220,13 +259,13 @@ export default async function Page({
 
       <MiniPShare
         title={initProps.worksDetail?.title || '详情'}
-        imageUrl={toOssMiniPCoverUrl(initProps.worksDetail?.cover)}
+        imageUrl={toOssMiniPCoverUrl(initProps.worksDetail?.cover || '')}
         serverPath={{
           miniPath: '/pages/viewer/index',
           urlPath: `/viewer2/${(await params).worksId}?appid=${queryRes.appid || getAppId()}`,
         }}
       />
-      <WebsiteApp widgetRely={widgetRely.allWidgetRely as any} {...initProps} />
+      <WebsiteApp {...initProps} />
     </>
   );
 }

@@ -165,7 +165,8 @@ const FormCompWrapper = styled.div`
 
   .header {
     padding: 8px 16px;
-    border-bottom: 1px solid #e5e7eb;
+    /* border-bottom: 1px solid var(--rsvp-border-color, #e5e7eb); */
+    box-shadow: 0 0 1px 1px rgba(0, 0, 0, 0.1);
   }
   .content {
     padding: 16px;

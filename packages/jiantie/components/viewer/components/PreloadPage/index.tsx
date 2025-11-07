@@ -1,5 +1,6 @@
-import { getCanvasScale } from '../../utils/scale';
-import { cdnApi, WorksDetailEntity } from '@mk/services';
+import styled from '@emotion/styled';
+import { cdnApi } from '@mk/services';
+import clas from 'classnames';
 import React, {
   forwardRef,
   useCallback,
@@ -8,11 +9,7 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import clas from 'classnames';
-import { AppContext } from '../../types';
-import { isScreenMode } from '../../utils/utils';
-import { IWorksData } from '@mk/works-store/types';
-import styled from '@emotion/styled';
+import { getCanvasScale } from '../../utils/scale';
 
 const PreloadPageDiv = styled.div`
   background: white;
@@ -191,23 +188,31 @@ const BrandDiv = styled.div`
 `;
 
 interface Props {
-  worksDetail: WorksDetailEntity;
-  worksData: IWorksData | null;
-  userAgent: string;
-  loadEndCb?: () => void;
-  query: AppContext['query'];
+  // 作品基础信息
+  worksCover: string;
+  worksId: string;
+  hasWorksData: boolean;
+
+  // 应用配置
+  appid?: string;
   pathname: string;
+  userAgent: string;
+
+  // 模式控制
+  isScreenshot?: boolean;
+  isVideoMode?: boolean;
   needLoading?: boolean;
-  permissionData?: Record<string, string>;
-  websiteControl: {
-    isTempLink: boolean;
-    isExpire: boolean;
-    viewMode?: 'viewer' | 'preview' | 'store';
-    trialExpired?: boolean;
-    brandLogoUrl?: string;
-    brandText?: string;
-    showWatermark?: boolean;
-  };
+
+  // 权限配置
+  removeProductIdentifiers?: boolean;
+  customLogo?: boolean;
+
+  // 品牌信息
+  brandLogoUrl?: string;
+  brandText?: string;
+
+  // 回调
+  loadEndCb?: () => void;
 }
 
 export type PreloadPageHandle = {
@@ -223,28 +228,24 @@ const slogan: Record<string, string> = {
  */
 const PreloadPage = forwardRef<PreloadPageHandle, Props>((props, ref) => {
   const {
-    worksDetail,
-    worksData,
-    userAgent,
-    loadEndCb,
-    query,
+    worksCover,
+    worksId,
+    hasWorksData,
+    appid = 'jiantie',
     pathname,
-    permissionData,
-    websiteControl,
+    userAgent,
+    isScreenshot = false,
+    isVideoMode = false,
     needLoading = true,
+    removeProductIdentifiers,
+    customLogo,
+    brandLogoUrl,
+    brandText,
+    loadEndCb,
   } = props;
-
-  const { appid = 'jiantie' } = query;
-
-  /** 是否截图模式 */
-  const isScreenshot = useMemo(
-    () => isScreenMode(query.screenshot),
-    [query.screenshot]
-  );
 
   /** 是否展示预加载页 */
   const needShowInit = useMemo(() => {
-    const isVideoMode = !!query.video_mode;
     return (
       needLoading &&
       !/MAKAInternal/.test(userAgent) &&
@@ -252,7 +253,7 @@ const PreloadPage = forwardRef<PreloadPageHandle, Props>((props, ref) => {
       !isVideoMode &&
       !isScreenshot
     );
-  }, [isScreenshot, pathname, query.video_mode, userAgent, needLoading]);
+  }, [isScreenshot, pathname, isVideoMode, userAgent, needLoading]);
 
   const [needShow, setNeedShow] = useState<boolean>(needShowInit);
   const [hasLoadEnd, setHasLoadEnd] = useState<boolean>(false);
@@ -260,11 +261,11 @@ const PreloadPage = forwardRef<PreloadPageHandle, Props>((props, ref) => {
   /** 封面 url */
   const thumbUrl = useMemo(
     () =>
-      cdnApi((worksDetail as any)?.cover, {
+      cdnApi(worksCover, {
         format: 'webp',
         resizeWidth: 300,
       }),
-    [worksDetail]
+    [worksCover]
   );
 
   /** 获取缩放样式 (每次渲染时计算，行为与 class getter 保持一致) */
@@ -276,43 +277,43 @@ const PreloadPage = forwardRef<PreloadPageHandle, Props>((props, ref) => {
 
   /** 获取 logo url */
   const logoUrl = useMemo(() => {
-    if (!worksData) return '';
-    if (query.appid === 'gov') {
+    if (!hasWorksData) return '';
+    if (appid === 'gov') {
       return cdnApi('/cdn/webstore7/assets/app/common/gov_loading_logo2.png');
-    } else if (query.appid === 'preschool') {
+    } else if (appid === 'preschool') {
       return cdnApi(
         '/cdn/webstore7/assets/app/common/preschool_loading_logo.png'
       );
-    } else if (query.appid === 'education') {
+    } else if (appid === 'education') {
       return cdnApi(
         '/cdn/webstore7/assets/app/common/education_loading_logo.png'
       );
-    } else if (query.appid === 'jiantie') {
+    } else if (appid === 'jiantie') {
       return cdnApi(
         '/cdn/webstore7/assets/app/common/jiantie_loading_logo_2.png'
       );
-    } else if (query.appid === 'makaai') {
+    } else if (appid === 'makaai') {
       return cdnApi(
         '/cdn/webstore7/assets/app/common/jiantie_loading_logo_2.png'
       );
-    } else if (query.appid === 'xueji') {
+    } else if (appid === 'xueji') {
       return cdnApi('/cdn/webstore10/xueji/xueji_loading_logo.png');
-    } else if (query.appid === 'huiyao') {
+    } else if (appid === 'huiyao') {
       return cdnApi('/cdn/webstore10/huiyao/loading_logo.png');
     }
     return cdnApi('/assets/viewer-loading-logo.png');
-  }, [query.appid, worksData]);
+  }, [appid, hasWorksData]);
 
   /** mask 图片 */
   const maskImage = useMemo(() => {
-    if (query.appid === 'xueji') {
+    if (appid === 'xueji') {
       return 'https://res.maka.im/cdn/webstore10/xueji/wave2.png';
     }
-    if (query.appid === 'huiyao') {
+    if (appid === 'huiyao') {
       return 'https://res.maka.im/cdn/webstore10/huiyao/wave2.png';
     }
     return 'https://res.maka.im/cdn/webstore10/jiantie/wave2.png';
-  }, [query.appid]);
+  }, [appid]);
 
   /** 组件挂载后逻辑 */
   useEffect(() => {
@@ -326,7 +327,7 @@ const PreloadPage = forwardRef<PreloadPageHandle, Props>((props, ref) => {
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [loadEndCb, needShow, worksDetail.id]);
+  }, [loadEndCb, needShow, worksId]);
 
   /** 提供给外部的 terminate 方法 */
   const terminate = useCallback(() => {
@@ -350,7 +351,7 @@ const PreloadPage = forwardRef<PreloadPageHandle, Props>((props, ref) => {
   return (
     <PreloadPageDiv
       style={scaleStyle}
-      className={clas([hasLoadEnd && 'fade-out', query.appid])}
+      className={clas([hasLoadEnd && 'fade-out', appid])}
     >
       <div className={clas(['html_loading_area', hasLoadEnd && 'end'])}>
         <div
@@ -368,7 +369,7 @@ const PreloadPage = forwardRef<PreloadPageHandle, Props>((props, ref) => {
       </div>
       <div className='text'>{slogan[appid] || '加载中'}</div>
 
-      {appid !== 'jiantie' && !permissionData?.remove_product_identifiers && (
+      {appid !== 'jiantie' && !removeProductIdentifiers && (
         <LogoDiv>
           <img src={logoUrl} alt='logo' />
         </LogoDiv>
@@ -378,18 +379,16 @@ const PreloadPage = forwardRef<PreloadPageHandle, Props>((props, ref) => {
         <BrandDiv>
           <img
             src={
-              permissionData?.custom_logo && websiteControl?.brandLogoUrl
-                ? websiteControl?.brandLogoUrl
+              customLogo && brandLogoUrl
+                ? brandLogoUrl
                 : 'https://res.maka.im/cdn/webstore10/jiantie/preload_logo_3x.png'
             }
             alt='logo'
             className='logo'
           />
 
-          {permissionData?.custom_logo && websiteControl?.brandText ? (
-            websiteControl?.brandText && (
-              <div className='brandText'>{websiteControl?.brandText}</div>
-            )
+          {customLogo && brandText ? (
+            brandText && <div className='brandText'>{brandText}</div>
           ) : (
             <div className='brandText'>请柬丨贺卡丨相册丨MV视频</div>
           )}

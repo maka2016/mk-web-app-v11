@@ -1,5 +1,6 @@
 'use client';
 
+import { getUid } from '@/services';
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
 import { TemplateMarketChannelEntity } from '@workspace/database/generated/client/client';
@@ -27,6 +28,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [unread, setUnread] = useState(0);
 
   useEffect(() => {
     const fetchChannels = async () => {
@@ -46,7 +48,25 @@ export default function Main({ appid = 'jiantie' }: Props) {
       }
     };
 
+    const fetchUnreadNotifications = async () => {
+      try {
+        const uid = getUid();
+        if (!uid) {
+          setUnread(0);
+          return;
+        }
+        const res = await trpc.rsvp.getUnreadNotificationCount.query({
+          user_id: uid,
+        });
+        setUnread(res.count || 0);
+      } catch (error) {
+        console.error('Failed to get RSVP notifications:', error);
+        setUnread(0);
+      }
+    };
+
     fetchChannels();
+    fetchUnreadNotifications();
   }, [appid]);
 
   return (
@@ -84,8 +104,6 @@ export default function Main({ appid = 'jiantie' }: Props) {
             }}
             className='relative w-8 h-8 flex items-center justify-center bg-white  hover:bg-gray-50 transition-colors'
             onClick={() => {
-              // TODO: 跳转到通知页面
-              console.log('查看通知');
               router.push('/mobile/rsvp/notifications?appid=jiantie');
             }}
           >
@@ -95,7 +113,11 @@ export default function Main({ appid = 'jiantie' }: Props) {
               className='w-4 h-4'
             />
             {/* 通知角标 */}
-            {/* <span className='absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium'></span> */}
+            {unread > 0 && (
+              <span className='absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium'>
+                {unread > 99 ? '99+' : unread}
+              </span>
+            )}
           </button>
         </div>
       </div>

@@ -17,15 +17,3 @@ export interface WechatClientInfo {
   openId: string;
   unionId?: string;
 }
-
-export interface WorkUserInfo {
-  nickname: string;
-  thumb: string;
-  tip?: string;
-}
-
-export interface ShareLinkInfo {
-  url: string;
-  share_link: string;
-  campaign_id: string;
-}

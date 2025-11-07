@@ -1,19 +1,16 @@
-import React, { useState } from 'react';
-import { getWidgetMeta } from '@mk/services';
-import { BtnLite, Sep } from '../../../shared/style-comps';
-import { useGridContext } from '../../../comp/provider';
-import { isPc, LoadWidget } from '@mk/utils';
-import PictureEdit from '../../../UserForm/Setting/PictureEdit';
-import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import { IPositionLink, LayerElemItem } from '@mk/works-store/types';
-import { SelectableElement } from '../../StylingManager/types';
+import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import cls from 'classnames';
+import { ChevronDown, ChevronUp, Copy, Trash } from 'lucide-react';
+import { useState } from 'react';
+import { useGridContext } from '../../../comp/provider';
+import { BtnLite } from '../../../shared/style-comps';
+import PictureEdit from '../../../UserForm/Setting/PictureEdit';
 import {
   getAddItemsByThemeConfig,
   getElementDisplayName,
 } from '../../AddCompHelper/const';
-import { ChevronDown, ChevronUp, Copy, Trash } from 'lucide-react';
-import MkImageGroupForm from '@mk/widgets/MkImageGroup_v2/form-wap';
+import { SelectableElement } from '../../StylingManager/types';
 
 // 辅助函数：安全地解析fontSize值
 const parseFontSize = (fontSize: any): number => {
@@ -104,9 +101,6 @@ export const SettingElemDesigner = () => {
   const layer = editorSDK?.getLayer(editingElemId);
   const layerLink = editorSDK?.getLink(editingElemId);
   if (!layer) return <></>;
-  const widgetMeta = getWidgetMeta(layer.elementRef);
-  const { disabledDelete = false, disabledCommonOperator = false } =
-    widgetMeta?.editorApply || {};
   let elemTag = layerLink?.tag;
   if (layer.elementRef === 'Text') {
     if (!elemTag) elemTag = 'text';
@@ -160,71 +154,6 @@ export const SettingElemDesigner = () => {
             >
               <span>缩小</span>
             </BtnLite> */}
-          </>
-        );
-
-      default:
-        // return <></>
-        let WebForm = LoadWidget(
-          getWidgetMeta(layer.elementRef)?.editorApply?.wapFormRef
-        );
-
-        if (layer.elementRef === 'MkImageGroup_v2') {
-          WebForm = MkImageGroupForm;
-        }
-        console.log('isPc()', isPc());
-        console.log('WebForm', WebForm);
-        // if (typeof WebForm === "function") {
-        //   return <></>
-        // }
-        // const WapForm = LoadWidget(getWidgetMeta(layer.elementRef)?.editorApply?.wapFormRef)
-        // const FormComp = typeof WapForm === "function" ? WapForm : undefined
-        const FormComp = typeof WebForm === 'function' ? WebForm : undefined;
-        const elemProps = editorSDK?.getLayer(layer.elemId)?.attrs;
-        return (
-          <>
-            {FormComp && (
-              <div
-                style={{
-                  maxHeight: 400,
-                  overflow: 'auto',
-                }}
-              >
-                <FormComp
-                  key={layer.elemId}
-                  entityInfo={{ id: layer.elemId }}
-                  pageInfo={editorSDK?.getPageData(
-                    editorSDK.getActivePageIdx()
-                  )}
-                  canvaInfo={{
-                    canvaW: 375,
-                    canvaH: 667,
-                    scaleRate: 1,
-                  }}
-                  changeOperatorHandle={() => {}}
-                  useCropV2={true} // 用户图片v2版本裁剪
-                  getOperatorHandle={editorSDK?.getOperatorHandle}
-                  changeContainer={() => {}}
-                  containerInfo={{
-                    width: '100%',
-                    height: '100%',
-                  }}
-                  editorCtx={editorCtx}
-                  formControledValues={elemProps}
-                  onFormValueChange={(nextVal: any) => {
-                    editorSDK?.changeCompAttr(layer.elemId, nextVal);
-                  }}
-                  onDeleteGridComp={() => {
-                    deleteComp();
-                    editorSDK?.changeWidgetState({
-                      editingElemId: undefined,
-                      activeCellId: undefined,
-                      activeRowId: undefined,
-                    });
-                  }}
-                />
-              </div>
-            )}
           </>
         );
     }
@@ -297,19 +226,15 @@ export const SettingElemDesigner = () => {
           <Copy size={16} />
           {/* <span>复制</span> */}
         </BtnLite>
-        {!disabledDelete && (
-          <>
-            <BtnLite
-              onClick={() => {
-                deleteComp();
-                clearActiveStatus?.();
-              }}
-            >
-              <Trash size={16} />
-              {/* <span>删除</span> */}
-            </BtnLite>
-          </>
-        )}
+        <BtnLite
+          onClick={() => {
+            deleteComp();
+            clearActiveStatus?.();
+          }}
+        >
+          <Trash size={16} />
+          {/* <span>删除</span> */}
+        </BtnLite>
         <BtnLite
           onClick={() => {
             editorSDK?.changeWidgetState({
