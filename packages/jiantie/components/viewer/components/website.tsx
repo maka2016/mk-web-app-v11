@@ -1,19 +1,21 @@
 'use client';
+import { WorksDetailEntity } from '@mk/services';
+import { IWorksData } from '@mk/works-store/types';
 import clas from 'classnames';
 import React, { useEffect, useRef, useState } from 'react';
-import { PageComponentProps } from '../types';
+import { AppContext } from '../types';
 // import Head from "next/head"
+import { getAppId } from '@/services';
 import APPBridge from '@mk/app-bridge';
 import CommonLogger from '@mk/loggerv7/logger';
 import { request } from '@mk/services';
 import { isPc, isWechat, LoadScript } from '@mk/utils';
-import { loadWidgetResource, setCdnPath } from '@mk/works-store';
+import { setCdnPath } from '@mk/works-store';
 import dayjs from 'dayjs';
-import { getAppId } from '@/services';
+import EnvelopeClientAnimation from '../../Envelope/EnvelopeClientAnimation';
+import { EnvelopeConfig } from '../../Envelope/types';
 import { useWorksData } from '../utils';
-import '../utils/react-dom-adapter';
 import { emitLoaded } from '../utils/utils';
-import { getWidgetMetaColl } from '../utils/widget-metadata';
 import LongViewerContainer from './AnimationViewer/LongViewerContainer';
 import PreloadPage, { PreloadPageHandle } from './PreloadPage';
 import './styles/index.scss';
@@ -22,10 +24,33 @@ import Watermark from './SuspendButton/Watermark';
 import { useWxEnv } from './wechat';
 import WxAuth from './WxAuth';
 
-interface WebsiteAppProps extends PageComponentProps {
-  widgetRely: any;
-  tracking?: boolean;
-  useAutoScrollByDefault?: boolean;
+interface WebsiteAppProps {
+  // 作品数据
+  worksData: IWorksData;
+  worksDetail: WorksDetailEntity;
+  widgetMetadatas?: any[];
+
+  // 查询参数
+  query: AppContext['query'];
+
+  // 网站控制
+  viewMode?: 'viewer' | 'preview' | 'store';
+  isExpire?: boolean;
+  trialExpired?: boolean;
+  floatAD?: boolean;
+  showWatermark?: boolean;
+  brandLogoUrl?: string;
+  brandText?: string;
+
+  // 权限数据
+  removeProductIdentifiers?: boolean;
+  customLogo?: boolean;
+
+  // 其他
+  userAgent: string;
+  pathname: string;
+
+  // 回调
   onViewerLoaded?: () => void;
   style?: React.CSSProperties;
 }
@@ -35,20 +60,38 @@ interface WebsiteAppProps extends PageComponentProps {
  */
 export default function WebsiteApp(props: WebsiteAppProps) {
   const {
+    worksData: initialWorksData,
     worksDetail,
-    websiteControl,
-    widgetRely,
+    widgetMetadatas,
     query,
-    tracking = true,
+    viewMode,
+    isExpire,
+    trialExpired,
+    floatAD,
+    showWatermark,
+    brandLogoUrl,
+    brandText,
+    removeProductIdentifiers,
+    customLogo,
     userAgent,
     pathname,
-    permissionData,
+    onViewerLoaded,
+    style,
   } = props;
 
-  const worksData = useWorksData(props);
+  // 构建 useWorksData 需要的参数
+  const worksDataParams = {
+    worksData: initialWorksData,
+    worksDetail,
+    query,
+    widgetMetadatas: widgetMetadatas || [],
+  };
+  const worksData = useWorksData(worksDataParams);
   const H5ViewerContainerRef = useRef<any>(null);
   const [mountInBrowser, setMountInBrowser] = useState(false);
   const isScreenshot = !!query.screenshot;
+
+  // 从 worksDetail 中获取规格信息
   const specInfo = worksDetail.specInfo;
   const {
     is_flip_page,
@@ -65,6 +108,18 @@ export default function WebsiteApp(props: WebsiteAppProps) {
   const [showFloatAD, setShowFloatAD] = useState(false);
   const [showTrialExpired, setShowTrialExpired] = useState(false);
   const [showExpired, setShowExpired] = useState(false);
+
+  // 从 worksDetail 中获取信封配置
+  const envelopeEnabled = worksDetail.envelope_enabled;
+  const envelopeConfig = envelopeEnabled
+    ? (worksDetail.envelope_config as EnvelopeConfig)
+    : undefined;
+
+  console.log('[WebsiteApp] 信封配置:', {
+    envelope_enabled: envelopeEnabled,
+    hasEnvelopeConfig: !!envelopeConfig,
+    config: envelopeConfig,
+  });
 
   const inviteVisit = () => {
     const personId = query.inviteId;
@@ -106,14 +161,6 @@ export default function WebsiteApp(props: WebsiteAppProps) {
         console.log('加载微信jssdk成功');
       }
       setCdnPath('https://res.maka.im');
-      await loadWidgetResource({
-        mode: 'viewer',
-        widgetRely,
-        loadedWidgetCache: {},
-        widgetMetadataColl: getWidgetMetaColl(),
-      }).catch(e => {
-        console.warn('loadWidgetResource error', e);
-      });
 
       setMountInBrowser(true);
       document.title = worksDetail?.title || 'Untitled';
@@ -133,24 +180,12 @@ export default function WebsiteApp(props: WebsiteAppProps) {
       // });
 
       // const isTemplate = /^T_/.test(query.worksId);
-      if (websiteControl?.viewMode === 'viewer') {
+      if (viewMode === 'viewer') {
         APPBridge.setUtmInfo({
           utmSource: 'virus',
           utmMedium: 'minip_viewer',
           utmContent: worksDetail?.id,
         });
-      }
-
-      if (tracking && /https/.test(window.location.href)) {
-        setInterval(() => {
-          CommonLogger.track(
-            {
-              object_type: 'tracking',
-              event_type: 'tracking',
-            },
-            true
-          );
-        }, 5000);
       }
     };
     init();
@@ -161,7 +196,7 @@ export default function WebsiteApp(props: WebsiteAppProps) {
         '2025-08-11 11:20:00'
       );
 
-      if (websiteControl?.isExpire) {
+      if (isExpire) {
         if (isOldwork) {
           console.log('old work expired，show ad');
           setShowFloatAD(true); //expired
@@ -170,21 +205,22 @@ export default function WebsiteApp(props: WebsiteAppProps) {
           console.log('expired');
           setShowExpired(true);
           // 试用过期
-          setShowTrialExpired(!!websiteControl.trialExpired);
+          setShowTrialExpired(!!trialExpired);
         }
       }
     }
 
     if (getAppId() === 'maka' && isWebsite) {
-      setShowExpired(websiteControl?.isExpire);
+      setShowExpired(!!isExpire);
     }
 
-    setShowFloatAD(!!websiteControl.floatAD);
+    setShowFloatAD(!!floatAD);
 
     setTimeout(() => {
-      props.onViewerLoaded?.();
+      onViewerLoaded?.();
     }, 1700);
-  }, [typeof window]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeof window]); // 只在组件挂载时执行一次
 
   const handlePreloadEnd = () => {
     setTimeout(() => {
@@ -192,78 +228,110 @@ export default function WebsiteApp(props: WebsiteAppProps) {
     }, 300);
   };
 
+  // 判断是否使用信封动画（有信封配置时不使用 PreloadPage）
+  const hasEnvelopeConfig = !!(
+    envelopeConfig &&
+    envelopeConfig.backgroundImage &&
+    envelopeConfig.envelopeFrontImage &&
+    envelopeConfig.envelopeLeftImage &&
+    envelopeConfig.envelopeRightImage &&
+    envelopeConfig.envelopeInnerImage &&
+    envelopeConfig.envelopeSealImage
+  );
+
   return (
-    <div
-      id='auto-scroll-container'
-      className={clas(
-        `flex-1 h-full max-h-full w-full overflow-y-auto mx-auto viewer_page_root`,
-        isWebsite ? 'overflow-x-hidden' : 'overflow-x-auto',
-        isWebsite && !isScreenshot && isPc() && 'md:max-w-[375px]'
+    <>
+      {/* 客户端接管的信封动画 */}
+      {hasEnvelopeConfig && (
+        <EnvelopeClientAnimation
+          key={worksDetail.id}
+          config={envelopeConfig}
+          onComplete={() => {
+            setPreloadEnd(true);
+          }}
+        />
       )}
-      style={{
-        ...(!isWebsite && {
-          width: viewport_width,
-          maxWidth: '100%',
-        }),
-        ...(fixed_height && !isWebsite
-          ? {
-              aspectRatio: `${specWidth} / ${specHeight}`,
-              // 确保 aspect-ratio 生效
-              height: 'auto',
-              minHeight: 0,
-            }
-          : {}),
-        ...props.style,
-      }}
-    >
-      {mountInBrowser && worksData && (
-        <div
-          className={clas(
-            'website_root',
-            isPc() && 'pc',
-            is_flip_page && 'flip_page h-full overflow-hidden',
-            !preloadEnd && 'hidden'
-          )}
-        >
-          <LongViewerContainer
-            ref={H5ViewerContainerRef}
-            query={query}
-            onPageLoaded={onPageViewerLoaded}
-            worksData={worksData}
-          />
-          <Watermark visible={!!websiteControl.showWatermark} query={query} />
-          <SuspendButton
-            query={query}
-            isVideoMode={false}
-            adConfig={{
-              floatAD: showFloatAD,
-              trialExpired: showTrialExpired,
-              showExpired: showExpired,
-            }}
-            musicVisible={
-              !!worksData?.canvasData?.music?.url &&
-              !worksData.canvasData.music.disabled
-            }
-            worksData={worksData!}
-          />
-          <WxAuth />
-        </div>
-      )}
-      <PreloadPage
-        needLoading={isWebsite}
-        ref={PreloadPageRef}
-        key={worksDetail.id}
-        worksDetail={worksDetail}
-        worksData={worksData!}
-        userAgent={userAgent}
-        query={query}
-        permissionData={permissionData}
-        websiteControl={websiteControl}
-        pathname={pathname}
-        loadEndCb={() => {
-          setPreloadEnd(true);
+
+      <div
+        id='auto-scroll-container'
+        className={clas(
+          `flex-1 h-full max-h-full w-full overflow-y-auto mx-auto viewer_page_root`,
+          isWebsite ? 'overflow-x-hidden' : 'overflow-x-auto',
+          isWebsite && !isScreenshot && isPc() && 'md:max-w-[375px]'
+        )}
+        style={{
+          ...(!isWebsite && {
+            width: viewport_width,
+            maxWidth: '100%',
+          }),
+          ...(fixed_height && !isWebsite
+            ? {
+                aspectRatio: `${specWidth} / ${specHeight}`,
+                // 确保 aspect-ratio 生效
+                height: 'auto',
+                minHeight: 0,
+              }
+            : {}),
+          ...style,
         }}
-      />
-    </div>
+      >
+        {mountInBrowser && worksData && (
+          <div
+            className={clas(
+              'website_root',
+              isPc() && 'pc',
+              is_flip_page && 'flip_page h-full overflow-hidden',
+              !preloadEnd && 'hidden'
+            )}
+          >
+            <LongViewerContainer
+              ref={H5ViewerContainerRef}
+              query={query}
+              onPageLoaded={onPageViewerLoaded}
+              worksData={worksData}
+            />
+            <Watermark visible={!!showWatermark} query={query} />
+            <SuspendButton
+              query={query}
+              isVideoMode={false}
+              adConfig={{
+                floatAD: showFloatAD,
+                trialExpired: showTrialExpired,
+                showExpired: showExpired,
+              }}
+              musicVisible={
+                !!worksData?.canvasData?.music?.url &&
+                !worksData.canvasData.music.disabled
+              }
+              worksData={worksData!}
+            />
+            <WxAuth />
+          </div>
+        )}
+        {/* 只有在没有信封配置时才显示 PreloadPage */}
+        {!hasEnvelopeConfig && (
+          <PreloadPage
+            needLoading={isWebsite}
+            ref={PreloadPageRef}
+            key={worksDetail.id}
+            worksCover={(worksDetail as any)?.cover || ''}
+            worksId={worksDetail.id}
+            hasWorksData={!!worksData}
+            appid={query.appid}
+            pathname={pathname}
+            userAgent={userAgent}
+            isScreenshot={!!query.screenshot}
+            isVideoMode={!!query.video_mode}
+            removeProductIdentifiers={!!removeProductIdentifiers}
+            customLogo={!!customLogo}
+            brandLogoUrl={brandLogoUrl}
+            brandText={brandText}
+            loadEndCb={() => {
+              setPreloadEnd(true);
+            }}
+          />
+        )}
+      </div>
+    </>
   );
 }

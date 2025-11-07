@@ -4,7 +4,7 @@ import {
   getObject,
   loadAliCloudConfigFromEnv,
   uploadFile,
-} from './oss-client';
+} from './oss-client-for-node-server';
 
 /**
  * 生成用户作品数据存储路径

@@ -20,7 +20,3 @@ export const useWorksStore = () => {
   const store = useLocalObservable(() => worksStore);
   return store;
 };
-
-export const getWidgetMeta = (elemRef?: string) => {
-  return worksStore?.getWidgetMeta(elemRef) || null;
-};

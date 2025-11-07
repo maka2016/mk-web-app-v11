@@ -1,24 +1,15 @@
 'use client';
-import { createWorksStore, getToken, getUid, initWidgetEnv } from '@/services';
-import { useEffect, useRef, useState } from 'react';
-import { WorksStore } from '@mk/works-store/store';
-import WebsiteApp from '@/components/viewer/components/website';
-import { toJS } from 'mobx';
-import { getAppId, getWorksDetailStatic } from '@mk/services';
 import { setStore } from '@/app/editor/useStore';
+import WebsiteApp from '@/components/viewer/components/website';
+import { createWorksStore, getToken, getUid, initWidgetEnv } from '@/services';
+import { getAppId, getWorksDetailStatic } from '@mk/services';
+import { WorksStore } from '@mk/works-store/store';
+import { toJS } from 'mobx';
+import { useEffect, useState } from 'react';
 
-import PreviewHeader from './header';
 import MiniPShare from '@/components/MiniPShare';
 import APPBridge from '@mk/app-bridge';
-
-interface ToolItem {
-  name: string;
-  elementRef: string;
-  disabledSetting?: boolean;
-  icon: string;
-  activeIcon: string;
-  type?: string;
-}
+import PreviewHeader from './header';
 
 interface Props {
   worksId: string;
@@ -83,15 +74,9 @@ const Preview = (props: Props) => {
       )}
 
       <WebsiteApp
-        widgetRely={worksStore.widgetRely}
         userAgent={''}
         worksData={worksStore.worksData}
         worksDetail={worksStore.worksDetail}
-        websiteControl={{
-          isTempLink: false,
-          isExpire: false,
-        }}
-        onViewerLoaded={() => {}}
         query={query}
         pathname={''}
         widgetMetadatas={Object.values(

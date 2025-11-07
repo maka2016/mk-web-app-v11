@@ -1,6 +1,8 @@
 import React, { useRef } from 'react';
+import { VideoBgConfig } from '../../../Envelope/types';
 import BgContainer from './BgContainer';
 import ClipModeBgV4 from './ClicpModeBgV4';
+import VideoBg from './VideoBg';
 
 export interface BgAreaProps {
   clipBgScale?: number;
@@ -14,6 +16,7 @@ export interface BgAreaProps {
   parallaxScrollBgConfig?: {
     coefficient: number;
   };
+  videoBgConfig?: VideoBgConfig;
 }
 
 export default function BgAreaV2(props: BgAreaProps) {
@@ -22,6 +25,7 @@ export default function BgAreaV2(props: BgAreaProps) {
     id,
     parallaxScrollBgConfig,
     clipBgScale,
+    videoBgConfig,
     ...otherProps
   } = props;
   const {
@@ -69,6 +73,10 @@ export default function BgAreaV2(props: BgAreaProps) {
           position: 'absolute',
         }}
       >
+        {/* 视频背景（最底层） */}
+        {videoBgConfig && <VideoBg config={videoBgConfig} />}
+
+        {/* 裁剪模式背景 */}
         {(otherStyle as any).borderImage2 ? (
           <ClipModeBgV4
             value={(otherStyle as any).borderImage2}

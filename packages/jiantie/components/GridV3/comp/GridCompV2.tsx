@@ -16,7 +16,6 @@ import { GridProps, GridRow, GridState } from '../shared';
 import i18nModule from '../shared/i18n';
 import { blockStyleFilter, setSystemThemeColor } from '../shared/utils';
 import ContainerWithBgV2 from './ContainerWithBgV2';
-import WidgetLoader from './WidgetLoader';
 import AnimateCover, { AnimateCoverRef } from './components/AnimateCover';
 import RowRendererV2 from './components/RowRendererV2';
 import LongPageRowEditorV2 from './components/RowRendererV2/LongPageRowEditorV2';
@@ -397,9 +396,6 @@ export const GridCompV2: React.FC<
       )}
       {/* 用户的组件设置 */}
       {renderWidgetSetting()}
-      {isWebsite && !isExportVideo && !isScreenshot && viewerSDK && (
-        <WidgetLoader worksData={worksData} viewewSDK={viewerSDK} />
-      )}
 
       {/* 快捷键说明组件 - 外挂到designer_scroll_container */}
       {fullStack && (

@@ -5,11 +5,14 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useGridContext } from '../../comp/provider';
 import { onScreenShot } from '../../shared';
+import { genTemplateCover } from './services';
 
 const CoverManager = ({
   onCoverChange,
+  isTemplate,
 }: {
   onCoverChange?: (cover: string | undefined) => void;
+  isTemplate?: boolean;
 }) => {
   const { editorSDK, editorCtx } = useGridContext();
   const worksStore = editorSDK?.fullSDK;
@@ -39,13 +42,27 @@ const CoverManager = ({
           variant={'outline'}
           onClick={async () => {
             setLoading(true);
-            const coverUrl = await onScreenShot({
-              id: worksStore?.worksDetail.id,
-              width: 540,
-              height: 960,
-              appid: getAppId(),
-            });
-            setCover(coverUrl);
+            if (isTemplate) {
+              // html, video规格需要是gif
+              const isVideo =
+                worksStore.worksDetail.specInfo.export_format?.includes(
+                  'video'
+                );
+              const coverUrl = await genTemplateCover(
+                worksStore?.worksDetail.id,
+                worksStore?.worksDetail.uid?.toString() || '',
+                isVideo ? '动态' : '静态'
+              );
+              setCover(coverUrl);
+            } else {
+              const coverUrl = await onScreenShot({
+                id: worksStore?.worksDetail.id,
+                width: 540,
+                height: 960,
+                appid: getAppId(),
+              });
+              setCover(coverUrl[0]);
+            }
             setLoading(false);
             toast.success('封面重新生成成功');
           }}

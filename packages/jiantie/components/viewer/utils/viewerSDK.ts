@@ -1,11 +1,10 @@
-import React from 'react';
-import toast, { Toaster } from 'react-hot-toast';
-import { ViewerSDKProps, wechatShareInfo } from '@mk/widgets-bridge-sdk/types';
-import { request, watermarkVersion } from '@mk/services';
-import { EventEmitter, isMakaAppClient } from '@mk/utils';
-import { IWorksData, WorksType } from '@mk/works-store/types';
 import CommonLogger from '@mk/loggerv7/logger';
-import { AxiosStatic } from 'axios';
+import { watermarkVersion } from '@mk/services';
+import { EventEmitter, isMakaAppClient } from '@mk/utils';
+import { ViewerSDKProps, wechatShareInfo } from '@mk/widgets-bridge-sdk/types';
+import { IWorksData } from '@mk/works-store/types';
+import React from 'react';
+import toast from 'react-hot-toast';
 import { getWechatInfo, updateWechatShare } from '../components/wechat';
 
 const viewerSDKCTX = React.createContext<ViewerSDKProps | null>(null);

@@ -1,9 +1,9 @@
 'use client';
+import { onScreenShot } from '@/components/GridV3/shared';
 import { getAppId, request } from '@/services';
 import { useStore } from '@/store';
-import { trpc } from '@/utils/trpc';
+import { trpc, trpcWorks } from '@/utils/trpc';
 import { API, cdnApi } from '@mk/services';
-import { onScreenShot } from '@/components/GridV3/shared';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Loading } from '@workspace/ui/components/loading';
@@ -73,13 +73,13 @@ const ImageWorksList = (props: Props) => {
 
       // 获取作品列表和总数（排除 H5 网页类型）
       const [list, count] = await Promise.all([
-        trpc.works.findMany.query({
+        trpcWorks.findMany({
           deleted: false,
           spec_id_not: H5_SPEC_ID,
           take: limit,
           skip,
         }),
-        trpc.works.count.query({
+        trpcWorks.count({
           deleted: false,
           spec_id_not: H5_SPEC_ID,
         }),

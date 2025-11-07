@@ -156,7 +156,6 @@ const FormCompWrapper = styled.div`
   box-shadow: var(--rsvp-box-shadow);
   font-size: 12px;
   overflow: hidden;
-  border: 1px solid var(--rsvp-border-color);
   position: relative;
   z-index: 11;
 
@@ -166,7 +165,8 @@ const FormCompWrapper = styled.div`
 
   .header {
     padding: 8px 16px;
-    border-bottom: 1px solid #e5e7eb;
+    /* border-bottom: 1px solid var(--rsvp-border-color, #e5e7eb); */
+    box-shadow: 0 0 1px 1px rgba(0, 0, 0, 0.1);
   }
   .content {
     padding: 16px;
@@ -780,7 +780,12 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         {/* 公开链接：必须填写姓名 */}
         {!isInviteeLink && (
           <div className='space-y-1 header'>
-            <label className='block text-xs font-medium text-gray-600'>
+            <label
+              className='block text-xs font-medium text-gray-600'
+              style={{
+                color: 'var(--rsvp-label-color)',
+              }}
+            >
               您的姓名 <span className='text-red-500'>*</span>
             </label>
             <Input

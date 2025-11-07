@@ -4,7 +4,7 @@ import {
   listObjects,
   loadAliCloudConfigFromEnv,
   uploadFile,
-} from './oss-client';
+} from './oss-client-for-node-server';
 import { getTemplateAssetsPath } from './works-storage';
 
 /**
