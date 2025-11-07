@@ -1,7 +1,6 @@
 'use client';
 
-import { trpc } from '@/utils/trpc';
-import type { WorksEntity } from '@workspace/database/generated/client';
+import { trpcWorks, type SerializedWorksEntity } from '@/utils/trpc';
 import { Button } from '@workspace/ui/components/button';
 import {
   Card,
@@ -22,15 +21,6 @@ import { Loader2, Search } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-type SerializedWorksEntity = Omit<
-  WorksEntity,
-  'create_time' | 'update_time' | 'custom_time'
-> & {
-  create_time: string;
-  update_time: string;
-  custom_time: string | null;
-};
-
 export default function UserManagerInternalFunctionPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -49,7 +39,7 @@ export default function UserManagerInternalFunctionPage() {
 
       setLoading(true);
       try {
-        const result = await trpc.works.findMany.query({
+        const result = await trpcWorks.findMany({
           deleted: false,
           is_folder: false,
           take: pageSize,
