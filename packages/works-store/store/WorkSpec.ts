@@ -15,6 +15,7 @@ import { queryToObj } from '@mk/utils';
 // }
 export interface WorksDetailEntity {
   envelope_config: any;
+  envelope_enabled: boolean;
   is_rsvp: boolean;
   id: string;
   uid?: number;

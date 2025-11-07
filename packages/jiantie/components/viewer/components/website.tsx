@@ -3,13 +3,15 @@ import clas from 'classnames';
 import React, { useEffect, useRef, useState } from 'react';
 import { PageComponentProps } from '../types';
 // import Head from "next/head"
+import { getAppId } from '@/services';
 import APPBridge from '@mk/app-bridge';
 import CommonLogger from '@mk/loggerv7/logger';
 import { request } from '@mk/services';
 import { isPc, isWechat, LoadScript } from '@mk/utils';
 import { loadWidgetResource, setCdnPath } from '@mk/works-store';
 import dayjs from 'dayjs';
-import { getAppId } from '@/services';
+import EnvelopeClientAnimation from '../../Envelope/EnvelopeClientAnimation';
+import { EnvelopeConfig } from '../../Envelope/types';
 import { useWorksData } from '../utils';
 import '../utils/react-dom-adapter';
 import { emitLoaded } from '../utils/utils';
@@ -21,8 +23,6 @@ import SuspendButton from './SuspendButton';
 import Watermark from './SuspendButton/Watermark';
 import { useWxEnv } from './wechat';
 import WxAuth from './WxAuth';
-import EnvelopeClientAnimation from '../../Envelope/EnvelopeClientAnimation';
-import { EnvelopeConfig } from '../../Envelope/types';
 
 interface WebsiteAppProps extends PageComponentProps {
   widgetRely: any;
@@ -67,7 +67,8 @@ export default function WebsiteApp(props: WebsiteAppProps) {
   const [showFloatAD, setShowFloatAD] = useState(false);
   const [showTrialExpired, setShowTrialExpired] = useState(false);
   const [showExpired, setShowExpired] = useState(false);
-  const [envelopeAnimationComplete, setEnvelopeAnimationComplete] = useState(false);
+  const [envelopeAnimationComplete, setEnvelopeAnimationComplete] =
+    useState(false);
 
   // 获取信封配置
   const envelopeConfig = worksDetail.envelope_enabled
@@ -232,53 +233,53 @@ export default function WebsiteApp(props: WebsiteAppProps) {
         }}
       >
         {mountInBrowser && worksData && (
-        <div
-          className={clas(
-            'website_root',
-            isPc() && 'pc',
-            is_flip_page && 'flip_page h-full overflow-hidden',
-            !preloadEnd && 'hidden'
-          )}
-        >
-          <LongViewerContainer
-            ref={H5ViewerContainerRef}
-            query={query}
-            onPageLoaded={onPageViewerLoaded}
-            worksData={worksData}
-          />
-          <Watermark visible={!!websiteControl.showWatermark} query={query} />
-          <SuspendButton
-            query={query}
-            isVideoMode={false}
-            adConfig={{
-              floatAD: showFloatAD,
-              trialExpired: showTrialExpired,
-              showExpired: showExpired,
-            }}
-            musicVisible={
-              !!worksData?.canvasData?.music?.url &&
-              !worksData.canvasData.music.disabled
-            }
-            worksData={worksData!}
-          />
-          <WxAuth />
-        </div>
-      )}
-      <PreloadPage
-        needLoading={isWebsite}
-        ref={PreloadPageRef}
-        key={worksDetail.id}
-        worksDetail={worksDetail}
-        worksData={worksData!}
-        userAgent={userAgent}
-        query={query}
-        permissionData={permissionData}
-        websiteControl={websiteControl}
-        pathname={pathname}
-        loadEndCb={() => {
-          setPreloadEnd(true);
-        }}
-      />
+          <div
+            className={clas(
+              'website_root',
+              isPc() && 'pc',
+              is_flip_page && 'flip_page h-full overflow-hidden',
+              !preloadEnd && 'hidden'
+            )}
+          >
+            <LongViewerContainer
+              ref={H5ViewerContainerRef}
+              query={query}
+              onPageLoaded={onPageViewerLoaded}
+              worksData={worksData}
+            />
+            <Watermark visible={!!websiteControl.showWatermark} query={query} />
+            <SuspendButton
+              query={query}
+              isVideoMode={false}
+              adConfig={{
+                floatAD: showFloatAD,
+                trialExpired: showTrialExpired,
+                showExpired: showExpired,
+              }}
+              musicVisible={
+                !!worksData?.canvasData?.music?.url &&
+                !worksData.canvasData.music.disabled
+              }
+              worksData={worksData!}
+            />
+            <WxAuth />
+          </div>
+        )}
+        <PreloadPage
+          needLoading={isWebsite}
+          ref={PreloadPageRef}
+          key={worksDetail.id}
+          worksDetail={worksDetail}
+          worksData={worksData!}
+          userAgent={userAgent}
+          query={query}
+          permissionData={permissionData}
+          websiteControl={websiteControl}
+          pathname={pathname}
+          loadEndCb={() => {
+            setPreloadEnd(true);
+          }}
+        />
       </div>
     </>
   );
