@@ -2,10 +2,9 @@
 
 import { getUid, request } from '@/services';
 import { useStore } from '@/store';
-import { trpc } from '@/utils/trpc';
+import { trpcWorks, type SerializedWorksEntity } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { API } from '@mk/services';
-import type { WorksEntity } from '@workspace/database/generated/client';
 import {
   Pagination,
   PaginationContent,
@@ -23,16 +22,6 @@ import toast from 'react-hot-toast';
 import { WorkInfoCard } from './components/WorkInfoCard';
 
 dayjs.extend(relativeTime);
-
-// tRPC 传输类型：将 Date 类型转换为 string
-type SerializedWorksEntity = Omit<
-  WorksEntity,
-  'create_time' | 'update_time' | 'custom_time'
-> & {
-  create_time: string;
-  update_time: string;
-  custom_time: string | null;
-};
 
 // RSVP 统计信息
 type RSVPStats = {
@@ -152,17 +141,18 @@ export default function WorksManagerForUser() {
 
     setLoading(true);
     try {
-      const works = (await trpc.works.findMany.query({
-        deleted: false,
-        is_folder: false,
-        skip: (pageNum - 1) * pageSize,
-        take: pageSize,
-      })) as any as SerializedWorksEntity[];
-
-      const count = (await trpc.works.count.query({
-        deleted: false,
-        is_folder: false,
-      })) as any as number;
+      const [works, count] = await Promise.all([
+        trpcWorks.findMany({
+          deleted: false,
+          is_folder: false,
+          skip: (pageNum - 1) * pageSize,
+          take: pageSize,
+        }),
+        trpcWorks.count({
+          deleted: false,
+          is_folder: false,
+        }),
+      ]);
 
       setWorksList(works);
       setTotal(count);

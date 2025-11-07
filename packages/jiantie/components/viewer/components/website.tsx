@@ -21,6 +21,10 @@ import SuspendButton from './SuspendButton';
 import Watermark from './SuspendButton/Watermark';
 import { useWxEnv } from './wechat';
 import WxAuth from './WxAuth';
+import EnvelopeAnimation, {
+  EnvelopeAnimationRef,
+} from '../../Envelope/EnvelopeAnimation';
+import { EnvelopeConfig } from '../../Envelope/types';
 
 interface WebsiteAppProps extends PageComponentProps {
   widgetRely: any;
@@ -65,6 +69,24 @@ export default function WebsiteApp(props: WebsiteAppProps) {
   const [showFloatAD, setShowFloatAD] = useState(false);
   const [showTrialExpired, setShowTrialExpired] = useState(false);
   const [showExpired, setShowExpired] = useState(false);
+  const envelopeRef = useRef<EnvelopeAnimationRef>(null);
+  const [envelopeAnimationComplete, setEnvelopeAnimationComplete] = useState(false);
+
+  // 获取信封配置
+  const envelopeConfig = worksDetail.envelope_enabled
+    ? (worksDetail.envelope_config as EnvelopeConfig)
+    : undefined;
+
+  // 当页面加载完成且有信封配置时，自动播放信封动画
+  useEffect(() => {
+    if (mountInBrowser && envelopeConfig && !envelopeAnimationComplete) {
+      // 延迟一点开始动画，确保页面已经渲染
+      const timer = setTimeout(() => {
+        envelopeRef.current?.startAnimation();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [mountInBrowser, envelopeConfig, envelopeAnimationComplete]);
 
   const inviteVisit = () => {
     const personId = query.inviteId;
@@ -193,30 +215,35 @@ export default function WebsiteApp(props: WebsiteAppProps) {
   };
 
   return (
-    <div
-      id='auto-scroll-container'
-      className={clas(
-        `flex-1 h-full max-h-full w-full overflow-y-auto mx-auto viewer_page_root`,
-        isWebsite ? 'overflow-x-hidden' : 'overflow-x-auto',
-        isWebsite && !isScreenshot && isPc() && 'md:max-w-[375px]'
-      )}
-      style={{
-        ...(!isWebsite && {
-          width: viewport_width,
-          maxWidth: '100%',
-        }),
-        ...(fixed_height && !isWebsite
-          ? {
-              aspectRatio: `${specWidth} / ${specHeight}`,
-              // 确保 aspect-ratio 生效
-              height: 'auto',
-              minHeight: 0,
-            }
-          : {}),
-        ...props.style,
-      }}
+    <EnvelopeAnimation
+      ref={envelopeRef}
+      config={envelopeConfig}
+      onComplete={() => setEnvelopeAnimationComplete(true)}
     >
-      {mountInBrowser && worksData && (
+      <div
+        id='auto-scroll-container'
+        className={clas(
+          `flex-1 h-full max-h-full w-full overflow-y-auto mx-auto viewer_page_root`,
+          isWebsite ? 'overflow-x-hidden' : 'overflow-x-auto',
+          isWebsite && !isScreenshot && isPc() && 'md:max-w-[375px]'
+        )}
+        style={{
+          ...(!isWebsite && {
+            width: viewport_width,
+            maxWidth: '100%',
+          }),
+          ...(fixed_height && !isWebsite
+            ? {
+                aspectRatio: `${specWidth} / ${specHeight}`,
+                // 确保 aspect-ratio 生效
+                height: 'auto',
+                minHeight: 0,
+              }
+            : {}),
+          ...props.style,
+        }}
+      >
+        {mountInBrowser && worksData && (
         <div
           className={clas(
             'website_root',
@@ -264,6 +291,7 @@ export default function WebsiteApp(props: WebsiteAppProps) {
           setPreloadEnd(true);
         }}
       />
-    </div>
+      </div>
+    </EnvelopeAnimation>
   );
 }

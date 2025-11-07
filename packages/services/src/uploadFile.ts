@@ -68,7 +68,7 @@ export interface UploadFileParams {
   folderId?: number;
   worksId?: string;
   originName?: string;
-  type?: 'picture' | 'music';
+  type?: 'picture' | 'music' | 'video';
   file: File;
   shareToCommunity?: boolean;
 }
@@ -192,7 +192,7 @@ export const uploadFile2 = async (
   const fileName = `${timestamp}${extension}`;
 
   // 根据类型决定文件夹
-  const folder = type === 'music' ? 'musics' : 'timages';
+  const folder = type === 'music' ? 'musics' : type === 'video' ? 'videos' : 'timages';
   const ossKey = `${folder}/${fileName}`;
 
   // 3. 直接上传文件到 OSS

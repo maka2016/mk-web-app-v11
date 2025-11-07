@@ -35,6 +35,9 @@ import {
 } from '../../comp/components/RowRendererV2/LongPageRowEditorV2';
 import { useGridContext } from '../../comp/provider';
 import CoverAnimationManager from '../CoverAnimateLibrary/CoverAnimationManager';
+import EnvelopeEditor from '../../../Envelope/EnvelopeEditor';
+import { EnvelopeConfig } from '../../../Envelope/types';
+import { trpc } from '@/utils/trpc';
 import LottieSetting from './LottieSetting';
 import PageFlipEffectManager from './PageFlipEffectManager';
 import PictureSetting from './PictureSetting';
@@ -125,6 +128,110 @@ export const CoverAnimateManagerHelperForPage = () => {
             setShowLayoutForm(false);
             toast.success('删除成功');
           }}
+        />
+      </ResponsiveDialog>
+    </>
+  );
+};
+
+export const EnvelopeManagerHelperForPage = () => {
+  const { editorCtx, editorSDK } = useGridContext();
+  const [showEnvelopeForm, setShowEnvelopeForm] = useState(false);
+  const worksDetail = editorSDK?.fullSDK?.worksDetail;
+  const isTemplate = worksDetail?.template_id === worksDetail?.id;
+
+  // 获取当前信封配置
+  const envelopeConfig = worksDetail?.envelope_config as EnvelopeConfig | undefined;
+
+  const updateEnvelopeMutation = trpc.works.update.useMutation();
+  const updateTemplateMutation = trpc.template.update.useMutation();
+
+  const handleSave = async (config: EnvelopeConfig) => {
+    if (!worksDetail?.id) return;
+
+    try {
+      if (isTemplate) {
+        await updateTemplateMutation.mutateAsync({
+          id: worksDetail.id,
+          envelope_enabled: true,
+          envelope_config: config,
+        });
+      } else {
+        await updateEnvelopeMutation.mutateAsync({
+          id: worksDetail.id,
+          envelope_enabled: true,
+          envelope_config: config,
+        });
+      }
+
+      // 更新本地状态
+      if (editorSDK?.fullSDK?.worksDetail) {
+        editorSDK.fullSDK.worksDetail.envelope_enabled = true;
+        editorSDK.fullSDK.worksDetail.envelope_config = config;
+      }
+
+      setShowEnvelopeForm(false);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!worksDetail?.id) return;
+
+    try {
+      if (isTemplate) {
+        await updateTemplateMutation.mutateAsync({
+          id: worksDetail.id,
+          envelope_enabled: false,
+          envelope_config: null,
+        });
+      } else {
+        await updateEnvelopeMutation.mutateAsync({
+          id: worksDetail.id,
+          envelope_enabled: false,
+          envelope_config: null,
+        });
+      }
+
+      // 更新本地状态
+      if (editorSDK?.fullSDK?.worksDetail) {
+        editorSDK.fullSDK.worksDetail.envelope_enabled = false;
+        editorSDK.fullSDK.worksDetail.envelope_config = undefined;
+      }
+
+      setShowEnvelopeForm(false);
+      toast.success('删除成功');
+    } catch (error) {
+      toast.error('删除失败');
+    }
+  };
+
+  return (
+    <>
+      <Button
+        className='trggier px-2'
+        size='xs'
+        variant='outline'
+        style={{
+          pointerEvents: 'auto',
+        }}
+        onClick={() => {
+          setShowEnvelopeForm(true);
+        }}
+      >
+        信封设置
+      </Button>
+      <ResponsiveDialog
+        isOpen={showEnvelopeForm}
+        onOpenChange={setShowEnvelopeForm}
+        title={'信封设置'}
+      >
+        <EnvelopeEditor
+          editorCtx={editorCtx}
+          value={envelopeConfig}
+          onChange={handleSave}
+          onRemove={handleRemove}
         />
       </ResponsiveDialog>
     </>
@@ -677,7 +784,7 @@ export default function ElementAttrsEditorV2() {
                           <CoverAnimateManagerHelperForPage />
                         </div>
                         <div className='paiban_items'>
-                          {/* TODO: 信封功能 */}
+                          <EnvelopeManagerHelperForPage />
                         </div>
 
                         <div className='paiban_items parallax_scroll_bg_btn flex items-center gap-1'>
