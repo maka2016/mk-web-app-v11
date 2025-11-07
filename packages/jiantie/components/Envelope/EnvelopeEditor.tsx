@@ -1,12 +1,11 @@
+import { uploadFile2 } from '@mk/services';
 import { Button } from '@workspace/ui/components/button';
-import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Slider } from '@workspace/ui/components/slider';
 import { UploadHelper } from '@workspace/ui/components/Upload';
 import { Play, RotateCcw, Save, Trash2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { uploadFile2 } from '@mk/services';
 import EnvelopeAnimation, { EnvelopeAnimationRef } from './EnvelopeAnimation';
 import { EnvelopeConfig, isEnvelopeConfigComplete } from './types';
 
@@ -166,50 +165,50 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
   };
 
   return (
-    <div className="space-y-4 p-4 max-h-[80vh] overflow-y-auto">
+    <div className='space-y-4 p-4 max-h-[80vh] overflow-y-auto'>
       {/* 预览区域 */}
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>预览</Label>
-        <div className="relative w-full aspect-[16/9] bg-gray-100 rounded-lg overflow-hidden">
+        <div className='relative w-full aspect-[16/9] bg-gray-100 rounded-lg overflow-hidden'>
           <EnvelopeAnimation
             ref={animationRef}
             config={localConfig}
             onComplete={() => setIsPlaying(false)}
           >
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <div className='w-full h-full flex items-center justify-center text-gray-400'>
               {isConfigComplete ? '点击播放预览动画' : '请先上传所有图片'}
             </div>
           </EnvelopeAnimation>
         </div>
-        <div className="flex gap-2">
+        <div className='flex gap-2'>
           <Button
-            size="sm"
-            variant="outline"
+            size='sm'
+            variant='outline'
             onClick={handlePlayPreview}
             disabled={!isConfigComplete || isPlaying}
           >
-            <Play className="w-4 h-4 mr-1" />
+            <Play className='w-4 h-4 mr-1' />
             播放
           </Button>
           <Button
-            size="sm"
-            variant="outline"
+            size='sm'
+            variant='outline'
             onClick={handleResetPreview}
             disabled={!isPlaying}
           >
-            <RotateCcw className="w-4 h-4 mr-1" />
+            <RotateCcw className='w-4 h-4 mr-1' />
             重置
           </Button>
         </div>
       </div>
 
       {/* 图片上传区域 */}
-      <div className="space-y-3">
+      <div className='space-y-3'>
         <Label>信封图片 (共6张)</Label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className='grid grid-cols-2 gap-3'>
           {IMAGE_FIELDS.map(({ key, label }) => (
-            <div key={key} className="space-y-2">
-              <Label className="text-xs">{label}</Label>
+            <div key={key} className='space-y-2'>
+              <Label className='text-xs'>{label}</Label>
               <UploadHelper
                 image={localConfig[key as keyof EnvelopeConfig] as string}
                 onRemove={() => handleImageChange(key, '')}
@@ -229,21 +228,21 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
       </div>
 
       {/* 视频背景 */}
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>视频背景 (可选)</Label>
-        <div className="space-y-2">
+        <div className='space-y-2'>
           {localConfig.videoBgConfig?.videoUrl ? (
-            <div className="relative">
+            <div className='relative'>
               <video
                 src={localConfig.videoBgConfig.videoUrl}
-                className="w-full aspect-video rounded-lg"
+                className='w-full aspect-video rounded-lg'
                 controls
                 muted
               />
               <Button
-                size="sm"
-                variant="destructive"
-                className="absolute top-2 right-2"
+                size='sm'
+                variant='destructive'
+                className='absolute top-2 right-2'
                 onClick={() => {
                   setLocalConfig({
                     ...localConfig,
@@ -251,16 +250,16 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
                   });
                 }}
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className='w-4 h-4' />
               </Button>
             </div>
           ) : (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+            <div className='border-2 border-dashed border-gray-300 rounded-lg p-6'>
               <input
-                type="file"
-                accept="video/mp4,video/webm"
-                className="hidden"
-                id="video-upload"
+                type='file'
+                accept='video/mp4,video/webm'
+                className='hidden'
+                id='video-upload'
                 onChange={e => {
                   const file = e.target.files?.[0];
                   if (file) {
@@ -269,16 +268,14 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
                 }}
               />
               <label
-                htmlFor="video-upload"
-                className="flex flex-col items-center cursor-pointer"
+                htmlFor='video-upload'
+                className='flex flex-col items-center cursor-pointer'
               >
-                <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                <span className="text-sm text-gray-600">
-                  {uploading
-                    ? `上传中... ${uploadProgress}%`
-                    : '点击上传视频'}
+                <Upload className='w-8 h-8 text-gray-400 mb-2' />
+                <span className='text-sm text-gray-600'>
+                  {uploading ? `上传中... ${uploadProgress}%` : '点击上传视频'}
                 </span>
-                <span className="text-xs text-gray-400 mt-1">
+                <span className='text-xs text-gray-400 mt-1'>
                   支持 MP4/WebM，最大 15MB
                 </span>
               </label>
@@ -288,12 +285,10 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
       </div>
 
       {/* 动画参数 */}
-      <div className="space-y-3">
+      <div className='space-y-3'>
         <Label>动画参数</Label>
-        <div className="space-y-2">
-          <Label className="text-xs">
-            持续时间: {localConfig.duration}ms
-          </Label>
+        <div className='space-y-2'>
+          <Label className='text-xs'>持续时间: {localConfig.duration}ms</Label>
           <Slider
             value={[localConfig.duration || 2000]}
             onValueChange={value => {
@@ -307,8 +302,8 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
             step={100}
           />
         </div>
-        <div className="space-y-2">
-          <Label className="text-xs">延迟时间: {localConfig.delay}ms</Label>
+        <div className='space-y-2'>
+          <Label className='text-xs'>延迟时间: {localConfig.delay}ms</Label>
           <Slider
             value={[localConfig.delay || 500]}
             onValueChange={value => {
@@ -325,26 +320,26 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
       </div>
 
       {/* 操作按钮 */}
-      <div className="flex gap-2 pt-4 border-t">
+      <div className='flex gap-2 pt-4 border-t'>
         <Button
           onClick={handleSave}
           disabled={saving || !hasUnsavedChanges || !isConfigComplete}
-          className="flex-1"
+          className='flex-1'
         >
-          <Save className="w-4 h-4 mr-1" />
+          <Save className='w-4 h-4 mr-1' />
           {saving ? '保存中...' : '保存'}
         </Button>
         <Button
-          variant="outline"
+          variant='outline'
           onClick={handleReset}
           disabled={!hasUnsavedChanges}
         >
-          <RotateCcw className="w-4 h-4 mr-1" />
+          <RotateCcw className='w-4 h-4 mr-1' />
           重置
         </Button>
         {onRemove && (
-          <Button variant="destructive" onClick={handleRemove}>
-            <Trash2 className="w-4 h-4 mr-1" />
+          <Button variant='destructive' onClick={handleRemove}>
+            <Trash2 className='w-4 h-4 mr-1' />
             删除
           </Button>
         )}

@@ -2,7 +2,7 @@
 
 import { getUid, request } from '@/services';
 import { useStore } from '@/store';
-import { trpcWorks, type SerializedWorksEntity } from '@/utils/trpc';
+import { trpc, trpcWorks, type SerializedWorksEntity } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { API } from '@mk/services';
 import {

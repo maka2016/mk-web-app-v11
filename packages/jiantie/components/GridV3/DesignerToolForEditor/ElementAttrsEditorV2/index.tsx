@@ -14,6 +14,7 @@ import AnimationSetting2 from '../animation2/AnimationSetting2';
 import AnimationSetting from './AnimationSetting';
 import StyleCustomSetting from './StyleSetting';
 
+import { trpc } from '@/utils/trpc';
 import { Button } from '@workspace/ui/components/button';
 import { Label } from '@workspace/ui/components/label';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
@@ -28,6 +29,8 @@ import { Separator } from '@workspace/ui/components/separator';
 import { Switch } from '@workspace/ui/components/switch';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import EnvelopeEditor from '../../../Envelope/EnvelopeEditor';
+import { EnvelopeConfig } from '../../../Envelope/types';
 import RSVPThemeSetting from '../../../RSVP/ThemeSetting';
 import {
   takeBlockStyle,
@@ -35,9 +38,6 @@ import {
 } from '../../comp/components/RowRendererV2/LongPageRowEditorV2';
 import { useGridContext } from '../../comp/provider';
 import CoverAnimationManager from '../CoverAnimateLibrary/CoverAnimationManager';
-import EnvelopeEditor from '../../../Envelope/EnvelopeEditor';
-import { EnvelopeConfig } from '../../../Envelope/types';
-import { trpc } from '@/utils/trpc';
 import LottieSetting from './LottieSetting';
 import PageFlipEffectManager from './PageFlipEffectManager';
 import PictureSetting from './PictureSetting';
@@ -141,23 +141,22 @@ export const EnvelopeManagerHelperForPage = () => {
   const isTemplate = worksDetail?.template_id === worksDetail?.id;
 
   // 获取当前信封配置
-  const envelopeConfig = worksDetail?.envelope_config as EnvelopeConfig | undefined;
-
-  const updateEnvelopeMutation = trpc.works.update.useMutation();
-  const updateTemplateMutation = trpc.template.update.useMutation();
+  const envelopeConfig = worksDetail?.envelope_config as
+    | EnvelopeConfig
+    | undefined;
 
   const handleSave = async (config: EnvelopeConfig) => {
     if (!worksDetail?.id) return;
 
     try {
       if (isTemplate) {
-        await updateTemplateMutation.mutateAsync({
+        await trpc.template.update.mutate({
           id: worksDetail.id,
           envelope_enabled: true,
           envelope_config: config,
         });
       } else {
-        await updateEnvelopeMutation.mutateAsync({
+        await trpc.works.update.mutate({
           id: worksDetail.id,
           envelope_enabled: true,
           envelope_config: config,
@@ -165,10 +164,10 @@ export const EnvelopeManagerHelperForPage = () => {
       }
 
       // 更新本地状态
-      if (editorSDK?.fullSDK?.worksDetail) {
-        editorSDK.fullSDK.worksDetail.envelope_enabled = true;
-        editorSDK.fullSDK.worksDetail.envelope_config = config;
-      }
+      // if (editorSDK?.fullSDK?.worksDetail) {
+      //   editorSDK.fullSDK.worksDetail.envelope_enabled = true;
+      //   editorSDK.fullSDK.worksDetail.envelope_config = config;
+      // }
 
       setShowEnvelopeForm(false);
     } catch (error) {
@@ -181,13 +180,13 @@ export const EnvelopeManagerHelperForPage = () => {
 
     try {
       if (isTemplate) {
-        await updateTemplateMutation.mutateAsync({
+        await trpc.template.update.mutate({
           id: worksDetail.id,
           envelope_enabled: false,
           envelope_config: null,
         });
       } else {
-        await updateEnvelopeMutation.mutateAsync({
+        await trpc.works.update.mutate({
           id: worksDetail.id,
           envelope_enabled: false,
           envelope_config: null,
@@ -195,10 +194,10 @@ export const EnvelopeManagerHelperForPage = () => {
       }
 
       // 更新本地状态
-      if (editorSDK?.fullSDK?.worksDetail) {
-        editorSDK.fullSDK.worksDetail.envelope_enabled = false;
-        editorSDK.fullSDK.worksDetail.envelope_config = undefined;
-      }
+      // if (editorSDK?.fullSDK?.worksDetail) {
+      //   editorSDK.fullSDK.worksDetail.envelope_enabled = false;
+      //   editorSDK.fullSDK.worksDetail.envelope_config = undefined;
+      // }
 
       setShowEnvelopeForm(false);
       toast.success('删除成功');

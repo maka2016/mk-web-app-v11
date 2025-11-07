@@ -10,6 +10,8 @@ import { toOssMiniPCoverUrl } from '@/utils';
 import { treeNodeCounter2 } from '@/utils/works';
 import { API, getAppId } from '@mk/services';
 import { getShareInfo } from '@/components/GridV3/comp/provider/utils';
+import EnvelopeLoading from '@/components/Envelope/EnvelopeLoading';
+import { EnvelopeConfig } from '@/components/Envelope/types';
 
 export const generateMetadata = async ({
   params,
@@ -206,8 +208,16 @@ export default async function Page({
   }
   const widgetRely = treeNodeCounter2(initProps?.worksData);
 
+  // 获取信封配置（如果启用）
+  const envelopeConfig = initProps.worksDetail.envelope_enabled
+    ? (initProps.worksDetail.envelope_config as EnvelopeConfig)
+    : undefined;
+
   return (
     <>
+      {/* 服务端渲染的信封 Loading */}
+      <EnvelopeLoading config={envelopeConfig} />
+
       <MiniPShare
         title={initProps.worksDetail?.title || '详情'}
         imageUrl={toOssMiniPCoverUrl(initProps.worksDetail?.cover)}

@@ -21,9 +21,7 @@ import SuspendButton from './SuspendButton';
 import Watermark from './SuspendButton/Watermark';
 import { useWxEnv } from './wechat';
 import WxAuth from './WxAuth';
-import EnvelopeAnimation, {
-  EnvelopeAnimationRef,
-} from '../../Envelope/EnvelopeAnimation';
+import EnvelopeClientAnimation from '../../Envelope/EnvelopeClientAnimation';
 import { EnvelopeConfig } from '../../Envelope/types';
 
 interface WebsiteAppProps extends PageComponentProps {
@@ -69,24 +67,12 @@ export default function WebsiteApp(props: WebsiteAppProps) {
   const [showFloatAD, setShowFloatAD] = useState(false);
   const [showTrialExpired, setShowTrialExpired] = useState(false);
   const [showExpired, setShowExpired] = useState(false);
-  const envelopeRef = useRef<EnvelopeAnimationRef>(null);
   const [envelopeAnimationComplete, setEnvelopeAnimationComplete] = useState(false);
 
   // 获取信封配置
   const envelopeConfig = worksDetail.envelope_enabled
     ? (worksDetail.envelope_config as EnvelopeConfig)
     : undefined;
-
-  // 当页面加载完成且有信封配置时，自动播放信封动画
-  useEffect(() => {
-    if (mountInBrowser && envelopeConfig && !envelopeAnimationComplete) {
-      // 延迟一点开始动画，确保页面已经渲染
-      const timer = setTimeout(() => {
-        envelopeRef.current?.startAnimation();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [mountInBrowser, envelopeConfig, envelopeAnimationComplete]);
 
   const inviteVisit = () => {
     const personId = query.inviteId;
@@ -215,11 +201,13 @@ export default function WebsiteApp(props: WebsiteAppProps) {
   };
 
   return (
-    <EnvelopeAnimation
-      ref={envelopeRef}
-      config={envelopeConfig}
-      onComplete={() => setEnvelopeAnimationComplete(true)}
-    >
+    <>
+      {/* 客户端接管的信封动画 */}
+      <EnvelopeClientAnimation
+        config={envelopeConfig}
+        onComplete={() => setEnvelopeAnimationComplete(true)}
+      />
+
       <div
         id='auto-scroll-container'
         className={clas(
@@ -292,6 +280,6 @@ export default function WebsiteApp(props: WebsiteAppProps) {
         }}
       />
       </div>
-    </EnvelopeAnimation>
+    </>
   );
 }
