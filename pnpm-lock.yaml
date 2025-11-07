@@ -387,6 +387,10 @@ importers:
       ali-oss:
         specifier: ^6.21.0
         version: 6.23.0(proxy-agent@6.5.0)
+    devDependencies:
+      '@types/ali-oss':
+        specifier: ^6.16.11
+        version: 6.16.11
 
   packages/ui:
     dependencies:
@@ -2581,6 +2585,9 @@ packages:
 
   '@tybys/wasm-util@0.9.0':
     resolution: {integrity: sha512-6+7nlbMVX/PVDCwaIQ8nTOPveOcFLSt8GcXdx8hD0bt39uWxYT88uXzqTd4fTvqta7oeUJqudepapKNt2DYJFw==}
+
+  '@types/ali-oss@6.16.11':
+    resolution: {integrity: sha512-/AyemPZy93ZXGzEokMsoPFgjH37snpzH4X/fwans/n63HLaCleriCG3PyrkHCPkgHEc9vj9Uo6paqsBN3vJ3OA==}
 
   '@types/body-parser@1.19.5':
     resolution: {integrity: sha512-fB3Zu92ucau0iQ0JMCFQE7b/dv8Ot07NI3KaZIkIUNXq82k4eBAqUaneXfleGY9JWskeS9y+u0nXMyspcuQrCg==}
@@ -9489,6 +9496,8 @@ snapshots:
     dependencies:
       tslib: 2.8.1
     optional: true
+
+  '@types/ali-oss@6.16.11': {}
 
   '@types/body-parser@1.19.5':
     dependencies:
