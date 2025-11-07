@@ -171,7 +171,7 @@ export const calcBlockHeight = (blockId: string) => {
 export const calcBlockHeight2 = () => {
   const { canvaScale } = getCanvaInfo2();
   const blockItems = document.querySelectorAll<HTMLDivElement>(
-    `#id-canvas .block_wrapper`
+    `#id-canvas .block_wrapper > .editor_row_wrapper`
   );
   if (!blockItems.length) {
     console.log(
