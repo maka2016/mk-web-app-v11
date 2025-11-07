@@ -112,20 +112,19 @@ const WorksManager = () => {
     setLoading(true);
     try {
       // 使用 tRPC API 查询作品列表
-      const [works, count] = await Promise.all([
-        trpc.works.findMany.query({
-          deleted: false,
-          is_folder: false,
-          keyword: search || undefined,
-          skip: (pageNum - 1) * pageSize,
-          take: pageSize,
-        }),
-        trpc.works.count.query({
-          deleted: false,
-          is_folder: false,
-          keyword: search || undefined,
-        }),
-      ]);
+      const works = (await trpc.works.findMany.query({
+        deleted: false,
+        is_folder: false,
+        keyword: search || undefined,
+        skip: (pageNum - 1) * pageSize,
+        take: pageSize,
+      })) as any as SerializedWorksEntity[];
+
+      const count = (await trpc.works.count.query({
+        deleted: false,
+        is_folder: false,
+        keyword: search || undefined,
+      })) as any as number;
 
       setWorksList(works);
       setTotal(count);
@@ -232,11 +231,10 @@ const WorksManager = () => {
 
     const deleteCount = selectedWorks.size;
     try {
-      await Promise.all(
-        Array.from(selectedWorks).map(workId =>
-          trpc.works.delete.mutate({ id: workId })
-        )
+      const deletePromises = Array.from(selectedWorks).map(
+        workId => trpc.works.delete.mutate({ id: workId }) as any
       );
+      await Promise.all(deletePromises);
       toast.success(`成功删除 ${deleteCount} 个作品`);
 
       // 渐进式更新：从列表中批量移除
@@ -257,7 +255,9 @@ const WorksManager = () => {
   // 复制作品
   const handleDuplicate = async (work: SerializedWorksEntity) => {
     try {
-      const newWork = await trpc.works.duplicate.mutate({ id: work.id });
+      const newWork = (await trpc.works.duplicate.mutate({
+        id: work.id,
+      })) as any as SerializedWorksEntity;
       toast.success('复制成功');
 
       // 渐进式更新：将新作品添加到列表顶部，移除最后一项保持页面大小
