@@ -17,6 +17,8 @@ export const templateRouter = router({
         designer_uid: z.number(),
         spec_id: z.string().optional(),
         designer_works_id: z.string().optional(),
+        envelope_enabled: z.boolean().optional(),
+        envelope_images: z.any().optional(), // JSON: 信封图片列表
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -95,6 +97,8 @@ export const templateRouter = router({
         deleted: z.boolean().optional(),
         custom_time: z.date().optional(),
         version: z.number().optional(),
+        envelope_enabled: z.boolean().optional(),
+        envelope_images: z.any().optional(), // JSON: 信封图片列表
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -354,6 +358,8 @@ export const templateRouter = router({
         spec_id: z.string().optional(),
         designer_works_id: z.string().optional(),
         content: z.any(), // 模板数据
+        envelope_enabled: z.boolean().optional(),
+        envelope_images: z.any().optional(), // JSON: 信封图片列表
       })
     )
     .mutation(async ({ ctx, input }) => {

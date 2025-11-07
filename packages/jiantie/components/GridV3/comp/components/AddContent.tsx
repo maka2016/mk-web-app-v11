@@ -1,16 +1,17 @@
-import React, { useState, useRef } from 'react';
-import ReactDOM from 'react-dom';
+import { showSelector } from '@/components/showSelector';
 import styled from '@emotion/styled';
+import React, { useRef, useState } from 'react';
+import ReactDOM from 'react-dom';
 
-import clas from 'classnames';
-import { useGridContext } from '../provider';
+import { Icon } from '@workspace/ui/components/Icon';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@workspace/ui/components/popover';
-import { Icon } from '@workspace/ui/components/Icon';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
+import clas from 'classnames';
+import { useGridContext } from '../provider';
 
 type IndicatorHandler = {
   setDomID: (domID: string, title: string) => void;
@@ -282,7 +283,7 @@ const AddContent = React.forwardRef<IndicatorHandler, Props>(
 
     const onAddPicture = () => {
       setOpen(false);
-      editorCtx?.utils.showSelector({
+      showSelector({
         onSelected: (params: any) => {
           const { url, type, ossPath } = params;
 
