@@ -128,12 +128,20 @@ const HeaderForUser = () => {
   const toRsvp = () => {
     const form_config_id = searchParams.get('form_config_id');
     console.log('form_config_id', form_config_id);
-    router.push(
-      getUrlWithParam(
-        `/mobile/rsvp/invitees?works_id=${worksId}&uid=${getUid()}&appid=${appid}&form_config_id=${form_config_id}`,
-        'clickid'
-      )
+
+    const rsvpUrl = getUrlWithParam(
+      `/mobile/rsvp/invitees?works_id=${worksId}&uid=${getUid()}&appid=${appid}&form_config_id=${form_config_id}`,
+      'clickid'
     );
+
+    if (APPBridge.judgeIsInApp()) {
+      APPBridge.navToPage({
+        url: `maka://webview?url=${encodeURIComponent(rsvpUrl)}`,
+        type: 'NATIVE',
+      });
+    } else {
+      router.push(rsvpUrl);
+    }
   };
 
   const handleSave = async () => {

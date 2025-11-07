@@ -56,7 +56,16 @@ const PreviewHeader = (props: Props) => {
     }
   };
 
+  const toRsvpShare = (worksId: string) => {
+    router.push(`/mobile/rsvp/invitees?works_id=${worksId}&mode=public`);
+    return;
+  };
+
   const checkPublish = async () => {
+    if (worksStore.worksDetail.is_rsvp) {
+      toRsvpShare(worksId);
+      return;
+    }
     try {
       // 根据类型选择对应的检查函数，减少重复代码
       const checkFunction = isVideo

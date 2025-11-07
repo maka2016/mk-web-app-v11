@@ -676,6 +676,9 @@ export default function ElementAttrsEditorV2() {
                         <div className='paiban_items'>
                           <CoverAnimateManagerHelperForPage />
                         </div>
+                        <div className='paiban_items'>
+                          {/* TODO: 信封功能 */}
+                        </div>
 
                         <div className='paiban_items parallax_scroll_bg_btn flex items-center gap-1'>
                           <Switch

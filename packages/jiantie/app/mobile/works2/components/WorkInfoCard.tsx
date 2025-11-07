@@ -22,6 +22,7 @@ interface WorkInfoCardProps {
   } | null;
   onClick?: () => void;
   size?: 'small' | 'medium';
+  loading?: boolean;
 }
 
 export function WorkInfoCard({
@@ -30,15 +31,28 @@ export function WorkInfoCard({
   rsvpStats,
   onClick,
   size = 'small',
+  loading = false,
 }: WorkInfoCardProps) {
   const isSmall = size === 'small';
   const imageSize = isSmall ? 'w-16 h-16' : 'w-20 h-20';
   const resizeWidth = isSmall ? 128 : 160;
 
+  const handleClick = () => {
+    if (!loading && onClick) {
+      onClick();
+    }
+  };
+
   return (
     <div
-      onClick={onClick}
-      className={`bg-white rounded-lg p-3 shadow-sm border border-gray-100 ${onClick ? 'cursor-pointer active:opacity-80' : ''}`}
+      onClick={handleClick}
+      className={`bg-white rounded-lg p-3 shadow-sm border border-gray-100 ${
+        onClick && !loading
+          ? 'cursor-pointer active:opacity-80'
+          : loading
+            ? 'cursor-wait opacity-60'
+            : ''
+      }`}
     >
       <div className='flex gap-3'>
         {/* 缩略图 */}
@@ -55,6 +69,12 @@ export function WorkInfoCard({
           ) : (
             <div className='w-full h-full bg-gray-100 flex items-center justify-center text-xs text-gray-400'>
               无
+            </div>
+          )}
+          {/* 加载蒙层 */}
+          {loading && (
+            <div className='absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center'>
+              <div className='w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin' />
             </div>
           )}
         </div>

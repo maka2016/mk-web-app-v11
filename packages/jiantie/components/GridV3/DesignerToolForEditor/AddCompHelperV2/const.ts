@@ -1,3 +1,4 @@
+import { showSelector } from '@/components/showSelector';
 import { formEntityServiceApi, getPageId, getUid } from '@mk/services';
 import { random } from '@mk/utils';
 import { Image, LayoutGrid, MessageCircle, Type } from 'lucide-react';
@@ -52,7 +53,7 @@ export const createAddConfigFactory = (
         });
         return compId;
       } else if (addItem.elementRef === 'Picture') {
-        editorCtx?.utils.showSelector({
+        showSelector({
           onSelected: (params: any) => {
             const { url, type, ossPath } = params;
             const compId = addComponentV2({
