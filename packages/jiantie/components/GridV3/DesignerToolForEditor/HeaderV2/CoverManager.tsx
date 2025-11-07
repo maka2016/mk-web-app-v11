@@ -45,7 +45,7 @@ const CoverManager = ({
               height: 960,
               appid: getAppId(),
             });
-            setCover(coverUrl);
+            setCover(coverUrl[0]);
             setLoading(false);
             toast.success('封面重新生成成功');
           }}
