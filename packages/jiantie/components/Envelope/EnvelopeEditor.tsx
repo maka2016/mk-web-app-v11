@@ -139,7 +139,8 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
     try {
       await props.onChange(localConfig);
       toast.success('保存成功');
-    } catch (error) {
+    } catch (err) {
+      console.error('保存失败:', err);
       toast.error('保存失败');
     } finally {
       setSaving(false);
@@ -229,32 +230,81 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
       {/* 视频背景 */}
       <div className='space-y-2'>
-        <Label>视频背景 (可选)</Label>
+        <Label className='flex items-center justify-between'>
+          <span>视频背景 (可选)</span>
+          {localConfig.videoBgConfig?.videoUrl && (
+            <Button
+              size='sm'
+              variant='ghost'
+              className='h-6 px-2 text-xs text-red-600 hover:text-red-700'
+              onClick={() => {
+                setLocalConfig({
+                  ...localConfig,
+                  videoBgConfig: undefined,
+                });
+                toast.success('已移除视频背景');
+              }}
+            >
+              <Trash2 className='w-3 h-3 mr-1' />
+              移除
+            </Button>
+          )}
+        </Label>
         <div className='space-y-2'>
           {localConfig.videoBgConfig?.videoUrl ? (
-            <div className='relative'>
-              <video
-                src={localConfig.videoBgConfig.videoUrl}
-                className='w-full aspect-video rounded-lg'
-                controls
-                muted
-              />
-              <Button
-                size='sm'
-                variant='destructive'
-                className='absolute top-2 right-2'
-                onClick={() => {
-                  setLocalConfig({
-                    ...localConfig,
-                    videoBgConfig: undefined,
-                  });
-                }}
-              >
-                <Trash2 className='w-4 h-4' />
-              </Button>
+            <div className='space-y-2'>
+              {/* 视频预览 */}
+              <div className='relative bg-gray-900 rounded-lg overflow-hidden'>
+                <video
+                  src={localConfig.videoBgConfig.videoUrl}
+                  className='w-full aspect-video object-contain'
+                  controls
+                  loop
+                  muted
+                  playsInline
+                  preload='metadata'
+                />
+              </div>
+              {/* 视频信息 */}
+              <div className='text-xs text-gray-500 px-2'>
+                <p>✓ 视频已上传</p>
+                <p className='truncate'>
+                  URL: {localConfig.videoBgConfig.videoUrl}
+                </p>
+              </div>
+              {/* 重新上传按钮 */}
+              <div>
+                <input
+                  type='file'
+                  accept='video/mp4,video/webm'
+                  className='hidden'
+                  id='video-reupload'
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleVideoUpload(file);
+                    }
+                  }}
+                  disabled={uploading}
+                />
+                <label htmlFor='video-reupload'>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    className='w-full'
+                    disabled={uploading}
+                    asChild
+                  >
+                    <span>
+                      <Upload className='w-4 h-4 mr-1' />
+                      重新上传
+                    </span>
+                  </Button>
+                </label>
+              </div>
             </div>
           ) : (
-            <div className='border-2 border-dashed border-gray-300 rounded-lg p-6'>
+            <div className='border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors'>
               <input
                 type='file'
                 accept='video/mp4,video/webm'
@@ -266,18 +316,29 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
                     handleVideoUpload(file);
                   }
                 }}
+                disabled={uploading}
               />
               <label
                 htmlFor='video-upload'
-                className='flex flex-col items-center cursor-pointer'
+                className={`flex flex-col items-center ${uploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
               >
                 <Upload className='w-8 h-8 text-gray-400 mb-2' />
-                <span className='text-sm text-gray-600'>
+                <span className='text-sm text-gray-600 font-medium'>
                   {uploading ? `上传中... ${uploadProgress}%` : '点击上传视频'}
                 </span>
                 <span className='text-xs text-gray-400 mt-1'>
                   支持 MP4/WebM，最大 15MB
                 </span>
+                {uploading && (
+                  <div className='w-full max-w-xs mt-3'>
+                    <div className='w-full bg-gray-200 rounded-full h-2'>
+                      <div
+                        className='bg-blue-600 h-2 rounded-full transition-all duration-300'
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </label>
             </div>
           )}

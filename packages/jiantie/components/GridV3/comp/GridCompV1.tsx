@@ -1,38 +1,37 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { PlatformCompProps } from '@mk/widgets-bridge-sdk';
-import ReactDOM from 'react-dom';
+import { getPermissionData, getWorksDetailStatic } from '@mk/services';
 import {
-  EventEmitter,
   DebounceClass,
-  mergeDeep,
-  queryToObj,
+  EventEmitter,
   isAndroid,
   isPc,
+  mergeDeep,
+  queryToObj,
 } from '@mk/utils';
+import { PlatformCompProps } from '@mk/widgets-bridge-sdk';
 import clas from 'classnames';
-import { getPermissionData, getWorksDetailStatic } from '@mk/services';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import ReactDOM from 'react-dom';
+import DesignerOperatorV1 from '../DesignerToolForEditor/DesignerOperator';
+import EditFormForCopyableCellWrapper from '../UserForm/Setting/EditFormForRepeatList';
+import SettingWidget from '../UserForm/Setting/SettingWidget';
 import { GridCell, GridProps, GridState } from '../shared';
-import { deepClone, blockStyleFilter } from '../shared/utils';
-import Indicator from './components/Indicator';
-import './index.scss';
-import './lib/animate.css';
-import { handleWidgetDidLoaded, getAllLayers } from './utils';
 import i18nModule from '../shared/i18n';
+import { blockStyleFilter, deepClone } from '../shared/utils';
+import ContainerWithBg from './ContainerWithBg';
 import { WidgetItemRenderer } from './WidgetItemRendererV1';
+import AddContent from './components/AddContent';
+import AnimateCover, { AnimateCoverRef } from './components/AnimateCover';
+import { isPictureUserEditable } from './components/ImgLiteCompV2';
+import Indicator from './components/Indicator';
 import RowRender from './components/RowRenderer';
 import LongPageRowEditor from './components/RowRenderer/LongPageRowEditor';
-import AnimateCover, { AnimateCoverRef } from './components/AnimateCover';
 import { useAutoScroll } from './hooks/autoScroll';
 import { useGlobalTypingStatus } from './hooks/useGlobalTypingStatus';
-import DesignerOperatorV1 from '../DesignerToolForEditor/DesignerOperator';
+import './index.scss';
+import './lib/animate.css';
 import { useGridContext } from './provider';
-import EditFormForCopyableCellWrapper from '../UserForm/Setting/EditFormForRepeatList';
-import ContainerWithBg from './ContainerWithBg';
-import AddContent from './components/AddContent';
-import SettingWidget from '../UserForm/Setting/SettingWidget';
-import WidgetLoader from './WidgetLoader';
 import { countChild, getCanvaInfo2, getLink } from './provider/utils';
-import { isPictureUserEditable } from './components/ImgLiteCompV2';
+import { getAllLayers, handleWidgetDidLoaded } from './utils';
 
 const didLoadedDebounce = new DebounceClass();
 const debounce = new DebounceClass();
@@ -795,9 +794,6 @@ export const GridCompV1: React.FC<
         />
       )}
       {renderWidgetSetting()}
-      {isWebsite && !isExportVideo && !isScreenshot && viewerSDK && (
-        <WidgetLoader worksData={worksData} viewewSDK={viewerSDK} />
-      )}
     </>
   );
 };

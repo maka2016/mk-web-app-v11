@@ -1,15 +1,10 @@
 import styled from '@emotion/styled';
 import { deepClone } from '@mk/utils';
-import MkBaoMingV2EditingPanel from '@mk/widgets/MkBaoMingV2/form-wap/EditingPanel';
-import MkHuiZhiSetting from '@mk/widgets/MkHuiZhi/form/settingV1';
-import MkPinTuanEditingPanel from '@mk/widgets/MkPinTuan/form-wap/EditingPanel';
 import { IWorksData } from '@mk/works-store/types';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import MaterialComponents from '../../DesignerToolForEditor/ThemeLayoutLibraryV3/MaterialComponents';
-import WidgetManager from '../../DesignerToolForEditor/WidgetManager';
-import { useWidgetsAttrs } from '../../comp/WidgetLoader';
 import { useGridContext } from '../../comp/provider';
 import { getCanvaInfo2 } from '../../comp/provider/utils';
 import { scrollToActiveRow } from '../../shared';
@@ -41,32 +36,10 @@ export default function SettingWidgetV3({
     getActiveRootRow,
   } = useGridContext();
   const currBlock = getActiveRootRow();
-  const { compAttrsMap } = useWidgetsAttrs({ needInit: true, worksData });
   const { isWebsite, maxPageCount, isFlatPage } = getCanvaInfo2();
   const [templateShow, setTemplateShow] = useState(false);
   const [templateShowV2, setTemplateShowV2] = useState(false);
   const [templateShowV3, setTemplateShowV3] = useState(false);
-  const [showComponentSwitch, setShowComponentSwitch] = useState(false);
-  const [showPintuanForm, setShowPintuanForm] = useState(false);
-  const [showMkBaoMingV2Form, setShowMkBaoMingV2Form] = useState(false);
-  const [showHuizhiForm, setShowHuizhiForm] = useState(false);
-  const [showPageManager, setShowPageManager] = useState(false);
-
-  const onSetting = (elementRef: string) => {
-    switch (elementRef) {
-      case 'MkPinTuan':
-        setShowPintuanForm(true);
-        break;
-      case 'MkBaoMingV2':
-        setShowMkBaoMingV2Form(true);
-        break;
-      case 'MkHuiZhi':
-        setShowHuizhiForm(true);
-        break;
-      default:
-        break;
-    }
-  };
 
   const [showMusicLib, setShowMusicLib] = useState(false);
   const addPageable = gridsData.length < maxPageCount;
@@ -102,67 +75,9 @@ export default function SettingWidgetV3({
     };
   }, []);
 
-  const renderPintuanForm = () => {
-    const component = compAttrsMap.MkPinTuan;
-    if (!component) return null;
-
-    const { elemId, attrs } = component;
-
-    return (
-      <MkPinTuanEditingPanel
-        editorCtx={editorCtx}
-        onFormValueChange={(nextVal: any) => {
-          editorSDK?.changeCompAttr(elemId, nextVal);
-        }}
-        onChange={(data: any) => {
-          editorSDK?.changeCompAttr(elemId, {
-            ...component,
-            attrs: {
-              ...component.attrs,
-              ...data,
-            },
-          });
-        }}
-        onClose={() => setShowPintuanForm(false)}
-        formControledValues={attrs as any}
-      />
-    );
-  };
-
-  const renderMkBaoMingV2Form = () => {
-    const component = compAttrsMap.MkBaoMingV2;
-    if (!component) return null;
-
-    const { elemId, attrs } = component;
-
-    return (
-      <MkBaoMingV2EditingPanel
-        editorCtx={editorCtx}
-        onFormValueChange={(nextVal: any) => {
-          editorSDK?.changeCompAttr(elemId, nextVal);
-        }}
-        onChange={(data: any) => {
-          editorSDK?.changeCompAttr(elemId, {
-            ...component,
-            attrs: {
-              ...component.attrs,
-              ...data,
-            },
-          });
-        }}
-        onClose={() => setShowMkBaoMingV2Form(false)}
-        formControledValues={attrs as any}
-      />
-    );
-  };
-
   if (!addPageable && !isWebsite) {
     return null;
   }
-
-  const renderAddPageButton = () => {
-    if (!addPageable) return null;
-  };
 
   // TODO: 迁移其他组件的设置
   return (
@@ -183,52 +98,6 @@ export default function SettingWidgetV3({
         )} */}
       </SettingWrapper>
 
-      <ResponsiveDialog
-        contentProps={{
-          className: 'h-[600px]',
-        }}
-        isOpen={showPintuanForm}
-        onOpenChange={setShowPintuanForm}
-      >
-        {renderPintuanForm()}
-      </ResponsiveDialog>
-      <ResponsiveDialog
-        contentProps={{
-          className: 'h-[600px]',
-        }}
-        isOpen={showMkBaoMingV2Form}
-        onOpenChange={setShowMkBaoMingV2Form}
-      >
-        {renderMkBaoMingV2Form()}
-      </ResponsiveDialog>
-      <ResponsiveDialog
-        isOpen={showHuizhiForm}
-        onOpenChange={setShowHuizhiForm}
-      >
-        <MkHuiZhiSetting
-          compAttrsMap={{
-            MkHuiZhi: compAttrsMap.MkHuiZhi,
-            MkBulletScreen_v2: compAttrsMap.MkBulletScreen_v2,
-            MkMapV3: compAttrsMap.MkMapV3,
-            MkGift: compAttrsMap.MkGift,
-          }}
-          onClose={() => setShowHuizhiForm(false)}
-          onFormValueChange={(elemId: string, nextVal: any) => {
-            editorSDK?.changeCompAttr(elemId, nextVal);
-          }}
-          onChange={data => {
-            editorSDK?.changeCompAttr(data.MkHuiZhi?.elemId || '', {
-              ...data.MkHuiZhi?.attrs,
-            });
-            editorSDK?.changeCompAttr(data.MkBulletScreen_v2?.elemId || '', {
-              ...data.MkBulletScreen_v2?.attrs,
-            });
-            editorSDK?.changeCompAttr(data.MkGift?.elemId || '', {
-              ...data.MkGift?.attrs,
-            });
-          }}
-        />
-      </ResponsiveDialog>
       <ResponsiveDialog
         isOpen={showMusicLib}
         // showOverlay={false}
@@ -328,18 +197,6 @@ export default function SettingWidgetV3({
             setTemplateShowV3(false);
           }}
         />
-      </ResponsiveDialog>
-      <ResponsiveDialog
-        isOpen={showComponentSwitch}
-        handleOnly={true}
-        showOverlay={false}
-        onOpenChange={setShowComponentSwitch}
-        title='组件开关'
-        contentProps={{
-          className: 'pt-2 h-[60vh]',
-        }}
-      >
-        <WidgetManager onSetting={onSetting} worksData={worksData} />
       </ResponsiveDialog>
     </>
   );

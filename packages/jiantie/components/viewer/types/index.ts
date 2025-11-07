@@ -1,8 +1,3 @@
-import { IGetInitialPropsCommonAppRouter } from '../utils/getInitialPropsCommon2';
-import { PermissionList } from '../utils/getPermission';
-import { WorksDetailEntity } from '@mk/services';
-import { IWorksData } from '@mk/works-store/types';
-
 export interface AppContext {
   query: {
     uid: string;
@@ -38,26 +33,4 @@ export interface AppContext {
     appid?: string;
     inviteId?: string;
   };
-}
-
-/**
- * 页面组件的通用 props
- */
-export interface PageComponentProps extends IGetInitialPropsCommonAppRouter {
-  userAgent: string;
-  worksData: IWorksData;
-  worksDetail: WorksDetailEntity;
-  websiteControl: {
-    isTempLink: boolean;
-    isExpire: boolean;
-    viewMode?: 'viewer' | 'preview' | 'store';
-    trialExpired?: boolean;
-    brandLogoUrl?: string;
-    brandText?: string;
-    showWatermark?: boolean;
-    floatAD?: boolean;
-  };
-  query: AppContext['query'];
-  // pageLoaded: boolean
-  // onPageLoaded: () => void
 }

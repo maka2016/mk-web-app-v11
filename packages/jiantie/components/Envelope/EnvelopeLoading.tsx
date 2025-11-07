@@ -9,9 +9,19 @@ interface EnvelopeLoadingProps {
 }
 
 export default function EnvelopeLoading({ config }: EnvelopeLoadingProps) {
+  console.log('[EnvelopeLoading SSR] 渲染信封 loading:', {
+    hasConfig: !!config,
+    hasBackgroundImage: !!config?.backgroundImage,
+    hasFrontImage: !!config?.envelopeFrontImage,
+    hasSealImage: !!config?.envelopeSealImage,
+  });
+
   if (!config || !config.backgroundImage) {
+    console.log('[EnvelopeLoading SSR] 无信封配置，跳过渲染');
     return null;
   }
+
+  console.log('[EnvelopeLoading SSR] 正在渲染静态信封');
 
   return (
     <div
@@ -36,12 +46,13 @@ export default function EnvelopeLoading({ config }: EnvelopeLoadingProps) {
           width: '100%',
           height: '100%',
           backgroundImage: `url(${config.backgroundImage})`,
-          backgroundSize: 'cover',
+          backgroundRepeat: 'repeat',
+          backgroundSize: 'auto',
           backgroundPosition: 'center',
         }}
       />
 
-      {/* 信封层 */}
+      {/* 信封层 - 竖版（服务端渲染，使用固定尺寸，客户端会接管） */}
       <div
         style={{
           position: 'absolute',
@@ -49,8 +60,8 @@ export default function EnvelopeLoading({ config }: EnvelopeLoadingProps) {
           left: '50%',
           transform: 'translate(-50%, -50%)',
           width: '90vw',
-          maxWidth: '600px',
-          aspectRatio: '3 / 2',
+          maxWidth: '400px',
+          aspectRatio: '2 / 3',
         }}
       >
         {/* 信封正面 */}

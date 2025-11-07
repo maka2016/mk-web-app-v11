@@ -48,21 +48,49 @@ function CounterControl({
         variant='outline'
         size='icon'
         disabled={disabled}
-        className='h-8 w-8 shrink-0 rounded-lg border-gray-200 bg-gray-50'
+        className='h-8 w-8 shrink-0'
+        style={{
+          borderRadius: 'var(--rsvp-border-radius)',
+          borderWidth: 'var(--rsvp-border-width)',
+          backgroundColor: 'var(--rsvp-secondary-btn-color)',
+          borderColor: 'var(--rsvp-secondary-btn-border-color)',
+          color: 'var(--rsvp-secondary-btn-text-color)',
+        }}
         onClick={onDecrement}
       >
         <Minus className='h-4 w-4' />
       </Button>
       <div className='flex-1 text-center'>
-        <span className='text-base font-semibold text-gray-900'>{value}</span>
-        <span className='text-sm text-gray-500 ml-1'>{label}</span>
+        <span
+          className='text-base font-semibold'
+          style={{
+            color: 'var(--rsvp-text-color)',
+          }}
+        >
+          {value}
+        </span>
+        <span
+          className='text-sm ml-1'
+          style={{
+            color: 'var(--rsvp-label-color)',
+          }}
+        >
+          {label}
+        </span>
       </div>
       <Button
         type='button'
         variant='outline'
         size='icon'
         disabled={disabled}
-        className='h-8 w-8 shrink-0 rounded-lg border-gray-200 bg-gray-50'
+        className='h-8 w-8 shrink-0'
+        style={{
+          borderRadius: 'var(--rsvp-border-radius)',
+          borderWidth: 'var(--rsvp-border-width)',
+          backgroundColor: 'var(--rsvp-secondary-btn-color)',
+          borderColor: 'var(--rsvp-secondary-btn-border-color)',
+          color: 'var(--rsvp-secondary-btn-text-color)',
+        }}
         onClick={onIncrement}
       >
         <Plus className='h-4 w-4' />

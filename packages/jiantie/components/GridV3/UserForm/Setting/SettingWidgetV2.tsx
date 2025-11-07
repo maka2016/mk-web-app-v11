@@ -1,8 +1,5 @@
 import { getAppId, getPermissionData } from '@mk/services';
 import { deepClone } from '@mk/utils';
-import MkBaoMingV2EditingPanel from '@mk/widgets/MkBaoMingV2/form-wap/EditingPanel';
-import MkHuiZhiSetting from '@mk/widgets/MkHuiZhi/form/settingV1';
-import MkPinTuanEditingPanel from '@mk/widgets/MkPinTuan/form-wap/EditingPanel';
 import { IWorksData } from '@mk/works-store/types';
 import { Icon } from '@workspace/ui/components/Icon';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
@@ -13,8 +10,6 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import PageManagerForUser from '../../DesignerToolForEditor/PageManager/forUser';
 import MaterialComponents from '../../DesignerToolForEditor/ThemeLayoutLibraryV3/MaterialComponents';
-import WidgetManager from '../../DesignerToolForEditor/WidgetManager';
-import { useWidgetsAttrs } from '../../comp/WidgetLoader';
 import { useGridContext } from '../../comp/provider';
 import { getCanvaInfo2 } from '../../comp/provider/utils';
 import { scrollToActiveRow } from '../../shared';
@@ -44,7 +39,6 @@ export default function SettingWidgetV2({
     gridProps,
   } = useGridContext();
   const currBlock = getActiveRootRow();
-  const { compAttrsMap } = useWidgetsAttrs({ needInit: true, worksData });
   const appid = getAppId();
   const fullStack = getPermissionData().materialProduct;
   const { isWebsite, maxPageCount, useMusic } = getCanvaInfo2();
@@ -107,60 +101,6 @@ export default function SettingWidgetV2({
     };
   }, []);
 
-  const renderPintuanForm = () => {
-    const component = compAttrsMap.MkPinTuan;
-    if (!component) return null;
-
-    const { elemId, attrs } = component;
-
-    return (
-      <MkPinTuanEditingPanel
-        editorCtx={editorCtx}
-        onFormValueChange={(nextVal: any) => {
-          editorSDK?.changeCompAttr(elemId, nextVal);
-        }}
-        onChange={(data: any) => {
-          editorSDK?.changeCompAttr(elemId, {
-            ...component,
-            attrs: {
-              ...component.attrs,
-              ...data,
-            },
-          });
-        }}
-        onClose={() => setShowPintuanForm(false)}
-        formControledValues={attrs as any}
-      />
-    );
-  };
-
-  const renderMkBaoMingV2Form = () => {
-    const component = compAttrsMap.MkBaoMingV2;
-    if (!component) return null;
-
-    const { elemId, attrs } = component;
-
-    return (
-      <MkBaoMingV2EditingPanel
-        editorCtx={editorCtx}
-        onFormValueChange={(nextVal: any) => {
-          editorSDK?.changeCompAttr(elemId, nextVal);
-        }}
-        onChange={(data: any) => {
-          editorSDK?.changeCompAttr(elemId, {
-            ...component,
-            attrs: {
-              ...component.attrs,
-              ...data,
-            },
-          });
-        }}
-        onClose={() => setShowMkBaoMingV2Form(false)}
-        formControledValues={attrs as any}
-      />
-    );
-  };
-
   if (!addPageable && !isWebsite) {
     return null;
   }
@@ -209,121 +149,8 @@ export default function SettingWidgetV2({
       {showPageManager && gridsData.length > 1 && <PageManagerForUser />}
       <div ref={newOperatingBtnRef} className={cls(styles.operatingBtns)}>
         {renderAddPageButton()}
-        {/* {isWebsite && (
-          <>
-            {fullStack ? (
-              <div
-                className={styles.btnItem}
-                onClick={() => setShowComponentSwitch(true)}
-              >
-                {' '}
-                <div className={styles.corner}>设计师功能</div>
-                <span>组件开关</span>
-              </div>
-            ) : (
-              <>
-                {compAttrsMap.MkBaoMingV2 && appid === 'huiyao' && (
-                  <div
-                    className={styles.btnItem}
-                    onClick={() => setShowMkBaoMingV2Form(true)}
-                  >
-                    {compAttrsMap.MkBaoMingV2.attrs.show !== false && (
-                      <div className={styles.corner}>已启用</div>
-                    )}
-                    <Icon name='form-fill' color='#000' size={18} />
-                    <span>设置报名</span>
-                  </div>
-                )}
-                {compAttrsMap.MkPinTuan && appid === 'xueji' && (
-                  <div
-                    className={styles.btnItem}
-                    onClick={() => setShowPintuanForm(true)}
-                  >
-                    {compAttrsMap.MkPinTuan.attrs.show !== false && (
-                      <div className={styles.corner}>已启用</div>
-                    )}
-                    <Icon name='form-fill' color='#000' size={18} />
-                    <span>设置报名</span>
-                  </div>
-                )}
-
-                {compAttrsMap.MkHuiZhi &&
-                  !compAttrsMap.MkHuiZhi.attrs.inLayout &&
-                  appid === 'jiantie' && (
-                    <div
-                      className={styles.btnItem}
-                      onClick={() => {
-                        setShowHuizhiForm(true);
-                      }}
-                    >
-                      {compAttrsMap.MkHuiZhi.attrs.show !== false && (
-                        <div className={styles.corner}>已启用</div>
-                      )}
-                      <Icon name='form-fill' color='#000' size={18} />
-                      <span>设置回执</span>
-                    </div>
-                  )}
-              </>
-            )}
-          </>
-        )} */}
-        {/* {useMusic && (
-          <div className={styles.btnItem} onClick={() => setShowMusicLib(true)}>
-            {!editorSDK?.getWorksData()?.canvasData?.music.disabled && (
-              <div className={styles.corner}>已启用</div>
-            )}
-            <Icon name='music' />
-            <span>音乐设置</span>
-          </div>
-        )} */}
       </div>
 
-      <ResponsiveDialog
-        contentProps={{
-          className: 'h-[600px]',
-        }}
-        isOpen={showPintuanForm}
-        onOpenChange={setShowPintuanForm}
-      >
-        {renderPintuanForm()}
-      </ResponsiveDialog>
-      <ResponsiveDialog
-        contentProps={{
-          className: 'h-[600px]',
-        }}
-        isOpen={showMkBaoMingV2Form}
-        onOpenChange={setShowMkBaoMingV2Form}
-      >
-        {renderMkBaoMingV2Form()}
-      </ResponsiveDialog>
-      <ResponsiveDialog
-        isOpen={showHuizhiForm}
-        onOpenChange={setShowHuizhiForm}
-      >
-        <MkHuiZhiSetting
-          compAttrsMap={{
-            MkHuiZhi: compAttrsMap.MkHuiZhi,
-            MkBulletScreen_v2: compAttrsMap.MkBulletScreen_v2,
-            MkMapV3: compAttrsMap.MkMapV3,
-            MkGift: compAttrsMap.MkGift,
-          }}
-          onClose={() => setShowHuizhiForm(false)}
-          onFormValueChange={(elemId: string, nextVal: any) => {
-            editorSDK?.changeCompAttr(elemId, nextVal);
-          }}
-          onChange={data => {
-            editorSDK?.changeCompAttr(data.MkHuiZhi?.elemId || '', {
-              ...data.MkHuiZhi?.attrs,
-            });
-            editorSDK?.changeCompAttr(data.MkBulletScreen_v2?.elemId || '', {
-              ...data.MkBulletScreen_v2?.attrs,
-            });
-            editorSDK?.changeCompAttr(data.MkGift?.elemId || '', {
-              ...data.MkGift?.attrs,
-            });
-          }}
-        />
-      </ResponsiveDialog>
       <ResponsiveDialog
         isOpen={showMusicLib}
         // showOverlay={false}
@@ -423,18 +250,6 @@ export default function SettingWidgetV2({
             setTemplateShowV3(false);
           }}
         />
-      </ResponsiveDialog>
-      <ResponsiveDialog
-        isOpen={showComponentSwitch}
-        handleOnly={true}
-        showOverlay={false}
-        onOpenChange={setShowComponentSwitch}
-        title='组件开关'
-        contentProps={{
-          className: 'pt-2 h-[60vh]',
-        }}
-      >
-        <WidgetManager onSetting={onSetting} worksData={worksData} />
       </ResponsiveDialog>
     </div>
   );
