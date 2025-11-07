@@ -3,12 +3,11 @@ import { Icon } from '@workspace/ui/components/Icon';
 import styles from './index.module.scss';
 import cls from 'classnames';
 import React, { useEffect, useState } from 'react';
-import { Button, ConfigProvider, TableProps } from 'antd';
+import { Button } from '@workspace/ui/components/button';
 import { usePathname, useRouter } from 'next/navigation';
-import { fontWeight } from 'html2canvas/dist/types/css/property-descriptors/font-weight';
 import EmptyContent from '@/app/invoice/components/UI/EmptyContent';
 import { InvoiceStatus, InvoiceType } from '@/types/invoice';
-import Table from '@/app/invoice/components/PC/Table';
+import Table, { ColumnType } from '@/app/invoice/components/PC/Table';
 import {
   ApplyInvoiceInfo,
   ApplyInvoiceInfoStatus,
@@ -48,7 +47,7 @@ const InvoiceRecordTabPanel: React.FC<Props> = props => {
     initData();
   }, []);
 
-  const columns: TableProps<ApplyInvoiceInfo>['columns'] = [
+  const columns: ColumnType<ApplyInvoiceInfo>[] = [
     {
       title: '申请单号',
       dataIndex: 'id',
@@ -107,7 +106,6 @@ const InvoiceRecordTabPanel: React.FC<Props> = props => {
               onClick={async () => {
                 router.push(`${pathname}/apply-details/${record.id}`);
               }}
-              color='default'
               variant='link'
             >
               详情
@@ -122,7 +120,6 @@ const InvoiceRecordTabPanel: React.FC<Props> = props => {
     <div className={styles.main}>
       <div>
         <Button
-          type='primary'
           onClick={() => {
             router.push('/invoice/order');
           }}
@@ -131,22 +128,20 @@ const InvoiceRecordTabPanel: React.FC<Props> = props => {
         </Button>
       </div>
       <div>
-        <ConfigProvider>
-          <Table<ApplyInvoiceInfo>
-            columns={columns}
-            dataSource={invoices}
-            rowKey={record => record.id}
-            size='small'
-            pagination={{
-              pageSize: pageSize,
-              hideOnSinglePage: true,
-              total: pageSize * pageNum,
-              onChange: (page, pageSize) => {
-                getInvoiceInfos(page);
-              },
-            }}
-          />
-        </ConfigProvider>
+        <Table<ApplyInvoiceInfo>
+          columns={columns}
+          dataSource={invoices}
+          rowKey={record => String(record.id)}
+          size='small'
+          pagination={{
+            pageSize: pageSize,
+            hideOnSinglePage: true,
+            total: pageSize * pageNum,
+            onChange: (page, pageSize) => {
+              getInvoiceInfos(page);
+            },
+          }}
+        />
       </div>
     </div>
   );

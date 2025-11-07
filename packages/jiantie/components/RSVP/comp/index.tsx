@@ -7,7 +7,6 @@ import { EditorSDK, LayerElemItem } from '@mk/works-store/types';
 import { Button } from '@workspace/ui/components/button';
 import { Form } from '@workspace/ui/components/form';
 import { Input } from '@workspace/ui/components/input';
-import { cn } from '@workspace/ui/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -15,13 +14,45 @@ import * as z from 'zod';
 import { ResponsiveDialog } from '../../Drawer';
 import { RSVPConfigPanel } from '../configPanel';
 import { RSVPProvider, useRSVP } from '../RSVPContext';
-import { RSVPAttrs, RSVPField } from '../type';
+import { DEFAULT_RSVP_THEME, RSVPAttrs, RSVPField, RSVPTheme } from '../type';
 import { RSVPFormFields } from './RSVPFormFields';
 import { SubmissionView } from './SubmissionView';
 
 // Cookie 键名
 const COOKIE_CONTACT_ID = 'rsvp_contact_id';
 const COOKIE_EXPIRE_DAYS = 365; // Cookie 有效期1年
+
+/**
+ * 将主题配置转换为 CSS 变量
+ */
+function themeToCSSVariables(theme: RSVPTheme): React.CSSProperties {
+  const mergedTheme = {
+    ...DEFAULT_RSVP_THEME,
+    ...theme,
+  };
+
+  return {
+    '--rsvp-bg-color': mergedTheme.backgroundColor,
+    '--rsvp-border-radius': `${mergedTheme.borderRadius}px`,
+    '--rsvp-border-color': mergedTheme.borderColor,
+    '--rsvp-border-width': `${mergedTheme.borderWidth}px`,
+    '--rsvp-box-shadow': mergedTheme.boxShadow,
+    '--rsvp-backdrop-filter': mergedTheme.backdropFilter || 'none',
+    '--rsvp-primary-btn-color': mergedTheme.primaryButtonColor,
+    '--rsvp-primary-btn-text-color': mergedTheme.primaryButtonTextColor,
+    '--rsvp-primary-btn-hover-color': mergedTheme.primaryButtonHoverColor,
+    '--rsvp-secondary-btn-color': mergedTheme.secondaryButtonColor,
+    '--rsvp-secondary-btn-text-color': mergedTheme.secondaryButtonTextColor,
+    '--rsvp-secondary-btn-border-color': mergedTheme.secondaryButtonBorderColor,
+    '--rsvp-input-bg-color': mergedTheme.inputBackgroundColor,
+    '--rsvp-input-border-color': mergedTheme.inputBorderColor,
+    '--rsvp-input-text-color': mergedTheme.inputTextColor,
+    '--rsvp-input-placeholder-color':
+      mergedTheme.inputPlaceholderColor || mergedTheme.secondaryButtonTextColor,
+    '--rsvp-text-color': mergedTheme.textColor,
+    '--rsvp-label-color': mergedTheme.labelColor,
+  } as React.CSSProperties;
+}
 
 // 根据字段配置动态生成 zod schema
 export function createFormSchema(fields: RSVPField[]) {
@@ -121,12 +152,18 @@ interface RSVPCompProps {
 }
 
 const FormCompWrapper = styled.div`
-  background-color: #fff;
-  border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: var(--rsvp-bg-color);
+  box-shadow: var(--rsvp-box-shadow);
   font-size: 12px;
   overflow: hidden;
-  border: 1px solid #e5e7ec;
+  border: 1px solid var(--rsvp-border-color);
+  position: relative;
+  z-index: 11;
+
+  /* 使用配置的 backdrop-filter 值 */
+  backdrop-filter: var(--rsvp-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--rsvp-backdrop-filter, none);
+
   .header {
     padding: 8px 16px;
     border-bottom: 1px solid #e5e7eb;
@@ -138,11 +175,35 @@ const FormCompWrapper = styled.div`
 
 // 内部组件：负责纯粹的渲染
 function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
-  const { formConfigId } = attrs;
+  const { formConfigId, theme } = attrs;
   const searchParams = useSearchParams();
   const router = useRouter();
   const rsvp = useRSVP();
   const { config, loading, error, fields } = rsvp;
+
+  // 合并主题设置，使用默认值填充缺失的项
+  const mergedTheme = useMemo(() => {
+    return {
+      ...DEFAULT_RSVP_THEME,
+      ...(theme || {}),
+    };
+  }, [theme]);
+
+  // 将主题转换为 CSS 变量
+  const cssVariables = useMemo(() => {
+    return themeToCSSVariables(theme || {});
+  }, [theme]);
+
+  // 检查是否需要应用 backdrop-filter（基于配置的值）
+  const needsBackdropFilter = useMemo(() => {
+    const backdropFilter = mergedTheme.backdropFilter;
+    return (
+      backdropFilter &&
+      typeof backdropFilter === 'string' &&
+      backdropFilter !== 'none' &&
+      backdropFilter.trim() !== ''
+    );
+  }, [mergedTheme.backdropFilter]);
 
   // 从 URL 参数获取被邀请人信息（支持新的专属链接参数）
   // 解码 URL 参数，处理可能的双重编码情况
@@ -170,9 +231,20 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
 
   // 没有在编辑器时，就是访客模式，需要根据访客的设备生成访客的ID
   const isViewerMode = !editorSDK;
+  const isEditorMode = !!editorSDK;
 
-  // 判断链接类型：如果有邀请人姓名，且没有 viewed 标记，则是专属邀请链接；否则是公开链接
-  const isInviteeLink = !!inviteeName && !searchParams.get('rsvp_viewed');
+  // 判断链接类型：使用 state 保存，避免 URL 参数变化导致判断失效
+  // 初始化时根据 URL 参数判断（首次打开时没有 viewed 标记）
+  const [isInviteeLink, setIsInviteeLink] = useState<boolean>(() => {
+    if (isViewerMode) {
+      const urlContactId = searchParams.get('rsvp_contact_id');
+      const urlViewed = searchParams.get('rsvp_viewed');
+      // 如果有邀请人姓名和 contact_id，且没有 viewed 标记，则是邀请链接
+      return !!inviteeName && !!urlContactId && !urlViewed;
+    }
+    // 编辑器模式，根据是否有邀请人姓名判断
+    return !!inviteeName;
+  });
 
   // 公开链接模式下的访客姓名（专属链接不需要）
   const [guestName, setGuestName] = useState<string>('');
@@ -275,6 +347,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         // 认为是原始被邀请人A第一次打开
         setContactId(urlContactId);
         setCookie(COOKIE_CONTACT_ID, urlContactId, COOKIE_EXPIRE_DAYS);
+        setIsInviteeLink(true); // 设置为邀请链接
 
         // 在URL上添加 viewed 标记，表示该链接已被查看
         const params = new URLSearchParams(searchParams.toString());
@@ -285,17 +358,21 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         // 场景2: 链接带有 viewed 标记（已被查看过）
         const existingContactId = getCookie(COOKIE_CONTACT_ID);
 
-        // 如果当前state已经有正确的contactId，说明是刚设置完viewed后的重新执行，直接跳过
+        // 如果当前state已经有正确的contactId，说明是刚设置完viewed后的重新执行
+        // 但仍需要确保 isInviteeLink 状态正确
         if (contactId === urlContactId) {
+          setIsInviteeLink(true); // 确保保持为邀请链接
           return;
         }
 
         if (existingContactId === urlContactId) {
           // 是原始被邀请人A再次访问，保持专属链接
           setContactId(urlContactId);
+          setIsInviteeLink(true); // 保持为邀请链接
         } else {
           // 不是原始被邀请人（是B通过A的分享打开）
           // 清除所有URL参数，转为公开链接
+          setIsInviteeLink(false); // 转为公开链接
           const params = new URLSearchParams(searchParams.toString());
           params.delete('rsvp_invitee');
           params.delete('invitee');
@@ -320,27 +397,36 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         // URL 有 contact_id 但没有邀请人姓名，正常设置
         setContactId(urlContactId);
         setCookie(COOKIE_CONTACT_ID, urlContactId, COOKIE_EXPIRE_DAYS);
+        setIsInviteeLink(false); // 没有邀请人姓名，不是邀请链接
       } else {
         // 如果 URL 没有 contact_id，从 cookie 读取
         const cid = getCookie(COOKIE_CONTACT_ID);
         if (cid) {
           setContactId(cid);
         }
+        setIsInviteeLink(false); // 没有邀请人信息，不是邀请链接
       }
+    } else {
+      // 编辑器模式，根据是否有邀请人姓名判断
+      setIsInviteeLink(!!inviteeName);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isViewerMode, searchParams, inviteeName, router]);
 
   // 查询是否有提交记录，并判断是否需要记录访问日志
   useEffect(() => {
-    if (
-      isViewerMode &&
-      config?.id &&
-      typeof window !== 'undefined' &&
-      !hasCheckedFirstVisit
-    ) {
-      // 对于邀请链接，直接记录访问日志
-      if (isInviteeLink && contactId) {
+    if (isViewerMode && config?.id && typeof window !== 'undefined') {
+      const urlViewed = searchParams.get('rsvp_viewed');
+
+      // 判断是否需要查询提交记录：
+      // 1. 首次访问（!hasCheckedFirstVisit）
+      // 2. 或者 contactId 存在且 URL 有 viewed=true（嘉宾再次访问链接）
+      const shouldQuerySubmission =
+        !hasCheckedFirstVisit ||
+        (contactId && urlViewed === 'true' && isInviteeLink);
+
+      // 对于邀请链接，直接记录访问日志（只在首次访问时记录）
+      if (isInviteeLink && contactId && !hasCheckedFirstVisit) {
         trpc.rsvp.createActionLog
           .mutate({
             form_config_id: config.id,
@@ -359,7 +445,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
       }
 
       // 查询是否有提交记录（基于 contact_id）
-      if (contactId) {
+      if (contactId && shouldQuerySubmission) {
         console.log('contactId1', contactId);
         trpc.rsvp.getMySubmissionByFormConfig
           .query({
@@ -383,31 +469,40 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                 setResultMsg('提交成功');
               }
             } else {
-              // 公开链接：如果没有提交记录，说明是首次访问，记录访问日志
-              if (!isInviteeLink && config.id) {
-                trpc.rsvp.createActionLog
-                  .mutate({
-                    form_config_id: config.id,
-                    // 公开链接首次访问时还没有 contact_id，不传递
-                    action_type: 'view_page',
-                    user_agent: navigator.userAgent,
-                    device_type: /Mobile/.test(navigator.userAgent)
-                      ? 'mobile'
-                      : 'desktop',
-                    referer: document.referrer || undefined,
-                  })
-                  .catch(() => {
-                    // 忽略错误，不影响用户体验
-                  });
+              // 如果没有提交记录，且是首次访问，记录访问日志
+              if (!hasCheckedFirstVisit) {
+                // 公开链接：如果没有提交记录，说明是首次访问，记录访问日志
+                if (!isInviteeLink && config.id) {
+                  trpc.rsvp.createActionLog
+                    .mutate({
+                      form_config_id: config.id,
+                      // 公开链接首次访问时还没有 contact_id，不传递
+                      action_type: 'view_page',
+                      user_agent: navigator.userAgent,
+                      device_type: /Mobile/.test(navigator.userAgent)
+                        ? 'mobile'
+                        : 'desktop',
+                      referer: document.referrer || undefined,
+                    })
+                    .catch(() => {
+                      // 忽略错误，不影响用户体验
+                    });
+                }
+                setHasCheckedFirstVisit(true);
               }
             }
-            setHasCheckedFirstVisit(true);
+            // 只有在首次访问时才设置 hasCheckedFirstVisit
+            if (!hasCheckedFirstVisit) {
+              setHasCheckedFirstVisit(true);
+            }
           })
           .catch(() => {
             // 忽略错误
-            setHasCheckedFirstVisit(true);
+            if (!hasCheckedFirstVisit) {
+              setHasCheckedFirstVisit(true);
+            }
           });
-      } else if (!isInviteeLink && config.id) {
+      } else if (!isInviteeLink && config.id && !hasCheckedFirstVisit) {
         // 公开链接且没有 contact_id，说明是首次访问，记录访问日志
         trpc.rsvp.createActionLog
           .mutate({
@@ -432,6 +527,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     contactId,
     isInviteeLink,
     hasCheckedFirstVisit,
+    searchParams,
   ]);
 
   // 当字段变化时，重置表单默认值
@@ -441,6 +537,13 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.id, fields.length]);
+
+  // 编辑器模式下，自动设置 willAttend 为 true，以便显示表单
+  useEffect(() => {
+    if (isEditorMode && willAttend === null) {
+      setWillAttend(true);
+    }
+  }, [isEditorMode, willAttend]);
 
   const handleSubmit = async (willAttendValue: boolean) => {
     if (!config) return;
@@ -646,6 +749,8 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           allowMultipleSubmit={config.allow_multiple_submit}
           fields={fields}
           inviteeName={inviteeName}
+          themeStyle={cssVariables}
+          needsBackdropFilter={!!needsBackdropFilter}
         />
       </div>
     );
@@ -656,13 +761,15 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
       <FormCompWrapper
         className='w-full max-w-xl'
         data-form-id={config.id}
+        data-has-backdrop-filter={needsBackdropFilter ? 'true' : 'false'}
         style={{
+          ...cssVariables,
           pointerEvents: editorSDK ? 'none' : 'auto',
         }}
       >
         {/* Header: 致 XXX 和 消息 */}
         {isInviteeLink && (
-          <div className='flex items-center justify-between header bg-gray-50'>
+          <div className='flex items-center justify-between header'>
             <div className='text-gray-600'>
               <span className='text-xs'>致</span>
               <span className='font-medium'>{inviteeName}</span>
@@ -672,7 +779,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
 
         {/* 公开链接：必须填写姓名 */}
         {!isInviteeLink && (
-          <div className='space-y-1 header bg-gray-50'>
+          <div className='space-y-1 header'>
             <label className='block text-xs font-medium text-gray-600'>
               您的姓名 <span className='text-red-500'>*</span>
             </label>
@@ -683,7 +790,12 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
               onChange={e => {
                 setGuestName(e.target.value);
                 // 记录姓名填写操作（仅第一次填写时记录）
-                if (e.target.value.trim() && !guestName.trim() && config?.id) {
+                if (
+                  e.target.value.trim() &&
+                  !guestName.trim() &&
+                  config?.id &&
+                  isViewerMode
+                ) {
                   trpc.rsvp.createActionLog
                     .mutate({
                       form_config_id: config.id,
@@ -699,14 +811,26 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                     });
                 }
               }}
-              className='h-9 border-blue-200'
+              className='border-2 h-9 focus:ring-0 [&::placeholder]:text-[var(--rsvp-input-placeholder-color)]'
+              style={{
+                borderRadius: 'var(--rsvp-border-radius)',
+                borderWidth: '2px',
+                backgroundColor: 'var(--rsvp-input-bg-color)',
+                borderColor: 'var(--rsvp-border-color)',
+                color: 'var(--rsvp-input-text-color)',
+              }}
             />
           </div>
         )}
         <div className='content'>
           {/* 您是否参加？ */}
           <div className='space-y-1'>
-            <div className='text-xs font-medium text-gray-600'>
+            <div
+              className='text-xs font-medium'
+              style={{
+                color: 'var(--rsvp-label-color)',
+              }}
+            >
               您是否参加？
             </div>
             {/* 出席/不出席选择按钮 */}
@@ -714,11 +838,15 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
               <div className='flex items-center gap-2'>
                 <Button
                   size='lg'
-                  disabled={submitting || (!isInviteeLink && !guestName.trim())}
+                  disabled={
+                    isEditorMode
+                      ? false
+                      : submitting || (!isInviteeLink && !guestName.trim())
+                  }
                   onClick={() => {
                     setWillAttend(true);
                     // 记录选择出席操作
-                    if (config?.id) {
+                    if (config?.id && isViewerMode) {
                       trpc.rsvp.createActionLog
                         .mutate({
                           form_config_id: config.id,
@@ -734,21 +862,37 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                         });
                     }
                   }}
-                  className={cn(
-                    'flex-1 h-10 rounded-lg font-medium',
-                    !willAttend && 'border-2'
-                  )}
-                  variant={willAttend === true ? 'black' : 'outline'}
+                  className='flex-1 h-10 font-medium'
+                  style={{
+                    borderRadius: 'var(--rsvp-border-radius)',
+                    borderWidth: 'var(--rsvp-border-width)',
+                    backgroundColor:
+                      willAttend === true
+                        ? 'var(--rsvp-primary-btn-color)'
+                        : 'var(--rsvp-secondary-btn-color)',
+                    color:
+                      willAttend === true
+                        ? 'var(--rsvp-primary-btn-text-color)'
+                        : 'var(--rsvp-secondary-btn-text-color)',
+                    borderColor:
+                      willAttend === true
+                        ? 'var(--rsvp-primary-btn-color)'
+                        : 'var(--rsvp-secondary-btn-border-color)',
+                  }}
+                  variant={willAttend === true ? 'default' : 'outline'}
                 >
                   参加
                 </Button>
                 <Button
                   size='lg'
-                  variant={willAttend === false ? 'black' : 'outline'}
-                  disabled={submitting || (!isInviteeLink && !guestName.trim())}
+                  disabled={
+                    isEditorMode
+                      ? false
+                      : submitting || (!isInviteeLink && !guestName.trim())
+                  }
                   onClick={() => {
                     // 记录选择不出席操作
-                    if (config?.id) {
+                    if (config?.id && isViewerMode) {
                       trpc.rsvp.createActionLog
                         .mutate({
                           form_config_id: config.id,
@@ -765,7 +909,24 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                     }
                     handleSubmit(false);
                   }}
-                  className='flex-1 h-10 rounded-lg font-medium border-2'
+                  className='flex-1 h-10 font-medium'
+                  style={{
+                    borderRadius: 'var(--rsvp-border-radius)',
+                    borderWidth: 'var(--rsvp-border-width)',
+                    backgroundColor:
+                      willAttend === false
+                        ? 'var(--rsvp-primary-btn-color)'
+                        : 'var(--rsvp-secondary-btn-color)',
+                    color:
+                      willAttend === false
+                        ? 'var(--rsvp-primary-btn-text-color)'
+                        : 'var(--rsvp-secondary-btn-text-color)',
+                    borderColor:
+                      willAttend === false
+                        ? 'var(--rsvp-primary-btn-color)'
+                        : 'var(--rsvp-secondary-btn-border-color)',
+                  }}
+                  variant={willAttend === false ? 'default' : 'outline'}
                 >
                   不参加
                 </Button>
@@ -773,8 +934,8 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
             )}
           </div>
 
-          {/* 如果选择了出席，显示表单 */}
-          {willAttend === true && (
+          {/* 如果选择了出席，或者在编辑器模式下，显示表单 */}
+          {(willAttend === true || isEditorMode) && (
             <Form {...form}>
               <form className='pt-3'>
                 <RSVPFormFields fields={fields} control={form.control} />
@@ -786,20 +947,49 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
             <div className='text-sm text-red-500'>{resultMsg}</div>
           ) : null}
 
-          {/* 如果选择了出席，显示确认按钮 */}
-          {willAttend === true && (
+          {/* 如果选择了出席，或者在编辑器模式下，显示确认按钮 */}
+          {(willAttend === true || isEditorMode) && (
             <div className='pt-3'>
               <Button
                 size='lg'
                 disabled={submitting}
                 onClick={() => handleSubmit(true)}
-                className='w-full h-10 rounded-lg font-medium bg-gray-900 hover:bg-gray-800'
+                className='w-full h-10 font-medium'
+                style={{
+                  borderRadius: 'var(--rsvp-border-radius)',
+                  borderWidth: 'var(--rsvp-border-width)',
+                  backgroundColor: 'var(--rsvp-primary-btn-color)',
+                  color: 'var(--rsvp-primary-btn-text-color)',
+                }}
+                onMouseEnter={e => {
+                  // 从 CSS 变量获取 hover 颜色
+                  const root = e.currentTarget.closest(
+                    '[data-form-id]'
+                  ) as HTMLElement;
+                  if (root) {
+                    const hoverColor = getComputedStyle(root)
+                      .getPropertyValue('--rsvp-primary-btn-hover-color')
+                      .trim();
+                    if (hoverColor) {
+                      e.currentTarget.style.backgroundColor = hoverColor;
+                    }
+                  }
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor =
+                    'var(--rsvp-primary-btn-color)';
+                }}
               >
                 {submitting ? '提交中...' : '确认'}
               </Button>
               {config.max_submit_count != null ? (
                 <div className='text-center mt-2'>
-                  <span className='text-xs text-gray-500'>
+                  <span
+                    className='text-xs'
+                    style={{
+                      color: 'var(--rsvp-label-color)',
+                    }}
+                  >
                     限制 {config.max_submit_count} 次
                   </span>
                 </div>

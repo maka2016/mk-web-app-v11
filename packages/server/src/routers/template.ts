@@ -17,6 +17,8 @@ export const templateRouter = router({
         designer_uid: z.number(),
         spec_id: z.string().optional(),
         designer_works_id: z.string().optional(),
+        envelope_enabled: z.boolean().optional(),
+        envelope_images: z.any().optional(), // JSON: 信封图片列表
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -95,6 +97,8 @@ export const templateRouter = router({
         deleted: z.boolean().optional(),
         custom_time: z.date().optional(),
         version: z.number().optional(),
+        envelope_enabled: z.boolean().optional(),
+        envelope_images: z.any().optional(), // JSON: 信封图片列表
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -319,7 +323,28 @@ export const templateRouter = router({
         },
       });
 
-      return templates;
+      // 获取规格数据
+      const specIds = templates.map(t => t.spec_id).filter(Boolean) as string[];
+
+      const specs = await ctx.prisma.worksSpecEntity.findMany({
+        where: {
+          id: { in: specIds },
+        },
+        select: {
+          id: true,
+          preview_width: true,
+          preview_height: true,
+        },
+      });
+
+      // 构建规格数据映射
+      const specMap = new Map(specs.map(s => [s.id, s]));
+
+      // 合并规格数据到模板
+      return templates.map(template => ({
+        ...template,
+        spec: template.spec_id ? specMap.get(template.spec_id) : null,
+      }));
     }),
 
   // 从数据创建模板
@@ -333,6 +358,8 @@ export const templateRouter = router({
         spec_id: z.string().optional(),
         designer_works_id: z.string().optional(),
         content: z.any(), // 模板数据
+        envelope_enabled: z.boolean().optional(),
+        envelope_images: z.any().optional(), // JSON: 信封图片列表
       })
     )
     .mutation(async ({ ctx, input }) => {

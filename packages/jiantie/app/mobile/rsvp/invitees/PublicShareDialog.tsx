@@ -13,13 +13,17 @@ import { useShareNavigation } from '@/utils/share';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { cdnApi } from '@mk/services';
-import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Input } from '@workspace/ui/components/input';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import { Textarea } from '@workspace/ui/components/textarea';
-import { ChevronLeft } from 'lucide-react';
+import {
+  ChevronLeft,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Video as VideoIcon,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -278,13 +282,24 @@ export function PublicShareDialog({
       return;
     }
 
+    // 微信分享缩略图尺寸限制：建议 500x400 (5:4 比例)，使用 cdnApi 调整尺寸
+    const thumbUrl = shareCover
+      ? cdnApi(shareCover, {
+          resizeWidth: 500,
+          resizeHeight: 400,
+          format: 'webp',
+          quality: 85,
+          mode: 'lfit',
+        })
+      : '';
+
     APPBridge.appCall({
       type: 'MKShare',
       appid: 'jiantie',
       params: {
         title: shareTitle,
         content: shareDesc || '诚邀您参加活动',
-        thumb: shareCover || '',
+        thumb: thumbUrl,
         type: 'link',
         shareType: to,
         url: shareLink,
@@ -320,7 +335,7 @@ export function PublicShareDialog({
               onClick={() => {
                 if (APPBridge.judgeIsInApp()) {
                   APPBridge.navToPage({
-                    url: 'maka://home/activity/activityPage',
+                    url: 'maka://home/activity/activityPage?default_tab=0',
                     type: 'NATIVE',
                   });
                 } else {
@@ -331,7 +346,7 @@ export function PublicShareDialog({
               回首页
             </Button>
           </div>
-          <div className='p-4 space-y-4 bg-gray-50 '>
+          <div className='p-4 space-y-4 bg-gray-50 h-full'>
             {/* 编辑标题、描述和封面 */}
             <div className='bg-white rounded-xl border border-gray-100 p-4 shadow-sm'>
               <div className='flex items-center justify-between mb-3'>
@@ -421,71 +436,19 @@ export function PublicShareDialog({
               </div>
             </div>
 
-            {/* 分享功能 */}
+            {/* 导出其他格式 */}
             <div className='bg-white rounded-xl border border-gray-100 p-4 shadow-sm'>
               <div className={styles.title}>
                 <Icon name='web-page-fill' color='#09090B' size={16} />
-                <span>分享</span>
+                <span>导出其他格式</span>
               </div>
-              <div className={styles.shareTypes}>
-                {/* 微信分享 */}
-                {isApp && !isMiniP && (
-                  <BehaviorBox
-                    behavior={{
-                      object_type:
-                        mode === 'invitee'
-                          ? 'rsvp_share_wechat_btn'
-                          : 'share_wechat_btn',
-                      object_id: worksId,
-                    }}
-                    className={styles.shareItem}
-                    onClick={async () => {
-                      if (executingKey) return;
-                      setExecutingKey('wechat');
-                      try {
-                        await shareToWechat('wechat');
-                      } finally {
-                        setExecutingKey(null);
-                      }
-                    }}
-                  >
-                    <img
-                      src='https://img2.maka.im/cdn/webstore10/jiantie/icon_weixin.png'
-                      alt='微信'
-                    />
-                    <span>微信</span>
-                  </BehaviorBox>
-                )}
-
-                {/* 复制链接 */}
-                <BehaviorBox
-                  behavior={{
-                    object_type:
-                      mode === 'invitee'
-                        ? 'rsvp_share_copy_link_btn'
-                        : 'share_copy_link_btn',
-                    object_id: worksId,
-                  }}
-                  className={styles.shareItem}
-                  onClick={() => {
-                    handleCopyLink(shareLink);
-                  }}
-                >
-                  <img
-                    src='https://img2.maka.im/cdn/webstore10/jiantie/icon_lianjie.png'
-                    alt='复制链接'
-                  />
-                  <span>复制链接</span>
-                </BehaviorBox>
-
+              <div className='flex gap-2'>
                 {/* 长图分享（仅公开分享且支持） */}
                 {mode === 'public' && posterSupport && (
-                  <BehaviorBox
-                    behavior={{
-                      object_type: 'share_poster_btn',
-                      object_id: worksId,
-                    }}
-                    className={styles.shareItem}
+                  <Button
+                    variant='outline'
+                    className='w-full justify-center gap-2'
+                    disabled={!!executingKey}
                     onClick={async () => {
                       if (executingKey) return;
                       setExecutingKey('poster');
@@ -496,22 +459,17 @@ export function PublicShareDialog({
                       }
                     }}
                   >
-                    <img
-                      src='https://res.maka.im/cdn/webstore10/jiantie/icon_poster.png'
-                      alt='长图'
-                    />
-                    <span>长图</span>
-                  </BehaviorBox>
+                    <ImageIcon size={20} />
+                    <span>图片</span>
+                  </Button>
                 )}
 
                 {/* 导出视频（仅公开分享且支持） */}
                 {mode === 'public' && videoSupport && (
-                  <BehaviorBox
-                    behavior={{
-                      object_type: 'share_export_video_btn',
-                      object_id: worksId,
-                    }}
-                    className={styles.shareItem}
+                  <Button
+                    variant='outline'
+                    className='w-full justify-center gap-2'
+                    disabled={!!executingKey}
                     onClick={async () => {
                       if (executingKey) return;
                       setExecutingKey('video');
@@ -522,15 +480,59 @@ export function PublicShareDialog({
                       }
                     }}
                   >
-                    <img
-                      src='https://img2.maka.im/cdn/webstore10/jiantie/icon_video_v2.png'
-                      alt='导出视频'
-                    />
-                    <span>导出视频</span>
-                  </BehaviorBox>
+                    <VideoIcon size={20} />
+                    <span>视频</span>
+                  </Button>
                 )}
+
+                {/* 复制链接 */}
+                <Button
+                  variant='outline'
+                  className='w-full justify-center gap-2'
+                  onClick={() => {
+                    handleCopyLink(shareLink);
+                  }}
+                >
+                  <LinkIcon size={20} />
+                  <span>复制链接</span>
+                </Button>
               </div>
             </div>
+
+            {/* 微信分享 */}
+            {isApp && !isMiniP && (
+              <div className='bg-white rounded-xl border border-gray-100 p-4 shadow-sm'>
+                <div className='flex items-center gap-2 mb-2'>
+                  <div className={styles.title}>
+                    <span>分享专属邀请函</span>
+                  </div>
+                  <Icon name='send' color='#FF6B35' size={16} />
+                </div>
+                <div className='text-sm text-gray-600 mb-4'>
+                  通过微信分享活动链接给嘉宾
+                </div>
+                <Button
+                  className='bg-[#07C160] hover:bg-[#06AD56] text-white flex items-center justify-center gap-2'
+                  disabled={!!executingKey}
+                  onClick={async () => {
+                    if (executingKey) return;
+                    setExecutingKey('wechat');
+                    try {
+                      await shareToWechat('wechat');
+                    } finally {
+                      setExecutingKey(null);
+                    }
+                  }}
+                >
+                  <img
+                    src='https://img2.maka.im/cdn/webstore10/jiantie/icon_weixin.png'
+                    alt='微信'
+                    className='w-5 h-5'
+                  />
+                  <span>微信好友</span>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </ResponsiveDialog>

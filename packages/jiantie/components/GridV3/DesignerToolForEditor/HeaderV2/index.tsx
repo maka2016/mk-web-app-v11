@@ -15,6 +15,7 @@ import cls from 'classnames';
 import { Download, FileText, Image } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import { updateWorksDetail2 } from '../../../../services/works2';
 import { useGridContext } from '../../comp/provider';
 import { getCanvaInfo2 } from '../../comp/provider/utils';
 import MusicManager from '../../shared/LibContent/Music/MusicManager';
@@ -401,9 +402,11 @@ export default function DesignerToolHeader() {
                 await updateTemplateCoverUrl(worksStore?.worksDetail.id, cover);
               }
             } else {
-              await editorSDK?.fullSDK.api.updateWorksDetail({
-                cover: cover,
-              });
+              if (worksStore?.worksDetail.id) {
+                await updateWorksDetail2(worksStore?.worksDetail.id, {
+                  cover: cover,
+                });
+              }
             }
             setShowCoverManager(false);
           }}

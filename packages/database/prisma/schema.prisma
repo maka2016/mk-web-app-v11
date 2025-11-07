@@ -51,6 +51,9 @@ model WorksSpecEntity {
   fixed_height         Boolean?                 @map("fixed_height")
   export_format        String?                  @map("export_format")
 
+  preview_width  Int? @map("preview_width")
+  preview_height Int? @map("preview_height")
+
   @@index([alias], map: "IDX_b4e878a9d7962422e5c968abda")
   @@index([deleted], map: "IDX_fa6660065ae44e94a7cf8abce9")
   @@index([appid], map: "IDX_cb4295fef52621f89102b0049d")
@@ -73,6 +76,10 @@ model TemplateEntity {
   designer_uid      Int      @map("designer_uid")
   id                String   @id(map: "PK_83f66c7249ae42d36912d8e3def") @default(cuid())
   spec_id           String?  @map("spec_id") @db.VarChar
+  /// 信封功能：是否配置了信封
+  envelope_enabled  Boolean? @default(false) @map("envelope_enabled")
+  /// 信封功能：信封的图片资源列表（JSON格式，支持多张图片）
+  envelope_images   Json?    @map("envelope_images")
 
   @@index([designer_works_id], map: "IDX_66088e78c3bfd2706638f66598")
   @@index([designer_uid], map: "IDX_3e730e89a9ec98217d789cd750")
@@ -134,6 +141,10 @@ model WorksEntity {
   spec_id                String?  @map("spec_id") @db.VarChar
   is_title_desc_modified Boolean  @default(true) @map("is_title_desc_modified")
   is_rsvp                Boolean  @default(false) @map("is_rsvp")
+  /// 信封功能：是否配置了信封
+  envelope_enabled       Boolean? @default(false) @map("envelope_enabled")
+  /// 信封功能：信封的图片资源列表（JSON格式，支持多张图片）
+  envelope_images        Json?    @map("envelope_images")
 
   @@index([uid], map: "IDX_121635b71d5f6986874d4c5de4")
   @@index([alias], map: "IDX_d6ed9b7a04fa675847385b649e")
