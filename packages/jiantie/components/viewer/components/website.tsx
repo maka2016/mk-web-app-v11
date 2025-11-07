@@ -3,13 +3,15 @@ import clas from 'classnames';
 import React, { useEffect, useRef, useState } from 'react';
 import { PageComponentProps } from '../types';
 // import Head from "next/head"
+import { getAppId } from '@/services';
 import APPBridge from '@mk/app-bridge';
 import CommonLogger from '@mk/loggerv7/logger';
 import { request } from '@mk/services';
 import { isPc, isWechat, LoadScript } from '@mk/utils';
 import { loadWidgetResource, setCdnPath } from '@mk/works-store';
 import dayjs from 'dayjs';
-import { getAppId } from '@/services';
+import EnvelopeClientAnimation from '../../Envelope/EnvelopeClientAnimation';
+import { EnvelopeConfig } from '../../Envelope/types';
 import { useWorksData } from '../utils';
 import '../utils/react-dom-adapter';
 import { emitLoaded } from '../utils/utils';
@@ -65,6 +67,13 @@ export default function WebsiteApp(props: WebsiteAppProps) {
   const [showFloatAD, setShowFloatAD] = useState(false);
   const [showTrialExpired, setShowTrialExpired] = useState(false);
   const [showExpired, setShowExpired] = useState(false);
+  const [envelopeAnimationComplete, setEnvelopeAnimationComplete] =
+    useState(false);
+
+  // 获取信封配置
+  const envelopeConfig = worksDetail.envelope_enabled
+    ? (worksDetail.envelope_config as EnvelopeConfig)
+    : undefined;
 
   const inviteVisit = () => {
     const personId = query.inviteId;
@@ -193,77 +202,85 @@ export default function WebsiteApp(props: WebsiteAppProps) {
   };
 
   return (
-    <div
-      id='auto-scroll-container'
-      className={clas(
-        `flex-1 h-full max-h-full w-full overflow-y-auto mx-auto viewer_page_root`,
-        isWebsite ? 'overflow-x-hidden' : 'overflow-x-auto',
-        isWebsite && !isScreenshot && isPc() && 'md:max-w-[375px]'
-      )}
-      style={{
-        ...(!isWebsite && {
-          width: viewport_width,
-          maxWidth: '100%',
-        }),
-        ...(fixed_height && !isWebsite
-          ? {
-              aspectRatio: `${specWidth} / ${specHeight}`,
-              // 确保 aspect-ratio 生效
-              height: 'auto',
-              minHeight: 0,
-            }
-          : {}),
-        ...props.style,
-      }}
-    >
-      {mountInBrowser && worksData && (
-        <div
-          className={clas(
-            'website_root',
-            isPc() && 'pc',
-            is_flip_page && 'flip_page h-full overflow-hidden',
-            !preloadEnd && 'hidden'
-          )}
-        >
-          <LongViewerContainer
-            ref={H5ViewerContainerRef}
-            query={query}
-            onPageLoaded={onPageViewerLoaded}
-            worksData={worksData}
-          />
-          <Watermark visible={!!websiteControl.showWatermark} query={query} />
-          <SuspendButton
-            query={query}
-            isVideoMode={false}
-            adConfig={{
-              floatAD: showFloatAD,
-              trialExpired: showTrialExpired,
-              showExpired: showExpired,
-            }}
-            musicVisible={
-              !!worksData?.canvasData?.music?.url &&
-              !worksData.canvasData.music.disabled
-            }
-            worksData={worksData!}
-          />
-          <WxAuth />
-        </div>
-      )}
-      <PreloadPage
-        needLoading={isWebsite}
-        ref={PreloadPageRef}
-        key={worksDetail.id}
-        worksDetail={worksDetail}
-        worksData={worksData!}
-        userAgent={userAgent}
-        query={query}
-        permissionData={permissionData}
-        websiteControl={websiteControl}
-        pathname={pathname}
-        loadEndCb={() => {
-          setPreloadEnd(true);
-        }}
+    <>
+      {/* 客户端接管的信封动画 */}
+      <EnvelopeClientAnimation
+        config={envelopeConfig}
+        onComplete={() => setEnvelopeAnimationComplete(true)}
       />
-    </div>
+
+      <div
+        id='auto-scroll-container'
+        className={clas(
+          `flex-1 h-full max-h-full w-full overflow-y-auto mx-auto viewer_page_root`,
+          isWebsite ? 'overflow-x-hidden' : 'overflow-x-auto',
+          isWebsite && !isScreenshot && isPc() && 'md:max-w-[375px]'
+        )}
+        style={{
+          ...(!isWebsite && {
+            width: viewport_width,
+            maxWidth: '100%',
+          }),
+          ...(fixed_height && !isWebsite
+            ? {
+                aspectRatio: `${specWidth} / ${specHeight}`,
+                // 确保 aspect-ratio 生效
+                height: 'auto',
+                minHeight: 0,
+              }
+            : {}),
+          ...props.style,
+        }}
+      >
+        {mountInBrowser && worksData && (
+          <div
+            className={clas(
+              'website_root',
+              isPc() && 'pc',
+              is_flip_page && 'flip_page h-full overflow-hidden',
+              !preloadEnd && 'hidden'
+            )}
+          >
+            <LongViewerContainer
+              ref={H5ViewerContainerRef}
+              query={query}
+              onPageLoaded={onPageViewerLoaded}
+              worksData={worksData}
+            />
+            <Watermark visible={!!websiteControl.showWatermark} query={query} />
+            <SuspendButton
+              query={query}
+              isVideoMode={false}
+              adConfig={{
+                floatAD: showFloatAD,
+                trialExpired: showTrialExpired,
+                showExpired: showExpired,
+              }}
+              musicVisible={
+                !!worksData?.canvasData?.music?.url &&
+                !worksData.canvasData.music.disabled
+              }
+              worksData={worksData!}
+            />
+            <WxAuth />
+          </div>
+        )}
+        <PreloadPage
+          needLoading={isWebsite}
+          ref={PreloadPageRef}
+          key={worksDetail.id}
+          worksDetail={worksDetail}
+          worksData={worksData!}
+          userAgent={userAgent}
+          query={query}
+          permissionData={permissionData}
+          websiteControl={websiteControl}
+          pathname={pathname}
+          loadEndCb={() => {
+            setPreloadEnd(true);
+          }}
+        />
+      </div>
+    </>
   );
 }
