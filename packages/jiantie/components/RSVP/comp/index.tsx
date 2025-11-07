@@ -156,7 +156,6 @@ const FormCompWrapper = styled.div`
   box-shadow: var(--rsvp-box-shadow);
   font-size: 12px;
   overflow: hidden;
-  border: 1px solid var(--rsvp-border-color);
   position: relative;
   z-index: 11;
 
@@ -780,7 +779,12 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         {/* 公开链接：必须填写姓名 */}
         {!isInviteeLink && (
           <div className='space-y-1 header'>
-            <label className='block text-xs font-medium text-gray-600'>
+            <label
+              className='block text-xs font-medium text-gray-600'
+              style={{
+                color: 'var(--rsvp-label-color)',
+              }}
+            >
               您的姓名 <span className='text-red-500'>*</span>
             </label>
             <Input
