@@ -125,7 +125,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
       <div className=' p-6 sticky top-12 z-10'>
         <div
           onClick={() => router.push('/mobile/channel2/search')}
-          className='flex items-center gap-3 px-4 py-4 bg-white rounded-2xl cursor-pointer transition-colors'
+          className='flex items-center gap-3 px-4 py-4 bg-white rounded-2xl cursor-pointer transition-transform duration-150 ease-out active:bg-gray-50 active:scale-[0.98]'
           style={{
             border: '2px solid rgba(232, 32, 39, 0.30)',
             boxShadow:
