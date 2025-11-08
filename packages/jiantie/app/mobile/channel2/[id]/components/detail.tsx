@@ -1,5 +1,6 @@
 'use client';
 
+import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
 import { ChevronRight, Search } from 'lucide-react';
@@ -165,7 +166,9 @@ export default function Detail({ channelId }: DetailProps) {
 
           {/* 右侧：搜索按钮 */}
           <button
-            onClick={() => router.push(`/mobile/channel2/search`)}
+            onClick={() =>
+              navigateWithBridge({ path: '/mobile/channel2/search', router })
+            }
             className='flex-shrink-0 text-gray-900 ml-2'
           >
             <Search className='w-5 h-5' />
@@ -281,9 +284,10 @@ export default function Detail({ channelId }: DetailProps) {
                                   : '0ms',
                             }}
                             onClick={() => {
-                              router.push(
-                                `/mobile/channel2/collection/${collection.id}`
-                              );
+                              navigateWithBridge({
+                                path: `/mobile/channel2/collection/${collection.id}`,
+                                router,
+                              });
                             }}
                           >
                             {/* 集合缩略图 */}

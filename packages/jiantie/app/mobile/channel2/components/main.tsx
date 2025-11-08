@@ -1,7 +1,9 @@
 'use client';
 
 import { getUid } from '@/services';
+import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
+import APPBridge from '@mk/app-bridge';
 import { cdnApi } from '@mk/services';
 import { TemplateMarketChannelEntity } from '@workspace/database/generated/client/client';
 import { Search } from 'lucide-react';
@@ -104,7 +106,19 @@ export default function Main({ appid = 'jiantie' }: Props) {
             }}
             className='relative w-8 h-8 flex items-center justify-center bg-white  hover:bg-gray-50 transition-colors'
             onClick={() => {
-              router.push('/mobile/rsvp/notifications?appid=jiantie');
+              if (APPBridge.judgeIsInApp() && typeof window !== 'undefined') {
+                const url = new URL(
+                  '/mobile/notification-center',
+                  window.location.origin
+                );
+                url.searchParams.set('is_full_screen', '1');
+                APPBridge.navToPage({
+                  url: url.toString(),
+                  type: 'URL',
+                });
+              } else {
+                router.push(`/mobile/rsvp/notifications?appid=${appid}`);
+              }
             }}
           >
             <img
@@ -124,8 +138,13 @@ export default function Main({ appid = 'jiantie' }: Props) {
       {/* 顶部搜索栏 */}
       <div className=' p-6 sticky top-12 z-10'>
         <div
-          onClick={() => router.push('/mobile/channel2/search')}
-          className='flex items-center gap-3 px-4 py-4 bg-white rounded-2xl cursor-pointer transition-colors'
+          onClick={() =>
+            navigateWithBridge({
+              path: '/mobile/channel2/search',
+              router,
+            })
+          }
+          className='flex items-center gap-3 px-4 py-4 bg-white rounded-2xl cursor-pointer transition-transform duration-150 ease-out active:bg-gray-50 active:scale-[0.98]'
           style={{
             border: '2px solid rgba(232, 32, 39, 0.30)',
             boxShadow:
@@ -160,7 +179,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
             </div>
           </div>
         ) : (
-          <div className='py-4 px-6 space-y-8'>
+          <div className='py-4 px-6  pb-32 space-y-8'>
             {channels.map(channel => (
               <div key={channel.id}>
                 {/* 分类标题 */}
@@ -174,15 +193,18 @@ export default function Main({ appid = 'jiantie' }: Props) {
                   {channel.display_name}
                 </h2>
 
-                {/* 网格布局 - 4列 */}
-                <div className='grid grid-cols-4 gap-4'>
+                {/* 网格布局 - 3列 */}
+                <div className='grid grid-cols-3 gap-10'>
                   {channel.children &&
                     channel.children.map(child => (
                       <div
                         key={child.id}
                         className='flex flex-col items-center cursor-pointer transition-transform active:scale-95'
                         onClick={() => {
-                          router.push(`/mobile/channel2/${child.id}`);
+                          navigateWithBridge({
+                            path: `/mobile/channel2/${child.id}`,
+                            router,
+                          });
                         }}
                       >
                         {/* 圆形图标容器 */}
@@ -208,10 +230,10 @@ export default function Main({ appid = 'jiantie' }: Props) {
                               <img
                                 src={`${cdnApi(child.thumb_path)}`}
                                 alt={child.display_name}
-                                width={48}
-                                height={48}
+                                width={64}
+                                height={64}
                                 style={{ objectFit: 'cover' }}
-                                className='object-contain'
+                                className='object-contain w-full h-full'
                               />
                             </div>
                           ) : (
