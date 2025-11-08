@@ -160,7 +160,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
             </div>
           </div>
         ) : (
-          <div className='py-4 px-6 space-y-8'>
+          <div className='py-4 px-6  pb-32 space-y-8'>
             {channels.map(channel => (
               <div key={channel.id}>
                 {/* 分类标题 */}
@@ -174,8 +174,8 @@ export default function Main({ appid = 'jiantie' }: Props) {
                   {channel.display_name}
                 </h2>
 
-                {/* 网格布局 - 4列 */}
-                <div className='grid grid-cols-4 gap-4'>
+                {/* 网格布局 - 3列 */}
+                <div className='grid grid-cols-3 gap-10'>
                   {channel.children &&
                     channel.children.map(child => (
                       <div
@@ -208,10 +208,10 @@ export default function Main({ appid = 'jiantie' }: Props) {
                               <img
                                 src={`${cdnApi(child.thumb_path)}`}
                                 alt={child.display_name}
-                                width={48}
-                                height={48}
+                                width={64}
+                                height={64}
                                 style={{ objectFit: 'cover' }}
-                                className='object-contain'
+                                className='object-contain w-full h-full'
                               />
                             </div>
                           ) : (
