@@ -92,7 +92,7 @@ const TabLayout = (props: Props) => {
   };
 
   useEffect(() => {
-    getUnReadNotifications();
+    // getUnReadNotifications();
     setIsMiniProgram(APPBridge.judgeIsInMiniP());
 
     // (window as any)?.["MKAPPCloseModal"] = () => {

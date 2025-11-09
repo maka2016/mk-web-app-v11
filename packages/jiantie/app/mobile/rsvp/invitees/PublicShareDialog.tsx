@@ -335,7 +335,7 @@ export function PublicShareDialog({
               onClick={() => {
                 if (APPBridge.judgeIsInApp()) {
                   APPBridge.navToPage({
-                    url: 'maka://home/activity/activityPage?default_tab=0',
+                    url: 'maka://home/activity/activityPage?default_tab=1',
                     type: 'NATIVE',
                   });
                 } else {
