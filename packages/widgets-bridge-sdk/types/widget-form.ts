@@ -1,13 +1,6 @@
 import React from 'react';
 
-import {
-  ChangeContainer,
-  ChangeOperatorHandle,
-  EditorSDK,
-  LayerElemItem,
-  OperatorHandle,
-  WorksPage,
-} from '@mk/works-store/types';
+import { EditorSDK, LayerElemItem, WorksPage } from '@mk/works-store/types';
 import { CanvaInfo, ContainerInfo } from './common';
 import { EditorContext } from './editor-ctx';
 import { WidgetCommonAttrs } from './widget-common-attrs';
@@ -44,14 +37,6 @@ export interface CommonFormProps<
   /**
    * 组件表单的值的回调 */
   onFormValueChange: (allValues: Partial<T>, layerInfo?: LayerElemItem) => void;
-  /**
-   * 更改容器大小信息 */
-  changeContainer: ChangeContainer;
-  /** 更改操作区的把手的信息 */
-  changeOperatorHandle: ChangeOperatorHandle;
-  /** 获取操作区的把手信息 */
-  getOperatorHandle: () => OperatorHandle;
-  changeModuleHeight: (nextHeight: number) => void;
   addComponentNormal?: (data: any, link?: any) => string;
   selectComp?: (compId: string) => void;
 }

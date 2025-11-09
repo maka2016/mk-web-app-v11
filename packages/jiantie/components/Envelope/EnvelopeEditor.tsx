@@ -9,6 +9,27 @@ import toast from 'react-hot-toast';
 import EnvelopeAnimation, { EnvelopeAnimationRef } from './EnvelopeAnimation';
 import { EnvelopeConfig, isEnvelopeConfigComplete } from './types';
 
+const normalizeConfig = (config?: EnvelopeConfig): EnvelopeConfig => {
+  const fallback: EnvelopeConfig = {
+    duration: 2000,
+    delay: 500,
+    easing: 'ease-in-out',
+  };
+
+  if (!config) {
+    return fallback;
+  }
+
+  return {
+    ...fallback,
+    ...config,
+    envelopeLeftOpeningImage:
+      config.envelopeLeftOpeningImage || config.envelopeLeftImage,
+    envelopeRightOpeningImage:
+      config.envelopeRightOpeningImage || config.envelopeRightImage,
+  };
+};
+
 interface EnvelopeEditorProps {
   editorCtx: any;
   value?: EnvelopeConfig;
@@ -17,10 +38,9 @@ interface EnvelopeEditorProps {
 }
 
 const IMAGE_FIELDS = [
-  { key: 'backgroundImage', label: '加载页背景' },
-  { key: 'envelopeFrontImage', label: '信封正面' },
-  { key: 'envelopeLeftImage', label: '信封左侧' },
-  { key: 'envelopeRightImage', label: '信封右侧' },
+  { key: 'backgroundImage', label: '完全展开底图' },
+  { key: 'envelopeLeftOpeningImage', label: '信封左开口' },
+  { key: 'envelopeRightOpeningImage', label: '信封右开口' },
   { key: 'envelopeInnerImage', label: '信封内页' },
   { key: 'envelopeSealImage', label: '信封印章' },
 ] as const;
@@ -35,11 +55,7 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
   // 本地状态
   const [localConfig, setLocalConfig] = useState<EnvelopeConfig>(
-    props.value || {
-      duration: 2000,
-      delay: 500,
-      easing: 'ease-in-out',
-    }
+    normalizeConfig(props.value)
   );
 
   // 检查是否有未保存的更改
@@ -50,10 +66,19 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
   // 更新图片
   const handleImageChange = (key: string, url: string) => {
-    setLocalConfig({
+    const nextConfig: EnvelopeConfig = {
       ...localConfig,
       [key]: url,
-    });
+    };
+
+    if (key === 'envelopeLeftOpeningImage') {
+      nextConfig.envelopeLeftImage = undefined;
+    }
+    if (key === 'envelopeRightOpeningImage') {
+      nextConfig.envelopeRightImage = undefined;
+    }
+
+    setLocalConfig(nextConfig);
   };
 
   // 更新视频背景
@@ -114,7 +139,7 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
   // 播放预览
   const handlePlayPreview = () => {
     if (!isConfigComplete) {
-      toast.error('请先上传所有6张信封图片');
+      toast.error('请先上传所有5张信封图片');
       return;
     }
     if (isPlaying) return;
@@ -131,7 +156,7 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
   // 保存
   const handleSave = async () => {
     if (!isConfigComplete) {
-      toast.error('请先上传所有6张信封图片');
+      toast.error('请先上传所有5张信封图片');
       return;
     }
 
@@ -150,11 +175,7 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
   // 重置
   const handleReset = () => {
     setLocalConfig(
-      props.value || {
-        duration: 2000,
-        delay: 500,
-        easing: 'ease-in-out',
-      }
+      normalizeConfig(props.value)
     );
   };
 
@@ -205,7 +226,7 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
       {/* 图片上传区域 */}
       <div className='space-y-3'>
-        <Label>信封图片 (共6张)</Label>
+        <Label>信封图片 (共5张)</Label>
         <div className='grid grid-cols-2 gap-3'>
           {IMAGE_FIELDS.map(({ key, label }) => (
             <div key={key} className='space-y-2'>
