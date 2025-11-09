@@ -1,12 +1,12 @@
 import { getPermissionData } from '@mk/services';
 import { LoadWidget, mergeDeep, queryToObj } from '@mk/utils';
-import { EditorSDK, IPositionLink, LayerElemItem } from '@mk/works-store/types';
-import clas from 'classnames';
-import React, { useRef, useState } from 'react';
 import MkBulletScreen from '@mk/widgets/MkBulletScreen_v2/comp';
 import MkHuiZhi from '@mk/widgets/MkHuiZhi/comp';
 import MkImageGroup from '@mk/widgets/MkImageGroup_v2/comp';
 import MkMapComp from '@mk/widgets/MkMapV4/comp';
+import { EditorSDK, IPositionLink, LayerElemItem } from '@mk/works-store/types';
+import clas from 'classnames';
+import React, { useRef, useState } from 'react';
 import { GridProps, GridState } from '../shared';
 import {
   bgImageChangeToWebp,
@@ -198,8 +198,6 @@ export const WidgetItemRenderer = (props: WidgetItemRendererProps) => {
           onFormValueChange: (nextAttrs: GridProps) => {
             editorSDK?.changeCompAttr(elemId, nextAttrs);
           },
-          changeContainer: () => {},
-          changePageScale: () => {},
         }
       : undefined;
   };

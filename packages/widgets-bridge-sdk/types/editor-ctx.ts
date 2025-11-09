@@ -101,23 +101,11 @@ export interface PlatformContextUtils {
    * 2. 颜色面板
    */
   showSelector: (selectorConfig: ShowSelectorParams) => void;
-  /**
-   * 让容器不响应 scale 操作
-   */
-  scaleToggle: (status: boolean) => boolean;
   /** 获取作品id */
   getWorksID: () => string;
-  /** 锁定元素 */
-  lockElem?: (lock: boolean) => void;
-  deleteElem?: () => void;
 
   /** 获得该元素在画布上的坐标与旋转角 */
   saveImgToSystem?: (url: string) => void;
-  getCanvasPosition?: (comId: string) => {
-    x: number;
-    y: number;
-    rotate?: number;
-  };
   /** 获取总页数 */
   getPagesLength?: () => number;
   /** 获取当前页数 */

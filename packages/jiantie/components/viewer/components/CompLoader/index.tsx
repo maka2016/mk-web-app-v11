@@ -1,16 +1,15 @@
+import GridV3Comp from '@/components/GridV3/comp';
 import { queryToObj } from '@mk/utils';
 import {
   CanvaInfo,
   ContainerInfo,
   PlatformCompProps,
 } from '@mk/widgets-bridge-sdk/types';
-import GridV3Comp from '@/components/GridV3/comp';
 import { LayerElemItem, WorksPage } from '@mk/works-store/types';
 import classnames from 'classnames';
 import React, { useEffect, useRef, useState } from 'react';
 import { LoadWidget } from '../../utils/helper';
 import { getViewerSDK } from '../../utils/viewerSDK';
-import { getWidgetMetaColl } from '../../utils/widget-metadata';
 
 interface CompLoaderProps {
   wrapper?: (children: any) => any;
@@ -30,7 +29,6 @@ interface CompLoaderProps {
 interface PlatformCompPropsExtend extends PlatformCompProps {
   body?: LayerElemItem[];
   getContainerInfo: (params: any) => ContainerInfo;
-  widgetMeta: any;
 }
 
 /**
@@ -68,8 +66,6 @@ export const CompLoader: React.FC<CompLoaderProps> = ({
     scaleRate: 1,
   };
 
-  const widgetMeta = getWidgetMetaColl(elementRef);
-  const viewerApply = widgetMeta?.componentMeta?.viewerApply;
   const WidgetPlugin = LoadWidget<PlatformCompPropsExtend>(elementRef);
   const compLoaderRef = useRef<HTMLDivElement>(null);
 
@@ -129,7 +125,6 @@ export const CompLoader: React.FC<CompLoaderProps> = ({
           widgetState={{}}
           getWorksData={viewewSdkFC.getWorksData}
           body={body}
-          widgetMeta={widgetMeta}
           canvaInfo={_canvaInfo}
           containerInfo={_containerInfo}
           getContainerInfo={getContainerInfo}
@@ -146,23 +141,8 @@ export const CompLoader: React.FC<CompLoaderProps> = ({
     <div
       ref={compLoaderRef}
       data-name={elementRef}
-      className={classnames([
-        'canvas_item',
-        viewerApply?.interaction && 'interaction',
-        viewerApply?.scrollable && 'scrollable',
-      ])}
+      className={classnames(['canvas_item interaction scrollable'])}
       id={id}
-      style={{
-        // 组件是否可交互，通过组件 meta 的 viewerApply.interaction 判断
-        pointerEvents:
-          debugMode ||
-          !!viewerApply?.interaction ||
-          !!_containerInfo?.action?.enable
-            ? 'all'
-            : 'none',
-        maskImage: maskImage ? maskImage : undefined,
-        WebkitMaskImage: maskImage ? maskImage : undefined,
-      }}
     >
       {wrapper ? wrapper(resChild) : resChild}
     </div>
