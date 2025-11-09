@@ -4,7 +4,6 @@ import WebsiteApp from '@/components/viewer/components/website';
 import { createWorksStore, getToken, getUid, initWidgetEnv } from '@/services';
 import { getAppId, getWorksDetailStatic } from '@mk/services';
 import { WorksStore } from '@mk/works-store/store';
-import { toJS } from 'mobx';
 import { useEffect, useState } from 'react';
 
 import MiniPShare from '@/components/MiniPShare';
@@ -39,7 +38,6 @@ const Preview = (props: Props) => {
       const worksStore = createWorksStore({
         worksId: () => worksId as string,
         autoSaveFreq: 2,
-        appMode: 'editor-wap',
       });
       await worksStore.prepareData();
       setStore(worksStore);
@@ -79,9 +77,6 @@ const Preview = (props: Props) => {
         worksDetail={worksStore.worksDetail}
         query={query}
         pathname={''}
-        widgetMetadatas={Object.values(
-          toJS(worksStore.widgetMetadataColl || {})
-        )}
       />
     </>
   );

@@ -19,14 +19,12 @@ export interface VideoBgConfig {
  * 包含信封图片、动画参数、视频背景等所有配置
  */
 export interface EnvelopeConfig {
-  /** 加载页背景图 */
+  /** 加载页背景图（完全展开的信封底图） */
   backgroundImage?: string;
-  /** 信封正面图 */
-  envelopeFrontImage?: string;
-  /** 信封左侧图 */
-  envelopeLeftImage?: string;
-  /** 信封右侧图 */
-  envelopeRightImage?: string;
+  /** 信封左开口图 */
+  envelopeLeftOpeningImage?: string;
+  /** 信封右开口图 */
+  envelopeRightOpeningImage?: string;
   /** 信封内页图 */
   envelopeInnerImage?: string;
   /** 信封印章图 */
@@ -39,6 +37,12 @@ export interface EnvelopeConfig {
   easing?: string;
   /** 视频背景配置 */
   videoBgConfig?: VideoBgConfig;
+  /** @deprecated 旧版信封正面图，仅为兼容旧数据 */
+  envelopeFrontImage?: string;
+  /** @deprecated 旧版信封左侧图，仅为兼容旧数据 */
+  envelopeLeftImage?: string;
+  /** @deprecated 旧版信封右侧图，仅为兼容旧数据 */
+  envelopeRightImage?: string;
 }
 
 /**
@@ -48,9 +52,8 @@ export function isEnvelopeConfigComplete(config?: EnvelopeConfig): boolean {
   if (!config) return false;
   return !!(
     config.backgroundImage &&
-    config.envelopeFrontImage &&
-    config.envelopeLeftImage &&
-    config.envelopeRightImage &&
+    (config.envelopeLeftOpeningImage || config.envelopeLeftImage) &&
+    (config.envelopeRightOpeningImage || config.envelopeRightImage) &&
     config.envelopeInnerImage &&
     config.envelopeSealImage
   );

@@ -241,8 +241,6 @@ const WidgetItemRendererV2Internal = (
           onFormValueChange: (nextAttrs: GridProps) => {
             editorSDK?.changeCompAttr(elemId, nextAttrs);
           },
-          changeContainer: () => {},
-          changePageScale: () => {},
         }
       : undefined;
   };

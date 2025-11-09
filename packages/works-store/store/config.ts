@@ -1,5 +1,4 @@
 import type { IWorksData } from '../types/interface';
-import { ResourceMode } from '../utils';
 import type { WorksDetailEntity } from './WorkSpec';
 
 /**
@@ -71,20 +70,4 @@ export class IWorksStoreConfig<T extends Object = any> {
   maxPage?: number;
 
   isFlatPages?: boolean;
-
-  watermarkVersion?: () => string;
-
-  hasWatermark?: () => boolean;
-
-  appMode?: ResourceMode;
-
-  elementDidMount?: (
-    eleId: string,
-    boxInfo: {
-      width: number;
-      height: number;
-    },
-    data: any,
-    store: T
-  ) => { width: number; height: number } | null;
 }
