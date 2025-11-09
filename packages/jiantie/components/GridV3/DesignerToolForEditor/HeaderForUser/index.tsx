@@ -136,8 +136,8 @@ const HeaderForUser = () => {
 
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `maka://webview?url=${encodeURIComponent(rsvpUrl)}`,
-        type: 'NATIVE',
+        url: `${location.origin}${rsvpUrl}`,
+        type: 'URL',
       });
     } else {
       router.push(rsvpUrl);

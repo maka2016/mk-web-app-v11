@@ -62,8 +62,8 @@ export default function RSVPInviteesPage() {
     const createUrl = `/mobile/rsvp/invitees/create?works_id=${worksId}&form_config_id=${formConfigId}`;
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `maka://webview?url=${encodeURIComponent(createUrl)}`,
-        type: 'NATIVE',
+        url: `${location.origin}${createUrl}`,
+        type: 'URL',
       });
     } else {
       router.push(createUrl);
@@ -75,8 +75,8 @@ export default function RSVPInviteesPage() {
     const shareUrl = `/mobile/rsvp/share?works_id=${worksId}&mode=public&form_config_id=${formConfigId}`;
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `maka://webview?url=${encodeURIComponent(shareUrl)}`,
-        type: 'NATIVE',
+        url: `${location.origin}${shareUrl}`,
+        type: 'URL',
       });
     } else {
       router.push(shareUrl);
@@ -88,8 +88,8 @@ export default function RSVPInviteesPage() {
     const detailUrl = `/mobile/rsvp/invitees/${invitee.id}?works_id=${worksId}&form_config_id=${formConfigId}`;
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `maka://webview?url=${encodeURIComponent(detailUrl)}`,
-        type: 'NATIVE',
+        url: `${location.origin}${detailUrl}`,
+        type: 'URL',
       });
     } else {
       router.push(detailUrl);
