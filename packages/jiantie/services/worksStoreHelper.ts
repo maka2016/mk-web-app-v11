@@ -87,7 +87,6 @@ const createTRPCAPI = (): IWorksAPI => ({
 export const createWorksStore = (config: Partial<WorksStoreConfig>) => {
   const {
     worksId,
-    appMode = 'editor-web',
     autoSaveFreq = 2,
     noSave = false,
     isTemplate = false,
@@ -119,7 +118,6 @@ export const createWorksStore = (config: Partial<WorksStoreConfig>) => {
     autoSaveFreq,
     noSave: noSave,
     isTemplate,
-    appMode: appMode as any,
   });
   return worksStore;
 };

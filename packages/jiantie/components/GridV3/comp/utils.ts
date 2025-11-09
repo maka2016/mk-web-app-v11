@@ -155,7 +155,6 @@ export const calcViewerHeight = () => {
 export const calcBlockHeight2 = () => {
   const { canvaScale } = getCanvaInfo2();
   const blockItems = document.querySelectorAll<HTMLDivElement>(
-    // 是的，这里选择的是 block_wrapper 下的直接子元素 editor_row_wrapper
     `#id-canvas .block_wrapper > .editor_row_wrapper`
   );
   if (!blockItems.length) {

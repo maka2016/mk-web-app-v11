@@ -6,15 +6,13 @@ import { IWorksData } from '@mk/works-store/types';
 import { useEffect, useState } from 'react';
 import { registerEnv } from './runtime-env';
 import { createViewerSDKCTXer } from './viewerSDK';
-import { setWidgetMetaColl } from './widget-metadata';
 
 export const useWorksData = (params: {
   worksData: IWorksData;
   worksDetail: WorksDetailEntity;
   query: AppContext['query'];
-  widgetMetadatas: any[];
 }) => {
-  const { worksData, worksDetail, query, widgetMetadatas } = params;
+  const { worksData, worksDetail, query } = params;
   const [worksDataRef, setWorksDataRef] = useState<IWorksData>(worksData);
 
   useEffect(() => {
@@ -27,7 +25,6 @@ export const useWorksData = (params: {
 
       let hasWorksWatermark = false;
 
-      setWidgetMetaColl(widgetMetadatas);
       setWorksDetail(worksDetail);
 
       createViewerSDKCTXer({
@@ -41,14 +38,7 @@ export const useWorksData = (params: {
     };
 
     init();
-  }, [
-    worksData,
-    worksDetail,
-    query,
-    widgetMetadatas,
-    params.query.uid,
-    params.query.worksId,
-  ]);
+  }, [worksData, worksDetail, query, params.query.uid, params.query.worksId]);
 
   return worksDataRef;
 };

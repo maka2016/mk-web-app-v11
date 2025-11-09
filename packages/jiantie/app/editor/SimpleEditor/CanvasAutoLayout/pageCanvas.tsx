@@ -44,8 +44,6 @@ const PageCanvas: React.FC<Props> = ({ scale, readonly, navigationIndex }) => {
     idx: number;
   }) => {
     const { id, type, attrs, idx } = com;
-    // const isReady = !!worksStore.widgetLoadState[type];
-    // if (!isReady) return <div data-tip="loading..." key={id}></div>;
     const dict = worksStore.worksData.positionLink[id];
     if (dict != null) {
       return (
@@ -71,13 +69,11 @@ const PageCanvas: React.FC<Props> = ({ scale, readonly, navigationIndex }) => {
     pageIndex,
   };
   toJS(worksStore.worksData.style);
-  toJS(worksStore.widgetLoadState);
   const { width, height } = pageInfo;
 
   return (
     <ViewerRenderer
-      key={JSON.stringify(worksStore.widgetLoadState)}
-      scale={scale || worksStore.scale}
+      scale={scale || 1}
       width={width}
       height={'fit-content'}
       id={pageInfo.id}

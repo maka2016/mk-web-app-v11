@@ -10,7 +10,6 @@ import APPBridge from '@mk/app-bridge';
 import CommonLogger from '@mk/loggerv7/logger';
 import { request } from '@mk/services';
 import { isPc, isWechat, LoadScript } from '@mk/utils';
-import { setCdnPath } from '@mk/works-store';
 import dayjs from 'dayjs';
 import EnvelopeClientAnimation from '../../Envelope/EnvelopeClientAnimation';
 import { EnvelopeConfig } from '../../Envelope/types';
@@ -28,7 +27,6 @@ interface WebsiteAppProps {
   // 作品数据
   worksData: IWorksData;
   worksDetail: WorksDetailEntity;
-  widgetMetadatas?: any[];
 
   // 查询参数
   query: AppContext['query'];
@@ -62,7 +60,6 @@ export default function WebsiteApp(props: WebsiteAppProps) {
   const {
     worksData: initialWorksData,
     worksDetail,
-    widgetMetadatas,
     query,
     viewMode,
     isExpire,
@@ -84,7 +81,6 @@ export default function WebsiteApp(props: WebsiteAppProps) {
     worksData: initialWorksData,
     worksDetail,
     query,
-    widgetMetadatas: widgetMetadatas || [],
   };
   const worksData = useWorksData(worksDataParams);
   const H5ViewerContainerRef = useRef<any>(null);
@@ -160,7 +156,6 @@ export default function WebsiteApp(props: WebsiteAppProps) {
         });
         console.log('加载微信jssdk成功');
       }
-      setCdnPath('https://res.maka.im');
 
       setMountInBrowser(true);
       document.title = worksDetail?.title || 'Untitled';
@@ -232,21 +227,43 @@ export default function WebsiteApp(props: WebsiteAppProps) {
   const hasEnvelopeConfig = !!(
     envelopeConfig &&
     envelopeConfig.backgroundImage &&
-    envelopeConfig.envelopeFrontImage &&
-    envelopeConfig.envelopeLeftImage &&
-    envelopeConfig.envelopeRightImage &&
+    (envelopeConfig.envelopeLeftOpeningImage ||
+      envelopeConfig.envelopeLeftImage) &&
+    (envelopeConfig.envelopeRightOpeningImage ||
+      envelopeConfig.envelopeRightImage) &&
     envelopeConfig.envelopeInnerImage &&
     envelopeConfig.envelopeSealImage
   );
 
   return (
     <>
-      {/* 客户端接管的信封动画 */}
-      {hasEnvelopeConfig && (
+      {/* 客户端接管的信封动画，否则用原来的加载页 */}
+      {hasEnvelopeConfig ? (
         <EnvelopeClientAnimation
           key={worksDetail.id}
           config={envelopeConfig}
           onComplete={() => {
+            setPreloadEnd(true);
+          }}
+        />
+      ) : (
+        <PreloadPage
+          needLoading={isWebsite}
+          ref={PreloadPageRef}
+          key={worksDetail.id}
+          worksCover={(worksDetail as any)?.cover || ''}
+          worksId={worksDetail.id}
+          hasWorksData={!!worksData}
+          appid={query.appid}
+          pathname={pathname}
+          userAgent={userAgent}
+          isScreenshot={!!query.screenshot}
+          isVideoMode={!!query.video_mode}
+          removeProductIdentifiers={!!removeProductIdentifiers}
+          customLogo={!!customLogo}
+          brandLogoUrl={brandLogoUrl}
+          brandText={brandText}
+          loadEndCb={() => {
             setPreloadEnd(true);
           }}
         />
@@ -280,8 +297,8 @@ export default function WebsiteApp(props: WebsiteAppProps) {
             className={clas(
               'website_root',
               isPc() && 'pc',
-              is_flip_page && 'flip_page h-full overflow-hidden',
-              !preloadEnd && 'hidden'
+              is_flip_page && 'flip_page h-full overflow-hidden'
+              // !preloadEnd && 'hidden'
             )}
           >
             <LongViewerContainer
@@ -307,29 +324,6 @@ export default function WebsiteApp(props: WebsiteAppProps) {
             />
             <WxAuth />
           </div>
-        )}
-        {/* 只有在没有信封配置时才显示 PreloadPage */}
-        {!hasEnvelopeConfig && (
-          <PreloadPage
-            needLoading={isWebsite}
-            ref={PreloadPageRef}
-            key={worksDetail.id}
-            worksCover={(worksDetail as any)?.cover || ''}
-            worksId={worksDetail.id}
-            hasWorksData={!!worksData}
-            appid={query.appid}
-            pathname={pathname}
-            userAgent={userAgent}
-            isScreenshot={!!query.screenshot}
-            isVideoMode={!!query.video_mode}
-            removeProductIdentifiers={!!removeProductIdentifiers}
-            customLogo={!!customLogo}
-            brandLogoUrl={brandLogoUrl}
-            brandText={brandText}
-            loadEndCb={() => {
-              setPreloadEnd(true);
-            }}
-          />
         )}
       </div>
     </>
