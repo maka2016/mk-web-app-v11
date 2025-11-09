@@ -57,7 +57,14 @@ const PreviewHeader = (props: Props) => {
   };
 
   const toRsvpShare = (worksId: string) => {
-    router.push(`/mobile/rsvp/invitees?works_id=${worksId}&mode=public`);
+    if (APPBridge.judgeIsInApp()) {
+      APPBridge.navToPage({
+        url: `/mobile/rsvp/invitees?works_id=${worksId}&mode=public`,
+        type: 'URL',
+      });
+    } else {
+      router.push(`/mobile/rsvp/invitees?works_id=${worksId}&mode=public`);
+    }
     return;
   };
 
