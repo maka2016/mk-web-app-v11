@@ -1,9 +1,10 @@
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import OSS from 'ali-oss';
 import { getAppId } from './env';
 import { getToken, getUid } from './request';
 
 let ossClientData: {
-  client: S3Client;
+  client: S3Client | OSS;
   clientInfo: {
     region: string;
     endpoint: string;
@@ -14,6 +15,7 @@ let ossClientData: {
   };
   uploadPath: string;
   bucket: string;
+  provider?: 'aliyun' | 'aws'; // 云服务提供商
 };
 
 /**
@@ -44,53 +46,79 @@ export async function startupStsOssClient(
     }),
   });
   const res = await response.json();
-  console.log('res', res);
+  console.log('[startupStsOssClient] STS 响应:', res);
 
   if (retryTime > 3) {
-    throw new Error('oss client error');
+    throw new Error('oss client error: 重试次数超过限制');
   }
 
-  if ((res as any).message === 'tokenError') {
+  // 检查错误
+  if (res.error || (res as any).message === 'tokenError') {
+    console.error('[startupStsOssClient] STS 获取失败:', res);
     return await startupStsOssClient(payload, true, retryTime + 1);
   }
 
-  const region = 'oss-cn-beijing'; // 后续要改造接口从接口返回拿
-  const endpoint = res.hostId || `https://${res.bucket}.${region}.aliyuncs.com`;
+  // 验证必需字段
+  if (!res.credentials || !res.bucket || !res.uploadPath) {
+    console.error('[startupStsOssClient] STS 响应缺少必需字段:', res);
+    throw new Error('Invalid STS response: missing required fields');
+  }
+
+  const ossRegion = res.region || 'oss-cn-beijing';
+  const provider = res.provider || 'aliyun';
 
   const clientInfo = {
-    region,
-    endpoint,
+    region: ossRegion,
+    endpoint: res.hostId || `https://${res.bucket}.${ossRegion}.aliyuncs.com`,
     accessKeyId: res.credentials.AccessKeyId,
     accessKeySecret: res.credentials.AccessKeySecret,
     stsToken: res.credentials.SecurityToken,
     bucket: res.bucket,
   };
 
-  // 创建 S3 客户端（使用 AWS SDK）
-  const client = new S3Client({
-    region,
-    endpoint,
-    credentials: {
+  let client: S3Client | OSS;
+
+  if (provider === 'aws') {
+    // AWS S3：使用 AWS SDK
+    const awsStyleRegion = ossRegion.replace('oss-', '');
+    client = new S3Client({
+      region: awsStyleRegion,
+      endpoint: clientInfo.endpoint,
+      credentials: {
+        accessKeyId: res.credentials.AccessKeyId,
+        secretAccessKey: res.credentials.AccessKeySecret,
+        sessionToken: res.credentials.SecurityToken,
+      },
+      forcePathStyle: false,
+      tls: true,
+    });
+  } else {
+    // 阿里云 OSS：使用阿里云官方 SDK
+    client = new OSS({
+      region: ossRegion,
       accessKeyId: res.credentials.AccessKeyId,
-      secretAccessKey: res.credentials.AccessKeySecret,
-      sessionToken: res.credentials.SecurityToken,
-    },
-    forcePathStyle: false,
-  });
+      accessKeySecret: res.credentials.AccessKeySecret,
+      stsToken: res.credentials.SecurityToken,
+      bucket: res.bucket,
+      secure: true,
+    });
+  }
 
   ossClientData = {
     client,
     clientInfo,
     uploadPath: res.uploadPath,
     bucket: res.bucket,
+    provider,
   };
 
   return ossClientData;
 }
 
 /**
- * 上传文件到 OSS（使用 AWS SDK）
- * 兼容原有的 ali-oss multipartUpload API
+ * 上传文件到 OSS（双云服务支持）
+ * - 阿里云：使用阿里云官方 SDK
+ * - AWS：使用 AWS SDK
  */
 export async function uploadFileToOSS(
   file: File | Blob,
@@ -98,7 +126,7 @@ export async function uploadFileToOSS(
   onProgress?: (progress: number) => void
 ): Promise<{ url: string; name: string }> {
   try {
-    const { client, uploadPath, bucket, clientInfo } = ossClientData;
+    const { client, uploadPath, bucket, clientInfo, provider } = ossClientData;
 
     if (!client) {
       throw new Error(
@@ -108,26 +136,56 @@ export async function uploadFileToOSS(
 
     const fullPath = `${uploadPath}${path}`;
 
-    // 将 File/Blob 转换为 ArrayBuffer
-    const arrayBuffer = await file.arrayBuffer();
-
-    // 模拟进度开始
-    if (onProgress) {
-      onProgress(0.1);
-    }
-
-    const command = new PutObjectCommand({
-      Bucket: bucket,
-      Key: fullPath,
-      Body: new Uint8Array(arrayBuffer),
-      ContentType: file.type,
+    console.log('[uploadFileToOSS] 开始上传:', {
+      provider: provider || 'aliyun',
+      fullPath,
+      bucket,
+      endpoint: clientInfo.endpoint,
+      fileSize: file.size,
+      fileType: file.type,
     });
 
-    await client.send(command);
+    if (provider === 'aws') {
+      // AWS S3：使用 AWS SDK
+      console.log('[uploadFileToOSS] 使用 AWS SDK 上传');
 
-    // 模拟进度完成
-    if (onProgress) {
-      onProgress(1);
+      const arrayBuffer = await file.arrayBuffer();
+
+      if (onProgress) {
+        onProgress(0.1);
+      }
+
+      const command = new PutObjectCommand({
+        Bucket: bucket,
+        Key: fullPath,
+        Body: new Uint8Array(arrayBuffer),
+        ContentType: file.type,
+        ACL: 'public-read',
+      });
+
+      await (client as S3Client).send(command);
+
+      if (onProgress) {
+        onProgress(1);
+      }
+
+      console.log('[uploadFileToOSS] AWS SDK 上传成功');
+    } else {
+      // 阿里云 OSS：使用阿里云官方 SDK
+      console.log('[uploadFileToOSS] 使用阿里云 OSS SDK 上传');
+
+      const result = await (client as OSS).put(fullPath, file, {
+        headers: {
+          'Content-Type': file.type || 'application/octet-stream',
+        },
+        ...(onProgress && {
+          progress: (p: number) => {
+            onProgress(p);
+          },
+        }),
+      });
+
+      console.log('[uploadFileToOSS] 阿里云 OSS SDK 上传成功:', result.name);
     }
 
     // 构建 URL
@@ -138,7 +196,14 @@ export async function uploadFileToOSS(
       name: fullPath,
     };
   } catch (error) {
-    console.error('Upload file to OSS failed:', error);
+    console.error('[uploadFileToOSS] 上传失败:', error);
+    if (error instanceof Error) {
+      console.error('错误详情:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack?.split('\n').slice(0, 3),
+      });
+    }
     throw error;
   }
 }

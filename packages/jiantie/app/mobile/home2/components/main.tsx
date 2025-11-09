@@ -2,11 +2,12 @@
 
 import Chanel2 from '@/app/mobile/channel2/page';
 import Mine from '@/app/mobile/mine/page';
-import Works from '@/app/mobile/works/page';
-import { getUid, request } from '@/services';
+import Works from '@/app/mobile/works2/page';
+import { getUid } from '@/services';
+import { trpc } from '@/utils/trpc';
 import useIsMobile from '@/utils/use-mobile';
 import APPBridge from '@mk/app-bridge';
-import { API, cdnApi } from '@mk/services';
+import { cdnApi } from '@mk/services';
 import cls from 'classnames';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -58,20 +59,20 @@ const TabLayout = (props: Props) => {
   const [unread, setUnread] = useState(0);
 
   const getUnReadNotifications = async () => {
-    const uid = getUid();
-    const subscriberId = `${appid}_${uid}`;
-    const res: any = await request.get(
-      `${API('apiv10')}/notify-proxy/v1/subscribers/${subscriberId}/notifications/feed`,
-      {
-        params: {
-          page: 0,
-          limit: 1,
-          read: false,
-        },
+    try {
+      const uid = getUid();
+      if (!uid) {
+        setUnread(0);
+        return;
       }
-    );
-
-    setUnread(res.totalCount);
+      const res = await trpc.rsvp.getUnreadNotificationCount.query({
+        user_id: uid,
+      });
+      setUnread(res.count || 0);
+    } catch (error) {
+      console.error('Failed to get RSVP notifications:', error);
+      setUnread(0);
+    }
   };
 
   useEffect(() => {

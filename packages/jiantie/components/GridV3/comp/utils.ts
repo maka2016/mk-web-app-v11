@@ -152,22 +152,6 @@ export const calcViewerHeight = () => {
   return totalHeight;
 };
 
-export const calcBlockHeight = (blockId: string) => {
-  const { canvaScale } = getCanvaInfo2();
-  const blockItems = document.querySelector<HTMLDivElement>(
-    `#id-canvas .Grid_container #editor_block_${blockId}`
-  );
-  if (!blockItems) {
-    console.log(
-      'calcViewerHeightError',
-      '找不到.Grid_container .editor_row_wrapper'
-    );
-    return 0;
-  }
-  const height = (blockItems.getBoundingClientRect()?.height || 1) / canvaScale;
-  return height;
-};
-
 export const calcBlockHeight2 = () => {
   const { canvaScale } = getCanvaInfo2();
   const blockItems = document.querySelectorAll<HTMLDivElement>(

@@ -16,6 +16,10 @@
   "peerDependencies": {},
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",
-    "@mk/form-engine": "workspace:*"
+    "@mk/form-engine": "workspace:*",
+    "ali-oss": "^6.21.0"
+  },
+  "devDependencies": {
+    "@types/ali-oss": "^6.16.11"
   }
 }

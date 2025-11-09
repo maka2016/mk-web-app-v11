@@ -43,13 +43,11 @@ import {
   getMaxZ,
   loadWidgetResource,
   setCdnPath,
-  treeNodeCounter,
 } from '../utils';
 import { deepLayers } from '../utils/deepLayers';
 import { IWorksStoreConfig } from './config';
 import { changeCopyData, checkCopyItem, insertPages } from './tools';
 import { undoManager } from './undoManager';
-import { setAllWidgetMeta } from './WidgetMeta';
 import { setWorksDetail, WorksDetailEntity } from './WorkSpec';
 
 export * from './undoManager';
@@ -323,7 +321,6 @@ export class WorksStore {
         const { ref } = item;
         this.allWidgetData[ref] = item;
       });
-      this.setWidgetMetaColl(this.allWidgetData);
       return widgetMetadatasResData;
     },
 
@@ -648,14 +645,9 @@ export class WorksStore {
    * @returns
    */
   prepareWorksData = async () => {
-    const [worksRes, widgetData] = await Promise.all([
-      this.api.getWorksData(),
-      this.api.getComponents(),
-    ]);
-    setAllWidgetMeta(this.allWidgetData);
+    const [worksRes] = await Promise.all([this.api.getWorksData()]);
     return {
       worksRes,
-      widgetData,
     };
   };
 
@@ -705,15 +697,6 @@ export class WorksStore {
     );
   };
 
-  getWidgetMeta = (elemRef?: string) => {
-    if (!elemRef || !this.allWidgetData[elemRef]) {
-      // throw new Error('请传入组件的 elemRef')
-      console.debug('请传入组件的 elemRef', elemRef);
-      return null;
-    }
-    return this.allWidgetData[elemRef].componentMeta;
-  };
-
   initData = (data: IWorksData, config?: Partial<WorksStoreConfig>) => {
     if (config) {
       Object.assign(this.config, config);
@@ -748,8 +731,6 @@ export class WorksStore {
       this.worksData.canvasData.visualHeight = visualHeight;
       this.worksData.canvasData.height = visualHeight;
     }
-    this.widgetRelyMonitor();
-    setAllWidgetMeta(this.allWidgetData);
 
     // 【关键修复】同步设置作品 ID 并恢复历史记录
     const worksId = this.config.worksId?.();
@@ -843,29 +824,6 @@ export class WorksStore {
         ...this.widgetLoadState,
         ...nextState,
       };
-    }
-  };
-  /**
-   * 设置组件元数据集合
-   */
-
-  setWidgetMetaColl = (widgetMetadataColl: Record<string, WidgetResItem>) => {
-    this.widgetMetadataColl = {
-      ...this.widgetMetadataColl,
-      ...widgetMetadataColl,
-    };
-    setAllWidgetMeta(this.widgetMetadataColl);
-  };
-
-  widgetRelyMonitor = () => {
-    const widgetRelyInfo = treeNodeCounter(this.worksData);
-    const widgetRely = widgetRelyInfo.allWidgetRely;
-    if (JSON.stringify(widgetRely) !== JSON.stringify(this.widgetRely)) {
-      this.widgetRely = {
-        ...this.widgetRely,
-        ...widgetRely,
-      };
-      this.loadWidgetResourceSelf();
     }
   };
 
@@ -1396,18 +1354,6 @@ export class WorksStore {
    * 是否屏蔽公共属性操作入口
    */
   isCommonOperatorDisabled = (compId: string) => {
-    const layer = this.getLayer(compId, true);
-    const layerLink = this.getLink(compId);
-    if (layer) {
-      const name = layer.elementRef;
-      const widgetMeta = this.getWidgetMeta(name);
-      if (widgetMeta) {
-        const disabledCommonOperator =
-          widgetMeta.editorApply.disabledCommonOperator;
-        return !!layerLink?.disabledCommonOperator || !!disabledCommonOperator;
-      }
-      return false;
-    }
     return false;
   };
 
@@ -1415,17 +1361,6 @@ export class WorksStore {
    * 是否禁用复制
    */
   isDisableCopy = (comId?: string) => {
-    if (comId) {
-      const layer = this.getLayer(comId);
-      if (layer) {
-        const name = layer.elementRef;
-        const widgetMeta = this.getWidgetMeta(name);
-        if (widgetMeta?.editorApply.disabledCopy) {
-          return true;
-        }
-      }
-      return this.isCommonOperatorDisabled(comId);
-    }
     return false;
   };
 
@@ -1638,8 +1573,6 @@ export class WorksStore {
     // 更新作品meta
     this.areaComps = [];
 
-    this.widgetRelyMonitor();
-
     return elemId;
   };
 
@@ -1825,7 +1758,6 @@ export class WorksStore {
     this.setPageIndex(targetIndex);
     this.clearOperation();
     this.setActivItemByID('');
-    this.widgetRelyMonitor();
   };
 
   /**

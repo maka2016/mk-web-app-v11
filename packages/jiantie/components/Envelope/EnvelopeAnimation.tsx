@@ -8,6 +8,26 @@ import React, {
 } from 'react';
 import { EnvelopeConfig } from './types';
 
+/**
+ * 将字符串格式的 easing 转换为 Framer Motion 支持的数组格式
+ */
+function parseEasing(easing?: string): [number, number, number, number] {
+  switch (easing) {
+    case 'ease-in-out':
+      return [0.4, 0, 0.2, 1];
+    case 'ease-in':
+      return [0.4, 0, 1, 1];
+    case 'ease-out':
+      return [0, 0, 0.2, 1];
+    case 'ease':
+      return [0.25, 0.1, 0.25, 1];
+    case 'linear':
+      return [0, 0, 1, 1];
+    default:
+      return [0.4, 0, 0.2, 1]; // 默认 ease-in-out
+  }
+}
+
 const Container = styled.div`
   position: fixed;
   top: 0;
@@ -38,6 +58,8 @@ const EnvelopeLayer = styled(motion.div)`
   max-width: 600px;
   height: auto;
   aspect-ratio: 3 / 2;
+  perspective: 1000px;
+  transform-style: preserve-3d;
 `;
 
 const EnvelopeImage = styled(motion.img)`
@@ -80,12 +102,17 @@ const EnvelopeAnimation = forwardRef<
 
   const duration = config?.duration || 2000;
   const delay = config?.delay || 500;
-  const easing = config?.easing || 'ease-in-out';
+  const easing = parseEasing(config?.easing);
 
   useImperativeHandle(ref, () => ({
     startAnimation: () => {
-      setIsAnimating(true);
+      // 先重置状态，确保动画可以重新触发
+      setIsAnimating(false);
       setAnimationPhase('idle');
+      // 使用 setTimeout 确保状态重置后再开始动画
+      setTimeout(() => {
+        setIsAnimating(true);
+      }, 0);
     },
     resetAnimation: () => {
       setIsAnimating(false);
@@ -163,13 +190,14 @@ const EnvelopeAnimation = forwardRef<
                 alt='envelope-left'
                 style={{
                   zIndex: 2,
-                  transformOrigin: 'center left',
+                  transformOrigin: 'left center',
+                  backfaceVisibility: 'hidden',
                 }}
-                initial={{ rotateY: 0, x: 0 }}
+                initial={{ rotateY: 0 }}
                 animate={
                   animationPhase === 'opening'
-                    ? { rotateY: -90, x: '-30%' }
-                    : { rotateY: 0, x: 0 }
+                    ? { rotateY: -90 }
+                    : { rotateY: 0 }
                 }
                 transition={{
                   duration: duration / 1000,
@@ -183,13 +211,14 @@ const EnvelopeAnimation = forwardRef<
                 alt='envelope-right'
                 style={{
                   zIndex: 2,
-                  transformOrigin: 'center right',
+                  transformOrigin: 'right center',
+                  backfaceVisibility: 'hidden',
                 }}
-                initial={{ rotateY: 0, x: 0 }}
+                initial={{ rotateY: 0 }}
                 animate={
                   animationPhase === 'opening'
-                    ? { rotateY: 90, x: '30%' }
-                    : { rotateY: 0, x: 0 }
+                    ? { rotateY: 90 }
+                    : { rotateY: 0 }
                 }
                 transition={{
                   duration: duration / 1000,

@@ -1,12 +1,7 @@
-import { getWidgetMeta } from '@mk/services';
-import { isPc, LoadWidget } from '@mk/utils';
 import MkCalendarV3Form from '@mk/widgets/MkCalendarV3/form';
-import MkHuiZhiForm from '@mk/widgets/MkHuiZhi/form';
-import MkImageGroupForm from '@mk/widgets/MkImageGroup_v2/form-wap';
 import MkMapV4Form from '@mk/widgets/MkMapV4/form-wap';
 import { ChevronDown, ChevronUp, Copy, Trash2 } from 'lucide-react';
 import { useGridContext } from '../../../comp/provider';
-import { useWidgetsAttrs } from '../../../comp/WidgetLoader';
 import { BtnLiteColumn as BtnLite } from '../../../shared/style-comps';
 import PictureEditV3 from './PictureEditV3';
 import TextEditorV3 from './TextEditorV3';
@@ -27,10 +22,6 @@ export const SettingElemV3 = ({ onUpdate }: { onUpdate?: () => void }) => {
   } = useGridContext();
   const { editingElemId, activeRowDepth } = widgetStateV2 || {};
   // const [finetuneMode, setFinetuneMode] = useState(false);
-  const { compAttrsMap } = useWidgetsAttrs({
-    needInit: false,
-    worksData: getWorksData(),
-  });
 
   if (!editingElemId) {
     return <></>;
@@ -75,25 +66,6 @@ export const SettingElemV3 = ({ onUpdate }: { onUpdate?: () => void }) => {
           </div>
         );
 
-      case /MkHuiZhi/gi.test(layer.elementRef):
-        return (
-          <div
-            style={{
-              maxHeight: 400,
-              overflow: 'auto',
-            }}
-          >
-            <MkHuiZhiForm
-              compAttrsMap={compAttrsMap}
-              formControledValues={editorSDK?.getLayer(layer.elemId)?.attrs}
-              onFormValueChange={(nextVal: any) => {
-                editorSDK?.changeCompAttr(layer.elemId, nextVal);
-              }}
-              editorSDK={editorSDK}
-              editorCtx={editorCtx}
-            />
-          </div>
-        );
       case /MkCalendarV3/gi.test(layer.elementRef):
         return (
           <div
@@ -111,62 +83,6 @@ export const SettingElemV3 = ({ onUpdate }: { onUpdate?: () => void }) => {
               editorCtx={editorCtx}
             />
           </div>
-        );
-      default:
-        // return <></>
-        let WebForm = isPc()
-          ? LoadWidget(getWidgetMeta(layer.elementRef)?.editorApply?.webFormRef)
-          : LoadWidget(
-              getWidgetMeta(layer.elementRef)?.editorApply?.wapFormRef
-            );
-
-        if (layer.elementRef === 'MkImageGroup_v2') {
-          WebForm = MkImageGroupForm;
-        }
-
-        const FormComp = typeof WebForm === 'function' ? WebForm : undefined;
-        const elemProps = editorSDK?.getLayer(layer.elemId)?.attrs;
-        return (
-          <>
-            {FormComp && (
-              <div
-                style={{
-                  maxHeight: 400,
-                  overflow: 'auto',
-                }}
-              >
-                <FormComp
-                  key={layer.elemId}
-                  entityInfo={{ id: layer.elemId }}
-                  pageInfo={editorSDK?.getPageData(
-                    editorSDK.getActivePageIdx()
-                  )}
-                  canvaInfo={{
-                    canvaW: 375,
-                    canvaH: 667,
-                    scaleRate: 1,
-                  }}
-                  changeOperatorHandle={() => {}}
-                  useCropV2={true} // 用户图片v2版本裁剪
-                  getOperatorHandle={editorSDK?.getOperatorHandle}
-                  changeContainer={() => {}}
-                  containerInfo={{
-                    width: '100%',
-                    height: '100%',
-                  }}
-                  editorCtx={editorCtx}
-                  formControledValues={elemProps}
-                  onFormValueChange={(nextVal: any) => {
-                    editorSDK?.changeCompAttr(layer.elemId, nextVal);
-                  }}
-                  onDeleteGridComp={() => {
-                    deleteElemV2();
-                    clearActiveStatus();
-                  }}
-                />
-              </div>
-            )}
-          </>
         );
     }
   };

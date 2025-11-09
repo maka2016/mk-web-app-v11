@@ -1,5 +1,4 @@
 'use client';
-import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
 import { getAppId, getUid } from '@/services';
 import { getUrlWithParam } from '@/utils';
 import { trpc } from '@/utils/trpc';
@@ -9,9 +8,11 @@ import { CheckCheck, ExternalLink, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useRSVPLayout } from '../RSVPLayoutContext';
 
 export default function NotificationsPage() {
   const router = useRouter();
+  const { setTitle } = useRSVPLayout();
   const [showUnreadOnly] = useState(false);
   const [notificationsData, setNotificationsData] = useState<any>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -52,6 +53,12 @@ export default function NotificationsPage() {
     loadNotifications(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showUnreadOnly]);
+
+  // 更新页面标题
+  const unreadCount = notificationsData?.unreadCount || 0;
+  useEffect(() => {
+    setTitle(unreadCount > 0 ? `通知中心 (${unreadCount} 未读)` : '通知中心');
+  }, [unreadCount, setTitle]);
 
   const handleNotificationClick = async (notification: any) => {
     // 如果未读，标记为已读
@@ -115,7 +122,6 @@ export default function NotificationsPage() {
   };
 
   const notifications = notificationsData?.notifications || [];
-  const unreadCount = notificationsData?.unreadCount || 0;
 
   // 格式化相对时间
   const formatRelativeTime = (date: Date | string) => {
@@ -265,10 +271,6 @@ export default function NotificationsPage() {
 
   return (
     <div className='relative bg-white min-h-screen pb-20'>
-      <MobileHeader
-        title={unreadCount > 0 ? `通知中心 (${unreadCount} 未读)` : '通知中心'}
-      />
-
       <div className='p-3'>
         {isInitialLoading ? (
           <div className='text-center py-8 text-gray-500'>加载中...</div>
