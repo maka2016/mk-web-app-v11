@@ -12,16 +12,46 @@ import toast from 'react-hot-toast';
 import { useRSVPLayout } from '../RSVPLayoutContext';
 
 export default function RSVPInviteesPage() {
-  const { setTitle } = useRSVPLayout();
-
-  // 设置页面标题
-  useEffect(() => {
-    setTitle('分享与邀请');
-  }, [setTitle]);
+  const { setTitle, setRightText, setRightContent, setOnRightClick } =
+    useRSVPLayout();
   const router = useRouter();
   const searchParams = useSearchParams();
   const formConfigId = searchParams.get('form_config_id') || '';
   const worksId = searchParams.get('works_id') || '';
+
+  // 设置页面标题
+  useEffect(() => {
+    setTitle('分享与邀请');
+    setRightContent(null);
+    setRightText('回首页');
+
+    const openManagePage = () => {
+      if (APPBridge.judgeIsInApp()) {
+        APPBridge.navToPage({
+          url: 'maka://home/activity/activityPage?default_tab=1',
+          type: 'NATIVE',
+        });
+      } else {
+        router.replace('/mobile/home');
+      }
+    };
+
+    setOnRightClick(() => openManagePage);
+
+    return () => {
+      setRightText('');
+      setRightContent(null);
+      setOnRightClick(undefined);
+    };
+  }, [
+    formConfigId,
+    router,
+    setOnRightClick,
+    setRightContent,
+    setRightText,
+    setTitle,
+    worksId,
+  ]);
 
   const [inviteeResponses, setInviteeResponses] = useState<any[]>([]);
   const [responseFilter, setResponseFilter] = useState<
