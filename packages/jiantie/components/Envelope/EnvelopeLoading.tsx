@@ -12,7 +12,10 @@ export default function EnvelopeLoading({ config }: EnvelopeLoadingProps) {
   console.log('[EnvelopeLoading SSR] 渲染信封 loading:', {
     hasConfig: !!config,
     hasBackgroundImage: !!config?.backgroundImage,
-    hasFrontImage: !!config?.envelopeFrontImage,
+    hasLeftOpeningImage:
+      !!config?.envelopeLeftOpeningImage || !!config?.envelopeLeftImage,
+    hasRightOpeningImage:
+      !!config?.envelopeRightOpeningImage || !!config?.envelopeRightImage,
     hasSealImage: !!config?.envelopeSealImage,
   });
 
@@ -59,21 +62,44 @@ export default function EnvelopeLoading({ config }: EnvelopeLoadingProps) {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '90vw',
-          maxWidth: '400px',
-          aspectRatio: '2 / 3',
+          width: '80vw',
+          aspectRatio: '114 / 162',
         }}
       >
-        {/* 信封正面 */}
-        {config.envelopeFrontImage && (
+        {/* 信封右开口（底层） */}
+        {(config.envelopeRightOpeningImage || config.envelopeRightImage) && (
           <img
-            src={config.envelopeFrontImage}
-            alt='envelope-front'
+            src={
+              config.envelopeRightOpeningImage ||
+              config.envelopeRightImage ||
+              ''
+            }
+            alt='envelope-right-opening'
             style={{
               position: 'absolute',
               width: '100%',
               height: '100%',
               objectFit: 'contain',
+              zIndex: 1,
+              objectPosition: 'right center',
+            }}
+          />
+        )}
+
+        {/* 信封左开口（覆盖右侧） */}
+        {(config.envelopeLeftOpeningImage || config.envelopeLeftImage) && (
+          <img
+            src={
+              config.envelopeLeftOpeningImage || config.envelopeLeftImage || ''
+            }
+            alt='envelope-left-opening'
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              zIndex: 2,
+              objectPosition: 'left center',
             }}
           />
         )}
@@ -88,6 +114,7 @@ export default function EnvelopeLoading({ config }: EnvelopeLoadingProps) {
               width: '100%',
               height: '100%',
               objectFit: 'contain',
+              zIndex: 3,
             }}
           />
         )}

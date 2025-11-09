@@ -45,19 +45,24 @@ const BackgroundLayer = styled(motion.div)`
   left: 0;
   width: 100%;
   height: 100%;
-  background-size: cover;
+  background-size: auto;
+  background-repeat: repeat;
   background-position: center;
 `;
 
-const EnvelopeLayer = styled(motion.div)`
+const EnvelopeWrapper = styled.div`
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 90vw;
-  max-width: 600px;
-  height: auto;
-  aspect-ratio: 3 / 2;
+  width: 80vw;
+  aspect-ratio: 114 / 162;
+`;
+
+const EnvelopeLayer = styled(motion.div)`
+  position: relative;
+  width: 100%;
+  height: 100%;
   perspective: 1000px;
   transform-style: preserve-3d;
 `;
@@ -68,6 +73,18 @@ const EnvelopeImage = styled(motion.img)`
   height: 100%;
   object-fit: contain;
   will-change: transform, opacity;
+`;
+
+const InvitationContentLayer = styled(motion.div)`
+  position: absolute;
+  width: calc(100% - 48px);
+  height: calc(100% - 48px);
+  top: 24px;
+  left: 24px;
+  overflow: hidden;
+  border-radius: 4px;
+  will-change: transform, opacity;
+  z-index: 2;
 `;
 
 export interface EnvelopeAnimationRef {
@@ -91,12 +108,16 @@ const EnvelopeAnimation = forwardRef<
   >('idle');
 
   // 如果没有配置或配置不完整，直接显示内容
+  const leftOpeningImage =
+    config?.envelopeLeftOpeningImage || config?.envelopeLeftImage;
+  const rightOpeningImage =
+    config?.envelopeRightOpeningImage || config?.envelopeRightImage;
+
   const hasValidConfig =
     config &&
     config.backgroundImage &&
-    config.envelopeFrontImage &&
-    config.envelopeLeftImage &&
-    config.envelopeRightImage &&
+    leftOpeningImage &&
+    rightOpeningImage &&
     config.envelopeInnerImage &&
     config.envelopeSealImage;
 
@@ -167,36 +188,58 @@ const EnvelopeAnimation = forwardRef<
 
           {/* 信封层 */}
           {animationPhase !== 'complete' && (
-            <EnvelopeLayer key='envelope-container'>
+            <EnvelopeWrapper>
+              <EnvelopeLayer key='envelope-container'>
               {/* 信封内页（最底层） */}
               <EnvelopeImage
                 src={config?.envelopeInnerImage || ''}
                 alt='envelope-inner'
                 style={{ zIndex: 1 }}
-                initial={{ opacity: 0 }}
+              />
+
+              <InvitationContentLayer
+                initial={{ opacity: 1, scale: 0.7 }}
                 animate={{
-                  opacity: animationPhase === 'opening' ? 1 : 0,
+                  scale: animationPhase === 'opening' ? 1 : 0.7,
                 }}
                 transition={{
-                  duration: (duration / 1000) * 0.3,
-                  delay: (duration / 1000) * 0.5,
+                  duration: (duration / 1000) * 0.6,
+                  delay: (duration / 1000) * 0.4,
                   ease: easing,
                 }}
-              />
+              >
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#6b7280',
+                    fontSize: 12,
+                    fontWeight: 500,
+                  }}
+                >
+                  邀请函内容预览
+                </div>
+              </InvitationContentLayer>
 
               {/* 信封左侧 */}
               <EnvelopeImage
-                src={config?.envelopeLeftImage || ''}
-                alt='envelope-left'
+                src={leftOpeningImage || ''}
+                alt='envelope-left-opening'
                 style={{
-                  zIndex: 2,
+                  zIndex: 3,
                   transformOrigin: 'left center',
                   backfaceVisibility: 'hidden',
+                  objectPosition: 'left center',
                 }}
                 initial={{ rotateY: 0 }}
                 animate={
                   animationPhase === 'opening'
-                    ? { rotateY: -90 }
+                    ? { rotateY: -180 }
                     : { rotateY: 0 }
                 }
                 transition={{
@@ -207,17 +250,18 @@ const EnvelopeAnimation = forwardRef<
 
               {/* 信封右侧 */}
               <EnvelopeImage
-                src={config?.envelopeRightImage || ''}
-                alt='envelope-right'
+                src={rightOpeningImage || ''}
+                alt='envelope-right-opening'
                 style={{
                   zIndex: 2,
                   transformOrigin: 'right center',
                   backfaceVisibility: 'hidden',
+                  objectPosition: 'right center',
                 }}
                 initial={{ rotateY: 0 }}
                 animate={
                   animationPhase === 'opening'
-                    ? { rotateY: 90 }
+                    ? { rotateY: 180 }
                     : { rotateY: 0 }
                 }
                 transition={{
@@ -226,26 +270,11 @@ const EnvelopeAnimation = forwardRef<
                 }}
               />
 
-              {/* 信封正面 */}
-              <EnvelopeImage
-                src={config?.envelopeFrontImage || ''}
-                alt='envelope-front'
-                style={{ zIndex: 3 }}
-                initial={{ opacity: 1 }}
-                animate={{
-                  opacity: animationPhase === 'opening' ? 0 : 1,
-                }}
-                transition={{
-                  duration: (duration / 1000) * 0.2,
-                  ease: easing,
-                }}
-              />
-
               {/* 信封印章 */}
               <EnvelopeImage
                 src={config?.envelopeSealImage || ''}
                 alt='envelope-seal'
-                style={{ zIndex: 4 }}
+                style={{ zIndex: 3 }}
                 initial={{ opacity: 1, scale: 1 }}
                 animate={
                   animationPhase === 'opening'
@@ -257,7 +286,8 @@ const EnvelopeAnimation = forwardRef<
                   ease: easing,
                 }}
               />
-            </EnvelopeLayer>
+              </EnvelopeLayer>
+            </EnvelopeWrapper>
           )}
         </AnimatePresence>
       </Container>
