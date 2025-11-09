@@ -2,8 +2,10 @@
 import { getGuestCountText } from '@/components/RSVP/comp/SubmissionDataView';
 import { parseRSVPFormFields, RSVPField } from '@/components/RSVP/type';
 import { getUid } from '@/services';
+import { getUrlWithParam } from '@/utils';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
+import { getAppId } from '@mk/services';
 import { Button } from '@workspace/ui/components/button';
 import { ChevronRight, Globe, Target } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -27,10 +29,12 @@ export default function RSVPInviteesPage() {
 
     const openManagePage = () => {
       if (APPBridge.judgeIsInApp()) {
-        APPBridge.navToPage({
-          url: 'maka://home/activity/activityPage?default_tab=1',
-          type: 'NATIVE',
-        });
+        router.push(
+          getUrlWithParam(
+            `/maka/mobile/home?default_tab=1&appid=${getAppId()}`,
+            'clickid'
+          )
+        );
       } else {
         router.replace('/mobile/home');
       }
