@@ -28,6 +28,11 @@ interface SearchResultsProps {
   keyword: string;
 }
 
+const GRADIENT_CLASSES = [
+  'from-rose-50 to-rose-100',
+  'from-pink-50 to-pink-100',
+];
+
 // 搜索历史记录相关的常量和工具函数
 const SEARCH_HISTORY_KEY = 'channel_search_history';
 const MAX_HISTORY_LENGTH = 10;
@@ -313,34 +318,45 @@ export default function SearchResults({
             </div>
 
             <div className='grid grid-cols-2 gap-4'>
-              {collections.map(collection => (
-                <div
-                  key={collection.id}
-                  className='bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer'
-                  onClick={() => {
-                    navigateWithBridge({
-                      path: `/mobile/channel2/collection/${collection.id}`,
-                      router,
-                    });
-                  }}
-                >
-                  {/* 集合封面 */}
-                  <div className='aspect-[3/4] bg-gray-100 relative'>
-                    {collection.thumb_path ? (
-                      <img
-                        src={cdnApi(collection.thumb_path)}
-                        alt={collection.display_name}
-                        loading='lazy'
-                        className='absolute inset-0 h-full w-full object-cover'
-                      />
-                    ) : (
-                      <div className='flex items-center justify-center h-full text-4xl text-gray-400'>
-                        📁
-                      </div>
-                    )}
+              {collections.map(collection => {
+                const gradientClass =
+                  GRADIENT_CLASSES[collection.id % GRADIENT_CLASSES.length];
+                const placeholderText =
+                  (collection.display_name || '').slice(0, 2) || '集合';
+
+                return (
+                  <div
+                    key={collection.id}
+                    className='bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer'
+                    onClick={() => {
+                      navigateWithBridge({
+                        path: `/mobile/channel2/collection/${collection.id}`,
+                        router,
+                      });
+                    }}
+                  >
+                    {/* 集合封面 */}
+                    <div
+                      className={`aspect-[3/4] bg-gradient-to-br ${gradientClass} relative`}
+                    >
+                      {collection.thumb_path ? (
+                        <img
+                          src={cdnApi(collection.thumb_path)}
+                          alt={collection.display_name}
+                          loading='lazy'
+                          className='absolute inset-0 h-full w-full object-cover'
+                        />
+                      ) : (
+                        <div className='flex items-center justify-center h-full'>
+                          <span className='text-3xl font-semibold text-gray-500'>
+                            {placeholderText}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
