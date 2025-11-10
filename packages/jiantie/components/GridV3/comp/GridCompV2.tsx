@@ -10,6 +10,7 @@ import { PlatformCompProps } from '@mk/widgets-bridge-sdk';
 import clas from 'classnames';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
+import { EnvelopeConfig } from '../../Envelope';
 import DesignerOperatorV2 from '../DesignerToolForEditor/DesignerOperatorV2';
 import SettingWidgetV3 from '../UserForm/Setting/SettingWidgetV3';
 import { GridProps, GridRow, GridState } from '../shared';
@@ -62,6 +63,7 @@ export const GridCompV2: React.FC<
   const [isAnimationCoverEnd, setIsAnimationCoverEnd] = useState(
     !gridProps.coverAnimation || !!editorSDK
   );
+  const envelopeConfig = worksDetail?.envelope_config as EnvelopeConfig;
   const [isReadyToPlayAnimation, setIsReadyToPlayAnimation] =
     useState(isAnimationCoverEnd);
   const isScreenshot = !!queryToObj().screenshot;
@@ -362,6 +364,7 @@ export const GridCompV2: React.FC<
           id={id}
           parallaxScrollBgConfig={gridProps.parallaxScrollBgConfig}
           lottieBgConfig={gridProps.lottieBgConfig}
+          videoBgConfig={envelopeConfig?.videoBgConfig}
           style={(() => {
             const styleData = blockStyleFilter({
               // background: "unset",
@@ -378,6 +381,10 @@ export const GridCompV2: React.FC<
                 height: '100%',
               }),
             });
+            if (envelopeConfig?.videoBgConfig) {
+              delete (styleData as Record<string, unknown>).background;
+              delete (styleData as Record<string, unknown>).backgroundImage;
+            }
             return styleData;
           })()}
         >
