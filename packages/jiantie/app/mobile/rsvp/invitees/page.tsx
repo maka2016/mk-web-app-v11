@@ -517,7 +517,7 @@ export default function RSVPInviteesPage() {
                 公开分享
               </div>
               <div className='text-xs text-gray-600'>
-                生成公开链接，获取链接的都可以访问和提交信息。
+                保存高清海报至相册，便于转发分享
               </div>
             </div>
           </div>
