@@ -26,8 +26,8 @@ import {
   setDocumentTitle,
 } from '@mk/utils';
 import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
-import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
+import { Button } from '@workspace/ui/components/button';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import { Separator } from '@workspace/ui/components/separator';
 import toast from 'react-hot-toast';

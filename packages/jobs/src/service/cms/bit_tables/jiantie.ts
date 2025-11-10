@@ -1,6 +1,7 @@
 import {
   DatasheetItem,
   bitFileRaw,
+  bitFindRaw,
   bitRecRef,
   bitTextRaw,
   bitTextRef,
@@ -77,7 +78,7 @@ export interface TemplateChannelItem {
     任务模板ID: bitTextRaw[];
     作品id: bitTextRef;
     状态: string;
-    封面类型: string;
+    封面类型: bitFindRaw;
   };
   record_id: string;
 }
