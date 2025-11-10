@@ -208,6 +208,7 @@ export const syncChannel = async (
         update_time: new Date(),
         template_ids: data.data.template_ids,
         env: env,
+        online: data.data.online,
       },
       create: data.data,
     });
