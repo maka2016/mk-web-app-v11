@@ -66,6 +66,7 @@ model TemplateEntity {
   title             String   @db.VarChar
   desc              String?  @db.VarChar
   cover             String?  @db.VarChar
+  coverV2           String?  @db.VarChar
   deleted           Boolean  @default(false)
   deleted_confirmed Boolean  @default(false) @map("deleted_confirmed")
   create_time       DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
