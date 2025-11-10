@@ -9,17 +9,6 @@ export function useShareNavigation() {
   const router = useRouter();
 
   const toShare = (works_id: string, isRsvp = false) => {
-    if (isRsvp) {
-      if (APPBridge.judgeIsInApp()) {
-        APPBridge.navToPage({
-          url: `${location.origin}/mobile/rsvp/invitees?works_id=${works_id}&mode=public`,
-          type: 'URL',
-        });
-      } else {
-        router.push(`/mobile/rsvp/invitees?works_id=${works_id}&mode=public`);
-      }
-      return;
-    }
     const appid = getAppId();
     const uid = getUid();
     if (APPBridge.judgeIsInApp()) {
