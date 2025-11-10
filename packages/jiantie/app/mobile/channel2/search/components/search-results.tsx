@@ -1,5 +1,6 @@
 'use client';
 
+import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
 import { Clock, Search, X } from 'lucide-react';
@@ -144,9 +145,12 @@ export default function SearchResults({
 
     setSearchKeyword(keyword);
     // 更新URL
-    router.replace(
-      `/mobile/channel2/search?keyword=${encodeURIComponent(keyword)}`
-    );
+    navigateWithBridge({
+      path: `/mobile/channel2/search?keyword=${encodeURIComponent(keyword)}`,
+      router,
+      replace: true,
+      fullScreen: false,
+    });
   };
 
   // 点击搜索历史记录
@@ -157,9 +161,12 @@ export default function SearchResults({
     addSearchHistory(historyKeyword);
     setSearchHistory(getSearchHistory());
     // 更新URL
-    router.replace(
-      `/mobile/channel2/search?keyword=${encodeURIComponent(historyKeyword)}`
-    );
+    navigateWithBridge({
+      path: `/mobile/channel2/search?keyword=${encodeURIComponent(historyKeyword)}`,
+      router,
+      replace: true,
+      fullScreen: false,
+    });
   };
 
   // 删除单条历史记录
@@ -314,7 +321,10 @@ export default function SearchResults({
                   key={collection.id}
                   className='bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer'
                   onClick={() => {
-                    router.push(`/mobile/channel2/collection/${collection.id}`);
+                    navigateWithBridge({
+                      path: `/mobile/channel2/collection/${collection.id}`,
+                      router,
+                    });
                   }}
                 >
                   {/* 集合封面 */}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { VideoBgConfig } from '../../Envelope/types';
 import { blockStyleFilter } from '../shared';
 import { LottieConfig } from '../shared/types';
 import BgAreaV2, { BgAreaProps } from './Bg/BgAreaV2';
@@ -14,6 +15,7 @@ interface ComtainerWithBgProps extends React.HTMLAttributes<HTMLDivElement> {
   lottieBgConfig?: LottieConfig;
   lottieFgConfig?: LottieConfig;
   parallaxScrollBgConfig?: BgAreaProps['parallaxScrollBgConfig'];
+  videoBgConfig?: VideoBgConfig;
 }
 
 function ContainerWithBgV2(
@@ -31,6 +33,7 @@ function ContainerWithBgV2(
     lottieFgConfig,
     parallaxScrollBgConfig,
     clipBgScale,
+    videoBgConfig,
     ...other
   } = props;
   const {
@@ -124,6 +127,7 @@ function ContainerWithBgV2(
           id={`bg_for_${id}`}
           parallaxScrollBgConfig={parallaxScrollBgConfig}
           clipBgScale={clipBgScale}
+          videoBgConfig={videoBgConfig}
           key={
             _bgStyle.background ||
             _bgStyle.backgroundImage ||
@@ -143,6 +147,7 @@ function ContainerWithBgV2(
         id={`bg_for_${id}`}
         parallaxScrollBgConfig={parallaxScrollBgConfig}
         clipBgScale={clipBgScale}
+        videoBgConfig={videoBgConfig}
         key={
           _bgStyle.background ||
           _bgStyle.backgroundImage ||
