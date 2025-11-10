@@ -9,7 +9,6 @@ import { cdnApi } from '@mk/services';
 import { ChevronRight, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import StatusBar from '../../../../../components/StatusBar';
 
 interface Channel {
   id: number;
@@ -133,7 +132,6 @@ export default function Detail({ channelId }: DetailProps) {
         // backgroundColor: 'yellow',
       }}
     >
-      <StatusBar />
       {/* 顶部导航栏 */}
       <div>
         <div className='bg-white flex items-center justify-between px-4 py-3 mb-3'>
@@ -258,7 +256,7 @@ export default function Detail({ channelId }: DetailProps) {
                               return newSet;
                             });
                           }}
-                          className='flex items-center text-[#D53933] text-sm'
+                          className='inline-flex items-center gap-1 text-[#D53933] text-sm whitespace-nowrap'
                         >
                           <span>{isExpanded ? '收起' : '查看全部'}</span>
                           <ChevronRight

@@ -11,7 +11,7 @@ import CommonLogger from '@mk/loggerv7/logger';
 import { request } from '@mk/services';
 import { isPc, isWechat, LoadScript } from '@mk/utils';
 import dayjs from 'dayjs';
-import EnvelopeClientAnimation from '../../Envelope/EnvelopeClientAnimation';
+import { EnvelopeClientAnimation } from '../../Envelope/EnvelopeClientAnimation';
 import { EnvelopeConfig } from '../../Envelope/types';
 import { useWorksData } from '../utils';
 import { emitLoaded } from '../utils/utils';
@@ -223,22 +223,10 @@ export default function WebsiteApp(props: WebsiteAppProps) {
     }, 300);
   };
 
-  // 判断是否使用信封动画（有信封配置时不使用 PreloadPage）
-  const hasEnvelopeConfig = !!(
-    envelopeConfig &&
-    envelopeConfig.backgroundImage &&
-    (envelopeConfig.envelopeLeftOpeningImage ||
-      envelopeConfig.envelopeLeftImage) &&
-    (envelopeConfig.envelopeRightOpeningImage ||
-      envelopeConfig.envelopeRightImage) &&
-    envelopeConfig.envelopeInnerImage &&
-    envelopeConfig.envelopeSealImage
-  );
-
   return (
     <>
       {/* 客户端接管的信封动画，否则用原来的加载页 */}
-      {hasEnvelopeConfig ? (
+      {!!envelopeConfig ? (
         <EnvelopeClientAnimation
           key={worksDetail.id}
           config={envelopeConfig}

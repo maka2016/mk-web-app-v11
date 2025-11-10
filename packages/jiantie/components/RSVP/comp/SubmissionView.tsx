@@ -14,6 +14,7 @@ const FormCompWrapper = styled.div`
   border: var(--rsvp-border-width, 0px) solid
     var(--rsvp-border-color, transparent);
   box-shadow: var(--rsvp-box-shadow, none);
+  font-size: var(--rsvp-control-font-size, 14px);
 
   /* 使用配置的 backdrop-filter 值 */
   backdrop-filter: var(--rsvp-backdrop-filter, none);
@@ -127,6 +128,7 @@ export function SubmissionView({
               className='p-0 h-auto font-normal'
               style={{
                 color: 'var(--rsvp-primary-btn-color, #2563eb)',
+                fontSize: 'var(--rsvp-control-font-size, 14px)',
               }}
               onClick={onResubmit}
             >

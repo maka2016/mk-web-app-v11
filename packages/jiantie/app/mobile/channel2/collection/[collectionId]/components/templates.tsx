@@ -6,7 +6,6 @@ import APPBridge from '@mk/app-bridge';
 import { cdnApi, getAppId } from '@mk/services';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import StatusBar from '../../../../../../components/StatusBar';
 
 interface Channel {
   id: number;
@@ -115,7 +114,6 @@ export default function Templates({ collectionId }: TemplatesProps) {
 
   return (
     <div className='flex flex-col h-dvh bg-white'>
-      <StatusBar />
       {/* 顶部标题栏 */}
       <div className='flex items-center px-3 py-2 border-b border-gray-200 '>
         <button
