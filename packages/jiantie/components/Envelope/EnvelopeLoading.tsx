@@ -8,17 +8,7 @@ interface EnvelopeLoadingProps {
   config?: EnvelopeConfig;
 }
 
-export default function EnvelopeLoading({ config }: EnvelopeLoadingProps) {
-  console.log('[EnvelopeLoading SSR] 渲染信封 loading:', {
-    hasConfig: !!config,
-    hasBackgroundImage: !!config?.backgroundImage,
-    hasLeftOpeningImage:
-      !!config?.envelopeLeftOpeningImage || !!config?.envelopeLeftImage,
-    hasRightOpeningImage:
-      !!config?.envelopeRightOpeningImage || !!config?.envelopeRightImage,
-    hasSealImage: !!config?.envelopeSealImage,
-  });
-
+export function EnvelopeLoading({ config }: EnvelopeLoadingProps) {
   if (!config || !config.backgroundImage) {
     console.log('[EnvelopeLoading SSR] 无信封配置，跳过渲染');
     return null;
@@ -67,13 +57,23 @@ export default function EnvelopeLoading({ config }: EnvelopeLoadingProps) {
         }}
       >
         {/* 信封右开口（底层） */}
-        {(config.envelopeRightOpeningImage || config.envelopeRightImage) && (
+        {config.backgroundImage && (
           <img
-            src={
-              config.envelopeRightOpeningImage ||
-              config.envelopeRightImage ||
-              ''
-            }
+            src={config.backgroundImage}
+            alt='envelope-base'
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              zIndex: 0,
+            }}
+          />
+        )}
+
+        {config.envelopeRightOpeningImage && (
+          <img
+            src={config.envelopeRightOpeningImage}
             alt='envelope-right-opening'
             style={{
               position: 'absolute',
@@ -87,11 +87,9 @@ export default function EnvelopeLoading({ config }: EnvelopeLoadingProps) {
         )}
 
         {/* 信封左开口（覆盖右侧） */}
-        {(config.envelopeLeftOpeningImage || config.envelopeLeftImage) && (
+        {config.envelopeLeftOpeningImage && (
           <img
-            src={
-              config.envelopeLeftOpeningImage || config.envelopeLeftImage || ''
-            }
+            src={config.envelopeLeftOpeningImage}
             alt='envelope-left-opening'
             style={{
               position: 'absolute',

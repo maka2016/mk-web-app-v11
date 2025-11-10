@@ -26,63 +26,76 @@ const primaryColorItems: Array<{
     value: 'backgroundColor',
     type: 'color',
   },
-  {
-    label: '主题背景',
-    value: 'primaryButtonColor',
-    type: 'color',
-  },
-  {
-    label: '主题边框',
-    value: 'borderColor',
-    type: 'color',
-  },
-  {
-    label: '主题文字颜色',
-    value: 'primaryButtonTextColor',
-    type: 'color',
-  },
+  { label: '主题背景', value: 'primaryButtonColor', type: 'color' },
+  { label: '主题边框', value: 'borderColor', type: 'color' },
+  { label: '主题文字', value: 'primaryButtonTextColor', type: 'color' },
+  { label: '正文文字', value: 'textColor', type: 'color' },
   {
     label: '背景虚化',
     value: 'backdropFilter',
     type: 'text',
   },
+  {
+    label: '容器阴影',
+    value: 'boxShadow',
+    type: 'text',
+  },
 ];
 
-// 控件配色设置项（应用于不参加按钮、输入框和标签）
-const controlColorItems: Array<{
+const buttonStyleItems: Array<{ label: string; value: keyof RSVPTheme }> = [
+  { label: '按钮背景', value: 'secondaryButtonColor' },
+  { label: '按钮文字', value: 'secondaryButtonTextColor' },
+  { label: '按钮边框', value: 'secondaryButtonBorderColor' },
+];
+
+const inputFieldItems: Array<{ label: string; value: keyof RSVPTheme }> = [
+  { label: '输入背景', value: 'inputBackgroundColor' },
+  { label: '输入边框', value: 'inputBorderColor' },
+  { label: '输入文字', value: 'inputTextColor' },
+  { label: '占位符', value: 'inputPlaceholderColor' },
+];
+
+const textStyleItems: Array<{ label: string; value: keyof RSVPTheme }> = [
+  { label: '标签文字', value: 'labelColor' },
+];
+
+const dimensionItems: Array<{
   label: string;
   value: keyof RSVPTheme;
-  type?: 'color' | 'number';
+  min?: number;
+  max?: number;
+  step?: number;
+  presets?: number[];
 }> = [
   {
-    label: '控件背景',
-    value: 'secondaryButtonColor',
-    type: 'color',
-  },
-  {
-    label: '控件文字',
-    value: 'secondaryButtonTextColor',
-    type: 'color',
-  },
-  {
-    label: '控件边框',
-    value: 'secondaryButtonBorderColor',
-    type: 'color',
-  },
-  {
-    label: '标签文字',
-    value: 'labelColor',
-    type: 'color',
+    label: '控件字号',
+    value: 'controlFontSize',
+    min: 10,
+    max: 28,
+    step: 1,
+    presets: [12, 14, 16, 18, 20],
   },
   {
     label: '圆角大小',
     value: 'borderRadius',
-    type: 'number',
+    min: 0,
+    max: 30,
+    step: 1,
   },
   {
     label: '边框宽度',
     value: 'borderWidth',
-    type: 'number',
+    min: 0,
+    max: 10,
+    step: 1,
+  },
+  {
+    label: '控件内间距',
+    value: 'controlPadding',
+    min: 4,
+    max: 32,
+    step: 4,
+    presets: [8, 12, 16, 20, 24],
   },
 ];
 
@@ -97,7 +110,7 @@ const ColorItemSetting = ({
     label: string;
   };
   theme: RSVPTheme;
-  onChangeTheme: (newTheme: RSVPTheme) => void;
+  onChangeTheme: (newTheme: RSVPTheme, changedKey: keyof RSVPTheme) => void;
 }) => {
   const currentValue =
     (theme?.[item.value] as string) ||
@@ -125,7 +138,7 @@ const ColorItemSetting = ({
               ...theme,
               [item.value]: colorValue,
             };
-            onChangeTheme(newTheme);
+            onChangeTheme(newTheme, item.value);
           }
         }}
         wrapper={() => (
@@ -157,7 +170,7 @@ const ColorItemSetting = ({
             ...theme,
             [item.value]: e.target.value,
           };
-          onChangeTheme(newTheme);
+          onChangeTheme(newTheme, item.value);
         }}
       />
     </div>
@@ -176,7 +189,7 @@ const TextItemSetting = ({
     label: string;
   };
   theme: RSVPTheme;
-  onChangeTheme: (newTheme: RSVPTheme) => void;
+  onChangeTheme: (newTheme: RSVPTheme, changedKey: keyof RSVPTheme) => void;
   getValue: (key: keyof RSVPTheme) => any;
 }) => {
   const currentValue = (getValue(item.value) as string) || '';
@@ -203,7 +216,7 @@ const TextItemSetting = ({
             ...theme,
             [item.value]: e.target.value || 'none',
           };
-          onChangeTheme(newTheme);
+          onChangeTheme(newTheme, item.value);
         }}
       />
     </div>
@@ -217,51 +230,158 @@ const NumberItemSetting = ({
   onChangeTheme,
   min = 0,
   max = 30,
-  draggingValue,
-  setDraggingValue,
-  getValue,
+  step = 1,
+  suffix = 'px',
+  presets,
+  currentValue,
 }: {
   item: {
     value: keyof RSVPTheme;
     label: string;
   };
   theme: RSVPTheme;
-  onChangeTheme: (newTheme: RSVPTheme) => void;
+  onChangeTheme: (newTheme: RSVPTheme, changedKey: keyof RSVPTheme) => void;
   min?: number;
   max?: number;
-  draggingValue: number | null;
-  setDraggingValue: (value: number | null) => void;
-  getValue: (key: keyof RSVPTheme) => any;
+  step?: number;
+  suffix?: string;
+  presets?: number[];
+  currentValue: number;
 }) => {
-  const currentValue = getValue(item.value) as number;
+  const [draftNumber, setDraftNumber] = useState<number | null>(null);
+  const [inputText, setInputText] = useState<string>('');
+
+  const clampValue = (value: number) =>
+    Math.min(max, Math.max(min, Number.isFinite(value) ? value : min));
+
+  const commitValue = (value: number) => {
+    const clamped = clampValue(value);
+    onChangeTheme({ ...theme, [item.value]: clamped }, item.value);
+  };
+
+  const effectiveNumber = draftNumber ?? currentValue;
+  const displayText =
+    inputText !== ''
+      ? inputText
+      : String(Math.round(effectiveNumber * 100) / 100);
 
   return (
-    <div className='flex items-center gap-2'>
-      <Label
-        className='text-xs w-[80px] flex-shrink-0'
-        style={{ fontSize: 12 }}
-      >
-        {item.label}
-      </Label>
-      <div className='flex-1 flex items-center gap-2'>
-        <Slider
-          value={[draggingValue !== null ? draggingValue : currentValue]}
-          min={min}
-          max={max}
-          step={1}
-          onValueChange={values => {
-            setDraggingValue(values[0]);
-          }}
-          onValueCommit={values => {
-            setDraggingValue(null);
-            onChangeTheme({ ...theme, [item.value]: values[0] });
-          }}
-          className='flex-1'
-        />
-        <span className='text-xs text-gray-600 w-[40px] flex-shrink-0 text-right'>
-          {draggingValue !== null ? draggingValue : currentValue}px
-        </span>
+    <div className='flex flex-col gap-2'>
+      <div className='flex items-center gap-2'>
+        <Label
+          className='text-xs w-[80px] flex-shrink-0'
+          style={{ fontSize: 12 }}
+        >
+          {item.label}
+        </Label>
+        <div className='flex-1 flex items-center gap-2'>
+          <Slider
+            value={[clampValue(effectiveNumber)]}
+            min={min}
+            max={max}
+            step={step}
+            onValueChange={values => {
+              const next = values[0];
+              setDraftNumber(next);
+              setInputText(String(next));
+            }}
+            onValueCommit={values => {
+              const next = clampValue(values[0]);
+              commitValue(next);
+              setDraftNumber(null);
+              setInputText('');
+            }}
+            className='flex-1'
+          />
+          <div className='flex items-center gap-1 w-[80px]'>
+            <Input
+              variantSize='xs'
+              type='number'
+              inputMode='numeric'
+              value={displayText}
+              className='h-6 text-xs text-right'
+              style={{
+                backgroundColor: '#f3f3f5',
+                border: 'none',
+              }}
+              min={min}
+              max={max}
+              step={step}
+              onChange={e => {
+                const raw = e.target.value;
+                setInputText(raw);
+                if (raw.trim() === '') {
+                  setDraftNumber(null);
+                  return;
+                }
+                const numeric = Number(raw);
+                if (!Number.isNaN(numeric)) {
+                  setDraftNumber(numeric);
+                }
+              }}
+              onBlur={() => {
+                if (inputText.trim() === '') {
+                  setDraftNumber(null);
+                  setInputText('');
+                  return;
+                }
+                const numeric = Number(inputText);
+                if (!Number.isNaN(numeric)) {
+                  commitValue(numeric);
+                }
+                setDraftNumber(null);
+                setInputText('');
+              }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  if (inputText.trim() === '') {
+                    setDraftNumber(null);
+                    setInputText('');
+                    return;
+                  }
+                  const numeric = Number(inputText);
+                  if (!Number.isNaN(numeric)) {
+                    commitValue(numeric);
+                  }
+                  setDraftNumber(null);
+                  setInputText('');
+                }
+                if (e.key === 'Escape') {
+                  setDraftNumber(null);
+                  setInputText('');
+                }
+              }}
+            />
+            <span className='text-xs text-gray-600'>{suffix}</span>
+          </div>
+        </div>
       </div>
+      {presets && presets.length > 0 ? (
+        <div className='flex flex-wrap items-center gap-2 pl-[80px]'>
+          {presets.map(presetValue => {
+            const isActive = currentValue === presetValue;
+            return (
+              <button
+                key={presetValue}
+                type='button'
+                className={cls(
+                  'px-2 py-1 text-xs rounded border transition-colors',
+                  isActive
+                    ? 'border-[#09090B] bg-[#f3f4f6] text-[#09090B]'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-800'
+                )}
+                onClick={() => {
+                  commitValue(presetValue);
+                  setDraftNumber(null);
+                  setInputText('');
+                }}
+              >
+                {presetValue}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 };
@@ -292,14 +412,6 @@ export default function RSVPThemeSetting({
 
   const [theme, setTheme] = useState<RSVPTheme>(() =>
     initializeTheme(formControledValues?.theme)
-  );
-
-  // 用于拖动过程中的临时值
-  const [draggingBorderRadius, setDraggingBorderRadius] = useState<
-    number | null
-  >(null);
-  const [draggingBorderWidth, setDraggingBorderWidth] = useState<number | null>(
-    null
   );
 
   // 检查当前主题是否匹配某个预设
@@ -365,18 +477,19 @@ export default function RSVPThemeSetting({
     }
   };
 
-  const onChangeTheme = (newTheme: RSVPTheme) => {
-    // 如果修改了控件配色，自动同步到输入框和占位符
+  const onChangeTheme = (newTheme: RSVPTheme, changedKey?: keyof RSVPTheme) => {
     const syncedTheme = { ...newTheme };
-    if (newTheme.secondaryButtonColor !== undefined) {
+
+    if (changedKey === 'secondaryButtonColor') {
       syncedTheme.inputBackgroundColor = newTheme.secondaryButtonColor;
     }
-    if (newTheme.secondaryButtonTextColor !== undefined) {
+
+    if (changedKey === 'secondaryButtonTextColor') {
       syncedTheme.inputTextColor = newTheme.secondaryButtonTextColor;
-      // 占位符颜色使用控件文字颜色
       syncedTheme.inputPlaceholderColor = newTheme.secondaryButtonTextColor;
     }
-    if (newTheme.secondaryButtonBorderColor !== undefined) {
+
+    if (changedKey === 'secondaryButtonBorderColor') {
       syncedTheme.inputBorderColor = newTheme.secondaryButtonBorderColor;
     }
 
@@ -525,48 +638,78 @@ export default function RSVPThemeSetting({
 
       <Separator />
 
-      {/* 控件配色设置 */}
+      {/* 控件样式设置 */}
       <div>
         <div className='text-xs font-semibold flex items-center gap-1 mb-3'>
           <Palette size={14} />
-          <span>控件配色</span>
+          <span>控件样式</span>
         </div>
-        <div className='flex flex-col gap-2'>
-          {controlColorItems.map(item => {
-            if (item.type === 'number') {
-              // 数字类型：圆角大小或边框宽度
-              const isBorderRadius = item.value === 'borderRadius';
-              return (
-                <NumberItemSetting
-                  key={item.value}
-                  item={item}
-                  theme={theme}
-                  onChangeTheme={onChangeTheme}
-                  min={isBorderRadius ? 0 : 0}
-                  max={isBorderRadius ? 30 : 10}
-                  draggingValue={
-                    isBorderRadius ? draggingBorderRadius : draggingBorderWidth
-                  }
-                  setDraggingValue={
-                    isBorderRadius
-                      ? setDraggingBorderRadius
-                      : setDraggingBorderWidth
-                  }
-                  getValue={getValue}
-                />
-              );
-            } else {
-              // 颜色类型
-              return (
+        <div className='flex flex-col gap-4'>
+          <div>
+            <div className='text-[11px] font-medium text-gray-500 mb-2'>
+              按钮
+            </div>
+            <div className='flex flex-col gap-2'>
+              {buttonStyleItems.map(item => (
                 <ColorItemSetting
                   key={item.value}
                   item={item}
                   theme={theme}
                   onChangeTheme={onChangeTheme}
                 />
-              );
-            }
-          })}
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className='text-[11px] font-medium text-gray-500 mb-2'>
+              输入框
+            </div>
+            <div className='flex flex-col gap-2'>
+              {inputFieldItems.map(item => (
+                <ColorItemSetting
+                  key={item.value}
+                  item={item}
+                  theme={theme}
+                  onChangeTheme={onChangeTheme}
+                />
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className='text-[11px] font-medium text-gray-500 mb-2'>
+              文本
+            </div>
+            <div className='flex flex-col gap-2'>
+              {textStyleItems.map(item => (
+                <ColorItemSetting
+                  key={item.value}
+                  item={item}
+                  theme={theme}
+                  onChangeTheme={onChangeTheme}
+                />
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className='text-[11px] font-medium text-gray-500 mb-2'>
+              布局
+            </div>
+            <div className='flex flex-col gap-2'>
+              {dimensionItems.map(item => (
+                <NumberItemSetting
+                  key={`${item.value}-${getValue(item.value)}`}
+                  item={{ value: item.value, label: item.label }}
+                  theme={theme}
+                  onChangeTheme={onChangeTheme}
+                  min={item.min}
+                  max={item.max}
+                  step={item.step}
+                  presets={item.presets}
+                  currentValue={Number(getValue(item.value) ?? 0)}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

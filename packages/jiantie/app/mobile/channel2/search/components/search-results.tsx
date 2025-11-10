@@ -1,13 +1,15 @@
 'use client';
 
-import { backWithBridge, navigateWithBridge } from '@/utils/navigate-with-bridge';
+import {
+  backWithBridge,
+  navigateWithBridge,
+} from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
 import { Clock, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import StatusBar from '../../../../../components/StatusBar';
 
 interface Collection {
   id: number;
@@ -135,22 +137,19 @@ export default function SearchResults({
     }
   };
 
+  const executeSearch = () => {
+    const trimmedKeyword = keyword.trim();
+    if (!trimmedKeyword) return;
+
+    addSearchHistory(trimmedKeyword);
+    setSearchHistory(getSearchHistory());
+    setSearchKeyword(trimmedKeyword);
+    inputRef.current?.blur();
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!keyword.trim()) return;
-
-    // 保存搜索历史
-    addSearchHistory(keyword.trim());
-    setSearchHistory(getSearchHistory());
-
-    setSearchKeyword(keyword);
-    // 更新URL
-    navigateWithBridge({
-      path: `/mobile/channel2/search?keyword=${encodeURIComponent(keyword)}`,
-      router,
-      replace: true,
-      fullScreen: false,
-    });
+    executeSearch();
   };
 
   // 点击搜索历史记录
@@ -161,12 +160,6 @@ export default function SearchResults({
     addSearchHistory(historyKeyword);
     setSearchHistory(getSearchHistory());
     // 更新URL
-    navigateWithBridge({
-      path: `/mobile/channel2/search?keyword=${encodeURIComponent(historyKeyword)}`,
-      router,
-      replace: true,
-      fullScreen: false,
-    });
   };
 
   // 删除单条历史记录
@@ -184,7 +177,6 @@ export default function SearchResults({
 
   return (
     <div className='flex flex-col h-dvh bg-gray-50'>
-      <StatusBar />
       {/* 搜索栏 */}
       <div className='bg-white shadow-sm p-4 sticky top-0 z-10'>
         <form onSubmit={handleSearch} className='flex items-center gap-2'>
@@ -212,8 +204,14 @@ export default function SearchResults({
             <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400' />
             <input
               ref={inputRef}
-              type='text'
+              type='search'
               value={keyword}
+              onKeyDown={event => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  executeSearch();
+                }
+              }}
               onChange={e => setKeyword(e.target.value)}
               placeholder='搜索模板集合...'
               style={{
@@ -226,7 +224,7 @@ export default function SearchResults({
 
           <button
             type='submit'
-            className='px-4 py-2 bg-[#D53933] text-white rounded-lg  transition-colors '
+            className='px-4 h-10 bg-[#D53933] text-white rounded-lg  transition-colors '
             disabled={!keyword.trim() || loading}
           >
             搜索

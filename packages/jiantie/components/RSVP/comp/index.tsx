@@ -38,9 +38,14 @@ function themeToCSSVariables(theme: RSVPTheme): React.CSSProperties {
     '--rsvp-border-width': `${mergedTheme.borderWidth}px`,
     '--rsvp-box-shadow': mergedTheme.boxShadow,
     '--rsvp-backdrop-filter': mergedTheme.backdropFilter || 'none',
+    '--rsvp-control-font-size': `${
+      mergedTheme.controlFontSize ?? DEFAULT_RSVP_THEME.controlFontSize
+    }px`,
+    '--rsvp-control-padding': `${
+      mergedTheme.controlPadding ?? DEFAULT_RSVP_THEME.controlPadding
+    }px`,
     '--rsvp-primary-btn-color': mergedTheme.primaryButtonColor,
     '--rsvp-primary-btn-text-color': mergedTheme.primaryButtonTextColor,
-    '--rsvp-primary-btn-hover-color': mergedTheme.primaryButtonHoverColor,
     '--rsvp-secondary-btn-color': mergedTheme.secondaryButtonColor,
     '--rsvp-secondary-btn-text-color': mergedTheme.secondaryButtonTextColor,
     '--rsvp-secondary-btn-border-color': mergedTheme.secondaryButtonBorderColor,
@@ -154,7 +159,10 @@ interface RSVPCompProps {
 const FormCompWrapper = styled.div`
   background-color: var(--rsvp-bg-color);
   box-shadow: var(--rsvp-box-shadow);
-  font-size: 12px;
+  border-radius: var(--rsvp-border-radius);
+  border: var(--rsvp-border-width, 0px) solid
+    var(--rsvp-border-color, transparent);
+  font-size: var(--rsvp-control-font-size, 14px);
   overflow: hidden;
   position: relative;
   z-index: 11;
@@ -781,9 +789,10 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         {!isInviteeLink && (
           <div className='space-y-1 header'>
             <label
-              className='block text-xs font-medium text-gray-600'
+              className='block font-medium text-gray-600'
               style={{
                 color: 'var(--rsvp-label-color)',
+                fontSize: 'var(--rsvp-control-font-size)',
               }}
             >
               您的姓名 <span className='text-red-500'>*</span>
@@ -816,13 +825,19 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                     });
                 }
               }}
-              className='border-2 h-9 focus:ring-0 [&::placeholder]:text-[var(--rsvp-input-placeholder-color)]'
+              className='focus:ring-0 [&::placeholder]:text-[var(--rsvp-input-placeholder-color)]'
               style={{
                 borderRadius: 'var(--rsvp-border-radius)',
-                borderWidth: '2px',
+                borderWidth: 'var(--rsvp-border-width)',
                 backgroundColor: 'var(--rsvp-input-bg-color)',
-                borderColor: 'var(--rsvp-border-color)',
+                borderColor: 'var(--rsvp-input-border-color)',
                 color: 'var(--rsvp-input-text-color)',
+                fontSize: 'var(--rsvp-control-font-size)',
+                borderStyle: 'solid',
+                paddingTop: 'var(--rsvp-control-padding)',
+                paddingBottom: 'var(--rsvp-control-padding)',
+                paddingLeft: 'calc(var(--rsvp-control-padding) * 1.5)',
+                paddingRight: 'calc(var(--rsvp-control-padding) * 1.5)',
               }}
             />
           </div>
@@ -831,18 +846,18 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           {/* 您是否参加？ */}
           <div className='space-y-1'>
             <div
-              className='text-xs font-medium'
+              className='font-medium'
               style={{
                 color: 'var(--rsvp-label-color)',
+                fontSize: 'var(--rsvp-control-font-size)',
               }}
             >
               您是否参加？
             </div>
             {/* 出席/不出席选择按钮 */}
             {!submitting && !resultMsg && (
-              <div className='flex items-center gap-2'>
+              <div className='flex gap-2'>
                 <Button
-                  size='lg'
                   disabled={
                     isEditorMode
                       ? false
@@ -867,7 +882,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                         });
                     }
                   }}
-                  className='flex-1 h-10 font-medium'
+                  className='flex-1 font-medium h-auto'
                   style={{
                     borderRadius: 'var(--rsvp-border-radius)',
                     borderWidth: 'var(--rsvp-border-width)',
@@ -883,13 +898,19 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                       willAttend === true
                         ? 'var(--rsvp-primary-btn-color)'
                         : 'var(--rsvp-secondary-btn-border-color)',
+                    fontSize: 'var(--rsvp-control-font-size)',
+                    borderStyle: 'solid',
+                    paddingTop: 'var(--rsvp-control-padding)',
+                    paddingBottom: 'var(--rsvp-control-padding)',
+                    paddingLeft: 'calc(var(--rsvp-control-padding) * 1.5)',
+                    paddingRight: 'calc(var(--rsvp-control-padding) * 1.5)',
+                    lineHeight: 'calc(var(--rsvp-control-font-size) * 1.2)',
                   }}
                   variant={willAttend === true ? 'default' : 'outline'}
                 >
                   参加
                 </Button>
                 <Button
-                  size='lg'
                   disabled={
                     isEditorMode
                       ? false
@@ -914,7 +935,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                     }
                     handleSubmit(false);
                   }}
-                  className='flex-1 h-10 font-medium'
+                  className='flex-1 h-auto'
                   style={{
                     borderRadius: 'var(--rsvp-border-radius)',
                     borderWidth: 'var(--rsvp-border-width)',
@@ -930,6 +951,13 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                       willAttend === false
                         ? 'var(--rsvp-primary-btn-color)'
                         : 'var(--rsvp-secondary-btn-border-color)',
+                    fontSize: 'var(--rsvp-control-font-size)',
+                    borderStyle: 'solid',
+                    paddingTop: 'var(--rsvp-control-padding)',
+                    paddingBottom: 'var(--rsvp-control-padding)',
+                    paddingLeft: 'calc(var(--rsvp-control-padding) * 1.5)',
+                    paddingRight: 'calc(var(--rsvp-control-padding) * 1.5)',
+                    lineHeight: 'calc(var(--rsvp-control-font-size) * 1.2)',
                   }}
                   variant={willAttend === false ? 'default' : 'outline'}
                 >
@@ -959,30 +987,20 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                 size='lg'
                 disabled={submitting}
                 onClick={() => handleSubmit(true)}
-                className='w-full h-10 font-medium'
+                className='w-full font-medium'
                 style={{
                   borderRadius: 'var(--rsvp-border-radius)',
                   borderWidth: 'var(--rsvp-border-width)',
+                  borderColor: 'var(--rsvp-primary-btn-color)',
                   backgroundColor: 'var(--rsvp-primary-btn-color)',
                   color: 'var(--rsvp-primary-btn-text-color)',
-                }}
-                onMouseEnter={e => {
-                  // 从 CSS 变量获取 hover 颜色
-                  const root = e.currentTarget.closest(
-                    '[data-form-id]'
-                  ) as HTMLElement;
-                  if (root) {
-                    const hoverColor = getComputedStyle(root)
-                      .getPropertyValue('--rsvp-primary-btn-hover-color')
-                      .trim();
-                    if (hoverColor) {
-                      e.currentTarget.style.backgroundColor = hoverColor;
-                    }
-                  }
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.backgroundColor =
-                    'var(--rsvp-primary-btn-color)';
+                  fontSize: 'var(--rsvp-control-font-size)',
+                  borderStyle: 'solid',
+                  paddingTop: 'var(--rsvp-control-padding)',
+                  paddingBottom: 'var(--rsvp-control-padding)',
+                  paddingLeft: 'calc(var(--rsvp-control-padding) * 1.5)',
+                  paddingRight: 'calc(var(--rsvp-control-padding) * 1.5)',
+                  lineHeight: 'calc(var(--rsvp-control-font-size) * 1.2)',
                 }}
               >
                 {submitting ? '提交中...' : '确认'}

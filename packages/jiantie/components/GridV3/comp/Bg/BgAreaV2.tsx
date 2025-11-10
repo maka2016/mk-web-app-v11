@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { VideoBgConfig } from '../../../Envelope/types';
+import { VideoBgConfig } from '../VideoBg/types';
 import BgContainer from './BgContainer';
 import ClipModeBgV4 from './ClicpModeBgV4';
 import VideoBg from './VideoBg';

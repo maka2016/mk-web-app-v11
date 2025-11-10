@@ -1,4 +1,4 @@
-import EnvelopeLoading from '@/components/Envelope/EnvelopeLoading';
+import { EnvelopeLoading } from '@/components/Envelope/EnvelopeLoading';
 import { EnvelopeConfig } from '@/components/Envelope/types';
 import { getShareInfo } from '@/components/GridV3/comp/provider/utils';
 import MiniPShare from '@/components/MiniPShare';

@@ -140,11 +140,12 @@ export interface RSVPTheme {
   borderWidth?: number; // 边框宽度（px）
   boxShadow?: string; // 阴影
   backdropFilter?: string; // 背景虚化（完整的 backdrop-filter 值，如 "blur(16px) saturate(180%)"）
+  controlFontSize?: number; // 控件字体大小（px）
+  controlPadding?: number; // 控件内间距（px）
 
   // 按钮相关
   primaryButtonColor?: string; // 主要按钮背景色（参加、确认按钮）
   primaryButtonTextColor?: string; // 主要按钮文字颜色
-  primaryButtonHoverColor?: string; // 主要按钮悬停颜色
   secondaryButtonColor?: string; // 次要按钮背景色（不参加按钮）
   secondaryButtonTextColor?: string; // 次要按钮文字颜色
   secondaryButtonBorderColor?: string; // 次要按钮边框颜色
@@ -170,9 +171,10 @@ export const DEFAULT_RSVP_THEME: RSVPTheme = {
   borderWidth: 1,
   boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
   backdropFilter: 'none',
+  controlFontSize: 14,
+  controlPadding: 12,
   primaryButtonColor: '#09090B',
   primaryButtonTextColor: '#ffffff',
-  primaryButtonHoverColor: '#09090B',
   secondaryButtonColor: '#ffffff',
   secondaryButtonTextColor: '#09090B',
   secondaryButtonBorderColor: '#09090B',
@@ -195,9 +197,10 @@ export const RSVP_THEME_PRESETS: Record<string, RSVPTheme> = {
     borderWidth: 1,
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
     backdropFilter: 'none',
+    controlFontSize: 14,
+    controlPadding: 12,
     primaryButtonColor: '#09090B',
     primaryButtonTextColor: '#ffffff',
-    primaryButtonHoverColor: '#09090B',
     secondaryButtonColor: '#ffffff',
     secondaryButtonTextColor: '#09090B',
     secondaryButtonBorderColor: '#09090B',
@@ -216,9 +219,10 @@ export const RSVP_THEME_PRESETS: Record<string, RSVPTheme> = {
     boxShadow:
       '0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04)',
     backdropFilter: 'blur(16px) saturate(180%)',
+    controlFontSize: 14,
+    controlPadding: 12,
     primaryButtonColor: 'rgba(0, 122, 255, 0.9)',
     primaryButtonTextColor: '#ffffff',
-    primaryButtonHoverColor: 'rgba(0, 122, 255, 1)',
     secondaryButtonColor: 'rgba(255, 255, 255, 0.5)',
     secondaryButtonTextColor: '#1d1d1f',
     secondaryButtonBorderColor: 'rgba(0, 0, 0, 0.1)',
@@ -236,9 +240,10 @@ export const RSVP_THEME_PRESETS: Record<string, RSVPTheme> = {
     borderWidth: 1,
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
     backdropFilter: 'none',
+    controlFontSize: 14,
+    controlPadding: 12,
     primaryButtonColor: '#ffffff',
     primaryButtonTextColor: '#09090B',
-    primaryButtonHoverColor: '#f3f4f6',
     secondaryButtonColor: '#27272a',
     secondaryButtonTextColor: '#ffffff',
     secondaryButtonBorderColor: '#ffffff',

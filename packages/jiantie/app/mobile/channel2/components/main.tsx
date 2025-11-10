@@ -9,7 +9,6 @@ import { TemplateMarketChannelEntity } from '@workspace/database/generated/clien
 import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import StatusBar from '../../../../components/StatusBar';
 
 interface Channel
   extends Omit<
@@ -75,13 +74,13 @@ export default function Main({ appid = 'jiantie' }: Props) {
     <div
       className='flex flex-col h-dvh'
       style={{
+        paddingTop: 'var(--safe-area-inset-top)',
         backgroundImage: 'url(https://res.maka.im/assets/jiantie/beijing4.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'top',
         backgroundRepeat: 'no-repeat',
       }}
     >
-      <StatusBar bgColor='transparent' /> {/* 顶部Logo区 */}
       <div
         className='flex
        items-center justify-between
