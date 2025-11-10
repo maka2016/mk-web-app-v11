@@ -1,6 +1,6 @@
 'use client';
 import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
-import { getAppId, getUid } from '@/services';
+import { checkPurchased, getAppId, getUid } from '@/services';
 import { useStore } from '@/store';
 import { getUrlWithParam } from '@/utils';
 import { useCheckPublish } from '@/utils/checkPubulish';
@@ -29,7 +29,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { WorkInfoCard } from '../components/WorkInfoCard';
 
@@ -43,7 +43,8 @@ export default function WorkDetailPage() {
   const params = useParams();
   const router = useRouter();
   const appid = getAppId();
-  const { isVip } = useStore();
+  const uid = getUid();
+  const { isVip, vipShow, setVipShow } = useStore();
   const { canShareWithoutWatermark } = useCheckPublish();
   const workId = params.id as string;
 
@@ -53,6 +54,8 @@ export default function WorkDetailPage() {
   const [canShare, setCanShare] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const prevVipShowRef = useRef(false);
 
   // 返回上一页
   const handleBack = () => {
@@ -62,6 +65,64 @@ export default function WorkDetailPage() {
       router.back();
     }
   };
+
+  // 检查用户权限（会员或作品购买状态）
+  useEffect(() => {
+    const checkPermission = async () => {
+      if (!workId || !uid || !work) return;
+
+      // 如果是会员，直接有权限
+      if (isVip) {
+        setHasPermission(true);
+        return;
+      }
+
+      // 检查作品是否已购买
+      try {
+        const purchased = await checkPurchased(workId, uid, appid);
+        setHasPermission(purchased);
+
+        // 如果没有权限，显示 VIP 拦截页
+        if (!purchased) {
+          setVipShow(true, {
+            works_id: workId,
+            ref_object_id: work.template_id || '',
+            tab: appid === 'xueji' ? 'business' : 'personal',
+            vipType: 'rsvp',
+          });
+        }
+      } catch (error) {
+        console.error('Failed to check purchase status:', error);
+        setHasPermission(false);
+        // 检查失败时也显示 VIP 拦截页
+        setVipShow(true, {
+          works_id: workId,
+          ref_object_id: work.template_id || '',
+          tab: appid === 'xueji' ? 'business' : 'personal',
+          vipType: 'rsvp',
+        });
+      }
+    };
+
+    // 只有在作品加载完成后才检查权限
+    if (work && !loading) {
+      checkPermission();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workId, uid, appid, isVip, work, loading]);
+
+  // 监听 VIP 拦截页关闭事件，关闭时返回上一页
+  useEffect(() => {
+    // 如果 VIP 拦截页从打开变为关闭，且之前没有权限，则返回上一页
+    if (prevVipShowRef.current && !vipShow && hasPermission === false) {
+      if (APPBridge.judgeIsInApp()) {
+        APPBridge.navAppBack();
+      } else {
+        router.back();
+      }
+    }
+    prevVipShowRef.current = vipShow;
+  }, [vipShow, hasPermission, router]);
 
   // 加载作品详情
   useEffect(() => {
