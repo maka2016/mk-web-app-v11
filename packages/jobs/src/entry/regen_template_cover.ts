@@ -1,6 +1,6 @@
 import { prisma } from '@workspace/database';
-import dotenv from 'dotenv';
 import axios from 'axios';
+import dotenv from 'dotenv';
 import {
   JTBitTables,
   TemplateChannelItem,
@@ -53,7 +53,7 @@ const dealOneTemplate = async (data: TemplateChannelItem) => {
       s.name AS spec_name,
       s.width AS spec_width,
       s.height AS spec_height,
-      s.unit AS spec_unit 
+      s.unit AS spec_unit
     FROM template_entity AS t
     LEFT JOIN works_spec_entity AS s
       ON t.spec_id = s.id
@@ -105,6 +105,20 @@ const dealOneTemplate = async (data: TemplateChannelItem) => {
         coverV2: coverUrl,
       },
     });
+
+    await batchCreateAndUpdate(
+      [],
+      [
+        {
+          record_id: data.record_id,
+          fields: {
+            封面V2生成状态: '已生成',
+          },
+        },
+      ],
+      JTBitTables['模版生产'],
+      100
+    );
   } else {
     console.log('非长页H5。直接更新', templateId, tempalteData.cover);
     //直接讲模版的cover复制给coverV2
@@ -156,9 +170,12 @@ const main = async () => {
     }
   );
 
+  console.log('tempalteRawOnbit', tempalteRawOnbit.length);
+
   for (let i in tempalteRawOnbit) {
     const item = tempalteRawOnbit[i];
     await dealOneTemplate(item);
+    console.log('dealOneTemplate', i, ':', tempalteRawOnbit.length);
   }
 
   //多维表格更新
