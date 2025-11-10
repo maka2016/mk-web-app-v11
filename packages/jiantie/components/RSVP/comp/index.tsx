@@ -190,6 +190,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
   const router = useRouter();
   const rsvp = useRSVP();
   const { config, loading, error, fields } = rsvp;
+  console.log('config', config);
 
   // 合并主题设置，使用默认值填充缺失的项
   const mergedTheme = useMemo(() => {
@@ -981,7 +982,6 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           {(willAttend === true || isEditorMode) && (
             <div className='pt-3'>
               <ButtonWithTheme
-                size='lg'
                 disabled={submitting}
                 onClick={() => handleSubmit(true)}
                 className='w-full'
@@ -991,7 +991,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                   color: 'var(--rsvp-primary-btn-text-color)',
                 }}
               >
-                {submitting ? '提交中...' : '确认出席'}
+                {submitting ? '提交中...' : '提交'}
               </ButtonWithTheme>
               {config.max_submit_count != null ? (
                 <div className='text-center mt-2'>

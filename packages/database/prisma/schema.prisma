@@ -180,6 +180,7 @@ model RsvpFormConfigEntity {
 
   /// 状态管理
   enabled     Boolean  @default(true) /// 是否启用
+  collect_form Boolean @default(false) @map("collect_form") /// 是否收集表单信息
   deleted     Boolean  @default(false)
   create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
   update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz
