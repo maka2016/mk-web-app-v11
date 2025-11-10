@@ -7,6 +7,7 @@ import { useCheckPublish } from '@/utils/checkPubulish';
 import { toVipPage } from '@/utils/jiantie';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
+import { EventEmitter } from '@mk/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,8 +43,6 @@ type RSVPStats = {
 export default function WorkDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const appid = getAppId();
-  const uid = getUid();
   const { isVip, vipShow, setVipShow } = useStore();
   const { canShareWithoutWatermark } = useCheckPublish();
   const workId = params.id as string;
@@ -69,6 +68,8 @@ export default function WorkDetailPage() {
   // 检查用户权限（会员或作品购买状态）
   useEffect(() => {
     const checkPermission = async () => {
+      const appid = getAppId();
+      const uid = getUid();
       if (!workId || !uid || !work) return;
 
       // 如果是会员，直接有权限
@@ -109,20 +110,35 @@ export default function WorkDetailPage() {
       checkPermission();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workId, uid, appid, isVip, work, loading]);
+  }, [workId, isVip, work, loading]);
 
-  // 监听 VIP 拦截页关闭事件，关闭时返回上一页
+  // 监听 VIP 拦截页关闭事件
   useEffect(() => {
-    // 如果 VIP 拦截页从打开变为关闭，且之前没有权限，则返回上一页
+    const handleVipModalOpenChange = (value: boolean) => {
+      console.log('value', value);
+      if (!value) {
+        // 用户没有购买会员，返回上一页
+        if (APPBridge.judgeIsInApp()) {
+          APPBridge.navAppBack();
+        } else {
+          router.back();
+        }
+      }
+    };
+    EventEmitter.on('VIP_MODAL_OPEN_CHANGE', handleVipModalOpenChange);
+    // 如果 VIP 拦截页从打开变为关闭，且之前没有权限
     if (prevVipShowRef.current && !vipShow && hasPermission === false) {
-      if (APPBridge.judgeIsInApp()) {
-        APPBridge.navAppBack();
-      } else {
-        router.back();
+      // 检查用户是否购买了会员
+      if (isVip) {
+        // 用户购买了会员，更新权限状态并留在当前页
+        setHasPermission(true);
       }
     }
     prevVipShowRef.current = vipShow;
-  }, [vipShow, hasPermission, router]);
+    return () => {
+      EventEmitter.rm('VIP_MODAL_OPEN_CHANGE', handleVipModalOpenChange);
+    };
+  }, [vipShow, hasPermission, isVip, router]);
 
   // 加载作品详情
   useEffect(() => {
@@ -192,6 +208,7 @@ export default function WorkDetailPage() {
   const handlePreview = () => {
     if (!work) return;
     const uid = getUid();
+    const appid = getAppId();
 
     router.replace(
       `/mobile/preview?works_id=${work.id}&uid=${uid}&appid=${appid}`
@@ -202,6 +219,7 @@ export default function WorkDetailPage() {
   const handleEdit = () => {
     if (!work) return;
     const uid = getUid();
+    const appid = getAppId();
     router.replace(`/editor?works_id=${work.id}&uid=${uid}&appid=${appid}`);
   };
 
@@ -263,6 +281,9 @@ export default function WorkDetailPage() {
   // 跳转到宾客管理页面
   const handleManageGuests = () => {
     if (!work || !formConfigId) return;
+
+    const appid = getAppId();
+
     const url = `/mobile/rsvp/invitees?works_id=${work.id}&form_config_id=${formConfigId}`;
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
@@ -423,7 +444,8 @@ export default function WorkDetailPage() {
                           toVipPage({
                             works_id: work.id,
                             ref_object_id: work.template_id || '',
-                            tab: appid === 'xueji' ? 'business' : 'personal',
+                            tab:
+                              getAppId() === 'xueji' ? 'business' : 'personal',
                             vipType: 'rsvp',
                           });
                         }}

@@ -1,4 +1,5 @@
 'use client';
+import { getAllLayers } from '@/app/editor/SimpleEditor/utils';
 import ImageCropper from '@/app/mobile/share/components/ImageCropper';
 import {
   CanvaInfo2,
@@ -6,13 +7,13 @@ import {
 } from '@/components/GridV3/comp/provider/utils';
 import { onScreenShot } from '@/components/GridV3/shared';
 import LibPicture from '@/components/LibPicture';
-import { getAppId } from '@/services';
+import { getAppId, request } from '@/services';
 import { getWorkData2, updateWorksDetail2 } from '@/services/works2';
 import { canUseRnChoosePic, showRnChoosePic } from '@/utils/rnChoosePic';
 import { useShareNavigation } from '@/utils/share';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
-import { cdnApi } from '@mk/services';
+import { API, cdnApi } from '@mk/services';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Input } from '@workspace/ui/components/input';
@@ -23,7 +24,7 @@ import {
   Link as LinkIcon,
   Video as VideoIcon,
 } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import styles from '../invitees/share.module.scss';
@@ -31,7 +32,6 @@ import { useRSVPLayout } from '../RSVPLayoutContext';
 
 export default function SharePage() {
   const { setTitle } = useRSVPLayout();
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // 设置页面标题
@@ -125,6 +125,38 @@ export default function SharePage() {
 
             const canvaInfo2 = getCanvaInfo2(detail, worksData);
             setCanvaInfo2(canvaInfo2);
+
+            // 如果标题和描述未被修改过，自动生成
+            if (worksData && !detail.is_title_desc_modified) {
+              const layers = getAllLayers(worksData);
+              let workText = '';
+
+              layers.forEach(layer => {
+                if (layer.elementRef === 'Text') {
+                  workText += layer.attrs.text;
+                }
+              });
+
+              if (workText) {
+                const metaRes: any = await request.post(
+                  `${API('apiv10')}/ai-generate/work-meta`,
+                  {
+                    workText: workText?.slice(0, 500),
+                  }
+                );
+
+                if (metaRes) {
+                  setShareTitle(metaRes.title);
+                  setShareDesc(metaRes.desc);
+
+                  updateWorksDetail2(worksId, {
+                    title: metaRes.title,
+                    desc: metaRes.desc,
+                    is_title_desc_modified: true,
+                  });
+                }
+              }
+            }
           }
         }
       } catch (error) {
@@ -183,6 +215,21 @@ export default function SharePage() {
   const handleCopyLink = (link: string) => {
     navigator.clipboard.writeText(link);
     setShowCopyTip(true);
+    // 调用系统分享
+    if (navigator.share && link) {
+      navigator
+        .share({
+          title: shareTitle || '邀请链接',
+          text: shareDesc || '邀请你参加活动',
+          url: link,
+        })
+        .catch(error => {
+          // 用户取消无需提示
+          if (error && error.name !== 'AbortError') {
+            toast.error('系统分享失败');
+          }
+        });
+    }
   };
 
   // 分享长图
@@ -213,20 +260,7 @@ export default function SharePage() {
       });
 
       if (urls && urls.length > 0) {
-        if (isApp && !isMiniP) {
-          APPBridge.appCall({
-            type: 'MKShare',
-            appid: 'jiantie',
-            params: {
-              title: shareTitle,
-              type: 'images',
-              shareType: 'wechat',
-              urls,
-            },
-          });
-        } else {
-          toPosterShare(worksId);
-        }
+        toPosterShare(worksId);
       }
     } catch {
       toast.error('图片生成失败');
@@ -392,7 +426,7 @@ export default function SharePage() {
             <span>导出其他格式</span>
           </div>
           <div className='flex gap-2'>
-            {mode === 'public' && posterSupport && (
+            {posterSupport && (
               <Button
                 variant='outline'
                 className='w-full justify-center gap-2'
@@ -412,7 +446,7 @@ export default function SharePage() {
               </Button>
             )}
 
-            {mode === 'public' && videoSupport && (
+            {videoSupport && (
               <Button
                 variant='outline'
                 className='w-full justify-center gap-2'

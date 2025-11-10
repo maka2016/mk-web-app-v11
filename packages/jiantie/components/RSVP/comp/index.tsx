@@ -766,19 +766,11 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     );
   }
 
-  return (
-    <>
-      <FormCompWrapper
-        className='w-full max-w-xl'
-        data-form-id={config.id}
-        data-has-backdrop-filter={needsBackdropFilter ? 'true' : 'false'}
-        style={{
-          ...cssVariables,
-          pointerEvents: editorSDK ? 'none' : 'auto',
-        }}
-      >
-        {/* Header: 致 XXX 和 消息 */}
-        {isInviteeLink && (
+  const renderHeader = () => {
+    if (isViewerMode) {
+      if (isInviteeLink) {
+        /* Header: 致 XXX 和 消息 */
+        return (
           <div className='flex items-center justify-between header'>
             <div
               className='text-gray-600 flex gap-2 items-center'
@@ -791,10 +783,9 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
               <span className='font-bold'>{inviteeName}</span>
             </div>
           </div>
-        )}
-
-        {/* 公开链接：必须填写姓名 */}
-        {!isInviteeLink && (
+        );
+      } else {
+        return (
           <div className='space-y-1 header'>
             <label
               className='block font-medium text-gray-600'
@@ -835,7 +826,37 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
               }}
             />
           </div>
-        )}
+        );
+      }
+    }
+    return (
+      <div className='flex items-center justify-between header'>
+        <div
+          className='text-gray-600 flex gap-2 items-center'
+          style={{
+            color: 'var(--rsvp-label-color)',
+            fontSize: 'var(--rsvp-control-font-size)',
+          }}
+        >
+          <span>致</span>
+          <span className='font-bold'>宾客姓名</span>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <FormCompWrapper
+        className='w-full max-w-xl'
+        data-form-id={config.id}
+        data-has-backdrop-filter={needsBackdropFilter ? 'true' : 'false'}
+        style={{
+          ...cssVariables,
+          pointerEvents: editorSDK ? 'none' : 'auto',
+        }}
+      >
+        {renderHeader()}
         <div className='content'>
           {/* 您是否参加？ */}
           <div className='space-y-1'>
@@ -846,7 +867,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                 fontSize: 'var(--rsvp-control-font-size)',
               }}
             >
-              您是否参加？
+              您是否出席？
             </div>
             {/* 出席/不出席选择按钮 */}
             {!submitting && !resultMsg && (
@@ -944,7 +965,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           </div>
 
           {/* 如果选择了出席，或者在编辑器模式下，显示表单 */}
-          {(willAttend === true || isEditorMode) && (
+          {config.collect_form && (willAttend === true || isEditorMode) && (
             <Form {...form}>
               <form className='pt-3'>
                 <RSVPFormFields fields={fields} control={form.control} />

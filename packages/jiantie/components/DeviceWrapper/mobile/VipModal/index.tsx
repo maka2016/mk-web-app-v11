@@ -95,6 +95,7 @@ const VipModal = () => {
           if (!value) {
             handleComponentSettingClose();
           }
+
           setVipShow(value);
         }}
       >

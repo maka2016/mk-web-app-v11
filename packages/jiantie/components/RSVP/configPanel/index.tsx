@@ -37,7 +37,7 @@ export default function RSVPConfigPanelTrigger({
   return (
     <>
       <BtnLite
-        title='RSVP配置'
+        title='回执设置'
         onClick={() => {
           const trigger = document.getElementById(
             `hidden_trigger_for_rsvp_config_panel_${attrs.formConfigId}`
@@ -48,7 +48,7 @@ export default function RSVPConfigPanelTrigger({
         }}
       >
         <Icon name='form-fill' size={20} />
-        <span>RSVP配置</span>
+        <span>回执设置</span>
       </BtnLite>
     </>
   );
@@ -78,8 +78,6 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
   const [saving, setSaving] = useState<boolean>(false);
   const [showFieldEditor, setShowFieldEditor] = useState<boolean>(false);
   const [editingField, setEditingField] = useState<RSVPField | null>(null);
-  const [isBasicInfoExpanded, setIsBasicInfoExpanded] =
-    useState<boolean>(false);
   const [collectForm, setCollectForm] = useState<boolean>(
     config?.collect_form ?? fields.length > 0
   );
@@ -260,11 +258,7 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
   const handleSaveClick = async () => {
     setSaving(true);
     try {
-      // 保存 collect_form 到 config
-      setConfig({
-        ...config,
-        collect_form: collectForm,
-      });
+      // collect_form 已在开关切换时同步到 config，直接保存即可
       await handleSave();
     } catch {
       // 错误已在 Context 中处理
@@ -289,7 +283,7 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
         </button>
         <div className='flex items-center gap-2 flex-1 justify-center'>
           <span className='font-semibold text-lg leading-[26px] text-[#09090B]'>
-            RSVP配置
+            回执设置
           </span>
         </div>
         <Button
@@ -311,7 +305,7 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
             <div className='flex items-start justify-between mb-2'>
               <div className='flex-1'>
                 <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
-                  启用RSVP
+                  启用回执
                 </div>
                 <div className='text-sm leading-5 text-black/60'>
                   允许访客在线回复是否参加
@@ -332,15 +326,22 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
             <div className='flex items-start justify-between mb-4'>
               <div className='flex-1'>
                 <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
-                  收集表单信息
+                  收集宾客信息
                 </div>
                 <div className='text-sm leading-5 text-black/60'>
-                  向访客收集联系方式和相关信息
+                  向访客/宾客收集联系方式和相关信息
                 </div>
               </div>
               <Switch
                 checked={collectForm}
-                onCheckedChange={setCollectForm}
+                onCheckedChange={checked => {
+                  setCollectForm(checked);
+                  // 立即同步到 config，确保状态一致
+                  setConfig({
+                    ...config,
+                    collect_form: checked,
+                  });
+                }}
                 className='ml-4'
               />
             </div>

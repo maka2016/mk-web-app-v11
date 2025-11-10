@@ -116,7 +116,9 @@ export const takeInnerStyle = (style: React.CSSProperties = {}) => {
     minHeight: style.minHeight,
     maxHeight: style.maxHeight,
     filter: style.filter,
-  });
+    mixBlendMode: style.mixBlendMode,
+    WebkitMixBlendMode: style.mixBlendMode,
+  } as any);
   return clearUndefinedKey(_style);
 };
 
