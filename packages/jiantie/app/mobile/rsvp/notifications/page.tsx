@@ -1,8 +1,7 @@
 'use client';
 import { getAppId, getUid } from '@/services';
-import { getUrlWithParam } from '@/utils';
+import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
-import APPBridge from '@mk/app-bridge';
 import { Button } from '@workspace/ui/components/button';
 import { CheckCheck, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -94,15 +93,7 @@ export default function NotificationsPage() {
 
     // 跳转到嘉宾详情页面
     const detailUrl = `/mobile/rsvp/invitees/${contactId}?works_id=${worksId}&form_config_id=${formConfigId}`;
-
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}${detailUrl}`,
-        type: 'URL',
-      });
-    } else {
-      router.push(detailUrl);
-    }
+    navigateWithBridge({ path: detailUrl, router });
   };
 
   const handleMarkAllAsRead = async () => {
@@ -261,20 +252,8 @@ export default function NotificationsPage() {
 
     const uid = getUid();
     const appid = getAppId();
-
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}/mobile/preview?works_id=${worksId}&uid=${uid}&is_full_screen=1&back=1`,
-        type: 'URL',
-      });
-    } else {
-      router.push(
-        getUrlWithParam(
-          `/mobile/preview?works_id=${worksId}&uid=${uid}&appid=${appid}`,
-          'clickid'
-        )
-      );
-    }
+    const url = `/mobile/preview?works_id=${worksId}&uid=${uid}&appid=${appid}`;
+    navigateWithBridge({ path: url, router });
   };
 
   return (

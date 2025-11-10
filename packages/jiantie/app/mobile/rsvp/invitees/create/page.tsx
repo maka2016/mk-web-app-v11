@@ -1,4 +1,5 @@
 'use client';
+import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
@@ -53,7 +54,7 @@ export default function CreateInviteePage() {
       // 跳转到分享页面
       if (createdInvitee) {
         const shareUrl = `/mobile/rsvp/share?works_id=${worksId}&mode=invitee&contact_id=${createdInvitee.id}&contact_name=${encodeURIComponent(createdInvitee.name)}&form_config_id=${formConfigId}&from=create`;
-        router.push(shareUrl);
+        navigateWithBridge({ path: shareUrl, router });
       }
     } catch (error: any) {
       toast.error(error.message || '创建失败');

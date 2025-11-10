@@ -9,7 +9,7 @@ import { onScreenShot } from '@/components/GridV3/shared';
 import LibPicture from '@/components/LibPicture';
 import { request } from '@/services';
 import { getWorkData2, updateWorksDetail2 } from '@/services/works2';
-import { getUrlWithParam } from '@/utils';
+import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { canUseRnChoosePic, showRnChoosePic } from '@/utils/rnChoosePic';
 import { useShareNavigation } from '@/utils/share';
 import { trpc } from '@/utils/trpc';
@@ -53,27 +53,12 @@ export default function SharePage() {
     const handleComplete = () => {
       if (mode === 'public') {
         // 公开分享模式：跳转到作品列表页
-        if (APPBridge.judgeIsInApp()) {
-          router.push(
-            getUrlWithParam(
-              `/mobile/home2?default_tab=1&appid=${getAppId()}`,
-              'clickid'
-            )
-          );
-        } else {
-          router.replace('/mobile/home2?default_tab=1');
-        }
+        const url = `/mobile/home2?default_tab=1&appid=${getAppId()}`;
+        navigateWithBridge({ path: url, router });
       } else if (mode === 'invitee') {
         // 邀请模式：跳转到嘉宾列表页
         const inviteesUrl = `/mobile/rsvp/invitees?works_id=${worksId}&form_config_id=${formConfigId}`;
-        if (APPBridge.judgeIsInApp()) {
-          APPBridge.navToPage({
-            url: `${window.location.origin}${inviteesUrl}`,
-            type: 'URL',
-          });
-        } else {
-          router.push(inviteesUrl);
-        }
+        navigateWithBridge({ path: inviteesUrl, router });
       }
     };
 

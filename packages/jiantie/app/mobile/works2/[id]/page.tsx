@@ -2,7 +2,6 @@
 import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
 import { getAppId, getUid } from '@/services';
 import { useStore } from '@/store';
-import { getUrlWithParam } from '@/utils';
 import { useCheckPublish } from '@/utils/checkPubulish';
 import { useShareNavigation } from '@/utils/share';
 import { trpc } from '@/utils/trpc';
@@ -32,6 +31,7 @@ import {
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { navigateWithBridge } from '../../../../utils/navigate-with-bridge';
 import { WorkInfoCard } from '../components/WorkInfoCard';
 
 type WorksDetail = any;
@@ -158,9 +158,8 @@ export default function WorkDetailPage() {
     const uid = getUid();
     const appid = getAppId();
 
-    router.push(
-      `/mobile/preview?works_id=${work.id}&uid=${uid}&appid=${appid}`
-    );
+    const url = `/mobile/preview?works_id=${work.id}&uid=${uid}&appid=${appid}`;
+    navigateWithBridge({ path: url, router });
   };
 
   // 分享作品（图片/视频类型）
@@ -180,7 +179,8 @@ export default function WorkDetailPage() {
     if (!work) return;
     const uid = getUid();
     const appid = getAppId();
-    router.push(`/editor?works_id=${work.id}&uid=${uid}&appid=${appid}`);
+    const url = `/mobile/editor?works_id=${work.id}&uid=${uid}&appid=${appid}`;
+    navigateWithBridge({ path: url, router });
   };
 
   // 复制作品
@@ -222,14 +222,7 @@ export default function WorkDetailPage() {
     }
 
     const url = `/mobile/rsvp/invitees/create?works_id=${work.id}&form_config_id=${formConfigId}`;
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}${url}`,
-        type: 'URL',
-      });
-    } else {
-      router.push(url);
-    }
+    navigateWithBridge({ path: url, router });
   };
 
   // 跳转到公开分享页面
@@ -244,14 +237,7 @@ export default function WorkDetailPage() {
     }
 
     const url = `/mobile/rsvp/share?works_id=${work.id}&mode=public&form_config_id=${formConfigId}`;
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}${url}`,
-        type: 'URL',
-      });
-    } else {
-      router.push(url);
-    }
+    navigateWithBridge({ path: url, router });
   };
 
   // 跳转到宾客管理页面
@@ -264,17 +250,8 @@ export default function WorkDetailPage() {
       return;
     }
 
-    const appid = getAppId();
-
     const url = `/mobile/rsvp/invitees?works_id=${work.id}&form_config_id=${formConfigId}`;
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}${url}&is_full_screen=1`,
-        type: 'URL',
-      });
-    } else {
-      router.push(getUrlWithParam(`${url}&appid=${appid}`, 'clickid'));
-    }
+    navigateWithBridge({ path: url, router });
   };
 
   if (loading) {

@@ -2,6 +2,7 @@
 
 import { getUid, request } from '@/services';
 import { useStore } from '@/store';
+import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc, trpcWorks, type SerializedWorksEntity } from '@/utils/trpc';
 import { API } from '@mk/services';
 import {
@@ -272,15 +273,7 @@ export default function WorksManagerForUser() {
   // 跳转到作品详情页面
   const handleWorkDetail = (work: SerializedWorksEntity) => {
     const url = `/mobile/works2/${work.id}`;
-    // if (APPBridge.judgeIsInApp()) {
-    //   APPBridge.navToPage({
-    //     url: `${location.origin}${url}`,
-    //     type: 'URL',
-    //   });
-    // } else {
-    // router.push(url);
-    // }
-    router.push(url);
+    navigateWithBridge({ path: url, router });
   };
 
   // 获取购买状态标签
