@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 import { useEffect, useRef } from 'react';
-import { VideoBgConfig } from '../../../Envelope/types';
+import { VideoBgConfig } from '../VideoBg/types';
 
 const VideoContainer = styled.div`
   position: absolute;

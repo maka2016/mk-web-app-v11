@@ -65,28 +65,72 @@ const EnvelopeLayer = styled(motion.div)`
   transform-style: preserve-3d;
 `;
 
-const EnvelopeImage = styled(motion.img)`
-  position: absolute;
-  width: 100%;
-  /* max-width: unset; */
-  height: 100%;
-  object-fit: contain;
-  will-change: transform, opacity;
-`;
-
 /**
  * 邀请函内容预览层
  * 位于内页与开口之间，保持 24px 内边距
  */
 const InvitationContentLayer = styled(motion.div)`
   position: absolute;
+  top: 24px;
+  left: 24px;
+  width: calc(100% - 48px);
+  height: calc(100% - 48px);
+  overflow: hidden;
+  border-radius: 6px;
+  will-change: transform, opacity;
+  pointer-events: none;
+  transform-origin: center;
+  z-index: 3;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.24);
+`;
+
+const InvitationContentInner = styled.div`
   width: 100%;
   height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 6px;
+`;
+
+const LeftFlap = styled(motion.div)`
+  position: absolute;
   top: 0;
   left: 0;
-  overflow: hidden;
-  border-radius: 4px;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  z-index: 4;
+`;
+
+const FlapSide = styled(motion.img)`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  backface-visibility: hidden;
   will-change: transform, opacity;
+`;
+
+const RightFlap = styled(motion.img)`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: right center;
+  backface-visibility: hidden;
+  z-index: 2;
+`;
+
+const SealImage = styled(motion.img)`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 5;
+  cursor: pointer;
 `;
 
 interface EnvelopeClientAnimationProps {
@@ -101,7 +145,6 @@ type AnimationPhase =
   | 'idle' // 初始状态，等待点击
   | 'seal-disappearing' // 印章消失
   | 'left-opening' // 左侧打开
-  | 'right-opening' // 右侧打开
   | 'content-expanding' // 内容铺满
   | 'complete'; // 完成
 
@@ -109,7 +152,6 @@ const PHASE_SEQUENCE: AnimationPhase[] = [
   'idle',
   'seal-disappearing',
   'left-opening',
-  'right-opening',
   'content-expanding',
   'complete',
 ];
@@ -126,25 +168,22 @@ const phaseIndexMap = PHASE_SEQUENCE.reduce<Record<AnimationPhase, number>>(
  * 客户端信封动画组件
  * 在客户端接管服务端渲染的信封 loading，并播放动画
  */
-export default function EnvelopeClientAnimation({
+export function EnvelopeClientAnimation({
   config,
   onComplete,
 }: EnvelopeClientAnimationProps) {
   const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('idle');
-  const videoRef = useRef<HTMLVideoElement>(null);
   const contentShownRef = useRef(false); // 跟踪内容是否已经显示过
 
   // 检查是否有有效配置
-  const leftOpeningImage =
-    config?.envelopeLeftOpeningImage || config?.envelopeLeftImage;
-  const rightOpeningImage =
-    config?.envelopeRightOpeningImage || config?.envelopeRightImage;
+  const leftOpeningImage = config?.envelopeLeftOpeningImage;
+  const leftInnerImage = config?.envelopeLeftInnerImage;
 
   const hasValidConfig =
     config &&
     config.backgroundImage &&
     leftOpeningImage &&
-    rightOpeningImage &&
+    leftInnerImage &&
     config.envelopeInnerImage &&
     config.envelopeSealImage;
 
@@ -152,14 +191,10 @@ export default function EnvelopeClientAnimation({
 
   // 动画时序配置（毫秒）
   const SEAL_DISAPPEAR_DURATION = 300;
-  const LEFT_OPEN_DURATION = 1200;
-  const RIGHT_OPEN_DURATION = 1200;
+  const LEFT_OPEN_DURATION = 3200;
   const CONTENT_EXPAND_DURATION = 1000;
 
   const LEFT_OPEN_DELAY = 300; // 印章消失后开始
-  const RIGHT_OPEN_DELAY = 800; // 左侧打开中途开始
-  const CONTENT_EXPAND_DELAY = 1500; // 左右打开后开始
-
   // 初始化：隐藏 loading 和内容容器（只执行一次）
   useEffect(() => {
     if (!hasValidConfig) {
@@ -218,17 +253,6 @@ export default function EnvelopeClientAnimation({
     );
 
     setAnimationPhase(nextPhase);
-
-    // 首次进入动画时播放视频背景
-    if (
-      animationPhase === 'idle' &&
-      config?.videoBgConfig?.videoUrl &&
-      videoRef.current
-    ) {
-      videoRef.current.play().catch(err => {
-        console.warn('视频播放失败:', err);
-      });
-    }
   };
 
   const handlePrevPhase = () => {
@@ -280,12 +304,7 @@ export default function EnvelopeClientAnimation({
   const isClickable = animationPhase !== 'complete';
   const showEnvelope = animationPhase !== 'complete';
 
-  const hasLeftOpened =
-    currentPhaseIndex >= phaseIndexMap['left-opening'] &&
-    animationPhase !== 'idle';
-  const hasRightOpened =
-    currentPhaseIndex >= phaseIndexMap['right-opening'] &&
-    animationPhase !== 'idle';
+  const hasLeftOpened = currentPhaseIndex >= phaseIndexMap['left-opening'];
   const hasSealDisappeared =
     currentPhaseIndex >= phaseIndexMap['seal-disappearing'] &&
     animationPhase !== 'idle';
@@ -370,33 +389,6 @@ export default function EnvelopeClientAnimation({
           transition={{ duration: 0.5 }}
         />
 
-        {/* 邀请函内容预览层（位于内页与外折叠页之间） */}
-        <InvitationContentLayer
-          style={{ zIndex: 2 }}
-          initial={{ scale: 0.7, opacity: 0 }}
-          animate={{
-            scale: isContentExpanding ? 1 : 0.7,
-            opacity:
-              isContentExpanding || animationPhase === 'right-opening' ? 1 : 0,
-          }}
-          title='邀请函内容预览层'
-          transition={{
-            duration: animationPhase === 'content-expanding' ? 0.6 : 0,
-            ease: easing,
-          }}
-        >
-          {/* 这里显示邀请函内容的预览（通过 iframe 或截图） */}
-          <div
-            id='envelope-invitation-preview'
-            style={{
-              width: '100%',
-              height: '100%',
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          />
-        </InvitationContentLayer>
-
         <EnvelopeWrapper title='信封层容器'>
           <EnvelopeLayer
             key='envelope-container'
@@ -412,59 +404,36 @@ export default function EnvelopeClientAnimation({
               },
             }}
           >
-            {/* 信封内页（最底层） */}
-            <EnvelopeImage
-              src={config?.envelopeInnerImage || ''}
-              alt='envelope-inner'
-              style={{
-                zIndex: 1,
-                width: '300%',
-                maxWidth: 'unset',
-                transform: 'translateX(-25%)',
-              }}
-            />
-
-            {/* 信封右侧（在左侧下方） */}
-            <EnvelopeImage
-              src={rightOpeningImage || ''}
-              alt='envelope-right-opening'
-              style={{
-                zIndex: 3,
-                transformOrigin: 'right center',
-                backfaceVisibility: 'hidden',
-                objectPosition: 'right center',
-              }}
-              initial={{ rotateY: 0 }}
+            <InvitationContentLayer
+              initial={{ scale: 0.7, opacity: 0 }}
               animate={{
-                rotateY: hasRightOpened ? 180 : 0,
+                scale: isContentExpanding ? 1 : 0.7,
+                opacity: isContentExpanding ? 1 : 0,
               }}
               transition={{
-                duration:
-                  animationPhase === 'right-opening'
-                    ? RIGHT_OPEN_DURATION / 1000
-                    : 0,
-                delay:
-                  animationPhase === 'right-opening'
-                    ? RIGHT_OPEN_DELAY / 1000
-                    : 0,
+                duration: isContentExpanding
+                  ? CONTENT_EXPAND_DURATION / 1000
+                  : 0,
                 ease: easing,
               }}
-            />
+            >
+              <InvitationContentInner>
+                <div
+                  id='envelope-invitation-preview'
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                />
+              </InvitationContentInner>
+            </InvitationContentLayer>
 
-            {/* 信封左侧（覆盖右侧） */}
-            <EnvelopeImage
-              src={leftOpeningImage || ''}
-              alt='envelope-left-opening'
-              style={{
-                zIndex: 4,
-                transformOrigin: 'left center',
-                backfaceVisibility: 'hidden',
-                objectPosition: 'left center',
-              }}
+            <LeftFlap
+              title='左侧开口'
               initial={{ rotateY: 0 }}
-              animate={{
-                rotateY: hasLeftOpened ? -180 : 0,
-              }}
+              animate={{ rotateY: hasLeftOpened ? -180 : 0 }}
               transition={{
                 duration:
                   animationPhase === 'left-opening'
@@ -476,19 +445,35 @@ export default function EnvelopeClientAnimation({
                     : 0,
                 ease: easing,
               }}
-            />
+            >
+              <FlapSide
+                src={leftOpeningImage || ''}
+                alt='envelope-left-outer'
+                style={{
+                  objectPosition: 'left center',
+                  transformOrigin: 'left center',
+                  transform: 'rotateY(0deg)',
+                }}
+              />
+              <FlapSide
+                src={leftInnerImage || leftOpeningImage || ''}
+                alt='envelope-left-inner'
+                style={{
+                  objectPosition: 'left center',
+                  transformOrigin: 'left center',
+                  transform: 'rotateY(180deg)',
+                }}
+              />
+            </LeftFlap>
 
-            {/* 信封印章（可点击） */}
-            <EnvelopeImage
+            <RightFlap
+              src={config?.envelopeInnerImage || ''}
+              alt='信封右开口，不做动画'
+            ></RightFlap>
+
+            <SealImage
               src={config?.envelopeSealImage || ''}
               alt='envelope-seal'
-              style={{
-                zIndex: 5,
-                cursor:
-                  isClickable && animationPhase === 'idle'
-                    ? 'pointer'
-                    : 'default',
-              }}
               initial={{ opacity: 1, scale: 1 }}
               animate={{
                 opacity: hasSealDisappeared ? 0 : 1,
@@ -500,6 +485,12 @@ export default function EnvelopeClientAnimation({
                     ? SEAL_DISAPPEAR_DURATION / 1000
                     : 0,
                 ease: easing,
+              }}
+              style={{
+                cursor:
+                  isClickable && animationPhase === 'idle'
+                    ? 'pointer'
+                    : 'default',
               }}
               onClick={isClickable ? handleStartAnimation : undefined}
             />

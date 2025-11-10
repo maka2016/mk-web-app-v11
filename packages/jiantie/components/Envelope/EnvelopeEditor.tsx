@@ -1,12 +1,12 @@
-import { uploadFile2 } from '@mk/services';
+'use client';
+
 import { Button } from '@workspace/ui/components/button';
 import { Label } from '@workspace/ui/components/label';
 import { Slider } from '@workspace/ui/components/slider';
 import { UploadHelper } from '@workspace/ui/components/Upload';
-import { RotateCcw, Save, Trash2, Upload } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { RotateCcw, Save, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { EnvelopeAnimationRef } from './EnvelopeAnimation';
 import { EnvelopeConfig, isEnvelopeConfigComplete } from './types';
 
 const normalizeConfig = (config?: EnvelopeConfig): EnvelopeConfig => {
@@ -20,13 +20,14 @@ const normalizeConfig = (config?: EnvelopeConfig): EnvelopeConfig => {
     return fallback;
   }
 
+  const restConfig = { ...config } as EnvelopeConfig & {
+    videoBgConfig?: unknown;
+  };
+  delete restConfig.videoBgConfig;
+
   return {
     ...fallback,
-    ...config,
-    envelopeLeftOpeningImage:
-      config.envelopeLeftOpeningImage || config.envelopeLeftImage,
-    envelopeRightOpeningImage:
-      config.envelopeRightOpeningImage || config.envelopeRightImage,
+    ...(restConfig as EnvelopeConfig),
   };
 };
 
@@ -43,17 +44,22 @@ const ENVELOPE_HEIGHT_PX = Math.round((162 / 114) * ENVELOPE_WIDTH_PX);
 const IMAGE_FIELDS = [
   {
     key: 'backgroundImage',
-    label: '完全展开底图',
+    label: '信封底图',
     sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
   },
   {
     key: 'envelopeLeftOpeningImage',
-    label: '信封左开口',
+    label: '信封左开口外页图',
+    sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
+  },
+  {
+    key: 'envelopeLeftInnerImage',
+    label: '信封左开口内页图',
     sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
   },
   {
     key: 'envelopeRightOpeningImage',
-    label: '信封右开口',
+    label: '信封右开口图',
     sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
   },
   {
@@ -71,15 +77,14 @@ const IMAGE_FIELDS = [
 export default function EnvelopeEditor(props: EnvelopeEditorProps) {
   const { editorCtx, onRemove } = props;
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const animationRef = useRef<EnvelopeAnimationRef>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-
   // 本地状态
   const [localConfig, setLocalConfig] = useState<EnvelopeConfig>(
     normalizeConfig(props.value)
   );
+
+  useEffect(() => {
+    setLocalConfig(normalizeConfig(props.value));
+  }, [props.value]);
 
   // 检查是否有未保存的更改
   const hasUnsavedChanges =
@@ -94,92 +99,13 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
       [key]: url,
     };
 
-    if (key === 'envelopeLeftOpeningImage') {
-      nextConfig.envelopeLeftImage = undefined;
-    }
-    if (key === 'envelopeRightOpeningImage') {
-      nextConfig.envelopeRightImage = undefined;
-    }
-
     setLocalConfig(nextConfig);
-  };
-
-  // 更新视频背景
-  const handleVideoBgChange = (videoUrl: string) => {
-    setLocalConfig({
-      ...localConfig,
-      videoBgConfig: {
-        ...(localConfig.videoBgConfig || {}),
-        videoUrl,
-        loop: true,
-        muted: true,
-        objectFit: 'cover',
-      },
-    });
-  };
-
-  // 视频上传
-  const handleVideoUpload = async (file: File) => {
-    // 检查文件类型（仅支持 iOS/Android 浏览器支持的格式）
-    const validTypes = ['video/mp4', 'video/webm'];
-    if (!validTypes.includes(file.type)) {
-      toast.error('仅支持 MP4 和 WebM 格式');
-      return;
-    }
-
-    // 检查文件大小（15MB）
-    const maxSize = 15 * 1024 * 1024;
-    if (file.size > maxSize) {
-      toast.error('视频文件不能超过 15MB');
-      return;
-    }
-
-    try {
-      setUploading(true);
-      setUploadProgress(0);
-
-      const result = await uploadFile2(
-        {
-          file,
-          type: 'video',
-        },
-        progress => {
-          setUploadProgress(Math.round(progress * 100));
-        }
-      );
-
-      handleVideoBgChange(result.url);
-      toast.success('视频上传成功');
-    } catch (error) {
-      console.error('视频上传失败:', error);
-      toast.error('视频上传失败');
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
-    }
-  };
-
-  // 播放预览
-  const handlePlayPreview = () => {
-    if (!isConfigComplete) {
-      toast.error('请先上传所有5张信封图片');
-      return;
-    }
-    if (isPlaying) return;
-    setIsPlaying(true);
-    animationRef.current?.startAnimation();
-  };
-
-  // 重置预览
-  const handleResetPreview = () => {
-    setIsPlaying(false);
-    animationRef.current?.resetAnimation();
   };
 
   // 保存
   const handleSave = async () => {
     if (!isConfigComplete) {
-      toast.error('请先上传所有5张信封图片');
+      toast.error('请先上传信封所需的6张图片');
       return;
     }
 
@@ -211,7 +137,7 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
     <div className='space-y-4 p-4 max-h-[80vh] overflow-y-auto'>
       {/* 图片上传区域 */}
       <div className='space-y-3'>
-        <Label>信封图片 (共5张)</Label>
+        <Label>信封图片 (共6张)</Label>
         <div className='grid grid-cols-2 gap-3'>
           {IMAGE_FIELDS.map(({ key, label, sizeHint }) => (
             <div key={key} className='space-y-2'>
@@ -236,123 +162,6 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
               />
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* 视频背景 */}
-      <div className='space-y-2'>
-        <Label className='flex items-center justify-between'>
-          <span>视频背景 (可选)</span>
-          {localConfig.videoBgConfig?.videoUrl && (
-            <Button
-              size='sm'
-              variant='ghost'
-              className='h-6 px-2 text-xs text-red-600 hover:text-red-700'
-              onClick={() => {
-                setLocalConfig({
-                  ...localConfig,
-                  videoBgConfig: undefined,
-                });
-                toast.success('已移除视频背景');
-              }}
-            >
-              <Trash2 className='w-3 h-3 mr-1' />
-              移除
-            </Button>
-          )}
-        </Label>
-        <div className='space-y-2'>
-          {localConfig.videoBgConfig?.videoUrl ? (
-            <div className='space-y-2'>
-              {/* 视频预览 */}
-              <div className='relative bg-gray-900 rounded-lg overflow-hidden'>
-                <video
-                  src={localConfig.videoBgConfig.videoUrl}
-                  className='w-full aspect-video object-contain'
-                  controls
-                  loop
-                  muted
-                  playsInline
-                  preload='metadata'
-                />
-              </div>
-              {/* 视频信息 */}
-              <div className='text-xs text-gray-500 px-2'>
-                <p>✓ 视频已上传</p>
-                <p className='truncate'>
-                  URL: {localConfig.videoBgConfig.videoUrl}
-                </p>
-              </div>
-              {/* 重新上传按钮 */}
-              <div>
-                <input
-                  type='file'
-                  accept='video/mp4,video/webm'
-                  className='hidden'
-                  id='video-reupload'
-                  onChange={e => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleVideoUpload(file);
-                    }
-                  }}
-                  disabled={uploading}
-                />
-                <label htmlFor='video-reupload'>
-                  <Button
-                    size='sm'
-                    variant='outline'
-                    className='w-full'
-                    disabled={uploading}
-                    asChild
-                  >
-                    <span>
-                      <Upload className='w-4 h-4 mr-1' />
-                      重新上传
-                    </span>
-                  </Button>
-                </label>
-              </div>
-            </div>
-          ) : (
-            <div className='border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors'>
-              <input
-                type='file'
-                accept='video/mp4,video/webm'
-                className='hidden'
-                id='video-upload'
-                onChange={e => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    handleVideoUpload(file);
-                  }
-                }}
-                disabled={uploading}
-              />
-              <label
-                htmlFor='video-upload'
-                className={`flex flex-col items-center ${uploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-              >
-                <Upload className='w-8 h-8 text-gray-400 mb-2' />
-                <span className='text-sm text-gray-600 font-medium'>
-                  {uploading ? `上传中... ${uploadProgress}%` : '点击上传视频'}
-                </span>
-                <span className='text-xs text-gray-400 mt-1'>
-                  支持 MP4/WebM，最大 15MB
-                </span>
-                {uploading && (
-                  <div className='w-full max-w-xs mt-3'>
-                    <div className='w-full bg-gray-200 rounded-full h-2'>
-                      <div
-                        className='bg-blue-600 h-2 rounded-full transition-all duration-300'
-                        style={{ width: `${uploadProgress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </label>
-            </div>
-          )}
         </div>
       </div>
 

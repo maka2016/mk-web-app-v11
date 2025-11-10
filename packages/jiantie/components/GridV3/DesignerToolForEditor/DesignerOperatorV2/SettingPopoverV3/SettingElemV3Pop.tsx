@@ -304,7 +304,20 @@ export const SettingElemV3Pop = () => {
           <Copy size={20} />
         </BtnLite>
         <BtnLite
-          onClick={() => {
+          onClick={async () => {
+            if (layer.elementRef === 'RSVP1') {
+              const worksStore = editorSDK?.fullSDK;
+              try {
+                if (worksStore?.worksDetail?.is_rsvp) {
+                  worksStore.worksDetail.is_rsvp = false;
+                }
+                await worksStore?.api?.updateWorksDetail?.({
+                  is_rsvp: false,
+                });
+              } catch (error) {
+                console.error('Failed to unset RSVP flag', error);
+              }
+            }
             deleteElemV2();
             clearActiveStatus?.();
           }}
