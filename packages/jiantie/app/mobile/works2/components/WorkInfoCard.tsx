@@ -60,7 +60,7 @@ export function WorkInfoCard({
             <img
               src={cdnApi(work.cover, { resizeWidth })}
               alt={work.title}
-              className='w-full h-full object-cover'
+              className='w-full h-full object-cover object-top'
             />
           ) : (
             <div className='w-full h-full bg-gray-100 flex flex-col items-center justify-center text-gray-400'>
@@ -86,7 +86,11 @@ export function WorkInfoCard({
               <div className='flex items-center gap-[4px]'>
                 <Clock className='w-[11.5px] h-[11.5px] text-[#6a7282]' />
                 <span className='text-[12px] leading-[18px] text-[#6a7282]'>
-                  更新于 {dayjs(work.update_time).fromNow()}
+                  更新于{' '}
+                  {Intl.DateTimeFormat('zh-CN', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  }).format(new Date(work.update_time))}
                 </span>
               </div>
             </div>
@@ -118,13 +122,13 @@ export function WorkInfoCard({
         {/* 购买状态标签 - 右上角 */}
         {purchaseStatus && (
           <div
-            className={`absolute top-0 right-0 px-2 py-1 rounded-bl-[6px] ${
+            className={`absolute top-0 right-0 px-2 py-2 rounded-bl-[6px] flex items-center justify-center ${
               purchaseStatus === 'purchased'
                 ? 'bg-[#fde272] text-yellow-700'
                 : 'bg-[#64748b] text-[#f8fafc]'
             }`}
           >
-            <span className='text-[10px] font-semibold leading-[12px]'>
+            <span className='text-xs font-semibold leading-[12px]'>
               {purchaseStatus === 'purchased' ? '已购' : '未购'}
             </span>
           </div>
