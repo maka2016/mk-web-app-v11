@@ -81,7 +81,7 @@ export default async function Page({ searchParams }: any) {
   return (
     <div className={cls(['h-full flex flex-col overflow-hidden'])}>
       {!isScreenshot && <Header worksDetail={viewerData.worksDetail} id={id} />}
-      <WebsiteApp key={id} {...initProps} />;
+      <WebsiteApp key={id} {...initProps} />
     </div>
   );
 }
