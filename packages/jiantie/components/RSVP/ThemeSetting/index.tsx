@@ -95,7 +95,7 @@ const dimensionItems: Array<{
     min: 4,
     max: 32,
     step: 4,
-    presets: [8, 12, 16, 20, 24],
+    presets: [4, 8, 12, 16],
   },
 ];
 
