@@ -74,6 +74,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
     <div
       className='flex flex-col h-dvh'
       style={{
+        paddingTop: 'var(--safe-area-inset-top)',
         backgroundImage: 'url(https://res.maka.im/assets/jiantie/beijing4.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'top',
