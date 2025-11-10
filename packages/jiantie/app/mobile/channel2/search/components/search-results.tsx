@@ -1,6 +1,6 @@
 'use client';
 
-import { navigateWithBridge } from '@/utils/navigate-with-bridge';
+import { backWithBridge, navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
 import { Clock, Search, X } from 'lucide-react';
@@ -190,7 +190,7 @@ export default function SearchResults({
         <form onSubmit={handleSearch} className='flex items-center gap-2'>
           <button
             type='button'
-            onClick={() => router.back()}
+            onClick={() => backWithBridge(router)}
             className='flex-shrink-0 text-gray-600 hover:text-gray-900'
           >
             <svg
