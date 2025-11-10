@@ -168,6 +168,7 @@ export const syncChannel = async (
       const thumbPath = item.fields['封面url']?.[0]?.text || null;
       console.log('thumbPath', thumbPath);
 
+      console.log('item.fields上线', item.fields['上线']);
       const newData: any = {
         online: !(item.fields['上线'] === '下线'),
         alias, // 使用内部唯一名称作为 alias

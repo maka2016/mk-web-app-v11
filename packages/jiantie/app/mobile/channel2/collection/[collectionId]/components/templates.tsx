@@ -26,7 +26,7 @@ interface Template {
   title: string;
   desc: string | null;
   cover: string | null;
-  coverV2: string | null;
+  coverV2?: string | null;
   spec_id: string | null;
   create_time: string;
   update_time: string;
