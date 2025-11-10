@@ -2,7 +2,7 @@
 import { getGuestCountText } from '@/components/RSVP/comp/SubmissionDataView';
 import { parseRSVPFormFields, RSVPField } from '@/components/RSVP/type';
 import { getUid } from '@/services';
-import { getUrlWithParam } from '@/utils';
+import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { getAppId } from '@mk/services';
@@ -18,8 +18,11 @@ export default function RSVPInviteesPage() {
     useRSVPLayout();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const formConfigId = searchParams.get('form_config_id') || '';
   const worksId = searchParams.get('works_id') || '';
+
+  // 通过 works_id 获取 form_config_id
+  const [formConfigId, setFormConfigId] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
 
   // 设置页面标题
   useEffect(() => {
@@ -28,16 +31,8 @@ export default function RSVPInviteesPage() {
     setRightText('回首页');
 
     const openManagePage = () => {
-      if (APPBridge.judgeIsInApp()) {
-        router.push(
-          getUrlWithParam(
-            `/mobile/home2?default_tab=1&appid=${getAppId()}`,
-            'clickid'
-          )
-        );
-      } else {
-        router.replace('/mobile/home2');
-      }
+      const url = `/mobile/home2?default_tab=1&appid=${getAppId()}`;
+      navigateWithBridge({ path: url, router });
     };
 
     setOnRightClick(() => openManagePage);
@@ -47,15 +42,7 @@ export default function RSVPInviteesPage() {
       setRightContent(null);
       setOnRightClick(undefined);
     };
-  }, [
-    formConfigId,
-    router,
-    setOnRightClick,
-    setRightContent,
-    setRightText,
-    setTitle,
-    worksId,
-  ]);
+  }, [router, setOnRightClick, setRightContent, setRightText, setTitle]);
 
   const [inviteeResponses, setInviteeResponses] = useState<any[]>([]);
   const [responseFilter, setResponseFilter] = useState<
@@ -72,62 +59,51 @@ export default function RSVPInviteesPage() {
   // 表单字段
   const [formFields, setFormFields] = useState<RSVPField[]>([]);
 
-  // 从表单配置中提取字段
+  // 通过 works_id 获取表单配置
   useEffect(() => {
-    if (!formConfigId) return;
+    if (!worksId) return;
     const loadFormConfig = async () => {
       try {
-        const config = (await trpc.rsvp.getFormConfigById.query({
-          id: formConfigId,
+        setLoading(true);
+        const config = (await trpc.rsvp.getFormConfigByWorksId.query({
+          works_id: worksId,
         })) as any;
-        if (config?.form_fields) {
-          const fields = parseRSVPFormFields(config.form_fields) as RSVPField[];
-          setFormFields(fields);
+
+        if (config) {
+          setFormConfigId(config.id);
+          if (config.form_fields) {
+            const fields = parseRSVPFormFields(
+              config.form_fields
+            ) as RSVPField[];
+            setFormFields(fields);
+          }
         }
       } catch (error) {
         console.error('Failed to load form config:', error);
+        toast.error('加载表单配置失败');
+      } finally {
+        setLoading(false);
       }
     };
     loadFormConfig();
-  }, [formConfigId]);
+  }, [worksId]);
 
   // 跳转到创建嘉宾页面
   const handleOpenAddInvitee = () => {
     const createUrl = `/mobile/rsvp/invitees/create?works_id=${worksId}&form_config_id=${formConfigId}`;
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}${createUrl}`,
-        type: 'URL',
-      });
-    } else {
-      router.push(createUrl);
-    }
+    navigateWithBridge({ path: createUrl, router });
   };
 
   // 跳转到公开分享页面
   const handleOpenPublicShare = () => {
     const shareUrl = `/mobile/rsvp/share?works_id=${worksId}&mode=public&form_config_id=${formConfigId}`;
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}${shareUrl}`,
-        type: 'URL',
-      });
-    } else {
-      router.push(shareUrl);
-    }
+    navigateWithBridge({ path: shareUrl, router });
   };
 
   // 跳转到嘉宾详情页面
   const handleOpenInviteeDetail = (invitee: any) => {
     const detailUrl = `/mobile/rsvp/invitees/${invitee.id}?works_id=${worksId}&form_config_id=${formConfigId}`;
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}${detailUrl}`,
-        type: 'URL',
-      });
-    } else {
-      router.push(detailUrl);
-    }
+    navigateWithBridge({ path: detailUrl, router });
   };
 
   // 查询当前RSVP下的嘉宾响应状态
@@ -465,6 +441,33 @@ export default function RSVPInviteesPage() {
       toast.error(error.message || '导出失败');
     }
   };
+
+  // 加载中状态
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center py-20'>
+        <div className='text-gray-500'>加载中...</div>
+      </div>
+    );
+  }
+
+  // 未找到表单配置
+  if (!formConfigId) {
+    return (
+      <div className='flex flex-col items-center justify-center py-20 px-6'>
+        <div className='text-gray-500 mb-4'>未找到RSVP表单配置</div>
+        <Button
+          variant='outline'
+          onClick={() => {
+            const url = `/mobile/home2?default_tab=1&appid=${getAppId()}`;
+            navigateWithBridge({ path: url, router });
+          }}
+        >
+          返回首页
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className='p-3 flex flex-col gap-3'>

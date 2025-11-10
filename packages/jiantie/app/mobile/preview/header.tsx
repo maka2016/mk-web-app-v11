@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 
 import { checkBindPhone, getAppId, getUid } from '@/services';
 import { useCheckPublish } from '@/utils/checkPubulish';
+import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { useShareNavigation } from '@/utils/share';
 import { Icon } from '@workspace/ui/components/Icon';
 
@@ -55,7 +56,13 @@ const PreviewHeader = (props: Props) => {
     if (isVideo) {
       toVideoShare(worksId);
     } else {
-      toShare(worksId, worksStore.worksDetail.is_rsvp);
+      if (worksStore.worksDetail.is_rsvp) {
+        const url = `/mobile/rsvp/invitees?works_id=${worksId}&mode=public`;
+        navigateWithBridge({ path: url, router });
+        return;
+      } else {
+        toShare(worksId);
+      }
     }
     setIsSharing(false);
   };
