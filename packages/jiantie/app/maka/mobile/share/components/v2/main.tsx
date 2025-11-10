@@ -212,7 +212,7 @@ const Share = () => {
     <div className={cls([styles.share, appid && styles[appid]])}>
       <MobileHeader
         title={t('share')}
-        rightText={t('record')}
+        rightText={'作品记录'}
         onRightClick={toActivity}
       />
 

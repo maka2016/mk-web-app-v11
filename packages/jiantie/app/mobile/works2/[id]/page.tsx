@@ -198,8 +198,8 @@ export default function WorkDetailPage() {
     const url = `/mobile/rsvp/invitees/create?works_id=${work.id}&form_config_id=${formConfigId}`;
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `maka://webview?url=${encodeURIComponent(url)}`,
-        type: 'NATIVE',
+        url: `${location.origin}${url}`,
+        type: 'URL',
       });
     } else {
       router.push(url);
@@ -212,8 +212,8 @@ export default function WorkDetailPage() {
     const url = `/mobile/rsvp/share?works_id=${work.id}&mode=public&form_config_id=${formConfigId}`;
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `maka://webview?url=${encodeURIComponent(url)}`,
-        type: 'NATIVE',
+        url: `${location.origin}${url}`,
+        type: 'URL',
       });
     } else {
       router.push(url);

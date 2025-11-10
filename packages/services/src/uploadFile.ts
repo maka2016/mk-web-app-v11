@@ -200,9 +200,8 @@ export const uploadFile2 = async (
   const uploadResult = await uploadFileToOSS(file, ossKey, onProgress);
 
   // 直接返回地址即可
-  const url = `${ossClientData.clientInfo.endpoint}/${ossKey}`;
   return {
-    url,
+    url: uploadResult.url,
     name: ossKey,
   };
 };
