@@ -31,12 +31,12 @@ export default function RSVPInviteesPage() {
       if (APPBridge.judgeIsInApp()) {
         router.push(
           getUrlWithParam(
-            `/maka/mobile/home?default_tab=1&appid=${getAppId()}`,
+            `/mobile/home2?default_tab=1&appid=${getAppId()}`,
             'clickid'
           )
         );
       } else {
-        router.replace('/mobile/home');
+        router.replace('/mobile/home2');
       }
     };
 
