@@ -186,19 +186,38 @@ export default function InviteeDetailPage() {
         fields.forEach((field: RSVPField) => {
           if (field.id === 'phone') {
           } else if (submissionData[field.id] !== undefined) {
-            defaultValues[field.id] = submissionData[field.id];
+            // 对于 guest_count 类型，确保成人人数至少为1
+            if (field.type === 'guest_count') {
+              const value = submissionData[field.id];
+              if (field.splitAdultChild && typeof value === 'object') {
+                defaultValues[field.id] = {
+                  adult: Math.max(1, value.adult || 1),
+                  child: value.child || 0,
+                };
+              } else if (typeof value === 'object') {
+                defaultValues[field.id] = {
+                  total: Math.max(1, value.total || 1),
+                };
+              } else {
+                // 兼容旧数据格式
+                defaultValues[field.id] = field.splitAdultChild
+                  ? { adult: 1, child: 0 }
+                  : { total: 1 };
+              }
+            } else {
+              defaultValues[field.id] = submissionData[field.id];
+            }
           } else if (field.type === 'checkbox') {
             defaultValues[field.id] = [];
           } else if (field.type === 'guest_count') {
             if (field.splitAdultChild) {
-              defaultValues[field.id] = { adult: 0, child: 0 };
+              defaultValues[field.id] = { adult: 1, child: 0 };
             } else {
-              defaultValues[field.id] = { total: 0 };
+              defaultValues[field.id] = { total: 1 };
             }
           } else {
             defaultValues[field.id] = '';
           }
-          console.log('defaultValues', defaultValues);
         });
 
         form.reset(defaultValues);
@@ -484,18 +503,42 @@ export default function InviteeDetailPage() {
                           const defaultValues: any = {};
                           formFields.forEach((field: RSVPField) => {
                             if (submissionData[field.id] !== undefined) {
-                              defaultValues[field.id] =
-                                submissionData[field.id];
+                              // 对于 guest_count 类型，确保成人人数至少为1
+                              if (field.type === 'guest_count') {
+                                const value = submissionData[field.id];
+                                if (
+                                  field.splitAdultChild &&
+                                  typeof value === 'object'
+                                ) {
+                                  defaultValues[field.id] = {
+                                    adult: Math.max(1, value.adult || 1),
+                                    child: value.child || 0,
+                                  };
+                                } else if (typeof value === 'object') {
+                                  defaultValues[field.id] = {
+                                    total: Math.max(1, value.total || 1),
+                                  };
+                                } else {
+                                  // 兼容旧数据格式
+                                  defaultValues[field.id] =
+                                    field.splitAdultChild
+                                      ? { adult: 1, child: 0 }
+                                      : { total: 1 };
+                                }
+                              } else {
+                                defaultValues[field.id] =
+                                  submissionData[field.id];
+                              }
                             } else if (field.type === 'checkbox') {
                               defaultValues[field.id] = [];
                             } else if (field.type === 'guest_count') {
                               if (field.splitAdultChild) {
                                 defaultValues[field.id] = {
-                                  adult: 0,
+                                  adult: 1,
                                   child: 0,
                                 };
                               } else {
-                                defaultValues[field.id] = { total: 0 };
+                                defaultValues[field.id] = { total: 1 };
                               }
                             } else {
                               defaultValues[field.id] = '';
