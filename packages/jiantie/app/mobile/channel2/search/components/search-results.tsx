@@ -7,7 +7,6 @@ import {
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
 import { Clock, Search, X } from 'lucide-react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -328,11 +327,11 @@ export default function SearchResults({
                   {/* 集合封面 */}
                   <div className='aspect-[3/4] bg-gray-100 relative'>
                     {collection.thumb_path ? (
-                      <Image
+                      <img
                         src={cdnApi(collection.thumb_path)}
                         alt={collection.display_name}
-                        fill
-                        className='object-cover'
+                        loading='lazy'
+                        className='absolute inset-0 h-full w-full object-cover'
                       />
                     ) : (
                       <div className='flex items-center justify-center h-full text-4xl text-gray-400'>
