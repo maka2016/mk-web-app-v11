@@ -80,7 +80,7 @@ model TemplateEntity {
   /// 信封功能：是否配置了信封
   envelope_enabled  Boolean? @default(false) @map("envelope_enabled")
   /// 信封功能配置（JSON格式，包含6张信封图片、视频背景等）
-  /// 结构：{ backgroundImage, envelopeLeftOpeningImage, envelopeRightOpeningImage, envelopeInnerImage, envelopeSealImage, videoBgConfig?, duration?, delay?, easing? }
+  /// 结构：{ backgroundImage, envelopeLeftOpeningImage, envelopeRightOpeningImage, envelopeInnerImage, envelopeSealImage, duration?, delay?, easing? }
   envelope_config   Json?    @map("envelope_config")
 
   @@index([designer_works_id], map: "IDX_66088e78c3bfd2706638f66598")
@@ -146,7 +146,7 @@ model WorksEntity {
   /// 信封功能：是否配置了信封
   envelope_enabled       Boolean? @default(false) @map("envelope_enabled")
   /// 信封功能配置（JSON格式，包含6张信封图片、视频背景等）
-  /// 结构：{ backgroundImage, envelopeLeftOpeningImage, envelopeRightOpeningImage, envelopeInnerImage, envelopeSealImage, videoBgConfig?, duration?, delay?, easing? }
+  /// 结构：{ backgroundImage, envelopeLeftOpeningImage, envelopeRightOpeningImage, envelopeInnerImage, envelopeSealImage, duration?, delay?, easing? }
   envelope_config        Json?    @map("envelope_config")
 
   @@index([uid], map: "IDX_121635b71d5f6986874d4c5de4")
