@@ -73,7 +73,7 @@ export function SubmissionView({
         <div
           className='text-xl font-semibold mb-2'
           style={{
-            color: 'var(--rsvp-text-color, #111827)',
+            color: 'var(--rsvp-label-color, #111827)',
           }}
         >
           {willAttend ? '确认出席' : '回复已收到'}
@@ -85,7 +85,7 @@ export function SubmissionView({
             <div
               className='text-sm mb-6'
               style={{
-                color: 'var(--rsvp-text-color, #374151)',
+                color: 'var(--rsvp-label-color, #374151)',
               }}
             >
               感谢您，{displayName}，期待您的到来

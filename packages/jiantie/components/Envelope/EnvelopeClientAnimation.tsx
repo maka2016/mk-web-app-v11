@@ -461,6 +461,7 @@ export function EnvelopeClientAnimation({
                   src={leftOpeningImage || ''}
                   alt='envelope-left-outer'
                   style={{
+                    zIndex: 1,
                     objectPosition: 'left center',
                     transformOrigin: 'left center',
                     transform: 'rotateY(0deg) translateZ(0.01px)',
@@ -470,6 +471,7 @@ export function EnvelopeClientAnimation({
                   src={leftInnerImage || leftOpeningImage || ''}
                   alt='envelope-left-inner'
                   style={{
+                    zIndex: 2,
                     objectPosition: 'left center',
                     transformOrigin: 'left center',
                     transform: 'rotateY(180deg) translateZ(0.01px)',

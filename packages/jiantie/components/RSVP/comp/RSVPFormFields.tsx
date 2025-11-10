@@ -165,7 +165,7 @@ export function RSVPFormFields({
                     fontSize: 'var(--rsvp-control-font-size)',
                   }}
                 >
-                  {field.label}
+                  {field.label === '访客' ? '出席人数（含本人）' : field.label}
                   {field.required ? (
                     <span className='text-red-500 ml-1'>*</span>
                   ) : null}
