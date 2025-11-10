@@ -2,7 +2,7 @@ import {
   createOSSClient,
   loadAliCloudConfigFromEnv,
   uploadFile,
-} from '@workspace/server/src/oss/oss-client';
+} from '@workspace/server/src/oss/oss-client-for-node-server';
 import { bitFileRaw } from './bit_tables/types';
 import { getLarkClient } from './lark';
 
