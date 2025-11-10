@@ -1,12 +1,13 @@
 'use client';
 import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
-import { getAppId, getUid } from '@/services';
+import { checkPurchased, getAppId, getUid } from '@/services';
 import { useStore } from '@/store';
 import { getUrlWithParam } from '@/utils';
 import { useCheckPublish } from '@/utils/checkPubulish';
 import { toVipPage } from '@/utils/jiantie';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
+import { EventEmitter } from '@mk/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +30,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { WorkInfoCard } from '../components/WorkInfoCard';
 
@@ -42,8 +43,7 @@ type RSVPStats = {
 export default function WorkDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const appid = getAppId();
-  const { isVip } = useStore();
+  const { isVip, vipShow, setVipShow } = useStore();
   const { canShareWithoutWatermark } = useCheckPublish();
   const workId = params.id as string;
 
@@ -53,6 +53,8 @@ export default function WorkDetailPage() {
   const [canShare, setCanShare] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const prevVipShowRef = useRef(false);
 
   // 返回上一页
   const handleBack = () => {
@@ -62,6 +64,81 @@ export default function WorkDetailPage() {
       router.back();
     }
   };
+
+  // 检查用户权限（会员或作品购买状态）
+  useEffect(() => {
+    const checkPermission = async () => {
+      const appid = getAppId();
+      const uid = getUid();
+      if (!workId || !uid || !work) return;
+
+      // 如果是会员，直接有权限
+      if (isVip) {
+        setHasPermission(true);
+        return;
+      }
+
+      // 检查作品是否已购买
+      try {
+        const purchased = await checkPurchased(workId, uid, appid);
+        setHasPermission(purchased);
+
+        // 如果没有权限，显示 VIP 拦截页
+        if (!purchased) {
+          setVipShow(true, {
+            works_id: workId,
+            ref_object_id: work.template_id || '',
+            tab: appid === 'xueji' ? 'business' : 'personal',
+            vipType: 'rsvp',
+          });
+        }
+      } catch (error) {
+        console.error('Failed to check purchase status:', error);
+        setHasPermission(false);
+        // 检查失败时也显示 VIP 拦截页
+        setVipShow(true, {
+          works_id: workId,
+          ref_object_id: work.template_id || '',
+          tab: appid === 'xueji' ? 'business' : 'personal',
+          vipType: 'rsvp',
+        });
+      }
+    };
+
+    // 只有在作品加载完成后才检查权限
+    if (work && !loading) {
+      checkPermission();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workId, isVip, work, loading]);
+
+  // 监听 VIP 拦截页关闭事件
+  useEffect(() => {
+    const handleVipModalOpenChange = (value: boolean) => {
+      console.log('value', value);
+      if (!value) {
+        // 用户没有购买会员，返回上一页
+        if (APPBridge.judgeIsInApp()) {
+          APPBridge.navAppBack();
+        } else {
+          router.back();
+        }
+      }
+    };
+    EventEmitter.on('VIP_MODAL_OPEN_CHANGE', handleVipModalOpenChange);
+    // 如果 VIP 拦截页从打开变为关闭，且之前没有权限
+    if (prevVipShowRef.current && !vipShow && hasPermission === false) {
+      // 检查用户是否购买了会员
+      if (isVip) {
+        // 用户购买了会员，更新权限状态并留在当前页
+        setHasPermission(true);
+      }
+    }
+    prevVipShowRef.current = vipShow;
+    return () => {
+      EventEmitter.rm('VIP_MODAL_OPEN_CHANGE', handleVipModalOpenChange);
+    };
+  }, [vipShow, hasPermission, isVip, router]);
 
   // 加载作品详情
   useEffect(() => {
@@ -131,6 +208,7 @@ export default function WorkDetailPage() {
   const handlePreview = () => {
     if (!work) return;
     const uid = getUid();
+    const appid = getAppId();
 
     router.replace(
       `/mobile/preview?works_id=${work.id}&uid=${uid}&appid=${appid}`
@@ -141,6 +219,7 @@ export default function WorkDetailPage() {
   const handleEdit = () => {
     if (!work) return;
     const uid = getUid();
+    const appid = getAppId();
     router.replace(`/editor?works_id=${work.id}&uid=${uid}&appid=${appid}`);
   };
 
@@ -202,6 +281,9 @@ export default function WorkDetailPage() {
   // 跳转到宾客管理页面
   const handleManageGuests = () => {
     if (!work || !formConfigId) return;
+
+    const appid = getAppId();
+
     const url = `/mobile/rsvp/invitees?works_id=${work.id}&form_config_id=${formConfigId}`;
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
@@ -362,7 +444,8 @@ export default function WorkDetailPage() {
                           toVipPage({
                             works_id: work.id,
                             ref_object_id: work.template_id || '',
-                            tab: appid === 'xueji' ? 'business' : 'personal',
+                            tab:
+                              getAppId() === 'xueji' ? 'business' : 'personal',
                             vipType: 'rsvp',
                           });
                         }}
