@@ -190,102 +190,103 @@ const EnvelopeAnimation = forwardRef<
           {animationPhase !== 'complete' && (
             <EnvelopeWrapper>
               <EnvelopeLayer key='envelope-container'>
-              {/* 信封内页（最底层） */}
-              <EnvelopeImage
-                src={config?.envelopeInnerImage || ''}
-                alt='envelope-inner'
-                style={{ zIndex: 1 }}
-              />
+                {/* 信封内页（最底层） */}
+                <EnvelopeImage
+                  src={config?.envelopeInnerImage || ''}
+                  alt='envelope-inner'
+                  style={{ zIndex: 1 }}
+                />
 
-              <InvitationContentLayer
-                initial={{ opacity: 1, scale: 0.7 }}
-                animate={{
-                  scale: animationPhase === 'opening' ? 1 : 0.7,
-                }}
-                transition={{
-                  duration: (duration / 1000) * 0.6,
-                  delay: (duration / 1000) * 0.4,
-                  ease: easing,
-                }}
-              >
-                <div
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#6b7280',
-                    fontSize: 12,
-                    fontWeight: 500,
+                <InvitationContentLayer
+                  initial={{ opacity: 1, scale: 0.7 }}
+                  animate={{
+                    scale: animationPhase === 'opening' ? 1 : 0.7,
+                  }}
+                  transition={{
+                    duration: (duration / 1000) * 0.6,
+                    delay: (duration / 1000) * 0.4,
+                    ease: easing,
                   }}
                 >
-                  邀请函内容预览
-                </div>
-              </InvitationContentLayer>
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      background:
+                        'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#6b7280',
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    邀请函内容预览
+                  </div>
+                </InvitationContentLayer>
 
-              {/* 信封左侧 */}
-              <EnvelopeImage
-                src={leftOpeningImage || ''}
-                alt='envelope-left-opening'
-                style={{
-                  zIndex: 3,
-                  transformOrigin: 'left center',
-                  backfaceVisibility: 'hidden',
-                  objectPosition: 'left center',
-                }}
-                initial={{ rotateY: 0 }}
-                animate={
-                  animationPhase === 'opening'
-                    ? { rotateY: -180 }
-                    : { rotateY: 0 }
-                }
-                transition={{
-                  duration: duration / 1000,
-                  ease: easing,
-                }}
-              />
+                {/* 信封左侧 */}
+                <EnvelopeImage
+                  src={leftOpeningImage || ''}
+                  alt='envelope-left-opening'
+                  style={{
+                    zIndex: 3,
+                    transformOrigin: 'left center',
+                    backfaceVisibility: 'hidden',
+                    objectPosition: 'left center',
+                  }}
+                  initial={{ rotateY: 0 }}
+                  animate={
+                    animationPhase === 'opening'
+                      ? { rotateY: -180 }
+                      : { rotateY: 0 }
+                  }
+                  transition={{
+                    duration: duration / 1000,
+                    ease: easing,
+                  }}
+                />
 
-              {/* 信封右侧 */}
-              <EnvelopeImage
-                src={rightOpeningImage || ''}
-                alt='envelope-right-opening'
-                style={{
-                  zIndex: 2,
-                  transformOrigin: 'right center',
-                  backfaceVisibility: 'hidden',
-                  objectPosition: 'right center',
-                }}
-                initial={{ rotateY: 0 }}
-                animate={
-                  animationPhase === 'opening'
-                    ? { rotateY: 180 }
-                    : { rotateY: 0 }
-                }
-                transition={{
-                  duration: duration / 1000,
-                  ease: easing,
-                }}
-              />
+                {/* 信封右侧 */}
+                <EnvelopeImage
+                  src={rightOpeningImage || ''}
+                  alt='envelope-right-opening'
+                  style={{
+                    zIndex: 2,
+                    transformOrigin: 'right center',
+                    backfaceVisibility: 'hidden',
+                    objectPosition: 'right center',
+                  }}
+                  initial={{ rotateY: 0 }}
+                  animate={
+                    animationPhase === 'opening'
+                      ? { rotateY: 180 }
+                      : { rotateY: 0 }
+                  }
+                  transition={{
+                    duration: duration / 1000,
+                    ease: easing,
+                  }}
+                />
 
-              {/* 信封印章 */}
-              <EnvelopeImage
-                src={config?.envelopeSealImage || ''}
-                alt='envelope-seal'
-                style={{ zIndex: 3 }}
-                initial={{ opacity: 1, scale: 1 }}
-                animate={
-                  animationPhase === 'opening'
-                    ? { opacity: 0, scale: 0.8 }
-                    : { opacity: 1, scale: 1 }
-                }
-                transition={{
-                  duration: (duration / 1000) * 0.3,
-                  ease: easing,
-                }}
-              />
+                {/* 信封印章 */}
+                <EnvelopeImage
+                  src={config?.envelopeSealImage || ''}
+                  alt='envelope-seal'
+                  style={{ zIndex: 3 }}
+                  initial={{ opacity: 1, scale: 1 }}
+                  animate={
+                    animationPhase === 'opening'
+                      ? { opacity: 0, scale: 0.8 }
+                      : { opacity: 1, scale: 1 }
+                  }
+                  transition={{
+                    duration: (duration / 1000) * 0.3,
+                    ease: easing,
+                  }}
+                />
               </EnvelopeLayer>
             </EnvelopeWrapper>
           )}
