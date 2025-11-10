@@ -40,9 +40,13 @@ export async function listTablesView(datasheetItem: DatasheetItem) {
 const cacheMap = new Map<string, any>();
 export const getAllRecord = async (
   datasheetItem: DatasheetItem,
-  limit?: number,
-  noCache?: boolean
+  config?: {
+    limit?: number;
+    noCache?: boolean;
+    filter?: any;
+  }
 ) => {
+  const { limit, noCache, filter } = config ?? {};
   if (!datasheetItem) {
     console.log('wrong getAllRecord', datasheetItem);
   }
@@ -78,6 +82,7 @@ export const getAllRecord = async (
       },
       data: {
         view_id: datasheetItem.viewId,
+        filter: filter ?? undefined,
       },
     });
 
