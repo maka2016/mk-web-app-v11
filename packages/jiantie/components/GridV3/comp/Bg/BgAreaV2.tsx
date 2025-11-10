@@ -29,17 +29,15 @@ export default function BgAreaV2(props: BgAreaProps) {
     ...otherProps
   } = props;
   const {
-    backgroundGroup,
-    padding,
-    margin,
+    backgroundGroup: _backgroundGroup,
     foregroundStyle,
-    display,
-    width,
-    height,
+    videoBgConfig: styleVideoBgConfig,
     ...otherStyle
-  } = style;
+  } = style as any;
+  void _backgroundGroup;
 
   const BgContainerRef = useRef<HTMLDivElement>(null);
+  const resolvedVideoBgConfig = videoBgConfig || styleVideoBgConfig;
 
   const renderForeground = () => {
     if (foregroundStyle) {
@@ -74,7 +72,7 @@ export default function BgAreaV2(props: BgAreaProps) {
         }}
       >
         {/* 视频背景（最底层） */}
-        {videoBgConfig && <VideoBg config={videoBgConfig} />}
+        {resolvedVideoBgConfig && <VideoBg config={resolvedVideoBgConfig} />}
 
         {/* 裁剪模式背景 */}
         {(otherStyle as any).borderImage2 ? (

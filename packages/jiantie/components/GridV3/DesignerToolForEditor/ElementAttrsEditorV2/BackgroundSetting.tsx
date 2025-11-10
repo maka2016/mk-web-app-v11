@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { cdnApi } from '@mk/services';
+import { cdnApi, uploadFile2 } from '@mk/services';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import {
@@ -7,13 +7,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@workspace/ui/components/popover';
-import { Slider } from '@workspace/ui/components/slider';
-import cls from 'classnames';
-import ColorPickerPopover from '../../shared/ColorPicker';
-import FrontgroundSelector from '../../shared/LibContent/FrontgroundSelector';
-import MaskSetting from './MaskSetting';
-// removed unused Switch import
 import { ResponsiveTooltip } from '@workspace/ui/components/responsive-tooltip';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@workspace/ui/components/select';
+import { Slider } from '@workspace/ui/components/slider';
+import { Switch } from '@workspace/ui/components/switch';
+import cls from 'classnames';
 import {
   AlignHorizontalJustifyCenter,
   AlignHorizontalJustifyEnd,
@@ -27,8 +31,13 @@ import {
   Minimize2,
   Repeat,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import toast from 'react-hot-toast';
+import { VideoBgConfig } from '../../../Envelope/types';
+import ColorPickerPopover from '../../shared/ColorPicker';
 import { colorValueBuilder } from '../../shared/ColorPicker/utils';
+import FrontgroundSelector from '../../shared/LibContent/FrontgroundSelector';
+import MaskSetting from './MaskSetting';
 import { ToggleItem } from './ToggleItem';
 
 interface BackgroundSettingFactoryProps {
@@ -652,6 +661,109 @@ const BackgroundSetting = (props: BackgroundSettingProps) => {
       ?.match(/url\((.*)\)/)?.[1]
       ?.replace(/['"]/g, '') || undefined;
 
+  const videoBgConfig = (itemStyle as any).videoBgConfig as
+    | VideoBgConfig
+    | undefined;
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+  const [draggingVideoOpacity, setDraggingVideoOpacity] = useState<
+    number | null
+  >(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
+  const ensureVideoConfig = (): VideoBgConfig => ({
+    videoUrl: videoBgConfig?.videoUrl || '',
+    loop: videoBgConfig?.loop !== undefined ? videoBgConfig.loop : true,
+    muted: videoBgConfig?.muted !== undefined ? videoBgConfig.muted : true,
+    objectFit: videoBgConfig?.objectFit || 'cover',
+    opacity: videoBgConfig?.opacity,
+  });
+
+  const updateVideoConfig = (next: Partial<VideoBgConfig>) => {
+    const base = ensureVideoConfig();
+    const merged: VideoBgConfig = {
+      ...base,
+      ...next,
+    };
+    if (merged.opacity === undefined || merged.opacity === 1) {
+      delete (merged as Partial<VideoBgConfig>).opacity;
+    }
+    onChange({
+      videoBgConfig: merged,
+    } as any);
+  };
+
+  const handleVideoUpload = async (file: File) => {
+    const validTypes = ['video/mp4', 'video/webm'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('仅支持 MP4 和 WebM 格式的视频');
+      return;
+    }
+
+    const maxSize = 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error('视频文件不能超过 15MB');
+      return;
+    }
+
+    try {
+      setVideoUploading(true);
+      setVideoUploadProgress(0);
+      const result = await uploadFile2(
+        {
+          file,
+          type: 'video',
+        },
+        progress => {
+          setVideoUploadProgress(Math.round(progress * 100));
+        }
+      );
+      updateVideoConfig({ videoUrl: result.url });
+      toast.success('视频上传成功');
+    } catch (error) {
+      console.error('视频上传失败:', error);
+      toast.error('视频上传失败');
+    } finally {
+      setVideoUploading(false);
+      setVideoUploadProgress(0);
+    }
+  };
+
+  const handleVideoFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await handleVideoUpload(file);
+    }
+    event.target.value = '';
+  };
+
+  const handleVideoRemove = () => {
+    setDraggingVideoOpacity(null);
+    onChange({
+      videoBgConfig: undefined,
+    } as any);
+  };
+
+  const openVideoSelector = () => {
+    if (videoUploading) return;
+    videoInputRef.current?.click();
+  };
+
+  const openVideoLibrary = () => {
+    if (videoUploading) return;
+    editorCtx?.utils?.showSelector?.({
+      type: 'video',
+      onSelected: (params: any) => {
+        if (params?.url) {
+          updateVideoConfig({ videoUrl: params.url });
+          toast.success('已选择视频');
+        }
+      },
+    });
+  };
+
   const [isExpandedBg, setIsExpandedBg] = useState(
     !!bgUrl || !!itemStyle.background || !!itemStyle.backgroundColor
   );
@@ -684,6 +796,162 @@ const BackgroundSetting = (props: BackgroundSettingProps) => {
           onChange={onChange}
           useMask={false}
         />
+      </ToggleItem>
+      <ToggleItem
+        title='视频背景'
+        hasValue={typeof videoBgConfig !== 'undefined'}
+        onAdd={() => {
+          updateVideoConfig({});
+        }}
+        onRemove={handleVideoRemove}
+      >
+        <div className='flex flex-col gap-3 px-2 pb-2'>
+          <input
+            ref={videoInputRef}
+            type='file'
+            accept='video/mp4,video/webm'
+            className='hidden'
+            onChange={handleVideoFileChange}
+          />
+          {videoBgConfig?.videoUrl ? (
+            <div className='relative overflow-hidden rounded-md bg-black'>
+              <video
+                key={videoBgConfig.videoUrl}
+                src={videoBgConfig.videoUrl}
+                className='aspect-video w-full object-contain'
+                controls
+                loop
+                muted
+                playsInline
+                preload='metadata'
+              />
+              <div className='absolute top-2 right-2 flex gap-2'>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  className='h-7 px-2 text-xs'
+                  onClick={openVideoLibrary}
+                  disabled={videoUploading}
+                >
+                  素材库
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  className='h-7 px-2 text-xs'
+                  onClick={openVideoSelector}
+                  disabled={videoUploading}
+                >
+                  更换
+                </Button>
+              </div>
+              <div className='absolute bottom-2 left-2 right-2 truncate rounded bg-black/40 px-2 py-1 text-[10px] text-white'>
+                {videoBgConfig.videoUrl}
+              </div>
+            </div>
+          ) : (
+            <div className='flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 p-4 text-xs text-gray-500'>
+              <span>支持 MP4、WebM，建议小于 15MB</span>
+              <div className='flex gap-2'>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  className='h-7 px-3 text-xs'
+                  onClick={openVideoSelector}
+                  disabled={videoUploading}
+                >
+                  {videoUploading
+                    ? `上传中... ${videoUploadProgress}%`
+                    : '上传视频'}
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  className='h-7 px-3 text-xs'
+                  onClick={openVideoLibrary}
+                  disabled={videoUploading}
+                >
+                  素材库
+                </Button>
+              </div>
+            </div>
+          )}
+          {videoUploading && (
+            <div className='text-xs text-gray-500 text-right'>
+              上传进度 {videoUploadProgress}%
+            </div>
+          )}
+          {typeof videoBgConfig !== 'undefined' && (
+            <div className='flex flex-col gap-2 text-xs text-gray-600'>
+              <div className='flex items-center justify-between gap-2'>
+                <span className='whitespace-nowrap'>填充方式</span>
+                <Select
+                  value={videoBgConfig?.objectFit || 'cover'}
+                  onValueChange={value =>
+                    updateVideoConfig({
+                      objectFit: value as VideoBgConfig['objectFit'],
+                    })
+                  }
+                >
+                  <SelectTrigger className='h-7 w-[140px] text-xs'>
+                    <SelectValue placeholder='选择模式' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='cover'>填充裁剪</SelectItem>
+                    <SelectItem value='contain'>完整展示</SelectItem>
+                    <SelectItem value='fill'>拉伸填满</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className='flex items-center justify-between gap-2'>
+                <span className='whitespace-nowrap'>循环播放</span>
+                <Switch
+                  checked={videoBgConfig?.loop !== false}
+                  onCheckedChange={checked =>
+                    updateVideoConfig({ loop: checked })
+                  }
+                />
+              </div>
+              <div className='flex items-center justify-between gap-2'>
+                <span className='whitespace-nowrap'>静音</span>
+                <Switch
+                  checked={videoBgConfig?.muted !== false}
+                  onCheckedChange={checked =>
+                    updateVideoConfig({ muted: checked })
+                  }
+                />
+              </div>
+              <div className='flex flex-col gap-2'>
+                <div className='flex items-center justify-between'>
+                  <span>透明度</span>
+                  <span>
+                    {draggingVideoOpacity ??
+                      Math.round((videoBgConfig?.opacity ?? 1) * 100)}
+                    %
+                  </span>
+                </div>
+                <Slider
+                  min={0}
+                  max={100}
+                  value={[
+                    draggingVideoOpacity ??
+                      Math.round((videoBgConfig?.opacity ?? 1) * 100),
+                  ]}
+                  onValueChange={values => {
+                    setDraggingVideoOpacity(values[0]);
+                  }}
+                  onValueCommit={values => {
+                    const opacity = values[0] / 100;
+                    setDraggingVideoOpacity(null);
+                    updateVideoConfig({
+                      opacity: opacity === 1 ? undefined : opacity,
+                    });
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </ToggleItem>
       {props.useFrontground && (
         <ToggleItem
