@@ -172,6 +172,7 @@ export const syncChannel = async (
       const newData: any = {
         online: !(item.fields['上线'] === '下线'),
         alias, // 使用内部唯一名称作为 alias
+        desc: item.fields['内部名称']?.[0]?.text || '',
         display_name: displayName, // 显示名
         thumb_path: item.fields['封面url']?.[0]?.text || null,
         class: ChClassName, // 一级栏目
@@ -209,6 +210,7 @@ export const syncChannel = async (
         template_ids: data.data.template_ids,
         env: env,
         online: data.data.online,
+        desc: data.data.desc,
       },
       create: data.data,
     });
