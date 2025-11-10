@@ -3,8 +3,6 @@
 import Chanel2 from '@/app/mobile/channel2/page';
 import Mine from '@/app/mobile/mine/page';
 import Works from '@/app/mobile/works2/page';
-import { getUid } from '@/services';
-import { trpc } from '@/utils/trpc';
 import useIsMobile from '@/utils/use-mobile';
 import APPBridge from '@mk/app-bridge';
 import { cdnApi } from '@mk/services';
@@ -56,27 +54,8 @@ const TabLayout = (props: Props) => {
     newParams.set('tab', val.toString());
     router.replace(`?${newParams.toString()}`, { scroll: false });
   };
-  const [unread, setUnread] = useState(0);
-
-  const getUnReadNotifications = async () => {
-    try {
-      const uid = getUid();
-      if (!uid) {
-        setUnread(0);
-        return;
-      }
-      const res = await trpc.rsvp.getUnreadNotificationCount.query({
-        user_id: uid,
-      });
-      setUnread(res.count || 0);
-    } catch (error) {
-      console.error('Failed to get RSVP notifications:', error);
-      setUnread(0);
-    }
-  };
 
   useEffect(() => {
-    getUnReadNotifications();
     setIsMiniProgram(APPBridge.judgeIsInMiniP());
 
     // (window as any)?.["MKAPPCloseModal"] = () => {
@@ -90,25 +69,6 @@ const TabLayout = (props: Props) => {
       { label: '作品', key: 'works', component: Works },
       { label: '我的', key: 'mine', component: Mine },
     ];
-  };
-
-  const toNotificationCenter = () => {
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}/mobile/notification-center?is_full_screen=1`,
-        type: 'URL',
-      });
-    } else {
-      router.push(`/mobile/rsvp/notifications?appid=${appid}`);
-    }
-    // if (APPBridge.judgeIsInApp()) {
-    //   APPBridge.navToPage({
-    //     url: `${location.origin}/mobile/notification-center?is_full_screen=1`,
-    //     type: 'URL',
-    //   });
-    // } else {
-    //   router.push(`/mobile/notification-center?appid=${appid}`);
-    // }
   };
 
   // 渲染每个 tab 对应的页面

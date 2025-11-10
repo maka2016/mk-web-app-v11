@@ -31,6 +31,17 @@ export default function Main({ appid = 'jiantie' }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [unread, setUnread] = useState(0);
 
+  const toNotificationCenter = () => {
+    if (APPBridge.judgeIsInApp()) {
+      APPBridge.navToPage({
+        url: `${location.origin}/mobile/notification-center?is_full_screen=1`,
+        type: 'URL',
+      });
+    } else {
+      router.push(`/mobile/rsvp/notifications?appid=${appid}`);
+    }
+  };
+
   useEffect(() => {
     const fetchChannels = async () => {
       try {
@@ -104,21 +115,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
               borderRadius: '10px',
             }}
             className='relative w-8 h-8 flex items-center justify-center bg-white  hover:bg-gray-50 transition-colors'
-            onClick={() => {
-              if (APPBridge.judgeIsInApp() && typeof window !== 'undefined') {
-                const url = new URL(
-                  '/mobile/notification-center',
-                  window.location.origin
-                );
-                url.searchParams.set('is_full_screen', '1');
-                APPBridge.navToPage({
-                  url: url.toString(),
-                  type: 'URL',
-                });
-              } else {
-                router.push(`/mobile/rsvp/notifications?appid=${appid}`);
-              }
-            }}
+            onClick={toNotificationCenter}
           >
             <img
               src='https://res.maka.im/assets/jiantie/tongzhi.png'
