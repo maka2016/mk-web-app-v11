@@ -49,6 +49,7 @@ function ContainerWithBgV2(
     backgroundSize,
     backgroundColor,
     backgroundOpacity,
+    videoBgConfig: styleVideoBgConfig,
     ...otherStyle
   } = style || ({} as any);
   const containerStyle = clearUndefinedKey({
@@ -56,6 +57,8 @@ function ContainerWithBgV2(
     borderRadius,
     position: 'relative',
   } as React.CSSProperties);
+
+  const resolvedVideoBgConfig = videoBgConfig || styleVideoBgConfig;
 
   const _bgStyle = clearUndefinedKey(
     bgStyle ||
@@ -127,7 +130,7 @@ function ContainerWithBgV2(
           id={`bg_for_${id}`}
           parallaxScrollBgConfig={parallaxScrollBgConfig}
           clipBgScale={clipBgScale}
-          videoBgConfig={videoBgConfig}
+          videoBgConfig={resolvedVideoBgConfig}
           key={
             _bgStyle.background ||
             _bgStyle.backgroundImage ||
@@ -147,7 +150,7 @@ function ContainerWithBgV2(
         id={`bg_for_${id}`}
         parallaxScrollBgConfig={parallaxScrollBgConfig}
         clipBgScale={clipBgScale}
-        videoBgConfig={videoBgConfig}
+        videoBgConfig={resolvedVideoBgConfig}
         key={
           _bgStyle.background ||
           _bgStyle.backgroundImage ||
