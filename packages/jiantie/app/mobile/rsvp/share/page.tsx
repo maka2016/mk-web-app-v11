@@ -5,15 +5,15 @@ import {
   CanvaInfo2,
   getCanvaInfo2,
 } from '@/components/GridV3/comp/provider/utils';
-import { onScreenShot } from '@/components/GridV3/shared';
 import LibPicture from '@/components/LibPicture';
-import { getAppId, request } from '@/services';
+import { request } from '@/services';
 import { getWorkData2, updateWorksDetail2 } from '@/services/works2';
+import { getUrlWithParam } from '@/utils';
 import { canUseRnChoosePic, showRnChoosePic } from '@/utils/rnChoosePic';
 import { useShareNavigation } from '@/utils/share';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
-import { API, cdnApi } from '@mk/services';
+import { API, cdnApi, getAppId } from '@mk/services';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Input } from '@workspace/ui/components/input';
@@ -24,26 +24,76 @@ import {
   Link as LinkIcon,
   Video as VideoIcon,
 } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import styles from '../invitees/share.module.scss';
 import { useRSVPLayout } from '../RSVPLayoutContext';
 
 export default function SharePage() {
-  const { setTitle } = useRSVPLayout();
+  const { setTitle, setRightText, setRightContent, setOnRightClick } =
+    useRSVPLayout();
   const searchParams = useSearchParams();
-
-  // 设置页面标题
-  useEffect(() => {
-    setTitle('分享邀请链接');
-  }, [setTitle]);
+  const router = useRouter();
 
   const worksId = searchParams.get('works_id') || '';
   const mode = (searchParams.get('mode') as 'public' | 'invitee') || 'public';
   const contactId = searchParams.get('contact_id') || undefined;
   const contactName = searchParams.get('contact_name') || undefined;
-  const from = searchParams.get('from') || '';
+  const formConfigId = searchParams.get('form_config_id') || '';
+
+  // 设置页面标题和右上角按钮
+  useEffect(() => {
+    setTitle('分享邀请链接');
+
+    // 公开分享和邀请模式下都显示"完成"按钮
+    setRightText('完成');
+    setRightContent(null);
+
+    const handleComplete = () => {
+      if (mode === 'public') {
+        // 公开分享模式：跳转到作品列表页
+        if (APPBridge.judgeIsInApp()) {
+          router.push(
+            getUrlWithParam(
+              `/mobile/home2?default_tab=1&appid=${getAppId()}`,
+              'clickid'
+            )
+          );
+        } else {
+          router.replace('/mobile/home2?default_tab=1');
+        }
+      } else if (mode === 'invitee') {
+        // 邀请模式：跳转到嘉宾列表页
+        const inviteesUrl = `/mobile/rsvp/invitees?works_id=${worksId}&form_config_id=${formConfigId}`;
+        if (APPBridge.judgeIsInApp()) {
+          APPBridge.navToPage({
+            url: `${window.location.origin}${inviteesUrl}`,
+            type: 'URL',
+          });
+        } else {
+          router.push(inviteesUrl);
+        }
+      }
+    };
+
+    setOnRightClick(() => handleComplete);
+
+    return () => {
+      setRightText('');
+      setRightContent(null);
+      setOnRightClick(undefined);
+    };
+  }, [
+    mode,
+    worksId,
+    formConfigId,
+    router,
+    setTitle,
+    setRightText,
+    setRightContent,
+    setOnRightClick,
+  ]);
 
   // 内部状态管理
   const [shareTitle, setShareTitle] = useState<string>('');
@@ -60,7 +110,6 @@ export default function SharePage() {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const { toPosterShare, toVideoShare } = useShareNavigation();
-  const appid = getAppId();
 
   // 生成分享链接
   const shareLink = useMemo(() => {
@@ -232,53 +281,6 @@ export default function SharePage() {
     }
   };
 
-  // 分享长图
-  const sharePoster = async () => {
-    if (!worksId || !canvaInfo2) {
-      toast.error('画布信息获取失败');
-      return;
-    }
-    if (!canvaInfo2.shareInfo?.posterSupport) {
-      toast.error('当前内容不支持导出图片');
-      return;
-    }
-
-    toast.loading('图片生成中');
-    try {
-      const {
-        viewportWidth,
-        canvaVisualHeight = 1,
-        viewportScale,
-      } = canvaInfo2;
-      const screenshotWidth = viewportWidth;
-      const screenshotHeight = viewportScale * canvaVisualHeight;
-      const urls = await onScreenShot({
-        id: worksId,
-        width: screenshotWidth,
-        height: screenshotHeight,
-        appid,
-      });
-
-      if (urls && urls.length > 0) {
-        toPosterShare(worksId);
-      }
-    } catch {
-      toast.error('图片生成失败');
-    } finally {
-      toast.dismiss();
-    }
-  };
-
-  // 导出视频
-  const shareVideo = async () => {
-    if (!worksId) return;
-    if (!canvaInfo2?.shareInfo?.videoSupport) {
-      toast.error('当前内容不支持导出视频');
-      return;
-    }
-    toVideoShare(worksId);
-  };
-
   // 处理封面上传
   const onChangeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const maxSize = 50;
@@ -435,7 +437,7 @@ export default function SharePage() {
                   if (executingKey) return;
                   setExecutingKey('poster');
                   try {
-                    await sharePoster();
+                    toPosterShare(worksId);
                   } finally {
                     setExecutingKey(null);
                   }
@@ -455,7 +457,7 @@ export default function SharePage() {
                   if (executingKey) return;
                   setExecutingKey('video');
                   try {
-                    await shareVideo();
+                    toVideoShare(worksId);
                   } finally {
                     setExecutingKey(null);
                   }

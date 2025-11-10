@@ -158,25 +158,11 @@ export const blockStyleFilter = (
   safeToSetStyle(_style, 'backgroundColor', style);
   safeToSetStyle(_style, 'background', style);
 
-  // 处理混合模式，确保 WebKit 前缀也被包含（兼容 iOS Safari）
-  const mixBlendMode = style.mixBlendMode;
-  const processedMixBlendMode: any = {};
-  if (mixBlendMode) {
-    processedMixBlendMode.mixBlendMode = mixBlendMode;
-    processedMixBlendMode.WebkitMixBlendMode = mixBlendMode;
-  }
-
-  // 计算 transform，如果存在混合模式但 transform 未设置，则启用硬件加速（iOS Safari 兼容性）
-  let processedTransform = calcTransform(style?.transform);
-  // 如果 transform 不存在（calcTransform 返回 undefined），且存在混合模式，则启用硬件加速
-  if (mixBlendMode && processedTransform === undefined && !style?.transform) {
-    // 启用硬件加速以改善 iOS Safari 的混合模式渲染
-    processedTransform = 'translate3d(0, 0, 0)';
-  }
+  // 注意：混合模式不再在这里处理，而是在 WidgetItemRendererV2 中通过 takeBlendModeStyle 单独处理
+  // 这样可以避免 Safari 黑色底问题，因为混合模式应用到内容层而不是容器层
 
   return {
     ..._style,
-    ...processedMixBlendMode,
     fontSize: calcLayoutStyleVal(style?.fontSize, scale),
     padding: calcLayoutStyleVal(style?.padding, scale),
     margin: calcLayoutStyleVal(style?.margin, scale),
@@ -191,7 +177,7 @@ export const blockStyleFilter = (
           : (rowGap ?? columnGap)),
       scale
     ),
-    transform: processedTransform,
+    transform: calcTransform(style?.transform),
     minWidth: calcLayoutStyleVal(style?.minWidth, scale),
     width: calcLayoutStyleVal(style?.width, scale),
     height: calcLayoutStyleVal(style?.height, scale),
