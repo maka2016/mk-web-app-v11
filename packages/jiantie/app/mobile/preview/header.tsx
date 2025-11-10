@@ -52,27 +52,11 @@ const PreviewHeader = (props: Props) => {
     if (isVideo) {
       toVideoShare(worksId);
     } else {
-      toShare(worksId);
+      toShare(worksId, worksStore.worksDetail.is_rsvp);
     }
-  };
-
-  const toRsvpShare = (worksId: string) => {
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `/mobile/rsvp/invitees?works_id=${worksId}&mode=public`,
-        type: 'URL',
-      });
-    } else {
-      router.push(`/mobile/rsvp/invitees?works_id=${worksId}&mode=public`);
-    }
-    return;
   };
 
   const checkPublish = async () => {
-    if (worksStore.worksDetail.is_rsvp) {
-      toRsvpShare(worksId);
-      return;
-    }
     try {
       // 根据类型选择对应的检查函数，减少重复代码
       const checkFunction = isVideo
