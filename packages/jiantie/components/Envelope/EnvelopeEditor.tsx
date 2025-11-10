@@ -3,10 +3,10 @@ import { Button } from '@workspace/ui/components/button';
 import { Label } from '@workspace/ui/components/label';
 import { Slider } from '@workspace/ui/components/slider';
 import { UploadHelper } from '@workspace/ui/components/Upload';
-import { Play, RotateCcw, Save, Trash2, Upload } from 'lucide-react';
+import { RotateCcw, Save, Trash2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import EnvelopeAnimation, { EnvelopeAnimationRef } from './EnvelopeAnimation';
+import { EnvelopeAnimationRef } from './EnvelopeAnimation';
 import { EnvelopeConfig, isEnvelopeConfigComplete } from './types';
 
 const normalizeConfig = (config?: EnvelopeConfig): EnvelopeConfig => {
@@ -37,12 +37,35 @@ interface EnvelopeEditorProps {
   onRemove?: () => void;
 }
 
+const ENVELOPE_WIDTH_PX = 720;
+const ENVELOPE_HEIGHT_PX = Math.round((162 / 114) * ENVELOPE_WIDTH_PX);
+
 const IMAGE_FIELDS = [
-  { key: 'backgroundImage', label: '完全展开底图' },
-  { key: 'envelopeLeftOpeningImage', label: '信封左开口' },
-  { key: 'envelopeRightOpeningImage', label: '信封右开口' },
-  { key: 'envelopeInnerImage', label: '信封内页' },
-  { key: 'envelopeSealImage', label: '信封印章' },
+  {
+    key: 'backgroundImage',
+    label: '完全展开底图',
+    sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
+  },
+  {
+    key: 'envelopeLeftOpeningImage',
+    label: '信封左开口',
+    sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
+  },
+  {
+    key: 'envelopeRightOpeningImage',
+    label: '信封右开口',
+    sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
+  },
+  {
+    key: 'envelopeInnerImage',
+    label: '信封内页',
+    sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
+  },
+  {
+    key: 'envelopeSealImage',
+    label: '信封印章',
+    sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
+  },
 ] as const;
 
 export default function EnvelopeEditor(props: EnvelopeEditorProps) {
@@ -174,9 +197,7 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
   // 重置
   const handleReset = () => {
-    setLocalConfig(
-      normalizeConfig(props.value)
-    );
+    setLocalConfig(normalizeConfig(props.value));
   };
 
   // 删除
@@ -188,49 +209,18 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
   return (
     <div className='space-y-4 p-4 max-h-[80vh] overflow-y-auto'>
-      {/* 预览区域 */}
-      <div className='space-y-2'>
-        <Label>预览</Label>
-        <div className='relative w-full aspect-[16/9] bg-gray-100 rounded-lg overflow-hidden'>
-          <EnvelopeAnimation
-            ref={animationRef}
-            config={localConfig}
-            onComplete={() => setIsPlaying(false)}
-          >
-            <div className='w-full h-full flex items-center justify-center text-gray-400'>
-              {isConfigComplete ? '点击播放预览动画' : '请先上传所有图片'}
-            </div>
-          </EnvelopeAnimation>
-        </div>
-        <div className='flex gap-2'>
-          <Button
-            size='sm'
-            variant='outline'
-            onClick={handlePlayPreview}
-            disabled={!isConfigComplete || isPlaying}
-          >
-            <Play className='w-4 h-4 mr-1' />
-            播放
-          </Button>
-          <Button
-            size='sm'
-            variant='outline'
-            onClick={handleResetPreview}
-            disabled={!isPlaying}
-          >
-            <RotateCcw className='w-4 h-4 mr-1' />
-            重置
-          </Button>
-        </div>
-      </div>
-
       {/* 图片上传区域 */}
       <div className='space-y-3'>
         <Label>信封图片 (共5张)</Label>
         <div className='grid grid-cols-2 gap-3'>
-          {IMAGE_FIELDS.map(({ key, label }) => (
+          {IMAGE_FIELDS.map(({ key, label, sizeHint }) => (
             <div key={key} className='space-y-2'>
-              <Label className='text-xs'>{label}</Label>
+              <Label className='text-xs flex items-center justify-between'>
+                <span>{label}</span>
+                <span className='text-[10px] text-gray-400'>
+                  建议尺寸：{sizeHint}
+                </span>
+              </Label>
               <UploadHelper
                 image={localConfig[key as keyof EnvelopeConfig] as string}
                 onRemove={() => handleImageChange(key, '')}
