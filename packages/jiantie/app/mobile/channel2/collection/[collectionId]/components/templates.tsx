@@ -190,7 +190,7 @@ export default function Templates({ collectionId }: TemplatesProps) {
                         });
                       } else {
                         router.push(
-                          `/maka/mobile/template?id=${template_id}&appid=${getAppId()}`
+                          `/mobile/template?id=${template_id}&appid=${getAppId()}`
                         );
                       }
                     };

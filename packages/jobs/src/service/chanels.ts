@@ -25,7 +25,9 @@ export const syncChannel = async (
   const sonCh1RawOnbit: BitChannelItem[] = await getAllRecord(sonBitTable);
 
   const parentCh1RawOnbit: BitChannelItem[] = parentBit
-    ? await getAllRecord(parentBit, undefined, true)
+    ? await getAllRecord(parentBit, {
+        noCache: true,
+      })
     : [];
 
   let templateMap: any = {};
