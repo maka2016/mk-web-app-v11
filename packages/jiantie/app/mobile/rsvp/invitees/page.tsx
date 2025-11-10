@@ -7,7 +7,7 @@ import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { getAppId } from '@mk/services';
 import { Button } from '@workspace/ui/components/button';
-import { ChevronRight, Globe, Target } from 'lucide-react';
+import { ChevronRight, Download, Globe, Target } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -31,12 +31,12 @@ export default function RSVPInviteesPage() {
       if (APPBridge.judgeIsInApp()) {
         router.push(
           getUrlWithParam(
-            `/maka/mobile/home?default_tab=1&appid=${getAppId()}`,
+            `/mobile/home2?default_tab=1&appid=${getAppId()}`,
             'clickid'
           )
         );
       } else {
-        router.replace('/mobile/home');
+        router.replace('/mobile/home2');
       }
     };
 
@@ -271,6 +271,177 @@ export default function RSVPInviteesPage() {
     (item: any) => item.has_response
   ).length;
 
+  // 获取字段显示值（用于CSV导出）
+  const getFieldDisplayValue = (
+    field: RSVPField,
+    submissionData: Record<string, any>
+  ): string => {
+    const value = submissionData[field.id];
+    if (value === undefined || value === null || value === '') {
+      return '';
+    }
+
+    if (field.type === 'checkbox') {
+      const selectedValues = Array.isArray(value) ? value : [];
+      if (selectedValues.length === 0) return '';
+
+      return selectedValues
+        .map(val => {
+          const option = field.options?.find(opt => opt.value === val);
+          return option?.label || val;
+        })
+        .join('、');
+    } else if (field.type === 'radio') {
+      const option = field.options?.find(opt => opt.value === value);
+      return option?.label || String(value);
+    } else if (field.type === 'guest_count') {
+      if (typeof value === 'object' && value !== null) {
+        if (field.splitAdultChild) {
+          const adult = (value as any).adult || 0;
+          const child = (value as any).child || 0;
+          if (adult === 0 && child === 0) return '';
+          return `成人 ${adult} · 儿童 ${child}`;
+        } else {
+          const total = (value as any).total || 0;
+          return total > 0 ? `共 ${total} 人` : '';
+        }
+      }
+      return '';
+    } else {
+      return String(value);
+    }
+  };
+
+  // CSV转义函数
+  const escapeCsvField = (field: string): string => {
+    if (!field) return '';
+    // 如果包含逗号、引号或换行符，需要用引号包裹，并转义内部引号
+    if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+      return `"${field.replace(/"/g, '""')}"`;
+    }
+    return field;
+  };
+
+  // 格式化日期时间
+  const formatDateTime = (dateString: string | undefined | null): string => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+    } catch {
+      return '';
+    }
+  };
+
+  // 导出CSV
+  const handleExportCSV = () => {
+    try {
+      // 获取筛选后的数据
+      const filteredResponses = inviteeResponses.filter((item: any) => {
+        if (responseFilter === 'all') return true;
+        if (responseFilter === 'responded') return item.has_response === true;
+        if (responseFilter === 'not_responded')
+          return item.has_response === false;
+        return true;
+      });
+
+      if (filteredResponses.length === 0) {
+        toast.error('没有可导出的数据');
+        return;
+      }
+
+      // 构建表头
+      const headers = [
+        '姓名',
+        '状态',
+        '响应状态',
+        '是否出席',
+        '人数',
+        '最近活动时间',
+      ];
+
+      // 添加表单字段作为列（排除guest_count，因为已经单独作为"人数"列）
+      const formFieldsForExport = formFields.filter(
+        f => f.enabled !== false && f.type !== 'guest_count'
+      );
+      formFieldsForExport.forEach(field => {
+        headers.push(field.label);
+      });
+
+      // 构建CSV内容
+      const rows: string[] = [];
+      rows.push(headers.map(escapeCsvField).join(','));
+
+      filteredResponses.forEach((item: any) => {
+        // 确定状态文本
+        let statusText = '不出席';
+        if (!item.has_response) {
+          statusText = '未响应';
+        } else if (item.will_attend === true) {
+          statusText = '出席';
+        } else if (item.will_attend === false) {
+          statusText = '不出席';
+        } else {
+          statusText = '已响应';
+        }
+
+        // 构建行数据
+        const row: string[] = [
+          item.name || '未知嘉宾',
+          statusText,
+          item.has_response ? '是' : '否',
+          item.has_response
+            ? item.will_attend === true
+              ? '是'
+              : item.will_attend === false
+                ? '否'
+                : '未知'
+            : '',
+          getGuestCountText(item.submission_data || {}, formFields),
+          formatDateTime(item.submission_create_time || item.create_time),
+        ];
+
+        // 添加表单字段值
+        const submissionData = item.submission_data || {};
+        formFieldsForExport.forEach(field => {
+          const value = getFieldDisplayValue(field, submissionData);
+          row.push(value);
+        });
+
+        rows.push(row.map(escapeCsvField).join(','));
+      });
+
+      // 生成CSV内容（添加BOM以支持Excel正确显示中文）
+      const csvContent = '\uFEFF' + rows.join('\n');
+
+      // 创建Blob并下载
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute(
+        'download',
+        `宾客数据_${new Date().toISOString().split('T')[0]}.csv`
+      );
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success(`成功导出 ${filteredResponses.length} 条记录`);
+    } catch (error: any) {
+      console.error('导出CSV失败:', error);
+      toast.error(error.message || '导出失败');
+    }
+  };
+
   return (
     <div className='p-3 flex flex-col gap-3'>
       {/* 指定嘉宾卡片 */}
@@ -319,7 +490,7 @@ export default function RSVPInviteesPage() {
                 公开分享
               </div>
               <div className='text-xs text-gray-600'>
-                生成公开链接，任何人都可以RSVP。
+                生成公开链接，获取链接的都可以访问和提交信息。
               </div>
             </div>
           </div>
@@ -332,13 +503,26 @@ export default function RSVPInviteesPage() {
 
       {/* 邀请记录 */}
       <div className='border border-gray-100 rounded-xl p-4 bg-white shadow-sm flex flex-col gap-3'>
-        <div className=''>
-          <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
-            已邀请嘉宾
+        <div className='flex items-start justify-between'>
+          <div className='flex-1'>
+            <div className='font-semibold text-base leading-6 text-[#09090B] mb-1'>
+              已邀请嘉宾
+            </div>
+            <div className='text-sm text-gray-600'>
+              共 {totalCount} 人 · {respondedCount} 人已响应
+            </div>
           </div>
-          <div className='text-sm text-gray-600'>
-            共 {totalCount} 人 · {respondedCount} 人已响应
-          </div>
+          {totalCount > 0 && (
+            <Button
+              size='sm'
+              variant='outline'
+              className='bg-white border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center gap-1.5'
+              onClick={handleExportCSV}
+            >
+              <Download size={16} />
+              <span>导出</span>
+            </Button>
+          )}
         </div>
 
         {/* 分类标签 */}

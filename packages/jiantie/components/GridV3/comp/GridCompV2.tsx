@@ -1,11 +1,5 @@
 import { getPermissionData, getWorksDetailStatic } from '@mk/services';
-import {
-  DebounceClass,
-  EventEmitter,
-  isAndroid,
-  isPc,
-  queryToObj,
-} from '@mk/utils';
+import { EventEmitter, isAndroid, isPc, queryToObj } from '@mk/utils';
 import { PlatformCompProps } from '@mk/widgets-bridge-sdk';
 import clas from 'classnames';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -28,8 +22,6 @@ import { useGridContext } from './provider';
 import { getCanvaInfo2 } from './provider/utils';
 import { calcBlockHeight2, getAllLayers } from './utils';
 
-const debounce = new DebounceClass();
-
 export const GridCompV2: React.FC<
   PlatformCompProps<GridProps, GridState>
 > = props => {
@@ -38,10 +30,8 @@ export const GridCompV2: React.FC<
     controledValues,
     readonly = true,
     editorSDK,
-    pageInfo,
     id,
     getWorksData,
-    viewerSDK,
   } = props;
   // console.count(`GridCompV2_${id}`);
   const {

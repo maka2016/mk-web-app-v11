@@ -131,38 +131,17 @@ export default function WorkDetailPage() {
   const handlePreview = () => {
     if (!work) return;
     const uid = getUid();
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}/mobile/preview?works_id=${work.id}&uid=${uid}&is_full_screen=1&back=1`,
-        type: 'URL',
-      });
-    } else {
-      router.push(
-        getUrlWithParam(
-          `/mobile/preview?works_id=${work.id}&uid=${uid}&appid=${appid}`,
-          'clickid'
-        )
-      );
-    }
+
+    router.replace(
+      `/mobile/preview?works_id=${work.id}&uid=${uid}&appid=${appid}`
+    );
   };
 
   // 编辑作品
   const handleEdit = () => {
     if (!work) return;
     const uid = getUid();
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}/editor?works_id=${work.id}&uid=${uid}&is_full_screen=1&popEnable=0&simple_mode=true`,
-        type: 'URL',
-      });
-    } else {
-      router.push(
-        getUrlWithParam(
-          `/editor?works_id=${work.id}&uid=${uid}&appid=${appid}&simple_mode=true`,
-          'clickid'
-        )
-      );
-    }
+    router.replace(`/editor?works_id=${work.id}&uid=${uid}&appid=${appid}`);
   };
 
   // 复制作品

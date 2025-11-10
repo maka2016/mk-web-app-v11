@@ -81,7 +81,7 @@ export function getDefaultFields(): RSVPField[] {
     {
       id: 'guest_count',
       type: 'guest_count',
-      label: '访客',
+      label: '出席人数（含本人）',
       required: true,
       enabled: true,
       splitAdultChild: false,
@@ -255,3 +255,51 @@ export const RSVP_THEME_PRESETS: Record<string, RSVPTheme> = {
     labelColor: '#a1a1aa',
   },
 };
+
+/**
+ * RSVP 提交数据中的系统字段
+ */
+export interface RSVPSubmissionSystemFields {
+  _inviteeInfo?: {
+    isGuest: false;
+    inviteeName: string;
+    inviteeEmail?: string;
+    inviteePhone?: string;
+  };
+  _guestInfo?: {
+    isGuest: true;
+    guestName: string;
+  };
+}
+
+/**
+ * RSVP 提交记录
+ */
+export interface RSVPSubmission {
+  id: string;
+  form_config_id: string;
+  contact_id: string;
+  submission_group_id: string;
+  will_attend: boolean;
+  submission_data: Record<string, any> & RSVPSubmissionSystemFields;
+  status: 'pending' | 'approved' | 'rejected';
+  approved_by: string | null;
+  approved_time: string | null;
+  reject_reason: string | null;
+  changed_fields: Record<string, any> | null;
+  operator_type: string | null;
+  operator_id: string | null;
+  operator_name: string | null;
+  remark: string | null;
+  deleted: boolean;
+  create_time: string;
+}
+
+/**
+ * getInviteeSubmissions 返回类型
+ */
+export interface RSVPInviteeSubmissionsResponse {
+  result: {
+    data: RSVPSubmission[];
+  };
+}

@@ -4,7 +4,7 @@ import { getUrlWithParam } from '@/utils';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { Button } from '@workspace/ui/components/button';
-import { CheckCheck, ExternalLink, Settings } from 'lucide-react';
+import { CheckCheck, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -15,19 +15,19 @@ export default function NotificationsPage() {
   const { setTitle } = useRSVPLayout();
   const [showUnreadOnly] = useState(false);
   const [notificationsData, setNotificationsData] = useState<any>(null);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
   const [isMarkingAsRead, setIsMarkingAsRead] = useState(false);
 
-  // TODO: 需要从 session 或 context 获取当前用户 ID
-  const userId = 'current_user_id'; // 临时占位
+  // 获取当前用户 ID
+  const userId = getUid();
 
   // 加载通知列表
   const loadNotifications = async (isInitial = false) => {
+    if (!userId) {
+      return;
+    }
+
     if (isInitial) {
-      setIsInitialLoading(true);
-    } else {
-      setIsUpdating(true);
+      toast.loading('加载通知中...', { id: 'loading-notifications' });
     }
     try {
       const data = await trpc.rsvp.getMyNotifications.query({
@@ -36,23 +36,24 @@ export default function NotificationsPage() {
         take: 100,
       });
       setNotificationsData(data);
-    } catch (error: any) {
-      toast.error(error.message || '加载失败');
-    } finally {
       if (isInitial) {
-        setIsInitialLoading(false);
-      } else {
-        setIsUpdating(false);
+        toast.dismiss('loading-notifications');
       }
+    } catch (error: any) {
+      if (isInitial) {
+        toast.dismiss('loading-notifications');
+      }
+      toast.error(error.message || '加载失败');
     }
   };
 
   // 初始加载和筛选变化时重新加载（筛选变化时也算初始加载）
   useEffect(() => {
-    setIsInitialLoading(true);
-    loadNotifications(true);
+    if (userId) {
+      loadNotifications(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showUnreadOnly]);
+  }, [showUnreadOnly, userId]);
 
   // 更新页面标题
   const unreadCount = notificationsData?.unreadCount || 0;
@@ -62,7 +63,7 @@ export default function NotificationsPage() {
 
   const handleNotificationClick = async (notification: any) => {
     // 如果未读，标记为已读
-    if (!notification.is_read && notification.submission?.id) {
+    if (!notification.is_read && notification.submission?.id && userId) {
       try {
         await trpc.rsvp.markNotificationAsRead.mutate({
           user_id: userId,
@@ -82,26 +83,33 @@ export default function NotificationsPage() {
       return;
     }
 
+    // 获取表单配置和作品ID
+    const formConfigId = notification.form_config?.id || '';
+    const worksId = notification.form_config?.works_id || '';
+
+    if (!formConfigId || !worksId) {
+      toast.error('无法找到表单配置信息');
+      return;
+    }
+
     // 跳转到嘉宾详情页面
-    const uid = getUid();
-    const appid = getAppId();
+    const detailUrl = `/mobile/rsvp/invitees/${contactId}?works_id=${worksId}&form_config_id=${formConfigId}`;
 
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `${location.origin}/mobile/rsvp/invitees/${contactId}?uid=${uid}&back=1`,
+        url: `${location.origin}${detailUrl}`,
         type: 'URL',
       });
     } else {
-      router.push(
-        getUrlWithParam(
-          `/mobile/rsvp/invitees/${contactId}?uid=${uid}&appid=${appid}`,
-          'clickid'
-        )
-      );
+      router.push(detailUrl);
     }
   };
 
   const handleMarkAllAsRead = async () => {
+    if (!userId) {
+      toast.error('无法获取用户信息');
+      return;
+    }
     if (
       !confirm(
         `确定要标记所有 ${notificationsData?.total || 0} 条通知为已读吗？`
@@ -237,7 +245,7 @@ export default function NotificationsPage() {
   };
 
   const getSenderName = (notification: any) => {
-    return notification.contact?.name || '访客';
+    return notification.contact?.name || '出席人数';
   };
 
   // 跳转到作品预览页面
@@ -272,23 +280,14 @@ export default function NotificationsPage() {
   return (
     <div className='relative bg-white min-h-screen pb-20'>
       <div className='p-3'>
-        {isInitialLoading ? (
-          <div className='text-center py-8 text-gray-500'>加载中...</div>
+        {!userId ? (
+          <div className='text-center py-8 text-gray-500'>请先登录</div>
         ) : notifications.length === 0 ? (
           <div className='text-center py-8 text-gray-500'>
             {showUnreadOnly ? '暂无未读通知' : '暂无通知'}
           </div>
         ) : (
           <div className='space-y-3 relative'>
-            {/* 更新时的加载指示器 - 显示在列表顶部 */}
-            {isUpdating && (
-              <div className='absolute -top-2 left-0 right-0 z-10 flex justify-center'>
-                <div className='bg-blue-500 text-white px-3 py-1 rounded-full text-xs flex items-center gap-1.5 shadow-md'>
-                  <div className='h-2.5 w-2.5 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                  <span>更新中...</span>
-                </div>
-              </div>
-            )}
             {notifications.map((notification: any) => {
               const config = getNotificationConfig(notification);
               const senderName = getSenderName(notification);
@@ -369,7 +368,7 @@ export default function NotificationsPage() {
           <CheckCheck className='h-4 w-4 mr-1' />
           全部已读
         </Button>
-        <Button
+        {/* <Button
           className='flex-1'
           variant='outline'
           onClick={() => {
@@ -379,7 +378,7 @@ export default function NotificationsPage() {
         >
           <Settings className='h-4 w-4 mr-1' />
           通知设置
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
