@@ -4,6 +4,7 @@ import { getAppId, getUid } from '@/services';
 import { useStore } from '@/store';
 import { getUrlWithParam } from '@/utils';
 import { useCheckPublish } from '@/utils/checkPubulish';
+import { useShareNavigation } from '@/utils/share';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import {
@@ -24,6 +25,7 @@ import {
   FileText,
   Globe,
   Pencil,
+  Share2,
   Target,
   Trash2,
 } from 'lucide-react';
@@ -44,6 +46,7 @@ export default function WorkDetailPage() {
   const { isVip, setVipShow } = useStore();
   const { canShareWithoutWatermark } = useCheckPublish();
   const workId = params.id as string;
+  const { toPosterShare, toVideoShare } = useShareNavigation();
 
   const [work, setWork] = useState<WorksDetail | null>(null);
   const [rsvpStats, setRsvpStats] = useState<RSVPStats | null>(null);
@@ -141,15 +144,35 @@ export default function WorkDetailPage() {
     loadWork();
   }, [workId]);
 
-  // 预览作品
+  // 判断是否为图片/视频规格（需要分享而不是预览）
+  const isImageOrVideoSpec = () => {
+    if (!work || !work.specInfo) return false;
+    const specName = work.specInfo.export_format || '';
+    // poster, video 类型需要分享
+    return specName.includes('image') || specName.includes('video');
+  };
+
+  // 预览作品（网页类型和RSVP）
   const handlePreview = () => {
     if (!work) return;
     const uid = getUid();
     const appid = getAppId();
 
-    router.replace(
+    router.push(
       `/mobile/preview?works_id=${work.id}&uid=${uid}&appid=${appid}`
     );
+  };
+
+  // 分享作品（图片/视频类型）
+  const handleShare = () => {
+    if (!work) return;
+    if (isImageOrVideoSpec()) {
+      if (work.specInfo.export_format.includes('image')) {
+        toPosterShare(work.id);
+      } else {
+        toVideoShare(work.id);
+      }
+    }
   };
 
   // 编辑作品
@@ -157,7 +180,7 @@ export default function WorkDetailPage() {
     if (!work) return;
     const uid = getUid();
     const appid = getAppId();
-    router.replace(`/editor?works_id=${work.id}&uid=${uid}&appid=${appid}`);
+    router.push(`/editor?works_id=${work.id}&uid=${uid}&appid=${appid}`);
   };
 
   // 复制作品
@@ -232,8 +255,14 @@ export default function WorkDetailPage() {
   };
 
   // 跳转到宾客管理页面
-  const handleManageGuests = () => {
+  const handleManageGuests = async () => {
     if (!work || !formConfigId) return;
+    // 检查分享权限
+    const hasPermission = await checkSharePermission();
+    if (!hasPermission) {
+      showVipInterceptor();
+      return;
+    }
 
     const appid = getAppId();
 
@@ -288,14 +317,25 @@ export default function WorkDetailPage() {
           <div className='space-y-3'>
             <h3 className='text-sm font-semibold text-[#09090B]'>编辑操作</h3>
             <div className='grid grid-cols-4 gap-2'>
-              <Button
-                variant='outline'
-                onClick={handlePreview}
-                className='flex items-center justify-center gap-1 h-auto py-2 px-2'
-              >
-                <Eye className='w-4 h-4 text-gray-600' />
-                <span className='text-xs text-gray-600'>预览</span>
-              </Button>
+              {isImageOrVideoSpec() ? (
+                <Button
+                  variant='outline'
+                  onClick={handleShare}
+                  className='flex items-center justify-center gap-1 h-auto py-2 px-2'
+                >
+                  <Share2 className='w-4 h-4 text-gray-600' />
+                  <span className='text-xs text-gray-600'>分享</span>
+                </Button>
+              ) : (
+                <Button
+                  variant='outline'
+                  onClick={handlePreview}
+                  className='flex items-center justify-center gap-1 h-auto py-2 px-2'
+                >
+                  <Eye className='w-4 h-4 text-gray-600' />
+                  <span className='text-xs text-gray-600'>预览</span>
+                </Button>
+              )}
               <Button
                 variant='outline'
                 onClick={handleEdit}
@@ -360,7 +400,7 @@ export default function WorkDetailPage() {
                       公开分享
                     </span>
                     <p className='text-xs text-gray-500 mt-1'>
-                      生成公开链接，任何人都可以RSVP
+                      生成公开链接，获取链接的都可以访问和提交信息。
                     </p>
                   </div>
                   <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />

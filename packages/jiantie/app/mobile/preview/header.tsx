@@ -3,7 +3,7 @@ import Header from '@/components/DeviceWrapper/mobile/Header';
 import { useStore } from '@/store';
 import { toVipPage } from '@/utils/jiantie';
 import APPBridge from '@mk/app-bridge';
-import { EventEmitter, queryToObj } from '@mk/utils';
+import { EventEmitter } from '@mk/utils';
 import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
 import { Button } from '@workspace/ui/components/button';
 import { useTranslations } from 'next-intl';
@@ -97,9 +97,7 @@ const PreviewHeader = (props: Props) => {
 
   const closePage = async () => {
     // toast.loading("保存到草稿箱...");
-    await worksStore.api.saveWorks('auto');
-    const query = queryToObj();
-    if (query.back && APPBridge.judgeIsInApp()) {
+    if (APPBridge.judgeIsInApp()) {
       APPBridge.navAppBack();
     } else {
       router.back();
@@ -111,7 +109,7 @@ const PreviewHeader = (props: Props) => {
 
   return (
     <Header
-      leftText={t('backToEdit')}
+      leftText={'返回'}
       title={t('preview')}
       onClose={() => closePage()}
       rightContent={

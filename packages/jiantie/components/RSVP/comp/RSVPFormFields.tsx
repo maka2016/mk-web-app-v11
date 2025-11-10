@@ -306,63 +306,53 @@ export function RSVPFormFields({
                         <div className='flex items-center gap-3'>
                           {/* 成人 */}
                           <CounterControl
-                            value={
-                              (
-                                formField.value as {
-                                  adult: number;
-                                }
-                              )?.adult || 1
-                            }
+                            value={formField.value?.adult || 1}
                             label='成人'
                             disabled={disabled}
                             onIncrement={() => {
-                              const currentValue = formField.value as {
-                                adult: number;
-                              };
-                              if (currentValue.adult > 0) {
-                                formField.onChange({
-                                  ...currentValue,
-                                  adult: currentValue.adult + 1,
-                                });
-                              }
-                            }}
-                            onDecrement={() => {
-                              const currentValue = formField.value as {
-                                adult: number;
-                              };
+                              const currentValue = formField.value;
                               formField.onChange({
                                 ...currentValue,
-                                adult: (currentValue.adult || 0) - 1,
+                                adult: Math.max(
+                                  1,
+                                  (currentValue.adult || 1) + 1
+                                ),
+                              });
+                            }}
+                            onDecrement={() => {
+                              const currentValue = formField.value;
+                              formField.onChange({
+                                ...currentValue,
+                                adult: Math.max(
+                                  1,
+                                  (currentValue.adult || 1) - 1
+                                ),
                               });
                             }}
                           />
                           {/* 儿童 */}
                           <CounterControl
-                            value={
-                              (
-                                formField.value as {
-                                  child: number;
-                                }
-                              )?.child || 0
-                            }
+                            value={formField.value?.child || 0}
                             label='儿童'
                             disabled={disabled}
                             onIncrement={() => {
-                              const currentValue = formField.value as {
-                                child: number;
-                              };
+                              const currentValue = formField.value;
                               formField.onChange({
                                 ...currentValue,
-                                child: (currentValue.child || 0) + 1,
+                                child: Math.max(
+                                  0,
+                                  (currentValue.child || 0) + 1
+                                ),
                               });
                             }}
                             onDecrement={() => {
-                              const currentValue = formField.value as {
-                                child: number;
-                              };
+                              const currentValue = formField.value;
                               formField.onChange({
                                 ...currentValue,
-                                child: (currentValue.child || 0) - 1,
+                                child: Math.max(
+                                  0,
+                                  (currentValue.child || 0) - 1
+                                ),
                               });
                             }}
                           />

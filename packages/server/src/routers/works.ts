@@ -47,7 +47,7 @@ export const worksRouter = router({
       const worksId = await generateWorksId(ctx.prisma, ctx.uid);
 
       let createWorksData: any = defaultWorksData;
-      let finalInput = { ...input };
+      let finalInput = { ...input, is_title_desc_modified: false };
 
       // 如果是从模板创建
       if (template_id) {
@@ -409,6 +409,7 @@ export const worksRouter = router({
         folder_id: z.string().optional(),
         custom_time: z.date().optional(),
         is_rsvp: z.boolean().optional(),
+        is_title_desc_modified: z.boolean().optional(),
         envelope_enabled: z.boolean().optional(),
         envelope_config: z.any().optional(), // JSON: 信封完整配置（包含6张图片、视频背景等）
       })

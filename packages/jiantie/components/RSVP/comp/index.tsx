@@ -1,5 +1,4 @@
 'use client';
-import { getCookie, setCookie } from '@/components/viewer/utils/helper';
 import { trpc } from '@/utils/trpc';
 import styled from '@emotion/styled';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,9 +19,27 @@ import {
 } from './RSVPFormFields';
 import { SubmissionView } from './SubmissionView';
 
-// Cookie 键名
-const COOKIE_CONTACT_ID = 'rsvp_contact_id';
-const COOKIE_EXPIRE_DAYS = 365; // Cookie 有效期1年
+// LocalStorage 键名
+const STORAGE_CONTACT_ID = 'rsvp_contact_id';
+
+// LocalStorage 辅助函数
+const getLocalStorage = (key: string): string | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const setLocalStorage = (key: string, value: string): void => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // 忽略错误（如隐私模式下无法使用 localStorage）
+  }
+};
 
 /**
  * 将主题配置转换为 CSS 变量
@@ -81,7 +98,7 @@ export function createFormSchema(fields: RSVPField[]) {
         // 访客人数类型：如果支持大人小孩划分，则存储 { adult: number, child: number }，否则存储 { total: number }
         if (field.splitAdultChild) {
           fieldSchema = z.object({
-            adult: z.number().int().min(0, '大人人数不能小于0'),
+            adult: z.number().int().min(1, '成人人数不能小于1'),
             child: z.number().int().min(0, '小孩人数不能小于0'),
           });
         } else {
@@ -102,12 +119,12 @@ export function createFormSchema(fields: RSVPField[]) {
           );
         } else if (field.type === 'guest_count') {
           // guest_count 类型的必填验证已经在对象内部处理
-          // 只需要确保至少有一个值大于0
+          // 成人人数至少为1
           if (field.splitAdultChild) {
             fieldSchema = (fieldSchema as z.ZodObject<any>).refine(
-              (val: any) => val.adult > 0 || val.child > 0,
+              (val: any) => val.adult >= 1,
               {
-                message: `${field.label} 至少需要填写一人`,
+                message: `${field.label} 成人人数至少需要1人`,
               }
             );
           } else {
@@ -135,7 +152,7 @@ export function createFormSchema(fields: RSVPField[]) {
           if (field.splitAdultChild) {
             fieldSchema = (fieldSchema as z.ZodObject<any>)
               .optional()
-              .default({ adult: 0, child: 0 });
+              .default({ adult: 1, child: 0 });
           } else {
             fieldSchema = (fieldSchema as z.ZodObject<any>)
               .optional()
@@ -190,7 +207,6 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
   const router = useRouter();
   const rsvp = useRSVP();
   const { config, loading, error, fields } = rsvp;
-  console.log('config', config);
 
   // 合并主题设置，使用默认值填充缺失的项
   const mergedTheme = useMemo(() => {
@@ -268,6 +284,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
   const [resultMsg, setResultMsg] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<boolean>(false); // 是否已提交成功
   const [latestSubmission, setLatestSubmission] = useState<any | null>(null); // 最新提交记录
+  const [isEditing, setIsEditing] = useState<boolean>(false); // 是否正在编辑回复
 
   // 联系人ID（由后端生成，前端只负责保存）
   const [contactId, setContactId] = useState<string | null>(null);
@@ -357,7 +374,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         // 场景1: 链接首次被打开（没有 viewed 标记）
         // 认为是原始被邀请人A第一次打开
         setContactId(urlContactId);
-        setCookie(COOKIE_CONTACT_ID, urlContactId, COOKIE_EXPIRE_DAYS);
+        setLocalStorage(STORAGE_CONTACT_ID, urlContactId);
         setIsInviteeLink(true); // 设置为邀请链接
 
         // 在URL上添加 viewed 标记，表示该链接已被查看
@@ -367,7 +384,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         router.replace(newUrl, { scroll: false });
       } else if (urlInviteeName && urlContactId && urlViewed) {
         // 场景2: 链接带有 viewed 标记（已被查看过）
-        const existingContactId = getCookie(COOKIE_CONTACT_ID);
+        const existingContactId = getLocalStorage(STORAGE_CONTACT_ID);
 
         // 如果当前state已经有正确的contactId，说明是刚设置完viewed后的重新执行
         // 但仍需要确保 isInviteeLink 状态正确
@@ -407,11 +424,11 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
       } else if (urlContactId) {
         // URL 有 contact_id 但没有邀请人姓名，正常设置
         setContactId(urlContactId);
-        setCookie(COOKIE_CONTACT_ID, urlContactId, COOKIE_EXPIRE_DAYS);
+        setLocalStorage(STORAGE_CONTACT_ID, urlContactId);
         setIsInviteeLink(false); // 没有邀请人姓名，不是邀请链接
       } else {
-        // 如果 URL 没有 contact_id，从 cookie 读取
-        const cid = getCookie(COOKIE_CONTACT_ID);
+        // 如果 URL 没有 contact_id，从 localStorage 读取
+        const cid = getLocalStorage(STORAGE_CONTACT_ID);
         if (cid) {
           setContactId(cid);
         }
@@ -633,8 +650,8 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           returnedContactId !== contactId
         ) {
           setContactId(returnedContactId);
-          // 保存到cookie
-          setCookie(COOKIE_CONTACT_ID, returnedContactId, COOKIE_EXPIRE_DAYS);
+          // 保存到 localStorage
+          setLocalStorage(STORAGE_CONTACT_ID, returnedContactId);
         }
 
         setLastSubmissionGroupId(result?.submission_group_id || null);
@@ -642,6 +659,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
 
       setWillAttend(willAttendValue);
       setSubmitted(true); // 标记为已提交
+      setIsEditing(false); // 重置编辑状态
       if (config.require_approval) {
         setResultMsg('提交成功，等待审核');
       } else {
@@ -678,39 +696,81 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     // 重置状态，回到表单
     setSubmitted(false);
     setResultMsg(null);
-    setWillAttend(null);
+    setIsEditing(true); // 标记为编辑模式
 
     // 如果有最新提交记录，使用其表单值作为默认值
     if (latestSubmission?.submission_data) {
       const submissionData = latestSubmission.submission_data;
+
+      // 恢复 willAttend 状态
+      setWillAttend(latestSubmission.will_attend);
+
+      // 如果是公开链接，恢复访客姓名
+      if (!isInviteeLink && submissionData._guestInfo?.guestName) {
+        setGuestName(submissionData._guestInfo.guestName);
+      }
+
       const defaultValues: Record<
         string,
         string | string[] | { adult: number; child: number } | { total: number }
       > = {};
+      console.log('fields', fields);
 
       // 从提交数据中提取表单字段值（只处理启用的字段，排除系统字段）
       fields
         .filter(field => field.enabled !== false)
         .forEach(field => {
           if (submissionData[field.id] !== undefined) {
-            defaultValues[field.id] = submissionData[field.id];
+            // 对于 guest_count 类型，确保成人人数至少为1
+            if (field.type === 'guest_count') {
+              const value = submissionData[field.id];
+              if (field.splitAdultChild && typeof value === 'object') {
+                defaultValues[field.id] = {
+                  adult: Math.max(1, value.adult || 1),
+                  child: value.child || 0,
+                };
+              } else if (typeof value === 'object') {
+                defaultValues[field.id] = {
+                  total: Math.max(1, value.total || 1),
+                };
+              } else {
+                // 兼容旧数据格式
+                defaultValues[field.id] = field.splitAdultChild
+                  ? { adult: 1, child: 0 }
+                  : { total: 1 };
+              }
+            } else {
+              defaultValues[field.id] = submissionData[field.id];
+            }
           } else if (field.type === 'checkbox') {
             defaultValues[field.id] = [];
           } else if (field.type === 'guest_count') {
             if (field.splitAdultChild) {
-              defaultValues[field.id] = { adult: 0, child: 0 };
+              defaultValues[field.id] = { adult: 1, child: 0 };
             } else {
-              defaultValues[field.id] = { total: 0 };
+              defaultValues[field.id] = { total: 1 };
             }
           } else {
             defaultValues[field.id] = '';
           }
         });
 
+      console.log('defaultValues', defaultValues);
       form.reset(defaultValues);
     } else {
       // 没有提交记录，使用默认值
+      setWillAttend(null);
       form.reset(getDefaultValues);
+    }
+  };
+
+  // 取消编辑，返回提交成功页面
+  const handleCancelEdit = () => {
+    if (latestSubmission) {
+      setSubmitted(true);
+      setWillAttend(latestSubmission.will_attend);
+      setResultMsg('提交成功');
+      setIsEditing(false);
     }
   };
 
@@ -981,18 +1041,35 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           {/* 如果选择了出席，或者在编辑器模式下，显示确认按钮 */}
           {(willAttend === true || isEditorMode) && (
             <div className='pt-3'>
-              <ButtonWithTheme
-                disabled={submitting}
-                onClick={() => handleSubmit(true)}
-                className='w-full'
-                style={{
-                  borderColor: 'var(--rsvp-primary-btn-color)',
-                  backgroundColor: 'var(--rsvp-primary-btn-color)',
-                  color: 'var(--rsvp-primary-btn-text-color)',
-                }}
-              >
-                {submitting ? '提交中...' : '提交'}
-              </ButtonWithTheme>
+              <div className='flex gap-3'>
+                <ButtonWithTheme
+                  disabled={submitting}
+                  onClick={() => handleSubmit(true)}
+                  className='flex-1'
+                  style={{
+                    borderColor: 'var(--rsvp-primary-btn-color)',
+                    backgroundColor: 'var(--rsvp-primary-btn-color)',
+                    color: 'var(--rsvp-primary-btn-text-color)',
+                  }}
+                >
+                  {submitting ? '提交中...' : '提交'}
+                </ButtonWithTheme>
+                {/* 编辑模式下显示取消按钮 */}
+                {isEditing && (
+                  <ButtonWithTheme
+                    disabled={submitting}
+                    onClick={handleCancelEdit}
+                    variant='outline'
+                    style={{
+                      borderColor: 'var(--rsvp-secondary-btn-border-color)',
+                      backgroundColor: 'var(--rsvp-secondary-btn-color)',
+                      color: 'var(--rsvp-secondary-btn-text-color)',
+                    }}
+                  >
+                    取消
+                  </ButtonWithTheme>
+                )}
+              </div>
               {config.max_submit_count != null ? (
                 <div className='text-center mt-2'>
                   <span
