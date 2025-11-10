@@ -204,13 +204,13 @@ export default function Templates({ collectionId }: TemplatesProps) {
                       <>
                         {/* 底层模糊背景图 */}
                         <img
-                          src={cdnApi(template.cover)}
+                          src={cdnApi(template.coverV2)}
                           alt=''
                           className='absolute inset-0 w-full h-full object-cover blur-md scale-110'
                         />
                         {/* 上层清晰居中图 */}
                         <img
-                          src={cdnApi(template.cover)}
+                          src={cdnApi(template.coverV2)}
                           alt={template.title}
                           className='absolute inset-0 w-full h-full object-contain'
                         />
