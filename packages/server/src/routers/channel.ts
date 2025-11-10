@@ -119,7 +119,7 @@ export const channelRouter = router({
       // 将关键词拆分成单个字符，支持单字匹配
       const chars = input.keyword.split('');
       const orConditions = chars.map(char => ({
-        display_name: {
+        desc: {
           contains: char,
         },
       }));
