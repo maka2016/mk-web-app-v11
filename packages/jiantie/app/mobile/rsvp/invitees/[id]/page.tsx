@@ -1,28 +1,77 @@
 'use client';
 import { createFormSchema } from '@/components/RSVP/comp/index';
-import { RSVPFormFields } from '@/components/RSVP/comp/RSVPFormFields';
-import { getGuestCountText } from '@/components/RSVP/comp/SubmissionDataView';
-import { parseRSVPFormFields, RSVPField } from '@/components/RSVP/type';
+import {
+  ButtonWithTheme,
+  RSVPFormFields,
+} from '@/components/RSVP/comp/RSVPFormFields';
+import {
+  getGuestCountText,
+  SubmissionDataView,
+} from '@/components/RSVP/comp/SubmissionDataView';
+import {
+  DEFAULT_RSVP_THEME,
+  parseRSVPFormFields,
+  RSVPField,
+  RSVPSubmission,
+  RSVPTheme,
+} from '@/components/RSVP/type';
 import { trpc } from '@/utils/trpc';
 import { zodResolver } from '@hookform/resolvers/zod';
 import APPBridge from '@mk/app-bridge';
 import { Button } from '@workspace/ui/components/button';
 import { Form } from '@workspace/ui/components/form';
 import {
-  ChevronDown,
-  ChevronUp,
   Clock,
   Eye,
   FileText,
   Mail,
+  Pencil,
   RefreshCw,
   Share,
+  X,
 } from 'lucide-react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useRSVPLayout } from '../../RSVPLayoutContext';
+
+/**
+ * 将主题配置转换为 CSS 变量
+ */
+function themeToCSSVariables(theme?: RSVPTheme): React.CSSProperties {
+  const mergedTheme = {
+    ...DEFAULT_RSVP_THEME,
+    ...(theme || {}),
+  };
+
+  return {
+    '--rsvp-bg-color': mergedTheme.backgroundColor,
+    '--rsvp-border-radius': `${mergedTheme.borderRadius}px`,
+    '--rsvp-border-color': mergedTheme.borderColor,
+    '--rsvp-border-width': `${mergedTheme.borderWidth}px`,
+    '--rsvp-box-shadow': mergedTheme.boxShadow,
+    '--rsvp-backdrop-filter': mergedTheme.backdropFilter || 'none',
+    '--rsvp-control-font-size': `${
+      mergedTheme.controlFontSize ?? DEFAULT_RSVP_THEME.controlFontSize
+    }px`,
+    '--rsvp-control-padding': `${
+      mergedTheme.controlPadding ?? DEFAULT_RSVP_THEME.controlPadding
+    }px`,
+    '--rsvp-primary-btn-color': mergedTheme.primaryButtonColor,
+    '--rsvp-primary-btn-text-color': mergedTheme.primaryButtonTextColor,
+    '--rsvp-secondary-btn-color': mergedTheme.secondaryButtonColor,
+    '--rsvp-secondary-btn-text-color': mergedTheme.secondaryButtonTextColor,
+    '--rsvp-secondary-btn-border-color': mergedTheme.secondaryButtonBorderColor,
+    '--rsvp-input-bg-color': mergedTheme.inputBackgroundColor,
+    '--rsvp-input-border-color': mergedTheme.inputBorderColor,
+    '--rsvp-input-text-color': mergedTheme.inputTextColor,
+    '--rsvp-input-placeholder-color':
+      mergedTheme.inputPlaceholderColor || mergedTheme.secondaryButtonTextColor,
+    '--rsvp-text-color': mergedTheme.textColor,
+    '--rsvp-label-color': mergedTheme.labelColor,
+  } as React.CSSProperties;
+}
 
 export default function InviteeDetailPage() {
   const { setTitle } = useRSVPLayout();
@@ -42,10 +91,11 @@ export default function InviteeDetailPage() {
   const [formConfig, setFormConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [formFields, setFormFields] = useState<RSVPField[]>([]);
+  const [latestSubmission, setLatestSubmission] =
+    useState<RSVPSubmission | null>(null);
   const [actionLogs, setActionLogs] = useState<any[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
-  const [isContactSectionExpanded, setIsContactSectionExpanded] =
-    useState(false);
+  const [isEditingContact, setIsEditingContact] = useState(false);
   const [isUpdatingInvitee, setIsUpdatingInvitee] = useState(false);
 
   // 创建表单 schema 和 form
@@ -54,6 +104,12 @@ export default function InviteeDetailPage() {
     resolver: zodResolver(formSchema),
     mode: 'onChange',
   });
+
+  // 计算主题 CSS 变量
+  const themeCSSVariables = useMemo(
+    () => themeToCSSVariables(formConfig?.theme),
+    [formConfig?.theme]
+  );
 
   // 加载表单配置
   useEffect(() => {
@@ -71,7 +127,7 @@ export default function InviteeDetailPage() {
     loadFormConfig();
   }, [formConfigId]);
 
-  // 加载嘉宾详情
+  // 加载嘉宾详情和最新提交记录
   useEffect(() => {
     const loadInvitee = async () => {
       if (!inviteeId || !formConfigId) {
@@ -86,6 +142,26 @@ export default function InviteeDetailPage() {
         });
         const found = data.find((item: any) => item.id === inviteeId);
         setInvitee(found || null);
+
+        // 如果有提交记录，获取最新的提交数据
+        if (found?.has_response && found?.id) {
+          try {
+            const submissions = await trpc.rsvp.getInviteeSubmissions.query({
+              contact_id: found.id,
+              form_config_id: formConfigId,
+            });
+            if (submissions.length > 0) {
+              setLatestSubmission(submissions[0]);
+            } else {
+              setLatestSubmission(null);
+            }
+          } catch (error) {
+            console.error('Failed to load submissions:', error);
+            setLatestSubmission(null);
+          }
+        } else {
+          setLatestSubmission(null);
+        }
       } catch (error) {
         console.error('Failed to load invitee:', error);
       } finally {
@@ -103,13 +179,12 @@ export default function InviteeDetailPage() {
         const fields = parseRSVPFormFields(formConfig.form_fields || []);
         setFormFields(fields);
 
-        // 初始化表单值
-        const submissionData = invitee.submission_data || {};
+        // 使用最新的提交记录来初始化表单值
+        const submissionData = latestSubmission?.submission_data || {};
         const defaultValues: any = {};
 
         fields.forEach((field: RSVPField) => {
           if (field.id === 'phone') {
-            defaultValues[field.id] = invitee.phone || '';
           } else if (submissionData[field.id] !== undefined) {
             defaultValues[field.id] = submissionData[field.id];
           } else if (field.type === 'checkbox') {
@@ -123,18 +198,17 @@ export default function InviteeDetailPage() {
           } else {
             defaultValues[field.id] = '';
           }
+          console.log('defaultValues', defaultValues);
         });
 
         form.reset(defaultValues);
-        // 默认展开联系信息区域
-        setIsContactSectionExpanded(true);
       } catch (error) {
         console.error('Failed to parse form fields:', error);
         setFormFields([]);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [invitee, formConfig]);
+  }, [invitee, formConfig, latestSubmission]);
 
   // 加载嘉宾操作日志
   useEffect(() => {
@@ -221,7 +295,7 @@ export default function InviteeDetailPage() {
           form_config_id: formConfig.id,
         });
 
-        if (submissions && submissions.length > 0) {
+        if (submissions.length > 0) {
           const latestSubmission = submissions[0];
           const submissionData = { ...latestSubmission.submission_data };
 
@@ -259,7 +333,23 @@ export default function InviteeDetailPage() {
       const updated = data.find((item: any) => item.id === inviteeId);
       if (updated) {
         setInvitee(updated);
+        // 重新获取最新的提交记录
+        if (updated.has_response && updated.id) {
+          try {
+            const submissions = await trpc.rsvp.getInviteeSubmissions.query({
+              contact_id: updated.id,
+              form_config_id: formConfigId,
+            });
+            if (submissions.length > 0) {
+              setLatestSubmission(submissions[0]);
+            }
+          } catch (error) {
+            console.error('Failed to reload submissions:', error);
+          }
+        }
       }
+      // 退出编辑模式
+      setIsEditingContact(false);
     } catch (error: any) {
       toast.error(error.message || '更新失败');
     } finally {
@@ -345,33 +435,24 @@ export default function InviteeDetailPage() {
 
       {/* 联系方式和附加信息卡片 */}
       <div className='bg-white border border-gray-100 rounded-xl p-4 mb-4 shadow-sm'>
-        <div
-          className={`flex items-center justify-between mb-3 ${
-            invitee.has_response ? 'cursor-pointer' : ''
-          }`}
-          onClick={() => {
-            if (invitee.has_response) {
-              setIsContactSectionExpanded(!isContactSectionExpanded);
-            }
-          }}
-        >
+        <div className='flex items-center justify-between mb-3'>
           <div className='font-semibold text-base text-gray-900'>
             联系方式和附加信息
           </div>
-          {invitee.has_response && (
-            <>
-              {isContactSectionExpanded ? (
-                <ChevronUp size={20} className='text-gray-400' />
-              ) : (
-                <ChevronDown size={20} className='text-gray-400' />
-              )}
-            </>
+          {invitee.has_response && !isEditingContact && (
+            <button
+              onClick={() => setIsEditingContact(true)}
+              className='flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700'
+            >
+              <Pencil size={16} />
+              <span>编辑</span>
+            </button>
           )}
         </div>
 
         {invitee.has_response ? (
-          isContactSectionExpanded && (
-            <div className='pt-2'>
+          isEditingContact ? (
+            <div className='pt-2' style={themeCSSVariables}>
               {formFields.length > 0 ? (
                 <Form {...form}>
                   <form className='space-y-4'>
@@ -379,16 +460,79 @@ export default function InviteeDetailPage() {
                       fields={formFields}
                       control={form.control}
                     />
-                    <Button
-                      type='button'
-                      className='w-full'
-                      onClick={handleUpdateInviteeInfo}
-                      disabled={isUpdatingInvitee}
-                    >
-                      {isUpdatingInvitee ? '保存中...' : '保存'}
-                    </Button>
+                    <div className='flex gap-2'>
+                      <ButtonWithTheme
+                        type='button'
+                        className='flex-1'
+                        onClick={handleUpdateInviteeInfo}
+                        disabled={isUpdatingInvitee}
+                        style={{
+                          backgroundColor: 'var(--rsvp-primary-btn-color)',
+                          color: 'var(--rsvp-primary-btn-text-color)',
+                          borderColor: 'var(--rsvp-primary-btn-color)',
+                        }}
+                      >
+                        {isUpdatingInvitee ? '保存中...' : '保存'}
+                      </ButtonWithTheme>
+                      <ButtonWithTheme
+                        type='button'
+                        variant='outline'
+                        onClick={() => {
+                          // 重置表单到原始值（使用最新的提交记录）
+                          const submissionData =
+                            latestSubmission?.submission_data || {};
+                          const defaultValues: any = {};
+                          formFields.forEach((field: RSVPField) => {
+                            if (submissionData[field.id] !== undefined) {
+                              defaultValues[field.id] =
+                                submissionData[field.id];
+                            } else if (field.type === 'checkbox') {
+                              defaultValues[field.id] = [];
+                            } else if (field.type === 'guest_count') {
+                              if (field.splitAdultChild) {
+                                defaultValues[field.id] = {
+                                  adult: 0,
+                                  child: 0,
+                                };
+                              } else {
+                                defaultValues[field.id] = { total: 0 };
+                              }
+                            } else {
+                              defaultValues[field.id] = '';
+                            }
+                          });
+                          form.reset(defaultValues);
+                          setIsEditingContact(false);
+                        }}
+                        disabled={isUpdatingInvitee}
+                        style={{
+                          backgroundColor: 'var(--rsvp-secondary-btn-color)',
+                          color: 'var(--rsvp-secondary-btn-text-color)',
+                          borderColor: 'var(--rsvp-secondary-btn-border-color)',
+                        }}
+                      >
+                        <X size={16} className='mr-1' />
+                        取消
+                      </ButtonWithTheme>
+                    </div>
                   </form>
                 </Form>
+              ) : (
+                <div className='text-sm text-gray-500 text-center py-4'>
+                  加载表单配置中...
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className='pt-2' style={themeCSSVariables}>
+              {formFields.length > 0 ? (
+                <SubmissionDataView
+                  submissionData={{
+                    ...(latestSubmission?.submission_data || {}),
+                  }}
+                  fields={formFields}
+                  showOnlyWithValues={false}
+                />
               ) : (
                 <div className='text-sm text-gray-500 text-center py-4'>
                   加载表单配置中...

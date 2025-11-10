@@ -1,6 +1,7 @@
 import {
   DatasheetItem,
   bitFileRaw,
+  bitFindRaw,
   bitRecRef,
   bitTextRaw,
   bitTextRef,
@@ -59,6 +60,7 @@ export interface BitChannelItem {
   fields: {
     alias: bitTextRef;
     显示名: bitTextRaw[];
+    内部名称: bitTextRaw[];
     封面: bitFileRaw[];
     封面url: bitTextRaw[];
     语言: string;
@@ -68,6 +70,16 @@ export interface BitChannelItem {
     状态: string;
     id: bitTextRaw[];
     上线: string;
+  };
+  record_id: string;
+}
+
+export interface TemplateChannelItem {
+  fields: {
+    任务模板ID: bitTextRaw[];
+    作品id: bitTextRef;
+    状态: string;
+    封面类型: bitFindRaw;
   };
   record_id: string;
 }

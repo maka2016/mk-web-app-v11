@@ -52,10 +52,37 @@ function ContainerWithBgV2(
     videoBgConfig: styleVideoBgConfig,
     ...otherStyle
   } = style || ({} as any);
+  // 检查 children 中是否有混合模式元素
+  // 如果 children 是单个元素且有混合模式，确保容器背景透明（避免 Safari 黑色底问题）
+  const hasBlendMode = React.Children.toArray(children).some(child => {
+    if (!React.isValidElement(child)) {
+      return false;
+    }
+    const props = child.props as { style?: React.CSSProperties };
+    const style = props?.style;
+    if (!style || typeof style !== 'object') {
+      return false;
+    }
+    // 检查混合模式属性（包括 WebKit 前缀）
+    const cssStyle = style as React.CSSProperties & {
+      WebkitMixBlendMode?: string;
+    };
+    return !!(cssStyle.mixBlendMode || cssStyle.WebkitMixBlendMode);
+  });
+
   const containerStyle = clearUndefinedKey({
     ...otherStyle,
     borderRadius,
     position: 'relative',
+    // 如果有混合模式，确保容器背景透明，避免 Safari 黑色底问题
+    // 背景应该在 BgAreaV2 中，而不是在容器上
+    ...(hasBlendMode
+      ? {
+          backgroundColor: 'transparent',
+          background: 'none',
+          backgroundImage: 'none',
+        }
+      : {}),
   } as React.CSSProperties);
 
   const resolvedVideoBgConfig = videoBgConfig || styleVideoBgConfig;

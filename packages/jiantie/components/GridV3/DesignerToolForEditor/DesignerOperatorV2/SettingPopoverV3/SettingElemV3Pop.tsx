@@ -1,5 +1,6 @@
 import RSVPConfigPanelTrigger from '@/components/RSVP/configPanel';
 import styled from '@emotion/styled';
+import { getPermissionData } from '@mk/services';
 import MkCalendarV3Form from '@mk/widgets/MkCalendarV3/form';
 import MkMapV4Form from '@mk/widgets/MkMapV4/form-wap';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
@@ -286,44 +287,39 @@ export const SettingElemV3Pop = () => {
     // if (finetuneMode) {
     //   return renderFinetunePanel();
     // }
+    const isRSVP1 = layer.elementRef === 'RSVP1';
+    const isDesigner = getPermissionData().materialProduct;
+    // RSVP1 只有在设计师模式下才显示复制和删除按钮
+    const shouldHideRSVP1Actions = isRSVP1 && !isDesigner;
     return (
       <>
         {renderEditForm()}
 
-        <BtnLite
-          onClick={() => {
-            // store.deleteCompEntity(layer.elemId)
-            const nextId = duplicateElemV2();
-            if (nextId) {
-              setWidgetStateV2({
-                editingElemId: nextId,
-              });
-            }
-          }}
-        >
-          <Copy size={20} />
-        </BtnLite>
-        <BtnLite
-          onClick={async () => {
-            if (layer.elementRef === 'RSVP1') {
-              const worksStore = editorSDK?.fullSDK;
-              try {
-                if (worksStore?.worksDetail?.is_rsvp) {
-                  worksStore.worksDetail.is_rsvp = false;
-                }
-                await worksStore?.api?.updateWorksDetail?.({
-                  is_rsvp: false,
+        {!shouldHideRSVP1Actions && (
+          <BtnLite
+            onClick={() => {
+              // store.deleteCompEntity(layer.elemId)
+              const nextId = duplicateElemV2();
+              if (nextId) {
+                setWidgetStateV2({
+                  editingElemId: nextId,
                 });
-              } catch (error) {
-                console.error('Failed to unset RSVP flag', error);
               }
-            }
-            deleteElemV2();
-            clearActiveStatus?.();
-          }}
-        >
-          <Trash2 size={20} />
-        </BtnLite>
+            }}
+          >
+            <Copy size={20} />
+          </BtnLite>
+        )}
+        {!shouldHideRSVP1Actions && (
+          <BtnLite
+            onClick={() => {
+              deleteElemV2();
+              clearActiveStatus?.();
+            }}
+          >
+            <Trash2 size={20} />
+          </BtnLite>
+        )}
         {/* {isInList && (
           <BtnLite
             style={{

@@ -75,7 +75,7 @@ function CreateBtn({
     const uid = getUid();
     router.replace(
       getUrlWithParam(
-        `/editor?works_id=${works_id}&uid=${uid}&appid=${appid}&is_full_screen=1&popEnable=0&simple_mode=true${preWorksId ? `&pre_works_id=${preWorksId}` : ''}`,
+        `/editor?works_id=${works_id}&uid=${uid}&appid=${appid}&is_full_screen=1&popEnable=0${preWorksId ? `&pre_works_id=${preWorksId}` : ''}`,
         'clickid'
       )
     );

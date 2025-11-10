@@ -4,6 +4,7 @@ import { JTBitTables } from '../service/cms/bit_tables/jiantie';
 
 dotenv.config({ path: '.env.local' });
 const buildJStoreV2 = async () => {
+  console.log('buildJStoreV2 start');
   await syncChannel(JTBitTables['一级-栏目'], '一级栏目');
   await syncChannel(
     JTBitTables['二级-频道'],
