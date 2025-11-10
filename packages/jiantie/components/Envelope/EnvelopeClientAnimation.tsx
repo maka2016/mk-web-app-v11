@@ -442,7 +442,9 @@ export function EnvelopeClientAnimation({
             </InvitationContentLayer>
 
             <LeftFlap title='左侧开口'>
-              <LeftFlapSide
+              <FlapSide
+                src={leftOpeningImage || ''}
+                alt='envelope-left-outer'
                 initial={{ rotateY: 0 }}
                 animate={{ rotateY: hasLeftOpened ? -180 : 0 }}
                 transition={{
@@ -456,28 +458,35 @@ export function EnvelopeClientAnimation({
                       : 0,
                   ease: easing,
                 }}
-              >
-                <FlapSide
-                  src={leftOpeningImage || ''}
-                  alt='envelope-left-outer'
-                  style={{
-                    zIndex: 1,
-                    objectPosition: 'left center',
-                    transformOrigin: 'left center',
-                    transform: 'rotateY(0deg) translateZ(0.01px)',
-                  }}
-                />
-                <FlapSide
-                  src={leftInnerImage || leftOpeningImage || ''}
-                  alt='envelope-left-inner'
-                  style={{
-                    zIndex: 2,
-                    objectPosition: 'left center',
-                    transformOrigin: 'left center',
-                    transform: 'rotateY(180deg) translateZ(0.01px)',
-                  }}
-                />
-              </LeftFlapSide>
+                style={{
+                  zIndex: 1,
+                  objectPosition: 'left center',
+                  transformOrigin: 'left center',
+                  transform: 'rotateY(0deg) translateZ(0.01px)',
+                }}
+              />
+              <FlapSide
+                src={leftInnerImage || leftOpeningImage || ''}
+                alt='envelope-left-inner'
+                initial={{ rotateY: 180 }}
+                animate={{ rotateY: hasLeftOpened ? 0 : 180 }}
+                transition={{
+                  duration:
+                    animationPhase === 'left-opening'
+                      ? LEFT_OPEN_DURATION / 1000
+                      : 0,
+                  delay:
+                    animationPhase === 'left-opening'
+                      ? LEFT_OPEN_DELAY / 1000
+                      : 0,
+                  ease: easing,
+                }}
+                style={{
+                  zIndex: 2,
+                  objectPosition: 'left center',
+                  transformOrigin: 'left center',
+                }}
+              />
             </LeftFlap>
 
             <RightFlap

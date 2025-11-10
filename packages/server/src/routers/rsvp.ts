@@ -13,6 +13,7 @@ const RsvpFormConfigInput = z.object({
   max_submit_count: z.number().int().nullable().optional(),
   submit_deadline: z.date().nullable().optional(),
   enabled: z.boolean().optional(),
+  collect_form: z.boolean().optional(),
 });
 const RsvpFormConfigUpdateInput = z.object({
   id: z.string(),
@@ -24,6 +25,7 @@ const RsvpFormConfigUpdateInput = z.object({
   max_submit_count: z.number().int().nullable().optional(),
   submit_deadline: z.date().nullable().optional(),
   enabled: z.boolean().optional(),
+  collect_form: z.boolean().optional(),
   deleted: z.boolean().optional(),
 });
 const SubmissionDataSchema = z.any();
