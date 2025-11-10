@@ -26,6 +26,7 @@ export const channelRouter = router({
           children: {
             where: {
               class: '二级频道',
+              online: true,
             },
             orderBy: {
               id: 'asc',
