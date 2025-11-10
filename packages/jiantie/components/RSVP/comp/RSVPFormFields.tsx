@@ -52,6 +52,7 @@ function CounterControl({
         style={{
           borderRadius: 'var(--rsvp-border-radius)',
           borderWidth: 'var(--rsvp-border-width)',
+          borderStyle: 'solid',
           backgroundColor: 'var(--rsvp-secondary-btn-color)',
           borderColor: 'var(--rsvp-secondary-btn-border-color)',
           color: 'var(--rsvp-secondary-btn-text-color)',
@@ -64,7 +65,7 @@ function CounterControl({
         <span
           className='text-base font-semibold'
           style={{
-            color: 'var(--rsvp-text-color)',
+            color: 'var(--rsvp-label-color)',
           }}
         >
           {value}
@@ -87,6 +88,7 @@ function CounterControl({
         style={{
           borderRadius: 'var(--rsvp-border-radius)',
           borderWidth: 'var(--rsvp-border-width)',
+          borderStyle: 'solid',
           backgroundColor: 'var(--rsvp-secondary-btn-color)',
           borderColor: 'var(--rsvp-secondary-btn-border-color)',
           color: 'var(--rsvp-secondary-btn-text-color)',
@@ -123,10 +125,11 @@ export function RSVPFormFields({
             render={({ field: formField }) => (
               <FormItem className='space-y-1'>
                 <FormLabel
-                  className='text-xs font-medium'
+                  className='font-medium'
                   style={{
-                    lineHeight: '18px',
+                    lineHeight: '1.5',
                     color: 'var(--rsvp-label-color)',
+                    fontSize: 'var(--rsvp-control-font-size)',
                   }}
                 >
                   {field.label}
@@ -144,13 +147,19 @@ export function RSVPFormFields({
                       name={formField.name}
                       ref={formField.ref}
                       disabled={disabled}
-                      className='h-11 focus:ring-0 [&::placeholder]:text-[var(--rsvp-input-placeholder-color)]'
+                      className='focus:ring-0 [&::placeholder]:text-[var(--rsvp-input-placeholder-color)]'
                       style={{
                         borderRadius: 'var(--rsvp-border-radius)',
                         borderWidth: 'var(--rsvp-border-width)',
                         backgroundColor: 'var(--rsvp-input-bg-color)',
                         borderColor: 'var(--rsvp-input-border-color)',
+                        borderStyle: 'solid',
                         color: 'var(--rsvp-input-text-color)',
+                        fontSize: 'var(--rsvp-control-font-size)',
+                        paddingTop: 'var(--rsvp-control-padding)',
+                        paddingBottom: 'var(--rsvp-control-padding)',
+                        paddingLeft: 'calc(var(--rsvp-control-padding) * 1.5)',
+                        paddingRight: 'calc(var(--rsvp-control-padding) * 1.5)',
                       }}
                     />
                   ) : field.type === 'radio' ? (
@@ -176,14 +185,30 @@ export function RSVPFormFields({
                               borderColor: isSelected
                                 ? 'var(--rsvp-primary-btn-color)'
                                 : 'var(--rsvp-secondary-btn-border-color)',
+                              borderStyle: 'solid',
+                              fontSize: 'var(--rsvp-control-font-size)',
+                              paddingTop: 'var(--rsvp-control-padding)',
+                              paddingBottom: 'var(--rsvp-control-padding)',
+                              paddingLeft:
+                                'calc(var(--rsvp-control-padding) * 1.25)',
+                              paddingRight:
+                                'calc(var(--rsvp-control-padding) * 1.25)',
+                              lineHeight:
+                                'calc(var(--rsvp-control-font-size) * 1.2)',
                             }}
                             onClick={() => formField.onChange(opt.value)}
                           >
                             <Circle
                               className={cn(
-                                'h-4 w-4',
+                                'shrink-0',
                                 isSelected ? 'fill-current' : ''
                               )}
+                              style={{
+                                width:
+                                  'calc(var(--rsvp-control-font-size) * 0.95)',
+                                height:
+                                  'calc(var(--rsvp-control-font-size) * 0.95)',
+                              }}
                             />
                             {opt.label}
                           </Button>
@@ -215,6 +240,16 @@ export function RSVPFormFields({
                               borderColor: isSelected
                                 ? 'var(--rsvp-primary-btn-color)'
                                 : 'var(--rsvp-secondary-btn-border-color)',
+                              borderStyle: 'solid',
+                              fontSize: 'var(--rsvp-control-font-size)',
+                              paddingTop: 'var(--rsvp-control-padding)',
+                              paddingBottom: 'var(--rsvp-control-padding)',
+                              paddingLeft:
+                                'calc(var(--rsvp-control-padding) * 1.25)',
+                              paddingRight:
+                                'calc(var(--rsvp-control-padding) * 1.25)',
+                              lineHeight:
+                                'calc(var(--rsvp-control-font-size) * 1.2)',
                             }}
                             onClick={() => {
                               const currentValue =
@@ -231,7 +266,15 @@ export function RSVPFormFields({
                               }
                             }}
                           >
-                            <CheckSquare2 className={cn('h-4 w-4')} />
+                            <CheckSquare2
+                              className='shrink-0'
+                              style={{
+                                width:
+                                  'calc(var(--rsvp-control-font-size) * 0.95)',
+                                height:
+                                  'calc(var(--rsvp-control-font-size) * 0.95)',
+                              }}
+                            />
                             {opt.label}
                           </Button>
                         );

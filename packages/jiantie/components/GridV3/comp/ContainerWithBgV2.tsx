@@ -1,10 +1,10 @@
 import React from 'react';
-import { VideoBgConfig } from '../../Envelope/types';
 import { blockStyleFilter } from '../shared';
 import { LottieConfig } from '../shared/types';
 import BgAreaV2, { BgAreaProps } from './Bg/BgAreaV2';
 import LottieComp from './Bg/LottieComp';
 import { clearUndefinedKey } from './utils';
+import { VideoBgConfig } from './VideoBg/types';
 
 interface ComtainerWithBgProps extends React.HTMLAttributes<HTMLDivElement> {
   clipBgScale?: number;

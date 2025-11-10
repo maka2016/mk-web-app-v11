@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { VideoBgConfig } from '../../../Envelope/types';
+import { VideoBgConfig } from '../../comp/VideoBg/types';
 import ColorPickerPopover from '../../shared/ColorPicker';
 import { colorValueBuilder } from '../../shared/ColorPicker/utils';
 import FrontgroundSelector from '../../shared/LibContent/FrontgroundSelector';
