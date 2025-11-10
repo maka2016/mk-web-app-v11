@@ -1,4 +1,5 @@
 'use client';
+import styled from '@emotion/styled';
 import { Button } from '@workspace/ui/components/button';
 import {
   FormControl,
@@ -32,6 +33,38 @@ interface CounterControlProps {
   onDecrement: () => void;
   disabled?: boolean;
 }
+
+export const InputWithTheme = styled(Input)`
+  font-size: var(--rsvp-control-font-size);
+  padding-top: var(--rsvp-control-padding);
+  padding-bottom: var(--rsvp-control-padding);
+  padding-left: calc(var(--rsvp-control-padding) * 1.5);
+  padding-right: calc(var(--rsvp-control-padding) * 1.5);
+  border-radius: var(--rsvp-border-radius);
+  border-width: var(--rsvp-border-width);
+  border-style: solid;
+  background-color: var(--rsvp-input-bg-color);
+  border-color: var(--rsvp-input-border-color);
+  color: var(--rsvp-input-text-color);
+  ::placeholder {
+    color: var(--rsvp-input-placeholder-color);
+    font-size: var(--rsvp-control-font-size);
+  }
+`;
+
+export const ButtonWithTheme = styled(Button)`
+  font-size: var(--rsvp-control-font-size);
+  padding-top: var(--rsvp-control-padding);
+  padding-bottom: var(--rsvp-control-padding);
+  padding-left: calc(var(--rsvp-control-padding) * 1.25);
+  padding-right: calc(var(--rsvp-control-padding) * 1.25);
+  line-height: calc(var(--rsvp-control-font-size) * 1.2);
+  border-radius: var(--rsvp-border-radius);
+  border-width: var(--rsvp-border-width);
+  border-style: solid;
+  background-color: var(--rsvp-secondary-btn-color);
+  border-color: var(--rsvp-secondary-btn-border-color);
+`;
 
 function CounterControl({
   className,
@@ -139,7 +172,7 @@ export function RSVPFormFields({
                 </FormLabel>
                 <FormControl>
                   {field.type === 'text' ? (
-                    <Input
+                    <InputWithTheme
                       placeholder={field.placeholder || '请输入' + field.label}
                       value={formField.value as string}
                       onChange={formField.onChange}
@@ -148,19 +181,6 @@ export function RSVPFormFields({
                       ref={formField.ref}
                       disabled={disabled}
                       className='focus:ring-0 [&::placeholder]:text-[var(--rsvp-input-placeholder-color)]'
-                      style={{
-                        borderRadius: 'var(--rsvp-border-radius)',
-                        borderWidth: 'var(--rsvp-border-width)',
-                        backgroundColor: 'var(--rsvp-input-bg-color)',
-                        borderColor: 'var(--rsvp-input-border-color)',
-                        borderStyle: 'solid',
-                        color: 'var(--rsvp-input-text-color)',
-                        fontSize: 'var(--rsvp-control-font-size)',
-                        paddingTop: 'var(--rsvp-control-padding)',
-                        paddingBottom: 'var(--rsvp-control-padding)',
-                        paddingLeft: 'calc(var(--rsvp-control-padding) * 1.5)',
-                        paddingRight: 'calc(var(--rsvp-control-padding) * 1.5)',
-                      }}
                     />
                   ) : field.type === 'radio' ? (
                     <div className='flex flex-wrap items-center gap-3'>

@@ -4,9 +4,7 @@ import { trpc } from '@/utils/trpc';
 import styled from '@emotion/styled';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { EditorSDK, LayerElemItem } from '@mk/works-store/types';
-import { Button } from '@workspace/ui/components/button';
 import { Form } from '@workspace/ui/components/form';
-import { Input } from '@workspace/ui/components/input';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -15,7 +13,11 @@ import { ResponsiveDialog } from '../../Drawer';
 import { RSVPConfigPanel } from '../configPanel';
 import { RSVPProvider, useRSVP } from '../RSVPContext';
 import { DEFAULT_RSVP_THEME, RSVPAttrs, RSVPField, RSVPTheme } from '../type';
-import { RSVPFormFields } from './RSVPFormFields';
+import {
+  ButtonWithTheme,
+  InputWithTheme,
+  RSVPFormFields,
+} from './RSVPFormFields';
 import { SubmissionView } from './SubmissionView';
 
 // Cookie 键名
@@ -797,7 +799,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
             >
               您的姓名 <span className='text-red-500'>*</span>
             </label>
-            <Input
+            <InputWithTheme
               type='text'
               placeholder='请输入您的姓名'
               value={guestName}
@@ -825,20 +827,6 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                     });
                 }
               }}
-              className='focus:ring-0 [&::placeholder]:text-[var(--rsvp-input-placeholder-color)]'
-              style={{
-                borderRadius: 'var(--rsvp-border-radius)',
-                borderWidth: 'var(--rsvp-border-width)',
-                backgroundColor: 'var(--rsvp-input-bg-color)',
-                borderColor: 'var(--rsvp-input-border-color)',
-                color: 'var(--rsvp-input-text-color)',
-                fontSize: 'var(--rsvp-control-font-size)',
-                borderStyle: 'solid',
-                paddingTop: 'var(--rsvp-control-padding)',
-                paddingBottom: 'var(--rsvp-control-padding)',
-                paddingLeft: 'calc(var(--rsvp-control-padding) * 1.5)',
-                paddingRight: 'calc(var(--rsvp-control-padding) * 1.5)',
-              }}
             />
           </div>
         )}
@@ -857,7 +845,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
             {/* 出席/不出席选择按钮 */}
             {!submitting && !resultMsg && (
               <div className='flex gap-2'>
-                <Button
+                <ButtonWithTheme
                   disabled={
                     isEditorMode
                       ? false
@@ -882,10 +870,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                         });
                     }
                   }}
-                  className='flex-1 font-medium h-auto'
                   style={{
-                    borderRadius: 'var(--rsvp-border-radius)',
-                    borderWidth: 'var(--rsvp-border-width)',
                     backgroundColor:
                       willAttend === true
                         ? 'var(--rsvp-primary-btn-color)'
@@ -898,19 +883,13 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                       willAttend === true
                         ? 'var(--rsvp-primary-btn-color)'
                         : 'var(--rsvp-secondary-btn-border-color)',
-                    fontSize: 'var(--rsvp-control-font-size)',
-                    borderStyle: 'solid',
-                    paddingTop: 'var(--rsvp-control-padding)',
-                    paddingBottom: 'var(--rsvp-control-padding)',
-                    paddingLeft: 'calc(var(--rsvp-control-padding) * 1.5)',
-                    paddingRight: 'calc(var(--rsvp-control-padding) * 1.5)',
-                    lineHeight: 'calc(var(--rsvp-control-font-size) * 1.2)',
                   }}
+                  className='flex-1'
                   variant={willAttend === true ? 'default' : 'outline'}
                 >
                   参加
-                </Button>
-                <Button
+                </ButtonWithTheme>
+                <ButtonWithTheme
                   disabled={
                     isEditorMode
                       ? false
@@ -935,10 +914,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                     }
                     handleSubmit(false);
                   }}
-                  className='flex-1 h-auto'
                   style={{
-                    borderRadius: 'var(--rsvp-border-radius)',
-                    borderWidth: 'var(--rsvp-border-width)',
                     backgroundColor:
                       willAttend === false
                         ? 'var(--rsvp-primary-btn-color)'
@@ -951,18 +927,12 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                       willAttend === false
                         ? 'var(--rsvp-primary-btn-color)'
                         : 'var(--rsvp-secondary-btn-border-color)',
-                    fontSize: 'var(--rsvp-control-font-size)',
-                    borderStyle: 'solid',
-                    paddingTop: 'var(--rsvp-control-padding)',
-                    paddingBottom: 'var(--rsvp-control-padding)',
-                    paddingLeft: 'calc(var(--rsvp-control-padding) * 1.5)',
-                    paddingRight: 'calc(var(--rsvp-control-padding) * 1.5)',
-                    lineHeight: 'calc(var(--rsvp-control-font-size) * 1.2)',
                   }}
+                  className='flex-1'
                   variant={willAttend === false ? 'default' : 'outline'}
                 >
                   不参加
-                </Button>
+                </ButtonWithTheme>
               </div>
             )}
           </div>
@@ -983,28 +953,19 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
           {/* 如果选择了出席，或者在编辑器模式下，显示确认按钮 */}
           {(willAttend === true || isEditorMode) && (
             <div className='pt-3'>
-              <Button
+              <ButtonWithTheme
                 size='lg'
                 disabled={submitting}
                 onClick={() => handleSubmit(true)}
-                className='w-full font-medium'
+                className='w-full'
                 style={{
-                  borderRadius: 'var(--rsvp-border-radius)',
-                  borderWidth: 'var(--rsvp-border-width)',
                   borderColor: 'var(--rsvp-primary-btn-color)',
                   backgroundColor: 'var(--rsvp-primary-btn-color)',
                   color: 'var(--rsvp-primary-btn-text-color)',
-                  fontSize: 'var(--rsvp-control-font-size)',
-                  borderStyle: 'solid',
-                  paddingTop: 'var(--rsvp-control-padding)',
-                  paddingBottom: 'var(--rsvp-control-padding)',
-                  paddingLeft: 'calc(var(--rsvp-control-padding) * 1.5)',
-                  paddingRight: 'calc(var(--rsvp-control-padding) * 1.5)',
-                  lineHeight: 'calc(var(--rsvp-control-font-size) * 1.2)',
                 }}
               >
                 {submitting ? '提交中...' : '确认'}
-              </Button>
+              </ButtonWithTheme>
               {config.max_submit_count != null ? (
                 <div className='text-center mt-2'>
                   <span
