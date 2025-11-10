@@ -33,9 +33,7 @@ export function WorkInfoCard({
   size = 'small',
   loading = false,
 }: WorkInfoCardProps) {
-  const isSmall = size === 'small';
-  const imageSize = isSmall ? 'w-16 h-16' : 'w-20 h-20';
-  const resizeWidth = isSmall ? 128 : 160;
+  const resizeWidth = 192; // 96px * 2 for retina
 
   const handleClick = () => {
     if (!loading && onClick) {
@@ -46,7 +44,7 @@ export function WorkInfoCard({
   return (
     <div
       onClick={handleClick}
-      className={`bg-white rounded-lg p-3 shadow-sm border border-gray-100 ${
+      className={`bg-white border border-gray-200 rounded-[12px] relative overflow-hidden ${
         onClick && !loading
           ? 'cursor-pointer active:opacity-80'
           : loading
@@ -54,21 +52,20 @@ export function WorkInfoCard({
             : ''
       }`}
     >
-      <div className='flex gap-3'>
+      <div className='flex gap-[10px] items-start h-[128px]'>
         {/* 缩略图 */}
-        <div
-          className={`${imageSize} relative flex-shrink-0 rounded overflow-hidden border border-gray-200 self-stretch`}
-        >
+        <div className='w-[96px] h-[128px] relative flex-shrink-0 overflow-hidden'>
           {work.cover ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={cdnApi(work.cover, { resizeWidth })}
               alt={work.title}
-              className='w-full h-full object-cover'
+              className='w-full h-full object-cover object-top'
             />
           ) : (
-            <div className='w-full h-full bg-gray-100 flex items-center justify-center text-xs text-gray-400'>
-              无
+            <div className='w-full h-full bg-gray-100 flex flex-col items-center justify-center text-gray-400'>
+              <div className='text-[24px] mb-1'>🖼️</div>
+              <div className='text-[9px] leading-[13.5px]'>预览</div>
             </div>
           )}
           {/* 加载蒙层 */}
@@ -80,45 +77,62 @@ export function WorkInfoCard({
         </div>
 
         {/* 内容 */}
-        <div className='flex-1 min-w-0'>
-          <div className='flex items-start justify-between gap-2 mb-1'>
-            <h3
-              className={`${isSmall ? 'text-base' : 'text-base'} font-${isSmall ? 'medium' : 'semibold'} text-[#09090B] line-clamp-2 flex-1`}
-            >
-              {work.title}
-            </h3>
-            {purchaseStatus && (
-              <span
-                className={`text-xs px-2 py-0.5 rounded flex-shrink-0 ${
-                  purchaseStatus === 'purchased'
-                    ? 'bg-[#ffe035] text-[#a16207]'
-                    : 'bg-gray-200 text-gray-600'
-                }`}
-              >
-                {purchaseStatus === 'purchased' ? '已购' : '未购'}
-              </span>
-            )}
-          </div>
-
-          <div className='flex items-center gap-1 text-xs text-gray-500 mb-1'>
-            <Clock className='w-3 h-3' />
-            <span>更新于 {dayjs(work.update_time).fromNow()}</span>
+        <div className='flex-1 min-w-0 h-full flex flex-col justify-between py-2'>
+          <div className='flex-1 min-w-0'>
+            <div className='flex flex-col gap-1'>
+              <h3 className='text-[16px] font-semibold leading-[24px] text-[#101828] truncate'>
+                {work.title}
+              </h3>
+              <div className='flex items-center gap-[4px]'>
+                <Clock className='w-[11.5px] h-[11.5px] text-[#6a7282]' />
+                <span className='text-[12px] leading-[18px] text-[#6a7282]'>
+                  更新于{' '}
+                  {Intl.DateTimeFormat('zh-CN', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  }).format(new Date(work.update_time))}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* RSVP 统计信息 */}
           {work.is_rsvp && rsvpStats && (
-            <div className='flex items-center gap-3 mt-1 text-xs'>
-              <span className='text-[#09090B] font-medium'>
-                <span className='font-semibold'>{rsvpStats.invited}</span>{' '}
-                已邀请
-              </span>
-              <span className='text-green-600 font-medium'>
-                <span className='font-semibold'>{rsvpStats.replied}</span>{' '}
-                已回复
-              </span>
+            <div className='flex items-center gap-4 h-[30px]'>
+              <div className='flex items-center gap-1'>
+                <span className='text-[20px] font-semibold leading-[30px] text-[#101828]'>
+                  {rsvpStats.invited}
+                </span>
+                <span className='text-[12px] leading-[18px] text-[#6a7282]'>
+                  已邀请
+                </span>
+              </div>
+              <div className='flex items-center gap-1'>
+                <span className='text-[20px] font-semibold leading-[30px] text-[#00a63e]'>
+                  {rsvpStats.replied}
+                </span>
+                <span className='text-[12px] leading-[18px] text-[#6a7282]'>
+                  已回复
+                </span>
+              </div>
             </div>
           )}
         </div>
+
+        {/* 购买状态标签 - 右上角 */}
+        {purchaseStatus && (
+          <div
+            className={`absolute top-0 right-0 px-2 py-2 rounded-bl-[6px] flex items-center justify-center ${
+              purchaseStatus === 'purchased'
+                ? 'bg-[#fde272] text-yellow-700'
+                : 'bg-[#64748b] text-[#f8fafc]'
+            }`}
+          >
+            <span className='text-xs font-semibold leading-[12px]'>
+              {purchaseStatus === 'purchased' ? '已购' : '未购'}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -125,25 +125,6 @@ const HeaderForUser = () => {
     );
   };
 
-  const toRsvp = () => {
-    const form_config_id = searchParams.get('form_config_id');
-    console.log('form_config_id', form_config_id);
-
-    const rsvpUrl = getUrlWithParam(
-      `/mobile/rsvp/invitees?works_id=${worksId}&uid=${getUid()}&appid=${appid}&form_config_id=${form_config_id}`,
-      'clickid'
-    );
-
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}${rsvpUrl}`,
-        type: 'URL',
-      });
-    } else {
-      router.push(rsvpUrl);
-    }
-  };
-
   const handleSave = async () => {
     try {
       toast.loading(t('saving'));
@@ -156,10 +137,7 @@ const HeaderForUser = () => {
       await worksStore.api.saveWorks('manual');
       toast.dismiss();
 
-      if (isRsvp) {
-        toRsvp();
-        return;
-      } else if (!isPoster) {
+      if (!isPoster) {
         // 预览页
         toPreview();
       } else {

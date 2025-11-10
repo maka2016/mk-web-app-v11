@@ -10,6 +10,11 @@ import { ChevronRight, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+const GRADIENT_CLASSES = [
+  'from-rose-50 to-rose-100',
+  'from-pink-50 to-pink-100',
+];
+
 interface Channel {
   id: number;
   alias: string;
@@ -272,6 +277,10 @@ export default function Detail({ channelId }: DetailProps) {
                     <div className='px-4 grid grid-cols-2 gap-x-2.5 gap-y-3 transition-all duration-300'>
                       {displayCollections.map((collection, index) => {
                         const isInInitial4 = index < 4;
+                        const gradientClass =
+                          GRADIENT_CLASSES[
+                            collection.id % GRADIENT_CLASSES.length
+                          ];
                         return (
                           <div
                             key={collection.id}
@@ -294,7 +303,9 @@ export default function Detail({ channelId }: DetailProps) {
                             }}
                           >
                             {/* 集合缩略图 */}
-                            <div className='aspect-[176/236] bg-gradient-to-br from-gray-100 to-gray-50 relative'>
+                            <div
+                              className={`aspect-[176/236] bg-gradient-to-br ${gradientClass} relative`}
+                            >
                               {collection.thumb_path ? (
                                 <img
                                   src={cdnApi(collection.thumb_path, {

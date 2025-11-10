@@ -1,7 +1,6 @@
-import React from 'react';
-import clsn from 'classnames';
 import { WorksPage } from '@mk/works-store/types';
-import { isIOS } from '@mk/utils';
+import clsn from 'classnames';
+import React from 'react';
 
 const LoadedWidgetCache = {
   MkCombination: true,
@@ -137,6 +136,23 @@ export default class ViewerRenderer extends React.Component<
         >
           {contentChild}
           {this.renderNormalCanvasItems()}
+
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              width: '100%',
+              zIndex: 100,
+            }}
+            className='flex justify-center items-center gap-2 text-[11px] font-medium uppercase tracking-[0.32em] text-white/80'
+          >
+            <img
+              src='https://res.maka.im/assets/jiantie/Frame%201321318475.png'
+              alt='logo'
+              className='w-full  '
+            />
+          </div>
         </div>
       </div>
     );

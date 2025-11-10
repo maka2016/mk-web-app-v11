@@ -53,7 +53,7 @@ export default function CreateInviteePage() {
       // 跳转到分享页面
       if (createdInvitee) {
         const shareUrl = `/mobile/rsvp/share?works_id=${worksId}&mode=invitee&contact_id=${createdInvitee.id}&contact_name=${encodeURIComponent(createdInvitee.name)}&form_config_id=${formConfigId}&from=create`;
-        router.replace(shareUrl);
+        router.push(shareUrl);
       }
     } catch (error: any) {
       toast.error(error.message || '创建失败');

@@ -1,3 +1,4 @@
+import { getPermissionData } from '@mk/services';
 import MkCalendarV3Form from '@mk/widgets/MkCalendarV3/form';
 import MkMapV4Form from '@mk/widgets/MkMapV4/form-wap';
 import { ChevronDown, ChevronUp, Copy, Trash2 } from 'lucide-react';
@@ -96,6 +97,10 @@ export const SettingElemV3 = ({ onUpdate }: { onUpdate?: () => void }) => {
       currCellIds.findIndex(id => id === editingElemId) ===
       currCellIds.length - 1;
     const onlyOneChild = currCellIds.length === 1;
+    const isRSVP1 = layer.elementRef === 'RSVP1';
+    const isDesigner = getPermissionData().materialProduct;
+    // RSVP1 只有在设计师模式下才显示复制和删除按钮
+    const shouldHideRSVP1Actions = isRSVP1 && !isDesigner;
     return (
       <>
         {renderEditForm()}
@@ -129,33 +134,37 @@ export const SettingElemV3 = ({ onUpdate }: { onUpdate?: () => void }) => {
           </div>
           <span>下移</span>
         </BtnLite>
-        <BtnLite
-          onClick={() => {
-            // store.deleteCompEntity(layer.elemId)
-            const nextId = duplicateElemV2();
-            if (nextId) {
-              setWidgetStateV2({
-                editingElemId: nextId,
-              });
-            }
-          }}
-        >
-          <div className='border_icon '>
-            <Copy size={16} />
-          </div>
-          <span>复制</span>
-        </BtnLite>
-        <BtnLite
-          onClick={() => {
-            deleteElemV2();
-            clearActiveStatus?.();
-          }}
-        >
-          <div className='border_icon '>
-            <Trash2 size={16} />
-          </div>
-          <span>删除</span>
-        </BtnLite>
+        {!shouldHideRSVP1Actions && (
+          <BtnLite
+            onClick={() => {
+              // store.deleteCompEntity(layer.elemId)
+              const nextId = duplicateElemV2();
+              if (nextId) {
+                setWidgetStateV2({
+                  editingElemId: nextId,
+                });
+              }
+            }}
+          >
+            <div className='border_icon '>
+              <Copy size={16} />
+            </div>
+            <span>复制</span>
+          </BtnLite>
+        )}
+        {!shouldHideRSVP1Actions && (
+          <BtnLite
+            onClick={() => {
+              deleteElemV2();
+              clearActiveStatus?.();
+            }}
+          >
+            <div className='border_icon '>
+              <Trash2 size={16} />
+            </div>
+            <span>删除</span>
+          </BtnLite>
+        )}
         {isInList && (
           <BtnLite
             style={{

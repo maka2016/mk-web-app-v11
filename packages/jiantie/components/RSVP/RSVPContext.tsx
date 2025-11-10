@@ -119,7 +119,7 @@ export function RSVPProvider({
               max_submit_count: null, // 固定值：无限，不可配置
               submit_deadline: null, // 固定值：无限期，不可配置
               enabled: dataAsAny?.enabled ?? true,
-              collect_form: dataAsAny?.collect_form ?? false,
+              collect_form: dataAsAny?.collect_form ?? true,
             } as any);
             const newConfigData = newConfig as any;
 
@@ -231,7 +231,7 @@ export function RSVPProvider({
         max_submit_count: null, // 固定值：无限，不可配置
         submit_deadline: null, // 固定值：无限期，不可配置
         enabled: config.enabled ?? true,
-        collect_form: config.collect_form ?? false,
+        collect_form: config.collect_form ?? true,
       } as any;
 
       const saved = await trpc.rsvp.upsertFormConfig.mutate(payload);

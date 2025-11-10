@@ -158,6 +158,9 @@ export const blockStyleFilter = (
   safeToSetStyle(_style, 'backgroundColor', style);
   safeToSetStyle(_style, 'background', style);
 
+  // 注意：混合模式不再在这里处理，而是在 WidgetItemRendererV2 中通过 takeBlendModeStyle 单独处理
+  // 这样可以避免 Safari 黑色底问题，因为混合模式应用到内容层而不是容器层
+
   return {
     ..._style,
     fontSize: calcLayoutStyleVal(style?.fontSize, scale),

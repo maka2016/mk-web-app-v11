@@ -103,6 +103,17 @@ const LeftFlap = styled(motion.div)`
   z-index: 4;
 `;
 
+const LeftFlapSide = styled(motion.div)`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+`;
+
 const FlapSide = styled(motion.img)`
   position: absolute;
   top: 0;
@@ -430,38 +441,50 @@ export function EnvelopeClientAnimation({
               </InvitationContentInner>
             </InvitationContentLayer>
 
-            <LeftFlap
-              title='左侧开口'
-              initial={{ rotateY: 0 }}
-              animate={{ rotateY: hasLeftOpened ? -180 : 0 }}
-              transition={{
-                duration:
-                  animationPhase === 'left-opening'
-                    ? LEFT_OPEN_DURATION / 1000
-                    : 0,
-                delay:
-                  animationPhase === 'left-opening'
-                    ? LEFT_OPEN_DELAY / 1000
-                    : 0,
-                ease: easing,
-              }}
-            >
+            <LeftFlap title='左侧开口'>
               <FlapSide
                 src={leftOpeningImage || ''}
                 alt='envelope-left-outer'
+                initial={{ rotateY: 0 }}
+                animate={{ rotateY: hasLeftOpened ? -180 : 0 }}
+                transition={{
+                  duration:
+                    animationPhase === 'left-opening'
+                      ? LEFT_OPEN_DURATION / 1000
+                      : 0,
+                  delay:
+                    animationPhase === 'left-opening'
+                      ? LEFT_OPEN_DELAY / 1000
+                      : 0,
+                  ease: easing,
+                }}
                 style={{
+                  zIndex: 1,
                   objectPosition: 'left center',
                   transformOrigin: 'left center',
-                  transform: 'rotateY(0deg)',
+                  transform: 'rotateY(0deg) translateZ(0.01px)',
                 }}
               />
               <FlapSide
                 src={leftInnerImage || leftOpeningImage || ''}
                 alt='envelope-left-inner'
+                initial={{ rotateY: 180 }}
+                animate={{ rotateY: hasLeftOpened ? 0 : 180 }}
+                transition={{
+                  duration:
+                    animationPhase === 'left-opening'
+                      ? LEFT_OPEN_DURATION / 1000
+                      : 0,
+                  delay:
+                    animationPhase === 'left-opening'
+                      ? LEFT_OPEN_DELAY / 1000
+                      : 0,
+                  ease: easing,
+                }}
                 style={{
+                  zIndex: 2,
                   objectPosition: 'left center',
                   transformOrigin: 'left center',
-                  transform: 'rotateY(180deg)',
                 }}
               />
             </LeftFlap>

@@ -228,7 +228,7 @@ export default function WorksManagerForUser() {
   return (
     <>
       <div
-        className='flex flex-col h-full bg-gray-50'
+        className='flex flex-col h-full'
         style={{
           paddingTop: 'var(--safe-area-inset-top)',
         }}
@@ -240,7 +240,7 @@ export default function WorksManagerForUser() {
 
         {/* 作品列表 */}
         <div
-          className={`flex-1 overflow-y-auto px-4 py-3 ${totalPages > 1 && !loading ? 'pb-[60px]' : ''}`}
+          className={`flex-1 overflow-y-auto bg-gray-50 p-4 ${totalPages > 1 && !loading ? 'pb-[60px]' : ''}`}
         >
           {loading && worksList.length === 0 ? (
             <div className='flex justify-center items-center h-64'>
@@ -251,7 +251,7 @@ export default function WorksManagerForUser() {
               <div className='text-sm text-gray-400'>还没有作品</div>
             </div>
           ) : (
-            <div className='space-y-3'>
+            <div className='flex flex-col gap-[12px]'>
               {worksList.map(work => (
                 <WorkInfoCard
                   key={work.id}

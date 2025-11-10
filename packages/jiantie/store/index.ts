@@ -1,3 +1,4 @@
+import { EventEmitter } from '@mk/utils';
 import { makeAutoObservable, toJS } from 'mobx';
 import { useLocalObservable } from 'mobx-react';
 
@@ -26,6 +27,7 @@ class ActivitiveStore {
   setVipShow = (nextData: boolean, data?: Record<string, any>) => {
     this.vipShow = nextData;
     this.vipTrackData = data || {};
+    EventEmitter.emit('VIP_MODAL_OPEN_CHANGE', nextData);
   };
 
   setBindPhoneShow = (nextData: boolean) => {
