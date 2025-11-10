@@ -26,6 +26,7 @@ interface Template {
   title: string;
   desc: string | null;
   cover: string | null;
+  coverV2?: string | null;
   spec_id: string | null;
   create_time: string;
   update_time: string;
@@ -204,7 +205,7 @@ export default function Templates({ collectionId }: TemplatesProps) {
                       <>
                         {/* 底层模糊背景图 */}
                         <img
-                          src={cdnApi(template.cover)}
+                          src={cdnApi(template.cover || template.cover)}
                           alt=''
                           className='absolute inset-0 w-full h-full object-cover blur-md scale-110'
                         />
