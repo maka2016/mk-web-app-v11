@@ -417,25 +417,49 @@ export default function RSVPInviteesPage() {
         rows.push(row.map(escapeCsvField).join(','));
       });
 
-      // 生成CSV内容（添加BOM以支持Excel正确显示中文）
-      const csvContent = '\uFEFF' + rows.join('\n');
+      // 生成CSV内容
+      // APP环境使用\r\n，浏览器环境使用\n并添加BOM
+      const isInApp = APPBridge.judgeIsInApp();
+      const lineBreak = isInApp ? '\r\n' : '\n';
+      const csvContent = isInApp
+        ? rows.join(lineBreak)
+        : '\uFEFF' + rows.join(lineBreak);
 
-      // 创建Blob并下载
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute(
-        'download',
-        `宾客数据_${new Date().toISOString().split('T')[0]}.csv`
-      );
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      const filename = `宾客数据_${new Date().toISOString().split('T')[0]}.csv`;
 
-      toast.success(`成功导出 ${filteredResponses.length} 条记录`);
+      // 如果在APP环境中，使用APPBridge下载
+      if (isInApp) {
+        APPBridge.appCall(
+          {
+            type: 'MkFileDownload',
+            jsCbFnName: 'appBridgeOnMKShare',
+            params: {
+              fileData: csvContent,
+              filename: filename.replace('.csv', ''),
+            },
+          },
+          (data: any) => {
+            console.log('文件下载回调', data);
+            toast.success(`成功导出 ${filteredResponses.length} 条记录`);
+          }
+        );
+      } else {
+        // 浏览器环境：创建Blob并下载
+        const blob = new Blob([csvContent], {
+          type: 'text/csv;charset=utf-8;',
+        });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast.success(`成功导出 ${filteredResponses.length} 条记录`);
+      }
     } catch (error: any) {
       console.error('导出CSV失败:', error);
       toast.error(error.message || '导出失败');

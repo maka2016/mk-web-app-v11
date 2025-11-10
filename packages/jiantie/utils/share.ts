@@ -1,14 +1,25 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import APPBridge from '@mk/app-bridge';
 import { getAppId, getUid } from '@/services';
+import APPBridge from '@mk/app-bridge';
+import { useRouter } from 'next/navigation';
 import { getUrlWithParam } from '.';
 
 export function useShareNavigation() {
   const router = useRouter();
 
-  const toShare = (works_id: string) => {
+  const toShare = (works_id: string, isRsvp = false) => {
+    if (isRsvp) {
+      if (APPBridge.judgeIsInApp()) {
+        APPBridge.navToPage({
+          url: `/mobile/rsvp/invitees?works_id=${works_id}&mode=public`,
+          type: 'URL',
+        });
+      } else {
+        router.push(`/mobile/rsvp/invitees?works_id=${works_id}&mode=public`);
+      }
+      return;
+    }
     const appid = getAppId();
     const uid = getUid();
     if (APPBridge.judgeIsInApp()) {
