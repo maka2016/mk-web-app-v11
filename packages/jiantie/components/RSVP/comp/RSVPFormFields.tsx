@@ -304,7 +304,7 @@ export function RSVPFormFields({
                     <div>
                       {field.splitAdultChild ? (
                         <div className='flex items-center gap-3'>
-                          {/* 大人 */}
+                          {/* 成人 */}
                           <CounterControl
                             value={
                               (
@@ -313,7 +313,7 @@ export function RSVPFormFields({
                                 }
                               )?.adult || 1
                             }
-                            label='大人'
+                            label='成人'
                             disabled={disabled}
                             onIncrement={() => {
                               const currentValue = formField.value as {
@@ -336,7 +336,7 @@ export function RSVPFormFields({
                               });
                             }}
                           />
-                          {/* 小孩 */}
+                          {/* 儿童 */}
                           <CounterControl
                             value={
                               (
@@ -345,7 +345,7 @@ export function RSVPFormFields({
                                 }
                               )?.child || 0
                             }
-                            label='小孩'
+                            label='儿童'
                             disabled={disabled}
                             onIncrement={() => {
                               const currentValue = formField.value as {

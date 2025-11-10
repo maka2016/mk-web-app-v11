@@ -1,13 +1,11 @@
 'use client';
 import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
-import { checkPurchased, getAppId, getUid } from '@/services';
+import { getAppId, getUid } from '@/services';
 import { useStore } from '@/store';
 import { getUrlWithParam } from '@/utils';
 import { useCheckPublish } from '@/utils/checkPubulish';
-import { toVipPage } from '@/utils/jiantie';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
-import { EventEmitter } from '@mk/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +28,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { WorkInfoCard } from '../components/WorkInfoCard';
 
@@ -43,18 +41,15 @@ type RSVPStats = {
 export default function WorkDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { isVip, vipShow, setVipShow } = useStore();
+  const { isVip, setVipShow } = useStore();
   const { canShareWithoutWatermark } = useCheckPublish();
   const workId = params.id as string;
 
   const [work, setWork] = useState<WorksDetail | null>(null);
   const [rsvpStats, setRsvpStats] = useState<RSVPStats | null>(null);
   const [formConfigId, setFormConfigId] = useState<string | null>(null);
-  const [canShare, setCanShare] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const prevVipShowRef = useRef(false);
 
   // 返回上一页
   const handleBack = () => {
@@ -65,80 +60,36 @@ export default function WorkDetailPage() {
     }
   };
 
-  // 检查用户权限（会员或作品购买状态）
-  useEffect(() => {
-    const checkPermission = async () => {
-      const appid = getAppId();
-      const uid = getUid();
-      if (!workId || !uid || !work) return;
+  // 检查分享权限
+  const checkSharePermission = async (): Promise<boolean> => {
+    if (!workId) return false;
 
-      // 如果是会员，直接有权限
-      if (isVip) {
-        setHasPermission(true);
-        return;
-      }
-
-      // 检查作品是否已购买
-      try {
-        const purchased = await checkPurchased(workId, uid, appid);
-        setHasPermission(purchased);
-
-        // 如果没有权限，显示 VIP 拦截页
-        if (!purchased) {
-          setVipShow(true, {
-            works_id: workId,
-            ref_object_id: work.template_id || '',
-            tab: appid === 'xueji' ? 'business' : 'personal',
-            vipType: 'rsvp',
-          });
-        }
-      } catch (error) {
-        console.error('Failed to check purchase status:', error);
-        setHasPermission(false);
-        // 检查失败时也显示 VIP 拦截页
-        setVipShow(true, {
-          works_id: workId,
-          ref_object_id: work.template_id || '',
-          tab: appid === 'xueji' ? 'business' : 'personal',
-          vipType: 'rsvp',
-        });
-      }
-    };
-
-    // 只有在作品加载完成后才检查权限
-    if (work && !loading) {
-      checkPermission();
+    // 如果是会员，直接有权限
+    if (isVip) {
+      return true;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workId, isVip, work, loading]);
 
-  // 监听 VIP 拦截页关闭事件
-  useEffect(() => {
-    const handleVipModalOpenChange = (value: boolean) => {
-      console.log('value', value);
-      if (!value) {
-        // 用户没有购买会员，返回上一页
-        if (APPBridge.judgeIsInApp()) {
-          APPBridge.navAppBack();
-        } else {
-          router.back();
-        }
-      }
-    };
-    EventEmitter.on('VIP_MODAL_OPEN_CHANGE', handleVipModalOpenChange);
-    // 如果 VIP 拦截页从打开变为关闭，且之前没有权限
-    if (prevVipShowRef.current && !vipShow && hasPermission === false) {
-      // 检查用户是否购买了会员
-      if (isVip) {
-        // 用户购买了会员，更新权限状态并留在当前页
-        setHasPermission(true);
-      }
+    // 检查分享权限
+    try {
+      const hasPermission = await canShareWithoutWatermark(workId);
+      return hasPermission;
+    } catch (error) {
+      console.error('Failed to check share permission:', error);
+      return false;
     }
-    prevVipShowRef.current = vipShow;
-    return () => {
-      EventEmitter.rm('VIP_MODAL_OPEN_CHANGE', handleVipModalOpenChange);
-    };
-  }, [vipShow, hasPermission, isVip, router]);
+  };
+
+  // 显示VIP拦截
+  const showVipInterceptor = () => {
+    if (!work) return;
+    const appid = getAppId();
+    setVipShow(true, {
+      works_id: work.id,
+      ref_object_id: work.template_id || '',
+      tab: appid === 'xueji' ? 'business' : 'personal',
+      vipType: 'rsvp',
+    });
+  };
 
   // 加载作品详情
   useEffect(() => {
@@ -149,19 +100,6 @@ export default function WorkDetailPage() {
       try {
         const detail = await trpc.works.findById.query({ id: workId });
         setWork(detail);
-
-        // 检查分享权限
-        if (isVip) {
-          setCanShare(true);
-        } else {
-          try {
-            const hasPermission = await canShareWithoutWatermark(workId);
-            setCanShare(hasPermission);
-          } catch (error) {
-            console.error('Failed to check share permission:', error);
-            setCanShare(false);
-          }
-        }
 
         // 如果是 RSVP 类型，获取统计信息
         if (detail.is_rsvp) {
@@ -201,8 +139,7 @@ export default function WorkDetailPage() {
     };
 
     loadWork();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workId, isVip]);
+  }, [workId]);
 
   // 预览作品
   const handlePreview = () => {
@@ -251,8 +188,16 @@ export default function WorkDetailPage() {
   };
 
   // 跳转到指定嘉宾页面
-  const handleTargetInvitee = () => {
+  const handleTargetInvitee = async () => {
     if (!work || !formConfigId) return;
+
+    // 检查分享权限
+    const hasPermission = await checkSharePermission();
+    if (!hasPermission) {
+      showVipInterceptor();
+      return;
+    }
+
     const url = `/mobile/rsvp/invitees/create?works_id=${work.id}&form_config_id=${formConfigId}`;
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
@@ -265,8 +210,16 @@ export default function WorkDetailPage() {
   };
 
   // 跳转到公开分享页面
-  const handlePublicShare = () => {
+  const handlePublicShare = async () => {
     if (!work || !formConfigId) return;
+
+    // 检查分享权限
+    const hasPermission = await checkSharePermission();
+    if (!hasPermission) {
+      showVipInterceptor();
+      return;
+    }
+
     const url = `/mobile/rsvp/share?works_id=${work.id}&mode=public&form_config_id=${formConfigId}`;
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
@@ -375,87 +328,43 @@ export default function WorkDetailPage() {
             <div className='space-y-3'>
               <h3 className='text-sm font-semibold text-[#09090B]'>分享邀请</h3>
               <div className='space-y-3'>
-                {canShare ? (
-                  <div className='space-y-3'>
-                    {/* 指定嘉宾 */}
-                    <button
-                      onClick={handleTargetInvitee}
-                      className='w-full flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-100 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors'
-                    >
-                      <div className='w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0'>
-                        <Target className='w-5 h-5 text-red-500' />
-                      </div>
-                      <div className='flex-1 text-left'>
-                        <span className='text-sm font-medium text-[#09090B]'>
-                          指定嘉宾
-                        </span>
-                        <p className='text-xs text-gray-500 mt-1'>
-                          向个别嘉宾发送带有专属链接的邀请
-                        </p>
-                      </div>
-                      <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
-                    </button>
+                {/* 指定嘉宾 */}
+                <button
+                  onClick={handleTargetInvitee}
+                  className='w-full flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-100 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors'
+                >
+                  <div className='w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0'>
+                    <Target className='w-5 h-5 text-red-500' />
+                  </div>
+                  <div className='flex-1 text-left'>
+                    <span className='text-sm font-medium text-[#09090B]'>
+                      指定嘉宾
+                    </span>
+                    <p className='text-xs text-gray-500 mt-1'>
+                      向个别嘉宾发送带有专属链接的邀请
+                    </p>
+                  </div>
+                  <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
+                </button>
 
-                    {/* 公开分享 */}
-                    <button
-                      onClick={handlePublicShare}
-                      className='w-full flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-100 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors'
-                    >
-                      <div className='w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0'>
-                        <Globe className='w-5 h-5 text-blue-500' />
-                      </div>
-                      <div className='flex-1 text-left'>
-                        <span className='text-sm font-medium text-[#09090B]'>
-                          公开分享
-                        </span>
-                        <p className='text-xs text-gray-500 mt-1'>
-                          生成公开链接，任何人都可以RSVP
-                        </p>
-                      </div>
-                      <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
-                    </button>
+                {/* 公开分享 */}
+                <button
+                  onClick={handlePublicShare}
+                  className='w-full flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-100 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors'
+                >
+                  <div className='w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0'>
+                    <Globe className='w-5 h-5 text-blue-500' />
                   </div>
-                ) : (
-                  <div className='bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-4 border border-purple-100'>
-                    <div className='flex flex-col items-center text-center py-4'>
-                      <div className='w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3'>
-                        <svg
-                          className='w-6 h-6 text-purple-600'
-                          fill='none'
-                          viewBox='0 0 24 24'
-                          stroke='currentColor'
-                        >
-                          <path
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            strokeWidth={2}
-                            d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
-                          />
-                        </svg>
-                      </div>
-                      <h4 className='text-base font-semibold text-[#09090B] mb-2'>
-                        升级解锁分享功能
-                      </h4>
-                      <p className='text-sm text-gray-600 mb-4'>
-                        升级会员或购买作品后即可使用分享邀请功能
-                      </p>
-                      <Button
-                        onClick={() => {
-                          toVipPage({
-                            works_id: work.id,
-                            ref_object_id: work.template_id || '',
-                            tab:
-                              getAppId() === 'xueji' ? 'business' : 'personal',
-                            vipType: 'rsvp',
-                          });
-                        }}
-                        className='px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-medium hover:from-purple-700 hover:to-blue-700 shadow-md'
-                      >
-                        立即升级
-                      </Button>
-                    </div>
+                  <div className='flex-1 text-left'>
+                    <span className='text-sm font-medium text-[#09090B]'>
+                      公开分享
+                    </span>
+                    <p className='text-xs text-gray-500 mt-1'>
+                      生成公开链接，任何人都可以RSVP
+                    </p>
                   </div>
-                )}
+                  <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
+                </button>
               </div>
             </div>
           )}

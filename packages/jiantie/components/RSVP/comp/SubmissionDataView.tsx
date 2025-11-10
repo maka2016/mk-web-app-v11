@@ -55,11 +55,11 @@ export function SubmissionDataView({
           const child = (value as any).child || 0;
           if (adult === 0 && child === 0) return '-';
           if (adult > 0 && child > 0) {
-            return `大人 ${adult} 人，小孩 ${child} 人（共 ${adult + child} 人）`;
+            return `成人 ${adult} 人，儿童 ${child} 人（共 ${adult + child} 人）`;
           } else if (adult > 0) {
-            return `大人 ${adult} 人`;
+            return `成人 ${adult} 人`;
           } else {
-            return `小孩 ${child} 人`;
+            return `儿童 ${child} 人`;
           }
         } else {
           const total = (value as any).total || 0;
