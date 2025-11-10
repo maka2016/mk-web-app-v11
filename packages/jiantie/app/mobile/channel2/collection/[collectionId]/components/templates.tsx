@@ -1,5 +1,6 @@
 'use client';
 
+import { backWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { cdnApi, getAppId } from '@mk/services';
@@ -103,7 +104,7 @@ export default function Templates({ collectionId }: TemplatesProps) {
           <p>{error || '集合不存在'}</p>
         </div>
         <button
-          onClick={() => router.back()}
+          onClick={() => backWithBridge(router)}
           className='mt-6 px-6 py-2 border-pink-600 text-white rounded-lg'
         >
           返回
@@ -118,7 +119,7 @@ export default function Templates({ collectionId }: TemplatesProps) {
       {/* 顶部标题栏 */}
       <div className='flex items-center px-3 py-2 border-b border-gray-200 '>
         <button
-          onClick={() => router.back()}
+          onClick={() => backWithBridge(router)}
           className='flex-shrink-0 text-gray-600 mr-4 flex items-center '
         >
           <svg
@@ -140,7 +141,7 @@ export default function Templates({ collectionId }: TemplatesProps) {
           选择合适的模板
         </h1>
         <button
-          onClick={() => router.back()}
+          onClick={() => backWithBridge(router)}
           className='flex-shrink-0 text-gray-600 mr-4 flex items-center opacity-0 '
         >
           <svg
@@ -186,7 +187,7 @@ export default function Templates({ collectionId }: TemplatesProps) {
                     const toTemplateDetail = (template_id: string) => {
                       if (APPBridge.judgeIsInApp()) {
                         APPBridge.navToPage({
-                          url: `${location.origin}/maka/mobile/template?id=${template_id}&is_full_screen=1`,
+                          url: `${location.origin}/mobile/template?id=${template_id}&is_full_screen=1`,
                           type: 'URL',
                         });
                       } else {
