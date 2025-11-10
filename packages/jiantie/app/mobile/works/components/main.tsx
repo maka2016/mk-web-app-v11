@@ -186,13 +186,13 @@ const Works = (props: Props) => {
 
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `${location.origin}/editor?works_id=${works_id}&uid=${uid}&is_full_screen=1&popEnable=0&simple_mode=true`,
+        url: `${location.origin}/editor?works_id=${works_id}&uid=${uid}&is_full_screen=1&popEnable=0`,
         type: 'URL',
       });
     } else {
       router.push(
         getUrlWithParam(
-          `/editor?works_id=${works_id}&uid=${uid}&appid=${appid}&simple_mode=true`,
+          `/editor?works_id=${works_id}&uid=${uid}&appid=${appid}`,
           'clickid'
         )
       );

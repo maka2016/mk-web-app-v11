@@ -91,6 +91,73 @@ const getOpacityData = () => {
   ];
 };
 
+const blendModeData = [
+  {
+    text: '正常',
+    value: 'normal',
+  },
+  {
+    text: '正片叠底',
+    value: 'multiply',
+  },
+  {
+    text: '滤色',
+    value: 'screen',
+  },
+  {
+    text: '叠加',
+    value: 'overlay',
+  },
+  {
+    text: '变暗',
+    value: 'darken',
+  },
+  {
+    text: '变亮',
+    value: 'lighten',
+  },
+  {
+    text: '颜色减淡',
+    value: 'color-dodge',
+  },
+  {
+    text: '颜色加深',
+    value: 'color-burn',
+  },
+  {
+    text: '强光',
+    value: 'hard-light',
+  },
+  {
+    text: '柔光',
+    value: 'soft-light',
+  },
+  {
+    text: '差值',
+    value: 'difference',
+  },
+  {
+    text: '排除',
+    value: 'exclusion',
+  },
+  {
+    text: '色相',
+    value: 'hue',
+  },
+  {
+    text: '饱和度',
+    value: 'saturation',
+  },
+  {
+    text: '颜色',
+    value: 'color',
+  },
+  {
+    text: '明度',
+    value: 'luminosity',
+  },
+];
+
 interface AppearanceSettingsProps {
   style: any;
   onChange: (value: any) => void;
@@ -409,6 +476,27 @@ export default function AppearanceSettings({
         onChange={value => {
           onChange({
             opacity: value,
+          });
+        }}
+      />
+
+      <SingleValueStyleSettingItem
+        title='混合模式'
+        value={style.mixBlendMode}
+        options={blendModeData}
+        onAddByDefault={() => {
+          onChange({
+            mixBlendMode: 'normal',
+          });
+        }}
+        onRemove={() => {
+          onChange({
+            mixBlendMode: undefined,
+          });
+        }}
+        onChange={value => {
+          onChange({
+            mixBlendMode: value,
           });
         }}
       />

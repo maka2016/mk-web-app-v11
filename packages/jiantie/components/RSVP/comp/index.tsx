@@ -780,9 +780,15 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
         {/* Header: 致 XXX 和 消息 */}
         {isInviteeLink && (
           <div className='flex items-center justify-between header'>
-            <div className='text-gray-600'>
-              <span className='text-xs'>致</span>
-              <span className='font-medium'>{inviteeName}</span>
+            <div
+              className='text-gray-600 flex gap-2 items-center'
+              style={{
+                color: 'var(--rsvp-label-color)',
+                fontSize: 'var(--rsvp-control-font-size)',
+              }}
+            >
+              <span>致</span>
+              <span className='font-bold'>{inviteeName}</span>
             </div>
           </div>
         )}

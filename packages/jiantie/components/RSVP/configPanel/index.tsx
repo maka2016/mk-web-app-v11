@@ -58,7 +58,7 @@ const fieldTypes = [
   { label: '文本', value: 'text' as FieldType, icon: Pencil },
   { label: '单选', value: 'radio' as FieldType, icon: Circle },
   { label: '多选', value: 'checkbox' as FieldType, icon: CheckSquare2 },
-  { label: '访客人数', value: 'guest_count' as FieldType },
+  { label: '出席人数', value: 'guest_count' as FieldType },
 ];
 
 export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
@@ -534,7 +534,7 @@ function FieldItem({
 
   // 获取字段显示名称
   const getFieldDisplayLabel = (field: RSVPField) => {
-    if (field.type === 'guest_count') return '访客';
+    if (field.type === 'guest_count') return '出席人数（含本人）';
     if (field.id === 'phone') return '手机';
     if (field.id === 'email') return '邮箱';
     if (field.id === 'remark') return '备注';
