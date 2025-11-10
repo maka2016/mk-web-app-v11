@@ -8,6 +8,7 @@ import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
 import { Button } from '@workspace/ui/components/button';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { checkBindPhone, getAppId, getUid } from '@/services';
@@ -29,6 +30,7 @@ const PreviewHeader = (props: Props) => {
   const { toShare, toVideoShare } = useShareNavigation();
   const { canShareWithoutWatermark, canExportWithoutWatermark } =
     useCheckPublish();
+  const [isSharing, setIsSharing] = useState(false);
 
   const isVideo =
     worksStore.worksDetail.specInfo.export_format.includes('video');
@@ -46,6 +48,7 @@ const PreviewHeader = (props: Props) => {
 
     if (!hasBind) {
       setBindPhoneShow(true);
+      setIsSharing(false);
       return;
     }
 
@@ -54,6 +57,7 @@ const PreviewHeader = (props: Props) => {
     } else {
       toShare(worksId, worksStore.worksDetail.is_rsvp);
     }
+    setIsSharing(false);
   };
 
   const checkPublish = async () => {
@@ -66,23 +70,29 @@ const PreviewHeader = (props: Props) => {
 
       const appid = getAppId();
       if (canShare) {
-        shareWorks();
+        await shareWorks();
       } else {
         toVipPage({
           vipType: !isVideo ? 'h5' : 'poster',
           works_id: worksId,
           tab: appid === 'xueji' ? 'business' : 'personal',
         });
+        setIsSharing(false);
       }
     } catch (error) {
       // 添加错误处理
       console.error('分享权限检查失败:', error);
       toast.error(t('sharePermissionCheckFailed'));
+      setIsSharing(false);
     }
   };
 
   const handleSave = async () => {
-    checkPublish();
+    if (isSharing) {
+      return;
+    }
+    setIsSharing(true);
+    await checkPublish();
   };
 
   const closePage = async () => {
@@ -111,7 +121,7 @@ const PreviewHeader = (props: Props) => {
             object_id: worksId,
           }}
         >
-          <Button size='sm' onClick={() => handleSave()}>
+          <Button size='sm' onClick={() => handleSave()} disabled={isSharing}>
             {isVideo ? (
               <div className='flex items-center gap-1'>
                 <Icon name='download' size={16} color='var(--btn-text-color)' />
