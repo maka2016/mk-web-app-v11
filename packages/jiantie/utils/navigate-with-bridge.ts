@@ -3,6 +3,7 @@ import APPBridge from '@mk/app-bridge';
 export interface RouterLike {
   push: (href: string) => void;
   replace: (href: string) => void;
+  back?: () => void;
 }
 
 export interface NavigateWithBridgeOptions {
@@ -35,4 +36,12 @@ export const navigateWithBridge = ({
   } else {
     router.push(path);
   }
+};
+
+export const backWithBridge = (router: { back: () => void }) => {
+  if (APPBridge.judgeIsInApp()) {
+    APPBridge.navAppBack();
+    return;
+  }
+  router.back();
 };
