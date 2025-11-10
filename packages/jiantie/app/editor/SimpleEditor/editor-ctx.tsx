@@ -1,10 +1,9 @@
-import { EditorContext } from '@mk/widgets-bridge-sdk/types';
+import { showSelector } from '@/components/showSelector';
 import appBridge from '@mk/app-bridge';
-import React, { useEffect, useState } from 'react';
-import { getPageId, getWorksDetailStatic, WebBridge } from '@mk/services';
+import { getPageId, WebBridge } from '@mk/services';
+import { EditorContext } from '@mk/widgets-bridge-sdk/types';
 import { toJS } from 'mobx';
 import { getStore } from '../useStore';
-import { showSelector } from '@/components/showSelector';
 
 export interface UseEditorContextRes {
   /** 是否已准备好 */
@@ -32,31 +31,7 @@ export const editorContext = new EditorContext({
       // EventEmitter.emit("showSelectorEvent", selectorParams);
       showSelector(selectorParams as any);
     },
-    scaleToggle: (status: boolean) => {
-      getStore().setScaleStatus(status);
-      return true;
-    },
     getWorksID: () => getPageId(),
-    deleteElem: () => {
-      // getStore().escCurrentControl()
-      const { controlComp, activeLayerId, worksData } = getStore();
-      const { positionLink } = worksData;
-      if (controlComp !== activeLayerId) {
-        getStore().setActivItemByID(controlComp);
-        getStore().setAreaComps([]);
-      } else {
-        const controlDict = positionLink[controlComp];
-        if (!controlDict) return;
-        if (controlDict.parentId) {
-          getStore().setActivItemByID(controlDict.parentId);
-          getStore().setControlComp(controlDict.parentId);
-        } else {
-          // store.setActivItemByID("")
-          // store.setControlComp("")
-        }
-      }
-      getStore().deleteActiveCompEntity();
-    },
     saveImgToSystem: url => {
       appBridge.appCall({
         type: 'MKSaveImage',

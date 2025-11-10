@@ -8,7 +8,6 @@ import { setStore } from '@/app/editor/useStore';
 import { createWorksStore, initWidgetEnv } from '@/services/worksStoreHelper';
 import CommonLogger from '@mk/loggerv7/logger';
 import { getWorksDetailStatic } from '@mk/services';
-import { isPc } from '@mk/utils';
 import { Loading } from '@workspace/ui/components/loading';
 import { observer, Provider } from 'mobx-react';
 import { useSearchParams } from 'next/navigation';
@@ -31,7 +30,6 @@ const EditorApp = () => {
       const _worksStore = createWorksStore({
         worksId: () => worksId as string,
         autoSaveFreq: 2,
-        appMode: isPc() ? 'editor-web' : 'editor-wap',
       });
       await _worksStore.prepareData();
       setStore(_worksStore);

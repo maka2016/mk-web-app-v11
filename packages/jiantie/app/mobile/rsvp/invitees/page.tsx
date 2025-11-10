@@ -2,8 +2,10 @@
 import { getGuestCountText } from '@/components/RSVP/comp/SubmissionDataView';
 import { parseRSVPFormFields, RSVPField } from '@/components/RSVP/type';
 import { getUid } from '@/services';
+import { getUrlWithParam } from '@/utils';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
+import { getAppId } from '@mk/services';
 import { Button } from '@workspace/ui/components/button';
 import { ChevronRight, Globe, Target } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -12,16 +14,48 @@ import toast from 'react-hot-toast';
 import { useRSVPLayout } from '../RSVPLayoutContext';
 
 export default function RSVPInviteesPage() {
-  const { setTitle } = useRSVPLayout();
-
-  // 设置页面标题
-  useEffect(() => {
-    setTitle('分享与邀请');
-  }, [setTitle]);
+  const { setTitle, setRightText, setRightContent, setOnRightClick } =
+    useRSVPLayout();
   const router = useRouter();
   const searchParams = useSearchParams();
   const formConfigId = searchParams.get('form_config_id') || '';
   const worksId = searchParams.get('works_id') || '';
+
+  // 设置页面标题
+  useEffect(() => {
+    setTitle('分享与邀请');
+    setRightContent(null);
+    setRightText('回首页');
+
+    const openManagePage = () => {
+      if (APPBridge.judgeIsInApp()) {
+        router.push(
+          getUrlWithParam(
+            `/maka/mobile/home?default_tab=1&appid=${getAppId()}`,
+            'clickid'
+          )
+        );
+      } else {
+        router.replace('/mobile/home');
+      }
+    };
+
+    setOnRightClick(() => openManagePage);
+
+    return () => {
+      setRightText('');
+      setRightContent(null);
+      setOnRightClick(undefined);
+    };
+  }, [
+    formConfigId,
+    router,
+    setOnRightClick,
+    setRightContent,
+    setRightText,
+    setTitle,
+    worksId,
+  ]);
 
   const [inviteeResponses, setInviteeResponses] = useState<any[]>([]);
   const [responseFilter, setResponseFilter] = useState<
@@ -62,8 +96,8 @@ export default function RSVPInviteesPage() {
     const createUrl = `/mobile/rsvp/invitees/create?works_id=${worksId}&form_config_id=${formConfigId}`;
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `maka://webview?url=${encodeURIComponent(createUrl)}`,
-        type: 'NATIVE',
+        url: `${location.origin}${createUrl}`,
+        type: 'URL',
       });
     } else {
       router.push(createUrl);
@@ -75,8 +109,8 @@ export default function RSVPInviteesPage() {
     const shareUrl = `/mobile/rsvp/share?works_id=${worksId}&mode=public&form_config_id=${formConfigId}`;
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `maka://webview?url=${encodeURIComponent(shareUrl)}`,
-        type: 'NATIVE',
+        url: `${location.origin}${shareUrl}`,
+        type: 'URL',
       });
     } else {
       router.push(shareUrl);
@@ -88,8 +122,8 @@ export default function RSVPInviteesPage() {
     const detailUrl = `/mobile/rsvp/invitees/${invitee.id}?works_id=${worksId}&form_config_id=${formConfigId}`;
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `maka://webview?url=${encodeURIComponent(detailUrl)}`,
-        type: 'NATIVE',
+        url: `${location.origin}${detailUrl}`,
+        type: 'URL',
       });
     } else {
       router.push(detailUrl);

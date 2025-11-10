@@ -1,10 +1,9 @@
 import EventNotFound from '@/components/EventNotFound';
-import { treeNodeCounter2 } from '@/utils/works';
-import { getInitialPropsCommonAppRouter } from '@/components/viewer/utils/getInitialPropsCommon2';
+import WebsiteApp from '@/components/viewer/components/website';
+import { getViewerData } from '@/components/viewer/utils/getViewerData';
 import { prisma } from '@workspace/database';
 import cls from 'classnames';
 import Header from './components/header';
-import Main from './components/main';
 
 export const generateMetadata = async ({
   searchParams,
@@ -36,66 +35,53 @@ export const generateMetadata = async ({
   };
 };
 
-async function getWorksData(paramsRes: {
-  worksId: string;
-  uid: string;
-  userAgent: string;
-  pathname: string;
-  host: string;
-}) {
-  if (!paramsRes.worksId) {
-    return null;
-  }
-
-  const initData = await getInitialPropsCommonAppRouter({
-    headers: {
-      'user-agent': paramsRes.userAgent,
-      host: paramsRes.host,
-    },
-    pathname: paramsRes.pathname,
-    query: paramsRes,
-    isTemplate: true,
-  });
-
-  return initData;
-}
-
 export default async function Page({ searchParams }: any) {
   const searchParamsRes = await searchParams;
   const id = searchParamsRes.id;
   const isScreenshot = !!searchParamsRes.screenshot;
-  // const templateDetail = (await getTemplateDetail2(id)) as any;
-  const queryRes = await searchParams;
-  const initProps = await getWorksData({
-    // uid: templateDetail.designerUid,
+
+  // 获取模板数据
+  const viewerData = await getViewerData({
     worksId: id,
-    ...queryRes,
+    version: searchParamsRes.version,
+    isTemplate: true, // 明确指定这是模板
   });
 
-  if (!initProps || !initProps?.worksData.canvasData) {
+  if (!viewerData?.worksData?.canvasData) {
     return <EventNotFound />;
   }
 
-  const widgetRely = treeNodeCounter2(initProps?.worksData);
+  // 构造兼容的 initProps 格式
+  const initProps = {
+    ...viewerData,
+    userAgent: '',
+    pathname: '',
+    query: {
+      worksId: id,
+      uid: viewerData.worksDetail.uid.toString(),
+      version: searchParamsRes.version || '',
+      host: '',
+      screenshot: '',
+      type: '',
+      ...searchParamsRes,
+    } as any,
+    // 平铺 websiteControl 字段
+    viewMode: 'viewer' as const,
+    isExpire: false,
+    trialExpired: false,
+    floatAD: false,
+    showWatermark: false,
+    brandLogoUrl: undefined,
+    brandText: undefined,
+    // 平铺 permissionData 字段
+    removeProductIdentifiers: false,
+    customLogo: false,
+  };
 
   return (
     <div className={cls(['h-full flex flex-col overflow-hidden'])}>
-      {!isScreenshot && (
-        <Header
-          title={initProps.worksDetail?.title || '模板详情'}
-          pre_works_id={searchParamsRes.pre_works_id}
-          worksDetail={initProps.worksDetail}
-          id={id}
-        />
-      )}
-      <Main
-        widgetRely={widgetRely}
-        initProps={initProps}
-        // useTools={false}
-        useTools={!isScreenshot}
-        useAutoScrollByDefault={!isScreenshot}
-        templateId={id}
-      />
+      {!isScreenshot && <Header worksDetail={viewerData.worksDetail} id={id} />}
+      <WebsiteApp key={id} {...initProps} />;
     </div>
   );
 }

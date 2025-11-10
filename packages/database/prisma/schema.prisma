@@ -78,8 +78,9 @@ model TemplateEntity {
   spec_id           String?  @map("spec_id") @db.VarChar
   /// 信封功能：是否配置了信封
   envelope_enabled  Boolean? @default(false) @map("envelope_enabled")
-  /// 信封功能：信封的图片资源列表（JSON格式，支持多张图片）
-  envelope_images   Json?    @map("envelope_images")
+  /// 信封功能配置（JSON格式，包含6张信封图片、视频背景等）
+  /// 结构：{ backgroundImage, envelopeLeftOpeningImage, envelopeRightOpeningImage, envelopeInnerImage, envelopeSealImage, videoBgConfig?, duration?, delay?, easing? }
+  envelope_config   Json?    @map("envelope_config")
 
   @@index([designer_works_id], map: "IDX_66088e78c3bfd2706638f66598")
   @@index([designer_uid], map: "IDX_3e730e89a9ec98217d789cd750")
@@ -143,8 +144,9 @@ model WorksEntity {
   is_rsvp                Boolean  @default(false) @map("is_rsvp")
   /// 信封功能：是否配置了信封
   envelope_enabled       Boolean? @default(false) @map("envelope_enabled")
-  /// 信封功能：信封的图片资源列表（JSON格式，支持多张图片）
-  envelope_images        Json?    @map("envelope_images")
+  /// 信封功能配置（JSON格式，包含6张信封图片、视频背景等）
+  /// 结构：{ backgroundImage, envelopeLeftOpeningImage, envelopeRightOpeningImage, envelopeInnerImage, envelopeSealImage, videoBgConfig?, duration?, delay?, easing? }
+  envelope_config        Json?    @map("envelope_config")
 
   @@index([uid], map: "IDX_121635b71d5f6986874d4c5de4")
   @@index([alias], map: "IDX_d6ed9b7a04fa675847385b649e")

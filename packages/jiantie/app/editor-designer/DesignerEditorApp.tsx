@@ -1,15 +1,14 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
-import { getUid, getToken } from '@/services';
-import { WorksStore } from '@mk/works-store/store';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { observer, Provider } from 'mobx-react';
-import { Loading } from '@workspace/ui/components/loading';
-import { isAndroid, isPc } from '@mk/utils';
+import { getToken, getUid } from '@/services';
 import { createWorksStore, initWidgetEnv } from '@/services/worksStoreHelper';
-import { setStore, useWorksStore } from '../editor/useStore';
-import CanvasAutoLayout from '../editor/SimpleEditor/CanvasAutoLayout';
+import { WorksStore } from '@mk/works-store/store';
+import { Loading } from '@workspace/ui/components/loading';
+import { observer, Provider } from 'mobx-react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import CanvasAutoLayout from '../editor/SimpleEditor/CanvasAutoLayout';
+import { setStore } from '../editor/useStore';
 
 const EditorApp = () => {
   const searchParams = useSearchParams();
@@ -28,7 +27,6 @@ const EditorApp = () => {
       const worksStore = createWorksStore({
         worksId: () => worksId as string,
         autoSaveFreq: isTemplate ? -1 : 2,
-        appMode: isPc() ? 'editor-web' : 'editor-wap',
         isTemplate,
       });
       try {

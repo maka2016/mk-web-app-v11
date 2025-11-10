@@ -1,15 +1,18 @@
 'use client';
 
-import { setWorksDetail } from '@mk/services';
+import { AppContext } from '@/components/viewer/types';
+import { WorksDetailEntity, setWorksDetail } from '@mk/services';
 import { IWorksData } from '@mk/works-store/types';
 import { useEffect, useState } from 'react';
-import { IGetInitialPropsCommonAppRouter } from './getInitialPropsCommon2';
 import { registerEnv } from './runtime-env';
 import { createViewerSDKCTXer } from './viewerSDK';
-import { setWidgetMetaColl } from './widget-metadata';
 
-export const useWorksData = (params: IGetInitialPropsCommonAppRouter) => {
-  const { worksData, worksDetail, query, widgetMetadatas } = params;
+export const useWorksData = (params: {
+  worksData: IWorksData;
+  worksDetail: WorksDetailEntity;
+  query: AppContext['query'];
+}) => {
+  const { worksData, worksDetail, query } = params;
   const [worksDataRef, setWorksDataRef] = useState<IWorksData>(worksData);
 
   useEffect(() => {
@@ -22,11 +25,10 @@ export const useWorksData = (params: IGetInitialPropsCommonAppRouter) => {
 
       let hasWorksWatermark = false;
 
-      setWidgetMetaColl(widgetMetadatas);
       setWorksDetail(worksDetail);
 
       createViewerSDKCTXer({
-        uid: worksDetail.uid,
+        uid: worksDetail.uid?.toString() ?? '',
         worksId: params.query.worksId,
         worksData: worksData,
         worksTitle: worksDetail.title,
@@ -36,14 +38,7 @@ export const useWorksData = (params: IGetInitialPropsCommonAppRouter) => {
     };
 
     init();
-  }, [
-    worksData,
-    worksDetail,
-    query,
-    widgetMetadatas,
-    params.query.uid,
-    params.query.worksId,
-  ]);
+  }, [worksData, worksDetail, query, params.query.uid, params.query.worksId]);
 
   return worksDataRef;
 };

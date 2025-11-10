@@ -4,17 +4,10 @@ import {
   queryToObj,
   random,
   toArray,
-  valueInterval,
 } from '@mk/utils';
-import { WidgetResItem } from '@mk/widgets-bridge-sdk';
 import axios from 'axios';
 import { makeAutoObservable, reaction, toJS } from 'mobx';
-import {
-  ChangeContainerParams,
-  EditorSDK,
-  GroupType,
-  IPositionLink,
-} from '../types';
+import { ChangeContainerParams, EditorSDK, IPositionLink } from '../types';
 import {
   ActiveItem,
   AddComponentParams,
@@ -26,14 +19,12 @@ import {
   IMusic,
   IWorksData,
   LayerElemItem,
-  OperatorHandle,
   PasteDict,
   PositionLinkMap,
   SetLinkBatchParams,
   TemplateShowcaseInfo,
   TemplateShowcasePreviewImage,
   TemplateShowcaseRichText,
-  WorksBackground,
   WorksPage,
 } from '../types/interface';
 import {
@@ -41,15 +32,11 @@ import {
   getDefaultLink,
   getDefaultWorksData,
   getMaxZ,
-  loadWidgetResource,
-  setCdnPath,
-  treeNodeCounter,
 } from '../utils';
 import { deepLayers } from '../utils/deepLayers';
 import { IWorksStoreConfig } from './config';
 import { changeCopyData, checkCopyItem, insertPages } from './tools';
 import { undoManager } from './undoManager';
-import { setAllWidgetMeta } from './WidgetMeta';
 import { setWorksDetail, WorksDetailEntity } from './WorkSpec';
 
 export * from './undoManager';
@@ -113,60 +100,13 @@ export class WorksStore {
   /** 组件内部状态 */
   widgetState: Record<string, any> = {};
 
-  /** 页面缩放状态 */
-  scale = 1;
-
   /** 当前选中的页面 */
   pageIndex = 0;
-
-  /** 当前正在编辑的元素的 id */
-  activeLayerId: string = '';
-
-  /** 控制是否可以缩放 */
-  scaleStatus = true;
-
-  /** 被选中的组件的ids */
-  areaComps: string[] = [];
-
-  /** 被选中的组件的父级 id */
-  areaParentId: string = '';
-
-  /** 被选中的组件的父级的位置信息 */
-  areaParentLinkDict: IPositionLink = {
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-    groupType: GroupType.临时,
-    lock: false,
-    animation: [],
-  };
-
-  /** 高亮的组件 */
-  highlightComps: string[] = [];
-
-  /** 控制的组件 */
-  controlComp = '';
-
   /** 应用是否已准备好渲染所需要的数据 */
   isAppReady = false;
-
-  /** 组件 metadata 的集合 */
-  widgetMetadataColl: Record<string, WidgetResItem> | null = null;
-
-  /** 组件加载状态 */
-  widgetLoadState: Record<string, boolean> = {
-    GridV3: true,
-  };
-
-  /** 组件依赖 */
-  widgetRely: Record<string, boolean> = {};
-  /** 元素操作区的状态 */
-  operationState: Record<string, OperatorHandle> = {};
   isSaved = false;
   saveError = false;
   focusUpdateVersion = 1;
-  allWidgetData: Record<string, WidgetResItem> = {};
   worksDetail = {} as WorksDetailEntity;
   getUid = () => {
     const uid = this.worksDetail?.uid || this.config.userId?.();
@@ -307,24 +247,6 @@ export class WorksStore {
         }
         throw new NetworkError(`${_err}`);
       }
-    },
-
-    getComponents: async () => {
-      const widgetMetadatasResData = (
-        await this.api.reqClient.get<WidgetResItem[]>(
-          `${this.config.widgetServer()}`
-        )
-      ).data;
-      if (!Array.isArray(widgetMetadatasResData)) {
-        console.log('widgetMetadatasResData', widgetMetadatasResData);
-        throw new Error(`请传入接口返回的数组数据`);
-      }
-      widgetMetadatasResData.forEach(item => {
-        const { ref } = item;
-        this.allWidgetData[ref] = item;
-      });
-      this.setWidgetMetaColl(this.allWidgetData);
-      return widgetMetadatasResData;
     },
 
     getWorksData: async (): Promise<{
@@ -637,7 +559,6 @@ export class WorksStore {
     this.api.reqClient.interceptors.request.use(config => {
       return this.config.requestInterceptors(config);
     });
-    setCdnPath(this.config.widgetResourceCdn());
     makeAutoObservable(this, {
       api: false,
     });
@@ -648,14 +569,9 @@ export class WorksStore {
    * @returns
    */
   prepareWorksData = async () => {
-    const [worksRes, widgetData] = await Promise.all([
-      this.api.getWorksData(),
-      this.api.getComponents(),
-    ]);
-    setAllWidgetMeta(this.allWidgetData);
+    const [worksRes] = await Promise.all([this.api.getWorksData()]);
     return {
       worksRes,
-      widgetData,
     };
   };
 
@@ -705,15 +621,6 @@ export class WorksStore {
     );
   };
 
-  getWidgetMeta = (elemRef?: string) => {
-    if (!elemRef || !this.allWidgetData[elemRef]) {
-      // throw new Error('请传入组件的 elemRef')
-      console.debug('请传入组件的 elemRef', elemRef);
-      return null;
-    }
-    return this.allWidgetData[elemRef].componentMeta;
-  };
-
   initData = (data: IWorksData, config?: Partial<WorksStoreConfig>) => {
     if (config) {
       Object.assign(this.config, config);
@@ -748,8 +655,6 @@ export class WorksStore {
       this.worksData.canvasData.visualHeight = visualHeight;
       this.worksData.canvasData.height = visualHeight;
     }
-    this.widgetRelyMonitor();
-    setAllWidgetMeta(this.allWidgetData);
 
     // 【关键修复】同步设置作品 ID 并恢复历史记录
     const worksId = this.config.worksId?.();
@@ -780,8 +685,6 @@ export class WorksStore {
     if (!redoStore) return;
     // 使用 setDataWithoutUndo，因为 redo 不应该创建新快照
     this.setDataWithoutUndo(redoStore.dataSnapshot);
-    this.cleanArea();
-    this.clearOperation();
 
     this.focusUpdateVersion += 1;
   };
@@ -791,8 +694,6 @@ export class WorksStore {
     if (!undoStore) return;
     // 使用 setDataWithoutUndo，因为 undo 不应该创建新快照
     this.setDataWithoutUndo(undoStore.dataSnapshot);
-    this.cleanArea();
-    this.clearOperation();
 
     this.focusUpdateVersion += 1;
   };
@@ -806,8 +707,6 @@ export class WorksStore {
     if (!targetStore) return;
     // 使用 setDataWithoutUndo，因为 jumpTo 不应该创建新快照
     this.setDataWithoutUndo(targetStore.dataSnapshot);
-    this.cleanArea();
-    this.clearOperation();
 
     this.focusUpdateVersion += 1;
   };
@@ -835,76 +734,6 @@ export class WorksStore {
     this.worksData.canvasData.visualHeight = height;
     this.worksData.canvasData.height = height;
     // }
-  };
-
-  setWidgetLoadState = (nextState: Record<string, boolean>) => {
-    if (nextState) {
-      this.widgetLoadState = {
-        ...this.widgetLoadState,
-        ...nextState,
-      };
-    }
-  };
-  /**
-   * 设置组件元数据集合
-   */
-
-  setWidgetMetaColl = (widgetMetadataColl: Record<string, WidgetResItem>) => {
-    this.widgetMetadataColl = {
-      ...this.widgetMetadataColl,
-      ...widgetMetadataColl,
-    };
-    setAllWidgetMeta(this.widgetMetadataColl);
-  };
-
-  widgetRelyMonitor = () => {
-    const widgetRelyInfo = treeNodeCounter(this.worksData);
-    const widgetRely = widgetRelyInfo.allWidgetRely;
-    if (JSON.stringify(widgetRely) !== JSON.stringify(this.widgetRely)) {
-      this.widgetRely = {
-        ...this.widgetRely,
-        ...widgetRely,
-      };
-      this.loadWidgetResourceSelf();
-    }
-  };
-
-  private loadWidgetResourceSelf = () => {
-    /** 服务器环境不需要 */
-    if (typeof window === 'undefined') return;
-
-    let needToLoadWidget = false;
-    if (!this.widgetMetadataColl) return;
-    Object.keys(this.widgetRely).forEach(ref => {
-      if (!this.widgetLoadState[ref]) {
-        needToLoadWidget = true;
-      }
-    });
-    if (!needToLoadWidget) {
-      return;
-    }
-    // console.log('widgetRely :>> ', widgetRely, loadedWidgetCache)
-    if (!this.config.appMode) {
-      console.error('未设置 this.config.appMode 时，会默认为 editor-web 模式');
-    }
-
-    loadWidgetResource({
-      widgetMetadataColl: this.widgetMetadataColl,
-      widgetRely: this.widgetRely,
-      loadedWidgetCache: this.widgetLoadState,
-      mode: this.config.appMode || 'editor-web',
-    })
-      .then(nextLoadedWidgetCache => {
-        // EventEmitter.emit('componentZipLoad', {})
-        this.setWidgetLoadState(nextLoadedWidgetCache);
-      })
-      .catch(err => {
-        console.error(err);
-      });
-  };
-
-  setData = (val: IWorksData) => {
-    this.worksData = val;
   };
 
   getDefaultPageData = () => {
@@ -988,10 +817,6 @@ export class WorksStore {
 
   protected setDataWithoutUndo = (nextData: IWorksData) => {
     this.worksData = nextData;
-  };
-
-  checkItemIsMount = (compEntityId: string) => {
-    return !!this.worksData.positionLink[compEntityId]?.mount;
   };
 
   /**
@@ -1238,18 +1063,6 @@ export class WorksStore {
     });
   };
 
-  /**
-   * 修改页面设置
-   * @param pageIndex
-   * @param options
-   */
-  setPageOptions = (pageIndex: number, options: WorksPage['options']) => {
-    const page = this.getPage(pageIndex);
-    if (page) {
-      page.options = Object.assign({}, page.options, options);
-    }
-  };
-
   getPages = () => {
     const { pages } = this.worksData.canvasData.content;
     return pages;
@@ -1260,67 +1073,68 @@ export class WorksStore {
     didMountData: CompDidMountEmitData,
     pageIndex?: number
   ) => {
-    const { boxInfo, data } = didMountData;
-    // const link = this.data.positionLink[compEntityId]
-    let data_ = data;
-    if (data_?.__newCommit__) {
-      // 让组件有一次修改 attr 的机会
-      this.changeCompAttr(compEntityId, data_);
-    }
-    // console.log(compEntityId,this.data.positionLink[compEntityId])
+    return;
+    // const { boxInfo, data } = didMountData;
+    // // const link = this.data.positionLink[compEntityId]
+    // let data_ = data;
+    // if (data_?.__newCommit__) {
+    //   // 让组件有一次修改 attr 的机会
+    //   this.changeCompAttr(compEntityId, data_);
+    // }
+    // // console.log(compEntityId,this.data.positionLink[compEntityId])
 
-    if (
-      this.worksData.positionLink[compEntityId] == null ||
-      this.worksData.positionLink[compEntityId].mount
-    )
-      return;
+    // if (
+    //   this.worksData.positionLink[compEntityId] == null ||
+    //   this.worksData.positionLink[compEntityId].mount
+    // )
+    //   return;
 
-    const currLinkDictData = this.worksData.positionLink[compEntityId];
+    // const currLinkDictData = this.worksData.positionLink[compEntityId];
 
-    this.worksData.positionLink[compEntityId].width =
-      boxInfo.width || currLinkDictData.width;
-    this.worksData.positionLink[compEntityId].height =
-      boxInfo.height || currLinkDictData.height;
-    this.worksData.positionLink[compEntityId].x =
-      boxInfo.x || currLinkDictData.x;
-    this.worksData.positionLink[compEntityId].y =
-      boxInfo.y || currLinkDictData.y;
+    // this.worksData.positionLink[compEntityId].width =
+    //   boxInfo.width || currLinkDictData.width;
+    // this.worksData.positionLink[compEntityId].height =
+    //   boxInfo.height || currLinkDictData.height;
+    // this.worksData.positionLink[compEntityId].x =
+    //   boxInfo.x || currLinkDictData.x;
+    // this.worksData.positionLink[compEntityId].y =
+    //   boxInfo.y || currLinkDictData.y;
 
-    if (this.worksData.positionLink[compEntityId].x === addCompDefalutX) {
-      /** 设置为已设置，下次不在执行以下逻辑 */
+    // if (this.worksData.positionLink[compEntityId].x === addCompDefalutX) {
+    //   /** 设置为已设置，下次不在执行以下逻辑 */
 
-      if (this.config.elementDidMount) {
-        const didmoutNewData = this.config.elementDidMount(
-          compEntityId,
-          boxInfo,
-          data,
-          this
-        );
-        if (didmoutNewData && data_?.__newCommit__) {
-          // 当挟持生命周期存在值时，修改组件入参
-          data_.width = didmoutNewData.width || data_.width;
-          data_.height = didmoutNewData.height || data_.height;
-          this.changeCompAttr(compEntityId, data_);
-        }
-      } else {
-        if (this.worksData.positionLink[compEntityId].x === addCompDefalutX) {
-          // 由于 addComponent 时，x y 坐标为元素左上角，以下逻辑为将元素修正到中心点,NaN为特殊赋值
-          const { height, width } = this.getPage(
-            pageIndex !== undefined ? pageIndex : this.pageIndex
-          );
-          this.worksData.positionLink[compEntityId].x =
-            (width - boxInfo.width) / 2;
-          this.worksData.positionLink[compEntityId].y =
-            (height - boxInfo.height) / 2;
-        }
-      }
-    }
+    //   if (this.config.elementDidMount) {
+    //     const didmoutNewData = this.config.elementDidMount(
+    //       compEntityId,
+    //       boxInfo,
+    //       data,
+    //       this
+    //     );
+    //     if (didmoutNewData && data_?.__newCommit__) {
+    //       // 当挟持生命周期存在值时，修改组件入参
+    //       data_.width = didmoutNewData.width || data_.width;
+    //       data_.height = didmoutNewData.height || data_.height;
+    //       this.changeCompAttr(compEntityId, data_);
+    //     }
+    //   } else {
+    //     if (this.worksData.positionLink[compEntityId].x === addCompDefalutX) {
+    //       // 由于 addComponent 时，x y 坐标为元素左上角，以下逻辑为将元素修正到中心点,NaN为特殊赋值
+    //       const { height, width } = this.getPage(
+    //         pageIndex !== undefined ? pageIndex : this.pageIndex
+    //       );
+    //       this.worksData.positionLink[compEntityId].x =
+    //         (width - boxInfo.width) / 2;
+    //       this.worksData.positionLink[compEntityId].y =
+    //         (height - boxInfo.height) / 2;
+    //     }
+    //   }
+    // }
 
-    // 设置元素已经加载到画布中
-    this.worksData.positionLink[compEntityId].mount = true;
-    if (data_) {
-      this.changeCompAttr(compEntityId, data_);
-    }
+    // // 设置元素已经加载到画布中
+    // this.worksData.positionLink[compEntityId].mount = true;
+    // if (data_) {
+    //   this.changeCompAttr(compEntityId, data_);
+    // }
   };
 
   duplicateComp = (targetId: string | string[], needSelectItem = true) => {
@@ -1396,18 +1210,6 @@ export class WorksStore {
    * 是否屏蔽公共属性操作入口
    */
   isCommonOperatorDisabled = (compId: string) => {
-    const layer = this.getLayer(compId, true);
-    const layerLink = this.getLink(compId);
-    if (layer) {
-      const name = layer.elementRef;
-      const widgetMeta = this.getWidgetMeta(name);
-      if (widgetMeta) {
-        const disabledCommonOperator =
-          widgetMeta.editorApply.disabledCommonOperator;
-        return !!layerLink?.disabledCommonOperator || !!disabledCommonOperator;
-      }
-      return false;
-    }
     return false;
   };
 
@@ -1415,17 +1217,6 @@ export class WorksStore {
    * 是否禁用复制
    */
   isDisableCopy = (comId?: string) => {
-    if (comId) {
-      const layer = this.getLayer(comId);
-      if (layer) {
-        const name = layer.elementRef;
-        const widgetMeta = this.getWidgetMeta(name);
-        if (widgetMeta?.editorApply.disabledCopy) {
-          return true;
-        }
-      }
-      return this.isCommonOperatorDisabled(comId);
-    }
     return false;
   };
 
@@ -1440,15 +1231,7 @@ export class WorksStore {
   };
 
   getLink = (elemId: string) => {
-    // const positionLink = Object.assign({}, this.data.positionLink, {
-    //   [this.areaParentId]: this.areaParentLinkDict,
-    // })
-    return (
-      this.worksData.positionLink[elemId] ||
-      {
-        [this.areaParentId]: this.areaParentLinkDict,
-      }[elemId]
-    );
+    return this.worksData.positionLink[elemId];
   };
 
   setPageIndex = (index: number) => {
@@ -1456,58 +1239,6 @@ export class WorksStore {
       return;
     }
     this.pageIndex = index;
-  };
-  /**
-   * 清空操作区
-   */
-
-  clearOperation = () => {
-    const { controlComp } = this;
-    this.areaComps = [];
-    this.highlightComps = [];
-    this.controlComp = '';
-    this.activeLayerId = '';
-    return controlComp;
-  };
-
-  setScaleStatus = (status: boolean) => {
-    this.scaleStatus = status;
-  };
-
-  cleanArea = () => {
-    this.areaParentId = '';
-    this.areaParentLinkDict = {
-      x: 0,
-      y: 0,
-      width: 0,
-      height: 0,
-      groupType: GroupType.临时,
-      rotate: 0,
-    };
-  };
-
-  /**
-   * 获取操作框的状态
-   */
-  getOperatorHandle = (compEntityId: string) => {
-    return this.operationState[compEntityId];
-  };
-
-  /**
-   * 更改操作框的状态
-   */
-  changeOperatorHandle = (compEntityId: string, nextVal: OperatorHandle) => {
-    this.operationState[compEntityId] = nextVal;
-  };
-
-  /**
-   * 设置控制项，并且激活此元素
-   */
-  setControlComp = (id: string, path?: string[]) => {
-    this.controlComp = id;
-    this.areaComps = this.areaComps.filter(comId => comId !== id);
-    this.highlightComps = this.highlightComps.filter(comId => comId !== id);
-    this.setActivItemByID(id, path);
   };
 
   setActivItemByID = (compEntityId: string, path?: string[]) => {
@@ -1527,26 +1258,7 @@ export class WorksStore {
       nextActiveItem.name = targetEntity.elementRef;
       nextActiveItem.idx = targetLink.zIndex ? targetLink?.zIndex : 0;
     }
-    this.setActivLayer(compEntityId);
     // this.setActivItem(nextActiveItem)
-  };
-
-  protected setActivLayer = (layerId: string) => {
-    this.activeLayerId = layerId;
-  };
-
-  deleteActiveCompEntity = (undoable = true) => {
-    const activeEntityID = this.activeLayerId;
-    // const { positionLink } = this.data
-    // const parentId = getMostParentByCompId(activeEntityID, positionLink)
-    // const brotherIds = Object.keys(positionLink).filter((id) => positionLink[id].parentId === parentId && id !== activeEntityID)
-    if (activeEntityID) {
-      if (undoable) {
-        this.deleteCompEntity(activeEntityID);
-      } else {
-        this.deleteCompEntityFun(activeEntityID);
-      }
-    }
   };
 
   private deleteCompEntityFun = (
@@ -1580,9 +1292,6 @@ export class WorksStore {
       return result;
     };
     const nextLayers = pickRemainingLayers(mergeDeep(layers));
-    this.areaComps = this.areaComps.filter(
-      areaId => !ids.includes(areaId) && !this.isDisableDelete(areaId)
-    );
     this.setPageLayers(pageIndex, nextLayers);
     this.delLink(deleteKeys);
   };
@@ -1592,23 +1301,7 @@ export class WorksStore {
     pageIndex = this.pageIndex
   ) => {
     this.deleteCompEntityFun(compEntityId, pageIndex);
-    this.cleanArea();
-    this.clearOperation();
     this.setActivItemByID('');
-  };
-
-  setAreaComps = (ids: string | string[]) => {
-    if (ids instanceof Array) {
-      this.areaComps = ids.filter(id => {
-        const { visibility = true } = this.worksData.positionLink[id];
-        return visibility;
-      });
-    } else if (this.controlComp !== ids) {
-      const dict = this.worksData.positionLink[ids];
-      if (!this.areaComps.includes(ids) && dict.visibility) {
-        this.areaComps.push(ids);
-      }
-    }
   };
 
   private addComponentAction = (
@@ -1635,26 +1328,12 @@ export class WorksStore {
     items.push(pushItem);
     this.setPageLayers(pageIndex, items);
     this.setLink(elemId, link);
-    // 更新作品meta
-    this.areaComps = [];
-
-    this.widgetRelyMonitor();
 
     return elemId;
   };
 
-  addComponent = (
-    eleItem: AddComponentParams,
-    link?: IPositionLink,
-    activeItem = true
-  ) => {
+  addComponent = (eleItem: AddComponentParams, link?: IPositionLink) => {
     const elemId = this.addComponentAction(eleItem, link);
-    if (activeItem) {
-      setTimeout(() => {
-        this.setActivItemByID(elemId);
-        this.setControlComp(elemId);
-      }, 10);
-    }
     return elemId;
   };
 
@@ -1702,24 +1381,10 @@ export class WorksStore {
     this.resetCanvasHeight();
   };
 
-  private addMkTextByCopy = (text: string) => {
-    this.addComponent({
-      attrs: {
-        fontUrl: 'https://font.maka.im/20190724/Alibaba-PuHuiTi-Regular.ttf',
-        fontFamily: 'Alibaba-PuHuiTi-Regular',
-        text: `<p>${text}</p>`,
-        fontSize: 28,
-      },
-      elementRef: 'MkText',
-    });
-  };
-
   private copyEntityAction = (
     pasteEntityContentSrc?: CopyData | string
   ): CopyItem | null => {
-    const pasteEntityContent = checkCopyItem(pasteEntityContentSrc, text => {
-      this.addMkTextByCopy(text);
-    });
+    const pasteEntityContent = checkCopyItem(pasteEntityContentSrc, text => {});
     const entity = pasteEntityContent?.entity;
     if (!entity) return null;
     const { elemId } = entity;
@@ -1732,7 +1397,8 @@ export class WorksStore {
    * 获取复制的数据
    */
   getCopyEntityData = (compId?: string[] | string): CopyEntityData | null => {
-    const targetKey = compId || this.activeLayerId;
+    const targetKey = compId;
+    if (!targetKey) return null;
     const comIds = Array.isArray(targetKey) ? targetKey : [targetKey];
     const copyLink: Record<string, IPositionLink> = {};
     comIds.forEach(id => {
@@ -1823,130 +1489,13 @@ export class WorksStore {
       Object.assign(this.worksData.positionLink, positionLink);
     }
     this.setPageIndex(targetIndex);
-    this.clearOperation();
     this.setActivItemByID('');
-    this.widgetRelyMonitor();
   };
 
   /**
    * 复制页面的基础方法
    * 只在 UI 层拦截 enableCopy，次方法不检查
    */
-
-  copyPage = (key: number, needSelectBG = true) => {
-    const index = +key;
-    // const pages = this.getPages()
-    const page = this.getPage(key);
-    if (!page) {
-      return;
-    } else {
-      // if (page.options?.enableCopy === false) {
-      //   return
-      // }
-      const page_ = toJS(page);
-      page_.id = random();
-      const copyPageRes = {
-        oldPageId: page.id,
-        newPageId: page_.id,
-        layerIdMap: {},
-      } as any;
-      const { layers } = page_;
-      const idContrastMap: Record<
-        string,
-        { newId: string; oldParentId?: string; newParentId?: string }
-      > = {};
-      deepLayers(layers, item => {
-        const newId = random();
-        const { elemId } = item;
-        if (elemId != null) {
-          const oldParentId = item.parentId;
-          const newParentId = idContrastMap[item.parentId || '']?.newId;
-          idContrastMap[elemId] = { newId, oldParentId, newParentId };
-          item.elemId = newId;
-          item.parentId = newParentId;
-
-          copyPageRes.layerIdMap[elemId] = {
-            elemId: newId,
-            elemRef: item.elementRef,
-          };
-        }
-      });
-      Object.entries(idContrastMap).forEach(item => {
-        const [oldId, newObj] = item;
-        const { newId, newParentId } = newObj;
-        this.worksData.positionLink[newId] = toJS(
-          this.worksData.positionLink[oldId]
-        );
-        this.worksData.positionLink[newId].parentId = newParentId;
-      });
-      this.addPage(index, page_, undefined, needSelectBG);
-
-      return copyPageRes;
-    }
-  };
-
-  /**
-   * 删除一个页面
-   */
-
-  delPage = (pageIdx: number) => {
-    const pages = this.getPages();
-    if (pages.length <= 1) {
-      return;
-    }
-    const { layers, options } = pages[pageIdx];
-    if (options?.enableDelete === false) {
-      return;
-    }
-    const ids: string[] = [];
-    deepLayers(layers, item => {
-      const { elemId } = item;
-      ids.push(elemId);
-    });
-    delete this.worksData.canvasData.content.pages[pageIdx];
-    this.worksData.canvasData.content.pages =
-      this.worksData.canvasData.content.pages.filter(Boolean);
-    const maxPage = Math.max(pages.length - 1, 0);
-    const targetPageIndex = valueInterval(0, maxPage, pageIdx - 1);
-    this.setPageIndex(targetPageIndex);
-    ids.forEach(id => {
-      delete this.worksData.positionLink[id];
-    });
-  };
-
-  getPageBackground = (index?: number): WorksBackground => {
-    const { pageIndex } = this;
-    const currentIndex = index == null ? pageIndex : index;
-    const worksPage = this.getPage(currentIndex);
-    let resBg = worksPage.background || {};
-    if (Array.isArray(resBg)) {
-      resBg = {};
-    }
-    return resBg;
-  };
-
-  setPageBackground = (
-    background: WorksBackground,
-    isImgToBackground = false,
-    pageIndex?: number,
-    needSelectBg = true
-  ) => {
-    this.takeSnapshotOfData('setPageBackground');
-    if (isImgToBackground) {
-      this.deleteActiveCompEntity(false);
-    }
-    const pageIndex_ = pageIndex == null ? this.pageIndex : pageIndex;
-    const currBgData = this.getPageBackground(pageIndex_);
-    const newData = mergeDeep(currBgData, background);
-    if (currBgData) {
-      // 如果是没有图片或者颜色，默认把当前的不透明度跳到1
-      if (!currBgData.bgpic && !currBgData.bgcolor) {
-        newData.opacity = 1;
-      }
-    }
-    this.worksData.canvasData.content.pages[pageIndex_].background = newData;
-    this.setData(this.worksData);
-  };
 
   getWidgetState = (widgetId: string) => {
     return toJS(this.widgetState[widgetId] || {});
@@ -1984,104 +1533,21 @@ export class WorksStore {
           })
         );
       },
-      setPageBackground: (pageIdx, background) => {
-        this.setPageBackground(background, false, pageIdx);
-      },
       getWorksData: () => toJS(this.worksData),
-      selectLayer: this.setControlComp,
-      getActivePageIdx: () => this.pageIndex,
       didMount: this.onComponentDidMount,
       changeWidgetState: nextVal =>
         this.changeWidgetState(compEntityId, nextVal),
       changeCompAttrMulti: this.changeCompAttrMulti,
-      copyPage: this.copyPage,
-      getPageData: idx => toJS(this.getPage(idx)),
       getLink: elemId => toJS(this.getLink(elemId)),
       setLinkBatch: this.setLinkBatch,
       addPage: this.addPage,
-      delPage: this.delPage,
-      setPageOptions: this.setPageOptions,
       changeCompAttr: this.changeCompAttr,
       addComponent: this.addComponent,
       deleteCompEntity: this.deleteCompEntity,
       getLayer: this.getLayer,
-      changePageScale: (pIdx, scale) => {
-        const currPage = this.getPage(pIdx);
-        const dx = scale.width ? scale.width - currPage.width : 0;
-        const dy = scale.height ? scale.height - currPage.height : 0;
-        this.setPage(pIdx, scale);
-        const regionsFollowParent = (
-          pageIndex: number,
-          dx: number,
-          dy: number = 0,
-          withFixedLayers = false
-        ) => {
-          let layers: LayerElemItem[] = [];
-
-          layers = this.getPageLayers(pageIndex, withFixedLayers);
-          const { scale } = this;
-          const { positionLink } = this.worksData;
-
-          const nextLink: SetLinkBatchParams = [];
-          for (const item of layers) {
-            let currItemDx = dx;
-            let currItemDy = dy;
-            const { x, y, constraints = 'LT' } = positionLink[item.elemId];
-            if (constraints === 'LT') {
-              continue;
-            }
-            if (constraints === 'LB') {
-              currItemDx = 0;
-            }
-            if (constraints === 'RT') {
-              currItemDy = 0;
-            }
-            const targetX = (x * scale + currItemDx * scale) / scale;
-            const targetY = (y * scale + currItemDy * scale) / scale;
-            const info = { x: targetX, y: targetY };
-            nextLink.push({
-              elemId: item.elemId,
-              nextContainerInfo: info,
-            });
-          }
-          this.setLinkBatch(nextLink);
-        };
-        regionsFollowParent(pIdx, dx, dy);
-      },
       duplicateComp: this.duplicateComp as any,
       onFormValueChange: nextVal => {
         this.changeCompAttr(compEntityId, nextVal);
-      },
-      changeContainer: nextVal => {
-        this.changeContainerInfoForWidgetEitity(compEntityId, nextVal);
-      },
-      changePageAndContainer: (nextPageInfo, nextContainerInfo) => {
-        this.changeContainerInfoForWidgetEitity(
-          nextContainerInfo.id,
-          nextContainerInfo.scale
-        );
-        Object.assign(
-          this.worksData.canvasData.content.pages[nextPageInfo.pageIndex],
-          nextPageInfo.scale
-        );
-      },
-      getOperatorHandle: () => {
-        return this.getOperatorHandle(compEntityId);
-      },
-      changeOperatorHandle: nextVal => {
-        this.changeOperatorHandle(compEntityId, nextVal);
-      },
-      getStaticResource: info => Promise.resolve(info.url),
-      disableDeleteModule: (pageIndex: number, status) => {
-        this.setPageOptions(pageIndex, {
-          enableDelete: status,
-        });
-      },
-      hasWatermark: () => {
-        return this.config.hasWatermark ? this.config.hasWatermark() : true;
-      },
-      watermarkVersion: () => {
-        return this.config.watermarkVersion?.() || '2';
       },
     };
   };

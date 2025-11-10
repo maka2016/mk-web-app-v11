@@ -1,5 +1,4 @@
 import GridV3Comp from '@/components/GridV3/comp';
-import { getWidgetMeta } from '@mk/services';
 import { CommonFormProps, PlatformCompProps } from '@mk/widgets-bridge-sdk';
 import { LayerElemItem } from '@mk/works-store/types';
 import React from 'react';
@@ -40,14 +39,6 @@ export const CompLoader: React.FC<CompLoaderProps> = ({
   pageInfo,
 }) => {
   const store = useWorksStore();
-  const metadata = getWidgetMeta(elementRef);
-
-  if (!metadata) {
-    console.error('找不到 metadata', metadata, elementRef);
-    return null;
-  }
-
-  const { canvasInteraction } = metadata.editorApply;
 
   const editorSDK = store.getEditorSDK(id);
 
@@ -55,7 +46,6 @@ export const CompLoader: React.FC<CompLoaderProps> = ({
     throw new Error('请传入 editorSDK');
   }
 
-  const { maskImage } = containerInfo as any;
   if (elementRef === 'GridV3') {
     return (
       <GridV3Comp

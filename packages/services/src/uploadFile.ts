@@ -68,7 +68,7 @@ export interface UploadFileParams {
   folderId?: number;
   worksId?: string;
   originName?: string;
-  type?: 'picture' | 'music';
+  type?: 'picture' | 'music' | 'video';
   file: File;
   shareToCommunity?: boolean;
 }
@@ -174,7 +174,7 @@ export const uploadFile2 = async (
   const uid = getUid2();
   const token = getToken2();
 
-  await startupStsOssClient({
+  const ossClientData = await startupStsOssClient({
     appid,
     uid,
     token,
@@ -192,24 +192,16 @@ export const uploadFile2 = async (
   const fileName = `${timestamp}${extension}`;
 
   // 根据类型决定文件夹
-  const folder = type === 'music' ? 'musics' : 'timages';
+  const folder =
+    type === 'music' ? 'musics' : type === 'video' ? 'videos' : 'timages';
   const ossKey = `${folder}/${fileName}`;
 
   // 3. 直接上传文件到 OSS
   const uploadResult = await uploadFileToOSS(file, ossKey, onProgress);
 
-  // 4. 调用后端接口记录文件信息
-  const response = await request2.post<FileItem>(`${getBaseUrl()}/user-files`, {
-    folderId,
-    worksId,
-    ossKey: uploadResult.name, // 使用 OSS 返回的完整路径
-    originName: originName || file.name,
-    type,
-    mimeType: file.type,
-    size: String(file.size),
+  // 直接返回地址即可
+  return {
     url: uploadResult.url,
-    shareToCommunity,
-  });
-
-  return response.data;
+    name: ossKey,
+  };
 };

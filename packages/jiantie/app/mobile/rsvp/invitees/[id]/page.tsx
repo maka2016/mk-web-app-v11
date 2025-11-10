@@ -181,8 +181,8 @@ export default function InviteeDetailPage() {
 
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `maka://webview?url=${encodeURIComponent(shareUrl)}`,
-        type: 'NATIVE',
+        url: `${location.origin}${shareUrl}`,
+        type: 'URL',
       });
     } else {
       router.push(shareUrl);

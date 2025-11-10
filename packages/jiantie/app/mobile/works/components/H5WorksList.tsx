@@ -11,7 +11,7 @@ import { getUrlWithParam } from '@/utils';
 import { useCheckPublish } from '@/utils/checkPubulish';
 import { toVipPage } from '@/utils/jiantie';
 import { useShareNavigation } from '@/utils/share';
-import { trpc } from '@/utils/trpc';
+import { trpcWorks } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { API, cdnApi } from '@mk/services';
 import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
@@ -83,13 +83,13 @@ const H5WorksList = (props: Props) => {
 
       // 获取作品列表和总数（在 API 层面过滤规格）
       const [list, count] = await Promise.all([
-        trpc.works.findMany.query({
+        trpcWorks.findMany({
           deleted: false,
           spec_id: H5_SPEC_ID,
           take: limit,
           skip,
         }),
-        trpc.works.count.query({
+        trpcWorks.count({
           deleted: false,
           spec_id: H5_SPEC_ID,
         }),

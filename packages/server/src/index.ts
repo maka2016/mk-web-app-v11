@@ -1,6 +1,6 @@
 // OSS 相关服务
 export * from './oss/copy-works-assets';
-export * from './oss/oss-client';
+export * from './oss/oss-client-for-node-server';
 export * from './oss/works-storage';
 
 // 认证相关

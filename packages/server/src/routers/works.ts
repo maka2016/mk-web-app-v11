@@ -37,7 +37,7 @@ export const worksRouter = router({
         offline: z.boolean().optional(),
         is_rsvp: z.boolean().optional(),
         envelope_enabled: z.boolean().optional(),
-        envelope_images: z.any().optional(), // JSON: 信封图片列表
+        envelope_config: z.any().optional(), // JSON: 信封完整配置（包含6张图片、视频背景等）
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -89,14 +89,14 @@ export const worksRouter = router({
             finalInput.envelope_enabled = template.envelope_enabled;
           }
           if (
-            input.envelope_images === undefined &&
-            template.envelope_images != null
+            input.envelope_config === undefined &&
+            template.envelope_config != null
           ) {
-            finalInput.envelope_images = template.envelope_images;
+            finalInput.envelope_config = template.envelope_config;
           }
           console.log('[Step 3] 继承信封配置:', {
             envelope_enabled: finalInput.envelope_enabled,
-            has_envelope_images: !!finalInput.envelope_images,
+            has_envelope_config: !!finalInput.envelope_config,
           });
 
           console.log('[Step 4] 计算资源路径...');
@@ -410,7 +410,7 @@ export const worksRouter = router({
         custom_time: z.date().optional(),
         is_rsvp: z.boolean().optional(),
         envelope_enabled: z.boolean().optional(),
-        envelope_images: z.any().optional(), // JSON: 信封图片列表
+        envelope_config: z.any().optional(), // JSON: 信封完整配置（包含6张图片、视频背景等）
       })
     )
     .mutation(async ({ ctx, input }) => {

@@ -10,13 +10,13 @@ import { PlatformCompProps } from '@mk/widgets-bridge-sdk';
 import clas from 'classnames';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
+import { EnvelopeConfig } from '../../Envelope';
 import DesignerOperatorV2 from '../DesignerToolForEditor/DesignerOperatorV2';
 import SettingWidgetV3 from '../UserForm/Setting/SettingWidgetV3';
 import { GridProps, GridRow, GridState } from '../shared';
 import i18nModule from '../shared/i18n';
 import { blockStyleFilter, setSystemThemeColor } from '../shared/utils';
 import ContainerWithBgV2 from './ContainerWithBgV2';
-import WidgetLoader from './WidgetLoader';
 import AnimateCover, { AnimateCoverRef } from './components/AnimateCover';
 import RowRendererV2 from './components/RowRendererV2';
 import LongPageRowEditorV2 from './components/RowRendererV2/LongPageRowEditorV2';
@@ -63,6 +63,7 @@ export const GridCompV2: React.FC<
   const [isAnimationCoverEnd, setIsAnimationCoverEnd] = useState(
     !gridProps.coverAnimation || !!editorSDK
   );
+  const envelopeConfig = worksDetail?.envelope_config as EnvelopeConfig;
   const [isReadyToPlayAnimation, setIsReadyToPlayAnimation] =
     useState(isAnimationCoverEnd);
   const isScreenshot = !!queryToObj().screenshot;
@@ -363,6 +364,7 @@ export const GridCompV2: React.FC<
           id={id}
           parallaxScrollBgConfig={gridProps.parallaxScrollBgConfig}
           lottieBgConfig={gridProps.lottieBgConfig}
+          videoBgConfig={envelopeConfig?.videoBgConfig}
           style={(() => {
             const styleData = blockStyleFilter({
               // background: "unset",
@@ -379,6 +381,10 @@ export const GridCompV2: React.FC<
                 height: '100%',
               }),
             });
+            if (envelopeConfig?.videoBgConfig) {
+              delete (styleData as Record<string, unknown>).background;
+              delete (styleData as Record<string, unknown>).backgroundImage;
+            }
             return styleData;
           })()}
         >
@@ -397,9 +403,6 @@ export const GridCompV2: React.FC<
       )}
       {/* 用户的组件设置 */}
       {renderWidgetSetting()}
-      {isWebsite && !isExportVideo && !isScreenshot && viewerSDK && (
-        <WidgetLoader worksData={worksData} viewewSDK={viewerSDK} />
-      )}
 
       {/* 快捷键说明组件 - 外挂到designer_scroll_container */}
       {fullStack && (

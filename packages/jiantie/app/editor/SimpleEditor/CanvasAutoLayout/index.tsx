@@ -1,4 +1,3 @@
-import { toJS } from 'mobx';
 import { observer } from 'mobx-react';
 import React, { useRef } from 'react';
 import { useWorksStore } from '../../useStore';
@@ -42,7 +41,6 @@ const CanvasAutoLayout: React.FC<Props> = (props: Props) => {
   //     </div>
   //   );
   // };
-  toJS(worksStore.widgetLoadState);
 
   const renderChild = () => {
     const { scale, readonly, navigationIndex } = props;

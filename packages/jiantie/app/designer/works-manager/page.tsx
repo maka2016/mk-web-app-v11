@@ -5,13 +5,12 @@ import { showSelector } from '@/components/showSelector';
 import { getAppId, getUid } from '@/services';
 import { updateWorksDetail2 } from '@/services/works2';
 import { useStore } from '@/store';
-import { trpc } from '@/utils/trpc';
+import { trpc, trpcWorks, type SerializedWorksEntity } from '@/utils/trpc';
 import {
   cdnApi,
   getDesignerInfoForClient,
   type DesignerConfig,
 } from '@mk/services';
-import type { WorksEntity } from '@workspace/database/generated/client';
 import { Button } from '@workspace/ui/components/button';
 import { Checkbox } from '@workspace/ui/components/checkbox';
 import {
@@ -64,16 +63,6 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-// tRPC 传输类型：将 Date 类型转换为 string（JSON 序列化）
-type SerializedWorksEntity = Omit<
-  WorksEntity,
-  'create_time' | 'update_time' | 'custom_time'
-> & {
-  create_time: string;
-  update_time: string;
-  custom_time: string | null;
-};
-
 const WorksManager = () => {
   const { setLoginShow } = useStore();
   const [uid, setUid] = useState<string>('');
@@ -113,14 +102,14 @@ const WorksManager = () => {
     try {
       // 使用 tRPC API 查询作品列表
       const [works, count] = await Promise.all([
-        trpc.works.findMany.query({
+        trpcWorks.findMany({
           deleted: false,
           is_folder: false,
           keyword: search || undefined,
           skip: (pageNum - 1) * pageSize,
           take: pageSize,
         }),
-        trpc.works.count.query({
+        trpcWorks.count({
           deleted: false,
           is_folder: false,
           keyword: search || undefined,
@@ -234,7 +223,7 @@ const WorksManager = () => {
     try {
       await Promise.all(
         Array.from(selectedWorks).map(workId =>
-          trpc.works.delete.mutate({ id: workId })
+          trpcWorks.delete({ id: workId })
         )
       );
       toast.success(`成功删除 ${deleteCount} 个作品`);
@@ -257,7 +246,7 @@ const WorksManager = () => {
   // 复制作品
   const handleDuplicate = async (work: SerializedWorksEntity) => {
     try {
-      const newWork = await trpc.works.duplicate.mutate({ id: work.id });
+      const newWork = await trpcWorks.duplicate({ id: work.id });
       toast.success('复制成功');
 
       // 渐进式更新：将新作品添加到列表顶部，移除最后一项保持页面大小

@@ -392,11 +392,11 @@ export default function DesignerToolHeader() {
         }}
       >
         <CoverManager
+          isTemplate={isTemplate}
           onCoverChange={async cover => {
             if (!cover) {
               return;
             }
-            const isTemplate = queryToObj().is_template === 'true';
             if (isTemplate) {
               if (worksStore?.worksDetail.id) {
                 await updateTemplateCoverUrl(worksStore?.worksDetail.id, cover);
