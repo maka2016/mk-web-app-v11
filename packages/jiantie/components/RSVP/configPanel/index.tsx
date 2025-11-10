@@ -308,7 +308,7 @@ export function RSVPConfigPanel({ onClose }: { onClose?: () => void }) {
                   启用回执
                 </div>
                 <div className='text-sm leading-5 text-black/60'>
-                  允许访客在线回复是否参加
+                  允许访客在线回复是否出席
                 </div>
               </div>
               <Switch

@@ -914,7 +914,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                   className='flex-1'
                   variant={willAttend === true ? 'default' : 'outline'}
                 >
-                  参加
+                  出席
                 </ButtonWithTheme>
                 <ButtonWithTheme
                   disabled={
@@ -958,7 +958,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                   className='flex-1'
                   variant={willAttend === false ? 'default' : 'outline'}
                 >
-                  不参加
+                  不出席
                 </ButtonWithTheme>
               </div>
             )}
@@ -991,7 +991,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
                   color: 'var(--rsvp-primary-btn-text-color)',
                 }}
               >
-                {submitting ? '提交中...' : '确认'}
+                {submitting ? '提交中...' : '确认出席'}
               </ButtonWithTheme>
               {config.max_submit_count != null ? (
                 <div className='text-center mt-2'>
