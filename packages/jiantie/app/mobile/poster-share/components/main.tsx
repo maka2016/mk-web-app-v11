@@ -1,5 +1,11 @@
 'use client';
 import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
+import {
+  downloadMultiplePage,
+  zipImageFromUrl,
+} from '@/components/GridV3/DesignerToolForEditor/HeaderV2/services';
+import { getCanvaInfo2 } from '@/components/GridV3/comp/provider/utils';
+import { getAllBlock, onScreenShot } from '@/components/GridV3/shared';
 import { getAppId } from '@/services';
 import { useCheckPublish } from '@/utils/checkPubulish';
 import { toVipPage } from '@/utils/jiantie';
@@ -7,12 +13,6 @@ import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { cdnApi, setWorksDetail } from '@mk/services';
 import { isAndroid, isMakaAppClient, isPc } from '@mk/utils';
-import {
-  downloadMultiplePage,
-  zipImageFromUrl,
-} from '@/components/GridV3/DesignerToolForEditor/HeaderV2/services';
-import { getCanvaInfo2 } from '@/components/GridV3/comp/provider/utils';
-import { getAllBlock, onScreenShot } from '@/components/GridV3/shared';
 import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Button } from '@workspace/ui/components/button';
@@ -163,7 +163,6 @@ const PosterExport = (props: Props) => {
     const screenshotHeight = viewportScale * canvaVisualHeight;
     console.log('screenshotHeight', screenshotHeight);
     console.log('screenshotWidth', screenshotWidth);
-
     let size = {
       width: screenshotWidth,
       height: screenshotHeight,
@@ -175,7 +174,16 @@ const PosterExport = (props: Props) => {
       ? getAllBlock(currentWorksData)
       : null;
     if (!allBlocks) {
-      // 兼容v1版本的下载
+      // v1版本的下载 & 长页下载
+      // 获取#poster-share-iframe中的.Grid_container的高度和宽度
+      const gridContainer = document.querySelector(
+        '#poster-share-iframe .Grid_container'
+      );
+      if (gridContainer) {
+        const { width, height } = gridContainer.getBoundingClientRect();
+        size.width = width;
+        size.height = height;
+      }
       const screenshotRes = await onScreenShot({
         id: worksId,
         width: size.width,
@@ -387,6 +395,7 @@ const PosterExport = (props: Props) => {
                     border: 'none',
                   }}
                   src={`/viewer2/${worksId}?appid=${appid}`}
+                  id='poster-share-iframe'
                 />
 
                 <>
