@@ -116,10 +116,27 @@ export const takeInnerStyle = (style: React.CSSProperties = {}) => {
     minHeight: style.minHeight,
     maxHeight: style.maxHeight,
     filter: style.filter,
-    mixBlendMode: style.mixBlendMode,
-    WebkitMixBlendMode: style.mixBlendMode,
+    // 混合模式不在这里应用，而是在内容包装器上应用，以避免 Safari 黑色底问题
   } as any);
   return clearUndefinedKey(_style);
+};
+
+// 提取混合模式样式，用于内容层
+export const takeBlendModeStyle = (style: React.CSSProperties = {}) => {
+  if (!style.mixBlendMode) {
+    return {};
+  }
+  return {
+    mixBlendMode: style.mixBlendMode,
+    WebkitMixBlendMode: style.mixBlendMode,
+    // 启用硬件加速以改善 iOS Safari 的混合模式渲染
+    // 注意：不使用 isolation，因为它会阻止混合模式与背景混合
+    transform: style.transform || 'translate3d(0, 0, 0)',
+    willChange: 'transform' as const,
+    // 确保内容层在背景之上
+    position: 'relative' as const,
+    zIndex: 1,
+  } as any;
 };
 
 export const takeTextStyle = (style: React.CSSProperties = {}) => {
@@ -318,6 +335,12 @@ const WidgetItemRendererV2Internal = (
     // maxHeight: "100%",
     // pointerEvents: isActive ? "auto" : "none",
   } as React.CSSProperties;
+
+  // 提取混合模式样式，应用到内容包装器
+  const blendModeStyle = takeBlendModeStyle({
+    ...styleFromTheme,
+    ...layoutStyleForWrapper,
+  });
 
   if (/container/gi.test(elementRef)) {
     return null;
@@ -674,7 +697,21 @@ const WidgetItemRendererV2Internal = (
           isActive && 'active'
         )}
       >
-        {compEntity}
+        {blendModeStyle.mixBlendMode ? (
+          <div
+            style={{
+              ...blendModeStyle,
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+              minHeight: '100%',
+            }}
+          >
+            {compEntity}
+          </div>
+        ) : (
+          compEntity
+        )}
       </ContainerWithBgV2>
       {!fullStack && editable && <div className='blink_modal'></div>}
     </LayoutWrapper>
