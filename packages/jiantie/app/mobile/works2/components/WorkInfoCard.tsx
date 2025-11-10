@@ -46,7 +46,7 @@ export function WorkInfoCard({
       onClick={handleClick}
       className={`bg-white border border-gray-200 rounded-[12px] relative overflow-hidden ${
         onClick && !loading
-          ? 'cursor-pointer active:opacity-80'
+          ? 'cursor-pointer active:bg-gray-100'
           : loading
             ? 'cursor-wait opacity-60'
             : ''
@@ -80,7 +80,7 @@ export function WorkInfoCard({
         <div className='flex-1 min-w-0 h-full flex flex-col justify-between py-2'>
           <div className='flex-1 min-w-0'>
             <div className='flex flex-col gap-1'>
-              <h3 className='text-[16px] font-semibold leading-[24px] text-[#101828] truncate'>
+              <h3 className='text-[16px] font-semibold leading-[24px] text-[#101828]'>
                 {work.title}
               </h3>
               <div className='flex items-center gap-[4px]'>
@@ -122,10 +122,10 @@ export function WorkInfoCard({
         {/* 购买状态标签 - 右上角 */}
         {purchaseStatus && (
           <div
-            className={`absolute top-0 right-0 px-2 py-2 rounded-bl-[6px] flex items-center justify-center ${
+            className={`absolute top-0 right-0 px-2 py-1 rounded-bl-[6px] flex items-center justify-center ${
               purchaseStatus === 'purchased'
                 ? 'bg-[#fde272] text-yellow-700'
-                : 'bg-[#64748b] text-[#f8fafc]'
+                : 'bg-gray-500 text-[#f8fafc]'
             }`}
           >
             <span className='text-xs font-semibold leading-[12px]'>

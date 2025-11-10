@@ -3,7 +3,6 @@
 import { getUid, request } from '@/services';
 import { useStore } from '@/store';
 import { trpc, trpcWorks, type SerializedWorksEntity } from '@/utils/trpc';
-import APPBridge from '@mk/app-bridge';
 import { API } from '@mk/services';
 import {
   Pagination,
@@ -16,8 +15,9 @@ import {
 } from '@workspace/ui/components/pagination';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { ArrowDown, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { WorkInfoCard } from './components/WorkInfoCard';
 
@@ -43,6 +43,12 @@ export default function WorksManagerForUser() {
   const [purchasedWorksMap, setPurchasedWorksMap] = useState<
     Map<string, boolean>
   >(new Map());
+
+  // 下拉刷新相关状态
+  const [refreshing, setRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const touchStartY = useRef(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // 获取已购作品列表
   const getPurchasedWorks = async (worksIds: string[]) => {
@@ -185,17 +191,96 @@ export default function WorksManagerForUser() {
     }
   };
 
+  // 下拉刷新处理
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return;
+
+    setRefreshing(true);
+    setPullDistance(0);
+
+    try {
+      // 重置到第一页并刷新数据
+      setPage(1);
+      await loadWorks(1);
+    } finally {
+      setRefreshing(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshing]);
+
+  // 触摸开始
+  const handleTouchStart = useCallback(
+    (e: TouchEvent) => {
+      const scrollContainer = scrollContainerRef.current;
+      if (!scrollContainer || refreshing) return;
+
+      // 只有在滚动到顶部时才允许下拉刷新
+      if (scrollContainer.scrollTop === 0) {
+        touchStartY.current = e.touches[0].clientY;
+      }
+    },
+    [refreshing]
+  );
+
+  // 触摸移动
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      const scrollContainer = scrollContainerRef.current;
+      if (!scrollContainer || refreshing) return;
+
+      // 只有在滚动到顶部时才处理下拉
+      if (scrollContainer.scrollTop === 0 && touchStartY.current > 0) {
+        const touchY = e.touches[0].clientY;
+        const distance = touchY - touchStartY.current;
+
+        // 只处理向下拉的情况
+        if (distance > 0) {
+          // 添加阻尼效果，最大拉动距离为 80px
+          const dampingFactor = 0.5;
+          const maxDistance = 80;
+          const dampedDistance = Math.min(
+            distance * dampingFactor,
+            maxDistance
+          );
+          setPullDistance(dampedDistance);
+
+          // 阻止默认滚动行为
+          if (distance > 10) {
+            e.preventDefault();
+          }
+        }
+      }
+    },
+    [refreshing]
+  );
+
+  // 触摸结束
+  const handleTouchEnd = useCallback(() => {
+    if (refreshing) return;
+
+    const threshold = 60; // 触发刷新的阈值
+
+    touchStartY.current = 0;
+
+    if (pullDistance >= threshold) {
+      handleRefresh();
+    } else {
+      setPullDistance(0);
+    }
+  }, [refreshing, pullDistance, handleRefresh]);
+
   // 跳转到作品详情页面
   const handleWorkDetail = (work: SerializedWorksEntity) => {
     const url = `/mobile/works2/${work.id}`;
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}${url}`,
-        type: 'URL',
-      });
-    } else {
-      router.push(url);
-    }
+    // if (APPBridge.judgeIsInApp()) {
+    //   APPBridge.navToPage({
+    //     url: `${location.origin}${url}`,
+    //     type: 'URL',
+    //   });
+    // } else {
+    // router.push(url);
+    // }
+    router.push(url);
   };
 
   // 获取购买状态标签
@@ -223,6 +308,27 @@ export default function WorksManagerForUser() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
+  // 绑定触摸事件监听器（需要设置 passive: false 以允许 preventDefault）
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    // 使用原生事件监听器，设置 passive: false
+    scrollContainer.addEventListener('touchstart', handleTouchStart, {
+      passive: false,
+    });
+    scrollContainer.addEventListener('touchmove', handleTouchMove, {
+      passive: false,
+    });
+    scrollContainer.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      scrollContainer.removeEventListener('touchstart', handleTouchStart);
+      scrollContainer.removeEventListener('touchmove', handleTouchMove);
+      scrollContainer.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+
   const totalPages = Math.ceil(total / pageSize);
 
   return (
@@ -238,8 +344,45 @@ export default function WorksManagerForUser() {
           <h1 className='text-lg font-semibold text-[#09090B]'>我的邀请函</h1>
         </div>
 
+        {/* 下拉刷新指示器区域 */}
+        <div
+          className='bg-gray-50 overflow-hidden'
+          style={{
+            height: `${refreshing ? 50 : pullDistance}px`,
+            transition:
+              refreshing || pullDistance === 0 ? 'height 0.3s ease' : 'none',
+          }}
+        >
+          {(pullDistance > 0 || refreshing) && (
+            <div className='flex items-center justify-center h-full text-sm'>
+              {refreshing ? (
+                <div className='flex items-center gap-2 text-blue-500'>
+                  <Loader2 className='w-5 h-5 animate-spin' />
+                  <span className='font-medium'>刷新中...</span>
+                </div>
+              ) : (
+                <div
+                  className={`flex items-center gap-2 transition-colors ${
+                    pullDistance >= 60 ? 'text-blue-500' : 'text-gray-500'
+                  }`}
+                >
+                  <ArrowDown
+                    className={`w-5 h-5 transition-transform ${
+                      pullDistance >= 60 ? 'rotate-180' : ''
+                    }`}
+                  />
+                  <span className='font-medium'>
+                    {pullDistance >= 60 ? '松手刷新' : '下拉刷新'}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* 作品列表 */}
         <div
+          ref={scrollContainerRef}
           className={`flex-1 overflow-y-auto bg-gray-50 p-4 ${totalPages > 1 && !loading ? 'pb-[60px]' : ''}`}
         >
           {loading && worksList.length === 0 ? (
@@ -266,7 +409,7 @@ export default function WorksManagerForUser() {
         </div>
 
         {/* 分页 - 固定在底部 */}
-        {totalPages > 1 && !loading && (
+        {totalPages > 1 && (
           <div className='bg-white border-t border-gray-200 px-2 py-2 z-10'>
             <Pagination className='justify-center'>
               <PaginationContent className='gap-0.5'>
