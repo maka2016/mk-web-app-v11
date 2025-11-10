@@ -1,13 +1,15 @@
 'use client';
 
-import { backWithBridge, navigateWithBridge } from '@/utils/navigate-with-bridge';
+import {
+  backWithBridge,
+  navigateWithBridge,
+} from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
 import { Clock, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import StatusBar from '../../../../../components/StatusBar';
 
 interface Collection {
   id: number;
@@ -184,7 +186,6 @@ export default function SearchResults({
 
   return (
     <div className='flex flex-col h-dvh bg-gray-50'>
-      <StatusBar />
       {/* 搜索栏 */}
       <div className='bg-white shadow-sm p-4 sticky top-0 z-10'>
         <form onSubmit={handleSearch} className='flex items-center gap-2'>
