@@ -180,10 +180,11 @@ model RsvpFormConfigEntity {
   submit_deadline       DateTime? @map("submit_deadline") @db.Timestamptz /// 提交截止时间
 
   /// 状态管理
-  enabled     Boolean  @default(true) /// 是否启用
-  deleted     Boolean  @default(false)
-  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
-  update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz
+  enabled      Boolean  @default(true) /// 是否启用
+  collect_form Boolean  @default(true) @map("collect_form") /// 是否收集表单信息
+  deleted      Boolean  @default(false)
+  create_time  DateTime @default(now()) @map("create_time") @db.Timestamptz
+  update_time  DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz
 
   /// 关联关系
   submissions          RsvpSubmissionEntity[]

@@ -34,7 +34,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
   const toNotificationCenter = () => {
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
-        url: `${location.origin}/mobile/notification-center?is_full_screen=1`,
+        url: `${location.origin}/mobile/rsvp/notifications`,
         type: 'URL',
       });
     } else {
