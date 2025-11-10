@@ -12,7 +12,7 @@ export function useShareNavigation() {
     if (isRsvp) {
       if (APPBridge.judgeIsInApp()) {
         APPBridge.navToPage({
-          url: `/mobile/rsvp/invitees?works_id=${works_id}&mode=public`,
+          url: `${location.origin}/mobile/rsvp/invitees?works_id=${works_id}&mode=public`,
           type: 'URL',
         });
       } else {
