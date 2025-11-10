@@ -1,6 +1,9 @@
 'use client';
 
-import { navigateWithBridge } from '@/utils/navigate-with-bridge';
+import {
+  backWithBridge,
+  navigateWithBridge,
+} from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import { cdnApi } from '@mk/services';
 import { ChevronRight, Search } from 'lucide-react';
@@ -110,7 +113,7 @@ export default function Detail({ channelId }: DetailProps) {
           <p>{error || '频道不存在'}</p>
         </div>
         <button
-          onClick={() => router.back()}
+          onClick={() => backWithBridge(router)}
           className='mt-6 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors'
         >
           返回
@@ -137,11 +140,12 @@ export default function Detail({ channelId }: DetailProps) {
           {/* 左侧：返回按钮 + 频道信息 */}
           <div className='flex items-center space-x-3 flex-1'>
             <button
-              onClick={() => router.back()}
-              className='flex-shrink-0 text-gray-900'
+              onClick={() => backWithBridge(router)}
+              className='group flex-shrink-0 text-gray-900 rounded-full p-1 transition-transform duration-150 ease-out hover:bg-gray-100/70 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D53933]/40'
             >
+              <span className='sr-only'>返回</span>
               <svg
-                className='w-6 h-6'
+                className='w-6 h-6 transition-transform duration-200 ease-out'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -169,9 +173,10 @@ export default function Detail({ channelId }: DetailProps) {
             onClick={() =>
               navigateWithBridge({ path: '/mobile/channel2/search', router })
             }
-            className='flex-shrink-0 text-gray-900 ml-2'
+            className='group flex-shrink-0 text-gray-900 ml-2 rounded-full p-1 transition-transform duration-150 ease-out hover:bg-gray-100/70 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D53933]/40'
           >
-            <Search className='w-5 h-5' />
+            <span className='sr-only'>搜索</span>
+            <Search className='w-5 h-5 transition-transform duration-200 ease-out' />
           </button>
         </div>
 
@@ -295,8 +300,7 @@ export default function Detail({ channelId }: DetailProps) {
                               {collection.thumb_path ? (
                                 <img
                                   src={cdnApi(collection.thumb_path, {
-                                    resizeWidth: 176,
-                                    resizeHeight: 236,
+                                    resizeWidth: 640,
                                   })}
                                   alt={collection.display_name}
                                   className={`object-cover w-full h-full absolute inset-0 transition-opacity duration-300 ${
