@@ -134,20 +134,10 @@ export function SubmissionDataView({
                   : 'none',
             }}
           >
-            <div
-              className='text-sm'
-              style={{
-                color: 'var(--rsvp-label-color, #374151)',
-              }}
-            >
-              {field.label}
+            <div className='text-sm'>
+              {field.label === '访客' ? '出席人数' : field.label}
             </div>
-            <div
-              className='text-sm font-medium text-right flex-1 ml-4'
-              style={{
-                color: 'var(--rsvp-text-color, #111827)',
-              }}
-            >
+            <div className='text-sm font-medium text-right flex-1 ml-4'>
               {value}
             </div>
           </div>
@@ -178,7 +168,7 @@ export function SubmissionDataView({
                 color: 'var(--rsvp-label-color, #374151)',
               }}
             >
-              {field.label}
+              {field.label === '访客' ? '出席人数' : field.label}
             </div>
             <div
               className='text-sm font-medium text-right flex-1 ml-4'

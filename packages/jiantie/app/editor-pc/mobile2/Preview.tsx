@@ -81,7 +81,7 @@ const Preview = (props: { worksId: string; onClose: () => void }) => {
       <div className='flex items-center justify-between w-full h-14 bg-white border-b border-[#E5E5E5] px-4'>
         <span className={styles.esc_preview}>按 ESC 退出预览</span>
         <Button size='sm' onClick={() => onClose()}>
-          返回编辑
+          返回
         </Button>
       </div>
       <div className={styles.content}>

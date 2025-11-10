@@ -142,7 +142,7 @@ model WorksEntity {
   appid                  String?  @db.VarChar
   offline                Boolean? @default(false)
   spec_id                String?  @map("spec_id") @db.VarChar
-  is_title_desc_modified Boolean  @default(true) @map("is_title_desc_modified")
+  is_title_desc_modified Boolean  @default(false) @map("is_title_desc_modified")
   is_rsvp                Boolean  @default(false) @map("is_rsvp")
   /// 信封功能：是否配置了信封
   envelope_enabled       Boolean? @default(false) @map("envelope_enabled")
