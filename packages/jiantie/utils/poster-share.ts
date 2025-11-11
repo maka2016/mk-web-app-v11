@@ -139,6 +139,48 @@ export function sharePoster(params: SharePosterParams): void {
     isSupportSharePoster,
   } = params;
 
+  const appid = getAppId();
+
+  // 系统分享特殊处理
+  if (shareType === 'system') {
+    // Web环境：使用 navigator.share
+    if (!APPBridge.judgeIsInApp() && navigator.share) {
+      const shareUrl = `${location.origin}/viewer2/${worksId}?appid=${appid}`;
+      navigator
+        .share({
+          title: title || '邀请函',
+          text: desc || '',
+          url: shareUrl,
+        })
+        .catch(error => {
+          // 用户取消无需提示
+          if (error && error.name !== 'AbortError') {
+            toast.error('系统分享失败');
+          }
+        });
+      return;
+    }
+
+    // APP环境：使用 link 类型的系统分享
+    APPBridge.appCall({
+      type: 'MKShare',
+      appid: 'jiantie',
+      params: {
+        title: title || '邀请函',
+        content: desc || '',
+        thumb: cdnApi(cover || undefined, {
+          resizeWidth: 120,
+          format: 'webp',
+        }),
+        type: 'link',
+        shareType: 'system',
+        url: `${location.origin}/viewer2/${worksId}?appid=${appid}`,
+      },
+    });
+    return;
+  }
+
+  // 其他分享类型根据支持情况选择
   if (isSupportSharePoster) {
     // 支持海报分享，使用 images 类型
     APPBridge.appCall({
@@ -154,17 +196,16 @@ export function sharePoster(params: SharePosterParams): void {
     });
   } else {
     // 不支持海报分享，使用 link 类型降级方案
-    const appid = getAppId();
     APPBridge.appCall({
       type: 'MKShare',
       appid: 'jiantie',
       params: {
         title: title || '邀请函',
         content: desc || '',
-        thumb: `${cdnApi(cover || undefined, {
+        thumb: cdnApi(cover || undefined, {
           resizeWidth: 120,
           format: 'webp',
-        })}`,
+        }),
         type: 'link',
         shareType: shareType,
         url: `${location.origin}/viewer2/${worksId}?appid=${appid}`,
