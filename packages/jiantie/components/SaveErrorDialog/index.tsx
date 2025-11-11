@@ -14,6 +14,7 @@ interface SaveErrorDialogProps {
   onOpenChange: (open: boolean) => void;
   onRetry: () => void;
   errorMessage?: string;
+  errorStack?: string;
 }
 
 export default function SaveErrorDialog({
@@ -21,6 +22,7 @@ export default function SaveErrorDialog({
   onOpenChange,
   onRetry,
   errorMessage,
+  errorStack,
 }: SaveErrorDialogProps) {
   const handleReload = () => {
     window.location.reload();
@@ -38,6 +40,16 @@ export default function SaveErrorDialog({
               <div className='mt-2 p-2 bg-red-50 rounded text-sm text-red-600 break-words'>
                 {errorMessage}
               </div>
+            )}
+            {errorStack && (
+              <details className='mt-2'>
+                <summary className='cursor-pointer text-sm text-gray-600 hover:text-gray-800'>
+                  查看调用堆栈
+                </summary>
+                <pre className='mt-2 p-2 bg-gray-50 rounded text-xs text-gray-700 overflow-auto max-h-48 break-words whitespace-pre-wrap'>
+                  {errorStack}
+                </pre>
+              </details>
             )}
           </AlertDialogDescription>
         </AlertDialogHeader>
