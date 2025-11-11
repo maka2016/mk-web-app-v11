@@ -72,8 +72,6 @@ export default function Detail({ channelId }: DetailProps) {
       } catch (err) {
         console.error('获取频道详情失败:', err);
         setError(err instanceof Error ? err.message : '网络请求失败');
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -92,6 +90,8 @@ export default function Detail({ channelId }: DetailProps) {
         setFourthLevelFloors(data);
       } catch (err) {
         console.error('获取四级楼层失败:', err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -224,7 +224,7 @@ export default function Detail({ channelId }: DetailProps) {
         {fourthLevelFloors.length === 0 ? (
           <div className='flex items-center justify-center h-full'>
             <div className='text-center text-gray-400'>
-              <p className='text-4xl mb-2'>📭</p>
+              {/* <p className='text-4xl mb-2'>📭</p> */}
               <p className='text-sm'>暂无数据</p>
             </div>
           </div>
