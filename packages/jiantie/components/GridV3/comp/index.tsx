@@ -1,7 +1,6 @@
 import { getPermissionData, getWorksDetailStatic } from '@mk/services';
 import { queryToObj } from '@mk/utils';
 import { PlatformCompProps } from '@mk/widgets-bridge-sdk';
-import { useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { Toaster } from 'react-hot-toast';
 import DesignerToolForEditor from '../DesignerToolForEditor';
@@ -25,7 +24,6 @@ const GridCompWrapper = (props: PlatformCompProps<GridProps, GridState>) => {
   } = props;
   const isUseGridV2 =
     queryToObj().gridv2 === 'true' || controledValues.version === 'v2.1';
-  const useGridV2 = useRef(isUseGridV2);
   const worksDetail = getWorksDetailStatic();
   const fullStack = getPermissionData().materialProduct;
 
@@ -39,11 +37,11 @@ const GridCompWrapper = (props: PlatformCompProps<GridProps, GridState>) => {
       widgetState={widgetState}
       gridProps={controledValues}
       gridId={id}
-      useGridV2={useGridV2.current}
+      useGridV2={isUseGridV2}
       getWorksData={getWorksData}
     >
-      <DesignerToolForEditor useGridV2={useGridV2.current}>
-        {useGridV2.current ? (
+      <DesignerToolForEditor useGridV2={isUseGridV2}>
+        {isUseGridV2 ? (
           <GridCompV2
             {...props}
             key={`grid_root_container_${controledValues._updateVersion}`}
