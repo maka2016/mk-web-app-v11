@@ -164,10 +164,10 @@ export const EnvelopeManagerHelperForPage = () => {
       }
 
       // 更新本地状态
-      // if (editorSDK?.fullSDK?.worksDetail) {
-      //   editorSDK.fullSDK.worksDetail.envelope_enabled = true;
-      //   editorSDK.fullSDK.worksDetail.envelope_config = config;
-      // }
+      if (editorSDK?.fullSDK?.worksDetail) {
+        editorSDK.fullSDK.worksDetail.envelope_enabled = true;
+        editorSDK.fullSDK.worksDetail.envelope_config = config;
+      }
 
       setShowEnvelopeForm(false);
     } catch (error) {
@@ -194,10 +194,10 @@ export const EnvelopeManagerHelperForPage = () => {
       }
 
       // 更新本地状态
-      // if (editorSDK?.fullSDK?.worksDetail) {
-      //   editorSDK.fullSDK.worksDetail.envelope_enabled = false;
-      //   editorSDK.fullSDK.worksDetail.envelope_config = undefined;
-      // }
+      if (editorSDK?.fullSDK?.worksDetail) {
+        editorSDK.fullSDK.worksDetail.envelope_enabled = false;
+        editorSDK.fullSDK.worksDetail.envelope_config = undefined;
+      }
 
       setShowEnvelopeForm(false);
       toast.success('删除成功');
