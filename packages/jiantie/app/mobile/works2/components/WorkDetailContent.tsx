@@ -521,7 +521,7 @@ export function WorkDetailContent({
                       公开分享
                     </span>
                     <p className='text-xs text-gray-500 mt-1'>
-                      生成公开链接，任何人都可以RSVP
+                      生成公开链接，任何人可填写回执
                     </p>
                   </div>
                   <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
