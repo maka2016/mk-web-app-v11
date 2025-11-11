@@ -11,11 +11,13 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
+import { WorkDetailContent } from '@/components/WorksDetailContent';
 import { checkBindPhone, getAppId, getUid } from '@/services';
 import { useCheckPublish } from '@/utils/checkPubulish';
 import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { useShareNavigation } from '@/utils/share';
 import { Icon } from '@workspace/ui/components/Icon';
+import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 
 interface Props {
   worksId: string;
@@ -32,7 +34,9 @@ const PreviewHeader = (props: Props) => {
   const { canShareWithoutWatermark, canExportWithoutWatermark } =
     useCheckPublish();
   const [isSharing, setIsSharing] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
+  const worksDetail = worksStore.worksDetail;
   const isVideo =
     worksStore.worksDetail.specInfo.export_format.includes('video');
 
@@ -95,11 +99,12 @@ const PreviewHeader = (props: Props) => {
   };
 
   const handleSave = async () => {
-    if (isSharing) {
-      return;
-    }
-    setIsSharing(true);
-    await checkPublish();
+    // if (isSharing) {
+    //   return;
+    // }
+    // setIsSharing(true);
+    setDetailDialogOpen(true);
+    // await checkPublish();
   };
 
   const closePage = async () => {
@@ -115,33 +120,56 @@ const PreviewHeader = (props: Props) => {
   };
 
   return (
-    <Header
-      leftText={'返回'}
-      title={t('preview')}
-      onClose={() => closePage()}
-      rightContent={
-        <BehaviorBox
-          behavior={{
-            object_type: 'work_share_btn',
-            object_id: worksId,
-          }}
-        >
-          <Button size='sm' onClick={() => handleSave()} disabled={isSharing}>
-            {isVideo ? (
-              <div className='flex items-center gap-1'>
-                <Icon name='download' size={16} color='var(--btn-text-color)' />
-                <span>导出</span>
-              </div>
-            ) : (
-              '分享'
-            )}
-          </Button>
-        </BehaviorBox>
-      }
-      style={{
-        zIndex: 99999,
-      }}
-    />
+    <>
+      <Header
+        leftText={'返回'}
+        title={t('preview')}
+        onClose={() => closePage()}
+        rightContent={
+          <BehaviorBox
+            behavior={{
+              object_type: 'work_share_btn',
+              object_id: worksId,
+            }}
+          >
+            <Button size='sm' onClick={() => handleSave()} disabled={isSharing}>
+              {isVideo ? (
+                <div className='flex items-center gap-1'>
+                  <Icon
+                    name='download'
+                    size={16}
+                    color='var(--btn-text-color)'
+                  />
+                  <span>导出</span>
+                </div>
+              ) : (
+                '分享'
+              )}
+            </Button>
+          </BehaviorBox>
+        }
+        style={{
+          zIndex: 99999,
+        }}
+      />
+
+      {/* 作品详情弹窗 */}
+      <ResponsiveDialog
+        title='邀请函详情'
+        isOpen={detailDialogOpen}
+        onOpenChange={open => {
+          setDetailDialogOpen(open);
+        }}
+        showCloseIcon={true}
+      >
+        <WorkDetailContent
+          work={worksDetail}
+          shareOnly={true}
+          onClose={() => setDetailDialogOpen(false)}
+          onDataChange={() => {}}
+        />
+      </ResponsiveDialog>
+    </>
   );
 };
 

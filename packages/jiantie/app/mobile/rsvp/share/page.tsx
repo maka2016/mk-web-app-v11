@@ -110,6 +110,154 @@ export default function SharePage() {
     return `${origin}/viewer2/${worksId}`;
   }, [worksId, mode, contactId, contactName]);
 
+  // 生成截图的通用函数
+  const generateScreenshot = async () => {
+    try {
+      const screenshotRes = await onScreenShot({
+        id: worksId,
+        width: 375,
+        height: 375,
+        appid: getAppId(),
+      });
+      const coverUrl = screenshotRes[0];
+      setShareCover(coverUrl);
+      await updateWorksDetail2(worksId, {
+        cover: coverUrl,
+      } as any);
+      console.log('[RSVP Share] 截图生成成功:', coverUrl);
+      return { success: true, cover: coverUrl };
+    } catch (error) {
+      console.error('[RSVP Share] 生成截图失败:', error);
+      return { success: false };
+    }
+  };
+
+  // 生成标题和描述的通用函数
+  const generateMeta = async (worksData: any) => {
+    try {
+      const layers = getAllLayers(worksData);
+      let workText = '';
+
+      layers.forEach(layer => {
+        if (layer.elementRef === 'Text' && layer.attrs?.text) {
+          workText += layer.attrs.text + ' ';
+        }
+      });
+
+      workText = workText.trim();
+
+      if (!workText) {
+        console.log('[RSVP Share] 未找到文本内容，使用默认标题');
+        return {
+          success: false,
+          title: '我的作品',
+          desc: '欢迎查看',
+        };
+      }
+
+      console.log('[RSVP Share] 提取的文本长度:', workText.length);
+
+      const metaRes: any = await request.post(
+        `${API('apiv10')}/ai-generate/work-meta`,
+        {
+          workText: workText.slice(0, 500),
+        }
+      );
+
+      if (metaRes && metaRes.title && metaRes.desc) {
+        console.log('[RSVP Share] AI生成结果:', {
+          title: metaRes.title,
+          desc: metaRes.desc,
+        });
+
+        // 保存生成的标题和描述
+        await updateWorksDetail2(worksId, {
+          title: metaRes.title,
+          desc: metaRes.desc,
+          is_title_desc_modified: true,
+        });
+
+        console.log(
+          '[RSVP Share] 标题描述已保存，is_title_desc_modified 设置为 true'
+        );
+
+        return {
+          success: true,
+          title: metaRes.title,
+          desc: metaRes.desc,
+        };
+      } else {
+        console.warn('[RSVP Share] AI 返回结果格式不正确:', metaRes);
+        return {
+          success: false,
+          title: '我的作品',
+          desc: workText.slice(0, 60),
+        };
+      }
+    } catch (error) {
+      console.error('[RSVP Share] 生成标题描述失败:', error);
+      return {
+        success: false,
+        title: '我的作品',
+        desc: '欢迎查看',
+      };
+    }
+  };
+
+  // 点击"自动"按钮强制重新生成
+  const regenerateContent = async () => {
+    if (!worksId) {
+      toast.error('缺少作品ID');
+      return;
+    }
+
+    setGeneratingContent(true);
+
+    try {
+      const res = await getWorkData2(worksId);
+      const worksData = res?.work_data;
+
+      if (!worksData) {
+        toast.error('未找到作品数据');
+        return;
+      }
+
+      // 并行生成截图和标题描述
+      const [screenshotResult, metaResult] = await Promise.all([
+        generateScreenshot(),
+        generateMeta(worksData),
+      ]);
+
+      // 更新界面标题和描述
+      if (metaResult && metaResult.title) {
+        if (mode === 'invitee' && contactId && contactName) {
+          // 邀请模式：需要重新获取联系人信息来构建完整标题
+          const contact = (await trpc.rsvp.getInviteeById.query({
+            id: contactId,
+          })) as { name: string };
+          const defaultTitle = `诚邀 ${contact.name || contactName} - ${metaResult.title}`;
+          setShareTitle(defaultTitle);
+          setShareDesc(metaResult.desc || '诚邀您参加活动');
+        } else {
+          // 公开模式：直接使用生成的标题
+          setShareTitle(metaResult.title);
+          setShareDesc(metaResult.desc || '');
+        }
+      }
+
+      if (screenshotResult?.success || metaResult?.success) {
+        toast.success('生成完成');
+      } else {
+        toast.error('生成失败，请重试');
+      }
+    } catch (error) {
+      console.error('[RSVP Share] 重新生成内容失败:', error);
+      toast.error('生成失败，请重试');
+    } finally {
+      setGeneratingContent(false);
+    }
+  };
+
   // 初始化 APP 环境判断
   useEffect(() => {
     const initAPP = async () => {
@@ -144,39 +292,15 @@ export default function SharePage() {
         const canvaInfo2 = getCanvaInfo2(detail as any, worksData);
         setCanvaInfo2(canvaInfo2);
 
-        // 3. 准备异步任务
-        const tasks: Array<{
-          type: 'cover' | 'meta';
-          promise: Promise<any>;
-        }> = [];
+        // 3. 准备异步任务（只在初始化时按需生成）
+        const tasks: Array<Promise<any>> = [];
         let needGeneration = false;
 
         // 3.1 检查是否需要生成封面
         if (!detail.cover || /gif/gi.test(detail.cover)) {
           console.log('[RSVP Share] 需要生成封面');
           needGeneration = true;
-          tasks.push({
-            type: 'cover',
-            promise: (async () => {
-              try {
-                const screenshotRes = await onScreenShot({
-                  id: worksId,
-                  width: 375,
-                  height: 375,
-                  appid: getAppId(),
-                });
-                const coverUrl = screenshotRes[0];
-                setShareCover(coverUrl);
-                await updateWorksDetail2(worksId, {
-                  cover: coverUrl,
-                } as any);
-                return { success: true, cover: coverUrl };
-              } catch (error) {
-                console.error('[RSVP Share] 生成封面失败:', error);
-                return { success: false };
-              }
-            })(),
-          });
+          tasks.push(generateScreenshot());
         } else {
           setShareCover(detail.cover);
         }
@@ -188,97 +312,21 @@ export default function SharePage() {
         if (worksData && !detail.is_title_desc_modified) {
           console.log('[RSVP Share] 需要生成标题和描述');
           needGeneration = true;
-          tasks.push({
-            type: 'meta',
-            promise: (async () => {
-              try {
-                const layers = getAllLayers(worksData);
-                let workText = '';
-
-                layers.forEach(layer => {
-                  if (layer.elementRef === 'Text' && layer.attrs?.text) {
-                    workText += layer.attrs.text + ' ';
-                  }
-                });
-
-                // 清理文本
-                workText = workText.trim();
-
-                console.log('[RSVP Share] 提取的文本长度:', workText.length);
-
-                if (!workText) {
-                  console.log('[RSVP Share] 未找到文本内容，使用默认标题');
-                  return {
-                    success: false,
-                    title: '我的作品',
-                    desc: '欢迎查看',
-                  };
-                }
-
-                const metaRes: any = await request.post(
-                  `${API('apiv10')}/ai-generate/work-meta`,
-                  {
-                    workText: workText.slice(0, 500),
-                  }
-                );
-
-                if (metaRes && metaRes.title && metaRes.desc) {
-                  console.log('[RSVP Share] AI生成结果:', {
-                    title: metaRes.title,
-                    desc: metaRes.desc,
-                  });
-
-                  // 保存生成的标题和描述
-                  await updateWorksDetail2(worksId, {
-                    title: metaRes.title,
-                    desc: metaRes.desc,
-                    is_title_desc_modified: true,
-                  });
-
-                  console.log(
-                    '[RSVP Share] 标题描述已保存，is_title_desc_modified 设置为 true'
-                  );
-
-                  return {
-                    success: true,
-                    title: metaRes.title,
-                    desc: metaRes.desc,
-                  };
-                } else {
-                  console.warn('[RSVP Share] AI 返回结果格式不正确:', metaRes);
-                  return {
-                    success: false,
-                    title: '我的作品',
-                    desc: workText.slice(0, 60),
-                  };
-                }
-              } catch (error) {
-                console.error('[RSVP Share] 生成标题描述失败:', error);
-                return {
-                  success: false,
-                  title: '我的作品',
-                  desc: '欢迎查看',
-                };
-              }
-            })(),
-          });
+          tasks.push(generateMeta(worksData));
         }
 
         // 3.3 如果有需要生成的内容，显示 loading 并等待所有任务完成
         if (needGeneration && tasks.length) {
           setGeneratingContent(true);
           try {
-            const results = await Promise.all(tasks.map(t => t.promise));
+            const results = await Promise.all(tasks);
 
-            // 处理标题描述生成结果
-            const metaTaskIndex = tasks.findIndex(t => t.type === 'meta');
-            if (metaTaskIndex !== -1) {
-              const metaResult = results[metaTaskIndex];
-              if (metaResult && metaResult.title) {
-                finalWorksTitle = metaResult.title;
-                finalWorksDesc = metaResult.desc || '';
-                console.log('[RSVP Share] 使用生成的标题:', finalWorksTitle);
-              }
+            // 处理标题描述生成结果（如果有的话，它是最后一个任务）
+            const metaResult = results.find(r => r && r.title);
+            if (metaResult && metaResult.title) {
+              finalWorksTitle = metaResult.title;
+              finalWorksDesc = metaResult.desc || '';
+              console.log('[RSVP Share] 使用生成的标题:', finalWorksTitle);
             }
           } catch (error) {
             console.error('[RSVP Share] 生成内容时出错:', error);
@@ -316,6 +364,7 @@ export default function SharePage() {
       }
     };
     fetchShareInfo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worksId, mode, contactId, contactName]);
 
   // 更新标题
@@ -441,9 +490,12 @@ export default function SharePage() {
             <p className='text-xs font-semibold text-[#64748B] leading-[18px]'>
               编辑标题、描述和封面
             </p>
-            <div className='px-2 py-0.5 rounded'>
+            <div
+              className='px-2 py-0.5 rounded cursor-pointer hover:bg-[#EEF2FF] transition-colors'
+              onClick={regenerateContent}
+            >
               <p className='text-xs font-semibold text-[#3358D4] leading-[18px]'>
-                自动
+                重新生成
               </p>
             </div>
           </div>

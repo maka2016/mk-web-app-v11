@@ -7,9 +7,9 @@
   ],
   "scripts": {
     "postinstall": "pnpm -F @workspace/database generate",
-    "dev:jiantie": "cross-env pnpm -F @mk/jiantie dev",
-    "build:jiantie": "cross-env pnpm -F @mk/jiantie build",
-    "start:jiantie": "cross-env pnpm -F @mk/jiantie start",
+    "dev:jiantie": "pnpm -F @mk/jiantie dev",
+    "build:jiantie": "pnpm -F @mk/jiantie build",
+    "start:jiantie": "pnpm -F @mk/jiantie start",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
