@@ -2,7 +2,6 @@
 
 import { getUid, request } from '@/services';
 import { useStore } from '@/store';
-import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc, trpcWorks, type SerializedWorksEntity } from '@/utils/trpc';
 import { API } from '@mk/services';
 import {
@@ -14,12 +13,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@workspace/ui/components/pagination';
+import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { ArrowDown, Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import { WorkDetailContent } from './components/WorkDetailContent';
 import { WorkInfoCard } from './components/WorkInfoCard';
 
 dayjs.extend(relativeTime);
@@ -31,7 +31,6 @@ type RSVPStats = {
 };
 
 export default function WorksManagerForUser() {
-  const router = useRouter();
   const { isVip } = useStore();
   const [worksList, setWorksList] = useState<SerializedWorksEntity[]>([]);
   const [total, setTotal] = useState(0);
@@ -50,6 +49,10 @@ export default function WorksManagerForUser() {
   const [pullDistance, setPullDistance] = useState(0);
   const touchStartY = useRef(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // 弹窗状态
+  const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   // 获取已购作品列表
   const getPurchasedWorks = async (worksIds: string[]) => {
@@ -270,10 +273,21 @@ export default function WorksManagerForUser() {
     }
   }, [refreshing, pullDistance, handleRefresh]);
 
-  // 跳转到作品详情页面
+  // 打开作品详情弹窗
   const handleWorkDetail = (work: SerializedWorksEntity) => {
-    const url = `/mobile/works2/${work.id}`;
-    navigateWithBridge({ path: url, router });
+    setSelectedWorkId(work.id);
+    setDetailDialogOpen(true);
+  };
+
+  // 关闭弹窗
+  const handleDetailDialogClose = () => {
+    setDetailDialogOpen(false);
+    setSelectedWorkId(null);
+  };
+
+  // 数据变更时刷新列表
+  const handleDataChange = () => {
+    loadWorks(page);
   };
 
   // 获取购买状态标签
@@ -321,6 +335,14 @@ export default function WorksManagerForUser() {
       scrollContainer.removeEventListener('touchend', handleTouchEnd);
     };
   }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any)['freshPageData'] = () => {
+        loadWorks();
+      };
+    }
+  }, []);
 
   const totalPages = Math.ceil(total / pageSize);
 
@@ -462,6 +484,26 @@ export default function WorksManagerForUser() {
           </div>
         )}
       </div>
+
+      {/* 作品详情弹窗 */}
+      <ResponsiveDialog
+        title='邀请函详情'
+        isOpen={detailDialogOpen}
+        onOpenChange={open => {
+          if (!open) {
+            handleDetailDialogClose();
+          }
+        }}
+        showCloseIcon={true}
+      >
+        {selectedWorkId && (
+          <WorkDetailContent
+            work={worksList.find(work => work.id === selectedWorkId)}
+            onClose={handleDetailDialogClose}
+            onDataChange={handleDataChange}
+          />
+        )}
+      </ResponsiveDialog>
     </>
   );
 }

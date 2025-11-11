@@ -9,10 +9,11 @@ import { getAllBlock, onScreenShot } from '@/components/GridV3/shared';
 import { getAppId } from '@/services';
 import { useCheckPublish } from '@/utils/checkPubulish';
 import { toVipPage } from '@/utils/jiantie';
+import { checkSupportSharePoster, sharePoster } from '@/utils/poster-share';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { cdnApi, setWorksDetail } from '@mk/services';
-import { isAndroid, isMakaAppClient, isPc } from '@mk/utils';
+import { isMakaAppClient, isPc } from '@mk/utils';
 import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Button } from '@workspace/ui/components/button';
@@ -240,36 +241,17 @@ const PosterExport = (props: Props) => {
   const onShare = (to: 'wechat' | 'wechatTimeline') => {
     let currentWorksDetail = resolvedWorksDetail;
 
-    if (isSupportSharePoster) {
-      APPBridge.appCall({
-        type: 'MKShare',
-        appid: 'jiantie',
-        params: {
-          title: currentWorksDetail?.title,
-          type: 'images',
-          shareType: to,
-          urls: fullUrls,
-          fileuri: fileUri,
-        },
-      });
-    } else {
-      const appid = getAppId();
-      APPBridge.appCall({
-        type: 'MKShare',
-        appid: 'jiantie',
-        params: {
-          title: currentWorksDetail?.title || '',
-          content: currentWorksDetail?.desc || '',
-          thumb: `${cdnApi(currentWorksDetail?.cover, {
-            resizeWidth: 120,
-            format: 'webp',
-          })}`,
-          type: 'link',
-          shareType: to, //微信好友：wechat， 微信朋友圈：wechatTimeline，复制链接：copyLink，二维码分享：qrCode，更多(系统分享)：system
-          url: `${location.origin}/viewer2/${worksId}?appid=${appid}`, // 只传一个链接
-        },
-      });
-    }
+    // 使用通用分享函数
+    sharePoster({
+      worksId: worksId,
+      title: currentWorksDetail?.title || '',
+      desc: currentWorksDetail?.desc || '',
+      cover: currentWorksDetail?.cover,
+      shareType: to,
+      urls: fullUrls,
+      fileUri: fileUri,
+      isSupportSharePoster: isSupportSharePoster,
+    });
   };
 
   useEffect(() => {
@@ -279,24 +261,11 @@ const PosterExport = (props: Props) => {
     }
   }, [worksId]);
 
-  const isSupportSharePosterFunc = async () => {
-    if (APPBridge.isRN()) {
-      let APPLETSV2Enable = await APPBridge.featureDetect(['MKShare']);
-      return APPLETSV2Enable?.MKShare;
-    } else if (isAndroid()) {
-      let APPLETSV2Enable = await APPBridge.featureDetect([
-        'WechatSharePoster',
-      ]);
-      return APPLETSV2Enable.WechatSharePoster;
-    } else {
-      return true;
-    }
-  };
-
   useEffect(() => {
     setIsPC(isPc());
     setIsMiniProgram(APPBridge.judgeIsInMiniP());
-    isSupportSharePosterFunc().then(res => {
+    // 使用通用的检测函数
+    checkSupportSharePoster().then(res => {
       setIsSupportSharePoster(res);
     });
     // setIframeStyle({
