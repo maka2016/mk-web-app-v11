@@ -1,4 +1,3 @@
-import { EnvelopeLoading } from '@/components/Envelope/EnvelopeLoading';
 import { EnvelopeConfig } from '@/components/Envelope/types';
 import { getShareInfo } from '@/components/GridV3/comp/provider/utils';
 import MiniPShare from '@/components/MiniPShare';
@@ -255,7 +254,7 @@ export default async function Page({
   return (
     <>
       {/* 服务端渲染的信封 Loading */}
-      <EnvelopeLoading config={envelopeConfig} />
+      {/* <EnvelopeLoading config={envelopeConfig} /> */}
 
       <MiniPShare
         title={initProps.worksDetail?.title || '详情'}

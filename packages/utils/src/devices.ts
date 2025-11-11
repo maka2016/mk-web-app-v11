@@ -86,17 +86,16 @@ export const getRuntime = () => {
 };
 
 /**
- * 判断当前设备是否为PC端
+ * 根据 userAgent 判断是否为PC端（SSR安全）
  * 支持鸿蒙手机检测，基于最佳实践实现
+ * @param userAgent - User Agent 字符串
  * @returns {boolean} true表示PC端，false表示移动端
  */
-export const isPc = () => {
-  // 服务器端渲染或非浏览器环境，默认认为是PC
-  if (typeof navigator === 'undefined' || !navigator.userAgent) {
+export const isPcByUA = (userAgent?: string): boolean => {
+  // 没有 userAgent，默认认为是PC
+  if (!userAgent) {
     return true;
   }
-
-  const ua = navigator.userAgent;
 
   // 移动设备 User Agent 特征模式
   const mobilePatterns = [
@@ -120,9 +119,28 @@ export const isPc = () => {
   ];
 
   // 检查 User Agent 是否匹配移动设备
-  const isMobileUA = mobilePatterns.some(pattern => pattern.test(ua));
+  const isMobileUA = mobilePatterns.some(pattern => pattern.test(userAgent));
 
-  if (isMobileUA) {
+  return !isMobileUA;
+};
+
+/**
+ * 判断当前设备是否为PC端
+ * 支持鸿蒙手机检测，基于最佳实践实现
+ * @returns {boolean} true表示PC端，false表示移动端
+ */
+export const isPc = () => {
+  // 服务器端渲染或非浏览器环境，默认认为是PC
+  if (typeof navigator === 'undefined' || !navigator.userAgent) {
+    return true;
+  }
+
+  const ua = navigator.userAgent;
+
+  // 使用 isPcByUA 进行基础判断
+  const isPcUA = isPcByUA(ua);
+
+  if (!isPcUA) {
     return false;
   }
 

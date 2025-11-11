@@ -19,7 +19,6 @@ const Preview = (props: Props) => {
   const { worksId, query } = props;
   const [worksStore, setWorksStore] = useState<WorksStore>();
   const worksDetail = getWorksDetailStatic();
-
   const appid = getAppId();
 
   useEffect(() => {

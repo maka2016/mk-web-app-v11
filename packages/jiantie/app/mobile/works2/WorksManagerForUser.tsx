@@ -16,8 +16,8 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { ArrowDown, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { WorkDetailContent } from './components/WorkDetailContent';
-import { WorkInfoCard } from './components/WorkInfoCard';
+import { WorkDetailContent } from '../../../components/WorksDetailContent';
+import { WorkInfoCard } from '../../../components/WorksDetailContent/WorkInfoCard';
 
 dayjs.extend(relativeTime);
 
@@ -514,7 +514,11 @@ export default function WorksManagerForUser() {
 
       {/* 作品详情弹窗 */}
       <ResponsiveDialog
-        title='邀请函详情'
+        title={
+          selectedWorkId
+            ? worksList.find(work => work.id === selectedWorkId)?.title
+            : ''
+        }
         isOpen={detailDialogOpen}
         onOpenChange={open => {
           if (!open) {

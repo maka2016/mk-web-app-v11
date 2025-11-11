@@ -5,6 +5,7 @@ import { getCanvaInfo2 } from '@/components/GridV3/comp/provider/utils';
 import { calcViewerHeight } from '@/components/GridV3/comp/utils';
 import MusicManager from '@/components/GridV3/shared/LibContent/Music/MusicManager';
 import SaveErrorDialog from '@/components/SaveErrorDialog';
+import { WorkDetailContent } from '@/components/WorksDetailContent';
 import { getAppId, getUid } from '@/services';
 import { getUrlWithParam } from '@/utils';
 import { useCheckPublish } from '@/utils/checkPubulish';
@@ -45,16 +46,17 @@ const HeaderForUser = () => {
   const [showMusicLib, setShowMusicLib] = useState(false);
   const object_id = searchParams.get('object_id');
   const worksStore = useWorksStore();
-  const isRsvp = worksStore.worksDetail.is_rsvp;
-  const worksId = worksStore.worksDetail.id;
+  const worksDetail = worksStore.worksDetail;
+  const isRsvp = worksDetail.is_rsvp;
+  const worksId = worksDetail.id;
   const [creating, setCreating] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [errorStack, setErrorStack] = useState<string>('');
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const isPoster =
-    worksStore.worksDetail.specInfo.export_format?.includes('image');
+  const isPoster = worksDetail.specInfo.export_format?.includes('image');
 
   const [showUserGuide, setShowUserGuide] = useState(() => {
     const hasSeenTip = localStorage.getItem('has_seen_user_guide');
@@ -143,7 +145,8 @@ const HeaderForUser = () => {
         // 预览页
         toPreview();
       } else {
-        checkPublish();
+        setDetailDialogOpen(true);
+        // checkPublish();
       }
     } catch (error) {
       toast.dismiss();
@@ -355,6 +358,23 @@ const HeaderForUser = () => {
             }}
           />
         </>
+      </ResponsiveDialog>
+
+      {/* 作品详情弹窗 */}
+      <ResponsiveDialog
+        title='邀请函详情'
+        isOpen={detailDialogOpen}
+        onOpenChange={open => {
+          setDetailDialogOpen(open);
+        }}
+        showCloseIcon={true}
+      >
+        <WorkDetailContent
+          work={worksDetail as any}
+          shareOnly={true}
+          onClose={() => setDetailDialogOpen(false)}
+          onDataChange={() => {}}
+        />
       </ResponsiveDialog>
     </>
   );

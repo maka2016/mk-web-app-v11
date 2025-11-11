@@ -9,7 +9,7 @@ import { getAppId } from '@/services';
 import APPBridge from '@mk/app-bridge';
 import CommonLogger from '@mk/loggerv7/logger';
 import { request } from '@mk/services';
-import { isPc, isWechat, LoadScript } from '@mk/utils';
+import { isPcByUA, isWechat, LoadScript } from '@mk/utils';
 import dayjs from 'dayjs';
 import { EnvelopeClientAnimation } from '../../Envelope/EnvelopeClientAnimation';
 import { EnvelopeConfig } from '../../Envelope/types';
@@ -86,6 +86,9 @@ export default function WebsiteApp(props: WebsiteAppProps) {
   const H5ViewerContainerRef = useRef<any>(null);
   const [mountInBrowser, setMountInBrowser] = useState(false);
   const isScreenshot = !!query.screenshot;
+
+  // 使用服务端传递的 userAgent 来判断是否为 PC，确保 SSR 和客户端一致
+  const isPcDevice = isPcByUA(userAgent);
 
   // 从 worksDetail 中获取规格信息
   const specInfo = worksDetail.specInfo;
@@ -262,7 +265,7 @@ export default function WebsiteApp(props: WebsiteAppProps) {
         className={clas(
           `flex-1 h-full max-h-full w-full overflow-y-auto mx-auto viewer_page_root`,
           isWebsite ? 'overflow-x-hidden' : 'overflow-x-auto',
-          isWebsite && !isScreenshot && isPc() && 'md:max-w-[375px]'
+          isWebsite && !isScreenshot && isPcDevice && 'md:max-w-[375px]'
         )}
         style={{
           ...(!isWebsite && {
@@ -284,7 +287,7 @@ export default function WebsiteApp(props: WebsiteAppProps) {
           <div
             className={clas(
               'website_root',
-              isPc() && 'pc',
+              isPcDevice && 'pc',
               is_flip_page && 'flip_page h-full overflow-hidden'
               // !preloadEnd && 'hidden'
             )}

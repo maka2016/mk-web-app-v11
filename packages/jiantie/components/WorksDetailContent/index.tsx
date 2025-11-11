@@ -43,12 +43,14 @@ type RSVPStats = {
 };
 
 interface WorkDetailContentProps {
+  shareOnly?: boolean;
   work?: SerializedWorksEntity;
   onClose?: () => void;
   onDataChange?: () => void; // 数据变更回调（删除/复制后触发）
 }
 
 export function WorkDetailContent({
+  shareOnly = false,
   work,
   onClose,
   onDataChange,
@@ -357,47 +359,51 @@ export function WorkDetailContent({
     <>
       <div className='p-4 space-y-4 max-h-[70vh] overflow-y-auto pb-20'>
         {/* 作品信息卡片 */}
-        <WorkInfoCard
-          work={work}
-          rsvpStats={rsvpStats}
-          size='medium'
-          purchaseStatus={null}
-        />
+        {!shareOnly && (
+          <WorkInfoCard
+            work={work}
+            rsvpStats={rsvpStats}
+            size='medium'
+            purchaseStatus={null}
+          />
+        )}
 
         {/* 编辑操作 */}
-        <div className='space-y-3'>
-          <h3 className='text-sm font-semibold text-[#09090B]'>编辑操作</h3>
-          <div className='flex gap-2'>
-            {!isImageOrVideoSpec() && (
+        {!shareOnly && (
+          <div className='space-y-3'>
+            <h3 className='text-sm font-semibold text-[#09090B]'>编辑操作</h3>
+            <div className='flex gap-2'>
+              {!isImageOrVideoSpec() && (
+                <SmallActionButton
+                  icon={Eye}
+                  label='预览'
+                  onClick={handlePreview}
+                  disabled={isCopying || isDeleting}
+                />
+              )}
               <SmallActionButton
-                icon={Eye}
-                label='预览'
-                onClick={handlePreview}
+                icon={Pencil}
+                label='编辑'
+                onClick={handleEdit}
                 disabled={isCopying || isDeleting}
               />
-            )}
-            <SmallActionButton
-              icon={Pencil}
-              label='编辑'
-              onClick={handleEdit}
-              disabled={isCopying || isDeleting}
-            />
-            <SmallActionButton
-              icon={Copy}
-              label='复制'
-              onClick={handleCopy}
-              disabled={isDeleting}
-              loading={isCopying}
-            />
-            <SmallActionButton
-              icon={Trash2}
-              label='删除'
-              onClick={() => setDeleteDialogOpen(true)}
-              disabled={isCopying}
-              variant='destructive'
-            />
+              <SmallActionButton
+                icon={Copy}
+                label='复制'
+                onClick={handleCopy}
+                disabled={isDeleting}
+                loading={isCopying}
+              />
+              <SmallActionButton
+                icon={Trash2}
+                label='删除'
+                onClick={() => setDeleteDialogOpen(true)}
+                disabled={isCopying}
+                variant='destructive'
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 分享邀请 */}
         {
