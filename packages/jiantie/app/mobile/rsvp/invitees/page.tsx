@@ -403,6 +403,15 @@ export default function RSVPInviteesPage() {
 
       const filename = `宾客数据_${new Date().toISOString().split('T')[0]}.csv`;
 
+      navigator.share({
+        title: '宾客数据',
+        text: '宾客数据',
+        files: [new File([csvContent], filename, { type: 'text/csv' })],
+      });
+
+      return;
+
+      // 以下代码App暂不支持
       // 如果在APP环境中，使用APPBridge下载
       if (isInApp) {
         APPBridge.appCall(

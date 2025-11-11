@@ -191,6 +191,26 @@ export const rsvpRouter = router({
             });
             const contactUid = works?.uid;
 
+            if (!contactUid) {
+              // 记录错误日志但不抛出异常，继续提交（contact_id 为 null）
+              console.error(
+                `[RSVP] 无法创建联系人：表单配置 ${input.form_config_id} 关联的作品 ${form.works_id} 不存在或已删除`
+              );
+              console.error(
+                `[RSVP] 访客姓名：${guestName}，表单配置：${JSON.stringify({
+                  form_config_id: input.form_config_id,
+                  works_id: form.works_id,
+                  form_title: form.title,
+                })}`
+              );
+              // 抛出明确的错误，提示用户或管理员
+              throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message:
+                  '表单配置异常，请联系管理员。表单可能关联到已删除的作品。',
+              });
+            }
+
             if (contactUid) {
               // 创建新联系人（无需手机号，仅基于姓名）
               const created = await ctx.prisma.rsvpContactEntity.create({

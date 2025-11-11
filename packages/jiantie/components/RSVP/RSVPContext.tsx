@@ -104,41 +104,92 @@ export function RSVPProvider({
           });
           const dataAsAny = data as any;
 
-          // 检查是否被复制到其他作品：belongToWorksId != currWorksId
-          if (editorSDK && belongToWorksId && belongToWorksId !== currWorksId) {
-            // 该 RSVP 是被复制到其他作品的，需要创建新的 RSVP 实体
-            const newConfig = await trpc.rsvp.upsertFormConfig.mutate({
-              works_id: currWorksId,
-              title: dataAsAny?.title || '诚邀',
-              desc: dataAsAny?.desc ?? null,
-              form_fields:
-                dataAsAny?.form_fields ||
-                toRSVPFormFieldsJson(getDefaultFields()),
-              allow_multiple_submit: true, // 固定值：允许，不可配置
-              require_approval: false, // 固定值：不需要，不可配置
-              max_submit_count: null, // 固定值：无限，不可配置
-              submit_deadline: null, // 固定值：无限期，不可配置
-              enabled: dataAsAny?.enabled ?? true,
-              collect_form: dataAsAny?.collect_form ?? true,
-            } as any);
-            const newConfigData = newConfig as any;
+          // 检查是否被复制到其他作品：belongToWorksId != currWorksId 或 data.works_id != currWorksId
+          const dataWorksId = dataAsAny?.works_id;
+          const needCreateNew =
+            (belongToWorksId && belongToWorksId !== currWorksId) ||
+            (dataWorksId && dataWorksId !== currWorksId);
 
-            // 更新 attrs 的 worksId 和 formConfigId
-            editorSDK.changeCompAttr(layer.elemId, {
-              formConfigId: newConfigData.id,
-              worksId: currWorksId,
-            });
+          if (needCreateNew) {
+            // 该 RSVP 是被复制到其他作品的，或者表单配置的 works_id 与当前作品不匹配
+            // 需要为当前作品创建/查询对应的 RSVP 配置
 
-            // 使用新创建的配置
-            setConfigState({
-              ...newConfigData,
-              allow_multiple_submit: true, // 固定值：允许，不可配置
-              require_approval: false, // 固定值：不需要，不可配置
-              max_submit_count: null, // 固定值：无限，不可配置
-              submit_deadline: null, // 固定值：无限期，不可配置
-            });
-            setConfigId(newConfigData.id);
-            setTitle(newConfigData.title || '诚邀');
+            // 访客模式：显示错误，不允许提交
+            if (!editorSDK) {
+              setError(
+                '表单配置异常：此表单关联到其他作品，无法提交。请联系管理员重新配置。'
+              );
+              setLoading(false);
+              console.error(
+                `[RSVP] 表单配置关联错误 - formConfigId: ${formConfigId}, ` +
+                  `表单关联的works_id: ${dataWorksId}, ` +
+                  `当前作品ID: ${currWorksId}, ` +
+                  `attrs.worksId: ${belongToWorksId}`
+              );
+              return;
+            }
+
+            // 编辑器模式：尝试自动修复
+            // 先查询当前作品是否已有配置
+            const existingConfig = await trpc.rsvp.getFormConfigByWorksId.query(
+              {
+                works_id: currWorksId,
+              }
+            );
+
+            if (existingConfig && !existingConfig.deleted) {
+              // 当前作品已有配置，直接使用
+              const existingData = existingConfig as any;
+              setConfigState({
+                ...existingData,
+                allow_multiple_submit: true, // 固定值：允许，不可配置
+                require_approval: false, // 固定值：不需要，不可配置
+                max_submit_count: null, // 固定值：无限，不可配置
+                submit_deadline: null, // 固定值：无限期，不可配置
+              });
+              setConfigId(existingData.id);
+              setTitle(existingData.title || '诚邀');
+
+              // 更新 attrs
+              editorSDK.changeCompAttr(layer.elemId, {
+                formConfigId: existingData.id,
+                worksId: currWorksId,
+              });
+            } else {
+              // 当前作品没有配置，需要创建新的
+              const newConfig = await trpc.rsvp.upsertFormConfig.mutate({
+                works_id: currWorksId,
+                title: dataAsAny?.title || '诚邀',
+                desc: dataAsAny?.desc ?? null,
+                form_fields:
+                  dataAsAny?.form_fields ||
+                  toRSVPFormFieldsJson(getDefaultFields()),
+                allow_multiple_submit: true, // 固定值：允许，不可配置
+                require_approval: false, // 固定值：不需要，不可配置
+                max_submit_count: null, // 固定值：无限，不可配置
+                submit_deadline: null, // 固定值：无限期，不可配置
+                enabled: dataAsAny?.enabled ?? true,
+                collect_form: dataAsAny?.collect_form ?? true,
+              } as any);
+              const newConfigData = newConfig as any;
+
+              setConfigState({
+                ...newConfigData,
+                allow_multiple_submit: true, // 固定值：允许，不可配置
+                require_approval: false, // 固定值：不需要，不可配置
+                max_submit_count: null, // 固定值：无限，不可配置
+                submit_deadline: null, // 固定值：无限期，不可配置
+              });
+              setConfigId(newConfigData.id);
+              setTitle(newConfigData.title || '诚邀');
+
+              // 更新 attrs
+              editorSDK.changeCompAttr(layer.elemId, {
+                formConfigId: newConfigData.id,
+                worksId: currWorksId,
+              });
+            }
+
             setLoading(false);
             return;
           }

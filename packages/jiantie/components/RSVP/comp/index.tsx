@@ -783,10 +783,69 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
   }
 
   if (error) {
+    // 检查是否是配置错误（关联错误）
+    const isConfigError =
+      error.includes('表单配置异常') || error.includes('关联');
+
     return (
-      <div className='w-full py-6 text-center text-red-500 text-sm'>
-        {error}
-      </div>
+      <FormCompWrapper
+        className='w-full max-w-xl'
+        style={{
+          ...cssVariables,
+          pointerEvents: 'auto',
+        }}
+      >
+        <div className='p-6 space-y-4'>
+          <div className='flex flex-col items-center text-center space-y-3'>
+            {/* 错误图标 */}
+            <div className='w-12 h-12 rounded-full bg-red-100 flex items-center justify-center'>
+              <svg
+                className='w-6 h-6 text-red-600'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
+                />
+              </svg>
+            </div>
+
+            {/* 错误标题 */}
+            <h3
+              className='text-lg font-semibold'
+              style={{ color: 'var(--rsvp-text-color)' }}
+            >
+              {isConfigError ? '表单配置错误' : '加载失败'}
+            </h3>
+
+            {/* 错误信息 */}
+            <p className='text-sm text-red-600 leading-relaxed max-w-md'>
+              {error}
+            </p>
+
+            {/* 配置错误的额外说明 */}
+            {isConfigError && (
+              <div className='mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200'>
+                <p className='text-xs text-yellow-800 text-left space-y-1'>
+                  <span className='block font-medium'>可能的原因：</span>
+                  <span className='block'>
+                    • 作品被复制后，表单配置未正确关联
+                  </span>
+                  <span className='block'>• 原作品已被删除或移动</span>
+                  <span className='block mt-2 font-medium'>解决方法：</span>
+                  <span className='block'>
+                    请在编辑器中重新打开此作品，系统将自动修复配置
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </FormCompWrapper>
     );
   }
 

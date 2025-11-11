@@ -48,43 +48,13 @@ export const GridCompV2: React.FC<
   const currBlock = getActiveRootRow();
   const worksDetail = getWorksDetailStatic();
   const canvaInfo = getCanvaInfo2();
-  const { isWebsite, isFixedHeight, maxPageCount } = canvaInfo;
+  const { isWebsite, isFixedHeight, viewportScale } = canvaInfo;
   const [isAnimationCoverEnd, setIsAnimationCoverEnd] = useState(
     !gridProps.coverAnimation || !!editorSDK
   );
   const [isReadyToPlayAnimation, setIsReadyToPlayAnimation] =
     useState(isAnimationCoverEnd);
   const isScreenshot = !!queryToObj().screenshot;
-
-  function waitAllAnimations() {
-    return new Promise(resolve => {
-      let running = 0;
-
-      function check() {
-        if (running === 0) {
-          resolve(void 0);
-        }
-      }
-
-      document.addEventListener('animationstart', () => {
-        running++;
-      });
-
-      document.addEventListener('transitionstart', () => {
-        running++;
-      });
-
-      document.addEventListener('animationend', () => {
-        running--;
-        check();
-      });
-
-      document.addEventListener('transitionend', () => {
-        running--;
-        check();
-      });
-    });
-  }
 
   const isExportVideo = !!queryToObj().exportVideo;
   const GridRef = useRef<HTMLDivElement>(null);
@@ -120,6 +90,13 @@ export const GridCompV2: React.FC<
   useEffect(() => {
     if (typeof window === 'undefined') return;
     EventEmitter.on('autoScroll', onSetAutoScroll);
+    // 设置 viewportScale 到 body 的 CSS 变量
+    if (typeof document !== 'undefined' && typeof viewportScale === 'number') {
+      document.body.style.setProperty(
+        '--website-viewport-scale',
+        String(viewportScale)
+      );
+    }
     return () => {
       EventEmitter.rm('autoScroll', onSetAutoScroll);
     };
