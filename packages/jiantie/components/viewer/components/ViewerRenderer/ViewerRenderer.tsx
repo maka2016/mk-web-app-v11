@@ -137,7 +137,7 @@ export default class ViewerRenderer extends React.Component<
           {contentChild}
           {this.renderNormalCanvasItems()}
 
-          <div
+          {/* <div
             style={{
               position: 'absolute',
               bottom: 0,
@@ -152,7 +152,7 @@ export default class ViewerRenderer extends React.Component<
               alt='logo'
               className='w-full  '
             />
-          </div>
+          </div> */}
         </div>
       </div>
     );
