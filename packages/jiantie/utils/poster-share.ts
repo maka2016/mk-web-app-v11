@@ -127,7 +127,7 @@ export interface SharePosterParams {
  * 根据设备支持情况智能选择分享方式（images或link）
  * @param params 分享参数
  */
-export function sharePoster(params: SharePosterParams): void {
+export async function sharePoster(params: SharePosterParams): Promise<void> {
   const {
     worksId,
     title,
@@ -144,40 +144,50 @@ export function sharePoster(params: SharePosterParams): void {
   // 系统分享特殊处理
   if (shareType === 'system') {
     // Web环境：使用 navigator.share
-    if (!APPBridge.judgeIsInApp() && navigator.share) {
-      const shareUrl = `${location.origin}/viewer2/${worksId}?appid=${appid}`;
-      navigator
-        .share({
-          title: title || '邀请函',
-          text: desc || '',
-          url: shareUrl,
-        })
-        .catch(error => {
-          // 用户取消无需提示
-          if (error && error.name !== 'AbortError') {
-            toast.error('系统分享失败');
-          }
-        });
+    if (navigator.share) {
+      try {
+        // 检查是否支持分享文件
+        const canShareFiles =
+          navigator.canShare &&
+          navigator.canShare({
+            files: [new File([''], 'test.png', { type: 'image/png' })] as any,
+          });
+
+        if (canShareFiles && urls && urls.length > 0) {
+          // 支持文件分享，转换URLs为File对象
+          const files = await Promise.all(
+            urls.map(async (url, index) => {
+              const response = await fetch(url);
+              const blob = await response.blob();
+              return new File([blob], `poster-${index + 1}.png`, {
+                type: 'image/png',
+              });
+            })
+          );
+
+          await navigator.share({
+            title: title || '邀请函',
+            text: desc || '',
+            files,
+          });
+        } else {
+          // 不支持文件分享，降级为链接分享
+          const shareUrl = `${location.origin}/viewer2/${worksId}?appid=${appid}`;
+          await navigator.share({
+            title: title || '邀请函',
+            text: desc || '',
+            url: shareUrl,
+          });
+        }
+      } catch (error: any) {
+        // 用户取消无需提示
+        if (error && error.name !== 'AbortError') {
+          console.error('系统分享失败:', error);
+          toast.error('系统分享失败');
+        }
+      }
       return;
     }
-
-    // APP环境：使用 link 类型的系统分享
-    APPBridge.appCall({
-      type: 'MKShare',
-      appid: 'jiantie',
-      params: {
-        title: title || '邀请函',
-        content: desc || '',
-        thumb: cdnApi(cover || undefined, {
-          resizeWidth: 120,
-          format: 'webp',
-        }),
-        type: 'link',
-        shareType: 'system',
-        url: `${location.origin}/viewer2/${worksId}?appid=${appid}`,
-      },
-    });
-    return;
   }
 
   // 其他分享类型根据支持情况选择
@@ -237,7 +247,7 @@ export async function generateAndSharePoster(
     }
 
     // 执行分享
-    sharePoster({
+    await sharePoster({
       ...params,
       urls: result.urls,
       fileUri: result.fileUri,

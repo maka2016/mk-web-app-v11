@@ -238,11 +238,11 @@ const PosterExport = (props: Props) => {
     timer.current = null;
   };
 
-  const onShare = (to: 'wechat' | 'wechatTimeline') => {
+  const onShare = async (to: 'wechat' | 'wechatTimeline') => {
     let currentWorksDetail = resolvedWorksDetail;
 
     // 使用通用分享函数
-    sharePoster({
+    await sharePoster({
       worksId: worksId,
       title: currentWorksDetail?.title || '',
       desc: currentWorksDetail?.desc || '',
