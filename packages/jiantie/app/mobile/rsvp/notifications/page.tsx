@@ -1,9 +1,8 @@
 'use client';
-import { getAppId, getUid } from '@/services';
+import { getUid } from '@/services';
 import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import { Button } from '@workspace/ui/components/button';
-import { CheckCheck, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -25,9 +24,6 @@ export default function NotificationsPage() {
       return;
     }
 
-    if (isInitial) {
-      toast.loading('加载通知中...', { id: 'loading-notifications' });
-    }
     try {
       const data = await trpc.rsvp.getMyNotifications.query({
         user_id: userId,
@@ -154,7 +150,6 @@ export default function NotificationsPage() {
         submissionData.companions || submissionData._companions || 0;
       return {
         emoji: '✅',
-        iconBgColor: '#22c55e', // green-500
         cardBgColor: '#F0FDF4', // green-50
         borderColor: '#bbf7d0', // green-200
         message: companions > 0 ? `确认出席，${companions}位同行` : '确认出席',
@@ -165,25 +160,23 @@ export default function NotificationsPage() {
     if (willAttend === false) {
       return {
         emoji: '❌',
-        iconBgColor: '#ef4444', // red-500
         cardBgColor: '#fef2f2', // red-50
         borderColor: '#fecaca', // red-200
         message: '回复不出席',
       };
     }
 
-    // 查看邀请（view_page 类型或没有 submission）- 浅紫色
+    // 查看邀请（view_page 类型或没有 submission）- 紫色
     if (actionType === 'view_page' || !notification.submission) {
       return {
         emoji: '👀',
-        iconBgColor: '#a855f7', // purple-500
         cardBgColor: '#faf5ff', // purple-50
         borderColor: '#e9d5ff', // purple-200
         message: '查看了邀请',
       };
     }
 
-    // 有留言的情况（在 submission_data 中有留言字段）- 浅蓝色
+    // 有留言的情况（在 submission_data 中有留言字段）- 蓝色
     if (
       submissionData.message ||
       submissionData.comment ||
@@ -193,7 +186,6 @@ export default function NotificationsPage() {
         submissionData.message || submissionData.comment || submissionData.note;
       return {
         emoji: '💬',
-        iconBgColor: '#3b82f6', // blue-500
         cardBgColor: '#eff6ff', // blue-50
         borderColor: '#bfdbfe', // blue-200
         message:
@@ -203,22 +195,20 @@ export default function NotificationsPage() {
       };
     }
 
-    // 更新联系信息（resubmit 且数据有变化）- 浅黄色
+    // 更新联系信息（resubmit 且数据有变化）- 黄色
     if (actionType === 'resubmit') {
       return {
         emoji: '✏️',
-        iconBgColor: '#eab308', // yellow-500
         cardBgColor: '#fefce8', // yellow-50
         borderColor: '#fde047', // yellow-200
         message: '更新了联系信息',
       };
     }
 
-    // 系统通知 - 白色/浅灰色，金色铃铛
+    // 系统通知 - 灰色
     if (notification.is_system) {
       return {
         emoji: '🔔',
-        iconBgColor: '#f59e0b', // amber-500 (金色)
         cardBgColor: '#ffffff', // white
         borderColor: '#e5e7eb', // gray-200
         message: notification.message || '系统通知',
@@ -228,7 +218,6 @@ export default function NotificationsPage() {
     // 默认：已提交
     return {
       emoji: '✅',
-      iconBgColor: '#6b7280', // gray-500
       cardBgColor: '#ffffff', // white
       borderColor: '#e5e7eb', // gray-200
       message: '已提交',
@@ -239,26 +228,9 @@ export default function NotificationsPage() {
     return notification.contact?.name || '出席人数';
   };
 
-  // 跳转到作品预览页面
-  const handleGoToWork = (
-    e: React.MouseEvent,
-    worksId: string | null | undefined
-  ) => {
-    e.stopPropagation(); // 阻止触发通知卡片的点击事件
-    if (!worksId) {
-      toast.error('作品ID不存在');
-      return;
-    }
-
-    const uid = getUid();
-    const appid = getAppId();
-    const url = `/mobile/preview?works_id=${worksId}&uid=${uid}&appid=${appid}`;
-    navigateWithBridge({ path: url, router });
-  };
-
   return (
     <div className='relative bg-white min-h-screen pb-20'>
-      <div className='p-3'>
+      <div className='px-3 pt-3'>
         {!userId ? (
           <div className='text-center py-8 text-gray-500'>请先登录</div>
         ) : notifications.length === 0 ? (
@@ -266,12 +238,10 @@ export default function NotificationsPage() {
             {showUnreadOnly ? '暂无未读通知' : '暂无通知'}
           </div>
         ) : (
-          <div className='space-y-3 relative'>
+          <div className='space-y-2 relative'>
             {notifications.map((notification: any) => {
               const config = getNotificationConfig(notification);
               const senderName = getSenderName(notification);
-              const rsvpTitle = notification.form_config?.title || 'RSVP邀请';
-              const worksId = notification.form_config?.works_id;
 
               return (
                 <div
@@ -280,52 +250,32 @@ export default function NotificationsPage() {
                     backgroundColor: config.cardBgColor,
                     borderColor: config.borderColor,
                   }}
-                  className='p-3 rounded-xl cursor-pointer transition-colors shadow-sm border'
+                  className='p-3 rounded-[10px] cursor-pointer transition-colors border'
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <div className='flex items-start gap-3'>
                     {/* 图标 */}
-                    <div className='bg-white shadow-md rounded-full w-9 h-9 flex-shrink-0 flex items-center justify-center text-lg'>
+                    <div className='bg-white shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] rounded-full w-9 h-9 flex-shrink-0 flex items-center justify-center text-lg'>
                       {config.emoji}
                     </div>
 
                     {/* 内容 */}
                     <div className='flex-1 min-w-0'>
-                      <div className='flex items-start justify-between gap-2 mb-1'>
-                        <div className='flex items-center gap-1.5 flex-1 min-w-0'>
-                          <span className='font-medium text-sm text-gray-900'>
+                      <div className='flex items-center justify-between gap-2 mb-1 h-[21px]'>
+                        <div className='flex items-center gap-2 flex-1 min-w-0'>
+                          <span className='font-semibold text-sm text-[#101828] leading-[21px]'>
                             {senderName}
                           </span>
                           {!notification.is_read && (
-                            <div className='h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0' />
+                            <div className='h-1.5 w-1.5 rounded-full bg-[#155dfc] flex-shrink-0' />
                           )}
                         </div>
-                        <div className='text-xs text-gray-400 whitespace-nowrap'>
+                        <div className='text-xs text-[#6a7282] whitespace-nowrap leading-[18px]'>
                           {formatRelativeTime(notification.create_time)}
                         </div>
                       </div>
-                      <div className='text-sm text-gray-700 leading-5 mb-2'>
+                      <div className='text-sm text-[#101828] leading-5'>
                         {config.message}
-                      </div>
-
-                      {/* RSVP信息和跳转按钮 */}
-                      <div className='flex items-center justify-between gap-2 pt-2 border-t border-gray-200/50'>
-                        <div className='flex-1 min-w-0'>
-                          <div className='text-xs text-gray-500 truncate'>
-                            {rsvpTitle}
-                          </div>
-                        </div>
-                        {worksId && (
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            className='h-7 px-2 text-xs flex-shrink-0'
-                            onClick={e => handleGoToWork(e, worksId)}
-                          >
-                            <ExternalLink className='h-3 w-3 mr-1' />
-                            查看作品
-                          </Button>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -337,27 +287,27 @@ export default function NotificationsPage() {
       </div>
 
       {/* 底部按钮 */}
-      <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 flex gap-3'>
-        <Button
-          className='flex-1'
-          variant='outline'
-          onClick={handleMarkAllAsRead}
-          disabled={isMarkingAsRead || unreadCount === 0}
-        >
-          <CheckCheck className='h-4 w-4 mr-1' />
-          全部已读
-        </Button>
-        {/* <Button
-          className='flex-1'
-          variant='outline'
-          onClick={() => {
-            // TODO: 实现通知设置页面
-            toast.success('通知设置功能开发中');
-          }}
-        >
-          <Settings className='h-4 w-4 mr-1' />
-          通知设置
-        </Button> */}
+      <div className='fixed bottom-0 left-0 right-0 bg-gray-50 border-t border-gray-100 px-3 py-3'>
+        <div className='grid grid-cols-2 gap-2'>
+          <Button
+            className='h-8 bg-white border-gray-200 text-[#101828] hover:bg-gray-50'
+            variant='outline'
+            onClick={handleMarkAllAsRead}
+            disabled={isMarkingAsRead || unreadCount === 0}
+          >
+            全部已读
+          </Button>
+          <Button
+            className='h-8 bg-white border-gray-200 text-[#101828] hover:bg-gray-50'
+            variant='outline'
+            onClick={() => {
+              // TODO: 实现通知设置页面
+              toast.success('通知设置功能开发中');
+            }}
+          >
+            通知设置
+          </Button>
+        </div>
       </div>
     </div>
   );
