@@ -580,7 +580,7 @@ export default function WorkDetailPage() {
                         公开分享
                       </span>
                       <p className='text-xs text-gray-500 mt-1'>
-                        保存高清海报至相册，便于转发分享
+                        生成公开链接，任何人可填写回执
                       </p>
                     </div>
                     <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
