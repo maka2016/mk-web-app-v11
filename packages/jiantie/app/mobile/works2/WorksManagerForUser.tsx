@@ -7,16 +7,13 @@ import { API } from '@mk/services';
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
 } from '@workspace/ui/components/pagination';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { ArrowDown, Loader2 } from 'lucide-react';
+import { ArrowDown, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { WorkDetailContent } from './components/WorkDetailContent';
@@ -421,68 +418,98 @@ export default function WorksManagerForUser() {
               ))}
             </div>
           )}
+          {/* 分页 - 固定在底部 */}
+          {totalPages > 1 && (
+            <div className='py-2 mt-4'>
+              <Pagination className='w-full'>
+                <PaginationContent className='gap-2 w-full'>
+                  <PaginationItem>
+                    <PaginationLink
+                      onClick={() => page > 1 && setPage(page - 1)}
+                      className={`h-8 w-8 p-0 text-xs bg-white border border-gray-300 hover:border-gray-400 ${page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
+                      aria-label='上一页'
+                    >
+                      <ChevronLeft className='h-4 w-4' />
+                    </PaginationLink>
+                  </PaginationItem>
+
+                  <div className='flex gap-2 items-center'>
+                    {(() => {
+                      const pages: (number | 'ellipsis')[] = [];
+                      const maxVisible = 7; // 增加可见页码数量
+
+                      if (totalPages <= maxVisible) {
+                        for (let i = 1; i <= totalPages; i++) {
+                          pages.push(i);
+                        }
+                      } else {
+                        const leftSiblings = 1;
+                        const rightSiblings = 1;
+
+                        if (page <= 3) {
+                          for (let i = 1; i <= 4; i++) {
+                            pages.push(i);
+                          }
+                          pages.push('ellipsis', totalPages);
+                        } else if (page >= totalPages - 2) {
+                          pages.push(1, 'ellipsis');
+                          for (let i = totalPages - 3; i <= totalPages; i++) {
+                            pages.push(i);
+                          }
+                        } else {
+                          pages.push(1, 'ellipsis');
+                          for (
+                            let i = page - leftSiblings;
+                            i <= page + rightSiblings;
+                            i++
+                          ) {
+                            pages.push(i);
+                          }
+                          pages.push('ellipsis', totalPages);
+                        }
+                      }
+
+                      return pages.map((item, index) => {
+                        if (item === 'ellipsis') {
+                          return (
+                            <span key={`ellipsis-${index}`} className='px-1'>
+                              ...
+                            </span>
+                          );
+                        }
+                        return (
+                          <PaginationItem key={item}>
+                            <PaginationLink
+                              onClick={() => setPage(item)}
+                              isActive={page === item}
+                              className={`cursor-pointer h-8 w-8 text-xs bg-white border ${
+                                page === item
+                                  ? 'border-blue-500 text-blue-600 font-semibold'
+                                  : 'border-gray-300 hover:border-gray-400'
+                              }`}
+                            >
+                              {item}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      });
+                    })()}
+                  </div>
+
+                  <PaginationItem>
+                    <PaginationLink
+                      onClick={() => page < totalPages && setPage(page + 1)}
+                      className={`h-8 w-8 p-0 text-xs bg-white border border-gray-300 hover:border-gray-400 ${page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
+                      aria-label='下一页'
+                    >
+                      <ChevronRight className='h-4 w-4' />
+                    </PaginationLink>
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
-
-        {/* 分页 - 固定在底部 */}
-        {totalPages > 1 && (
-          <div className='bg-white border-t border-gray-200 px-2 py-2 z-10'>
-            <Pagination className='justify-center'>
-              <PaginationContent className='gap-0.5'>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => page > 1 && setPage(page - 1)}
-                    className={`h-8 px-2 text-xs ${page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
-                  />
-                </PaginationItem>
-                {(() => {
-                  const pages: (number | 'ellipsis')[] = [];
-                  const maxVisible = 3; // 减少可见页码数量
-
-                  if (totalPages <= maxVisible) {
-                    for (let i = 1; i <= totalPages; i++) {
-                      pages.push(i);
-                    }
-                  } else {
-                    if (page === 1) {
-                      pages.push(1, 2, 'ellipsis', totalPages);
-                    } else if (page === totalPages) {
-                      pages.push(1, 'ellipsis', totalPages - 1, totalPages);
-                    } else {
-                      pages.push(1, 'ellipsis', page, 'ellipsis', totalPages);
-                    }
-                  }
-
-                  return pages.map((item, index) => {
-                    if (item === 'ellipsis') {
-                      return (
-                        <PaginationItem key={`ellipsis-${index}`}>
-                          <PaginationEllipsis className='h-8 w-8' />
-                        </PaginationItem>
-                      );
-                    }
-                    return (
-                      <PaginationItem key={item}>
-                        <PaginationLink
-                          onClick={() => setPage(item)}
-                          isActive={page === item}
-                          className='cursor-pointer h-8 w-8 text-xs'
-                        >
-                          {item}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  });
-                })()}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => page < totalPages && setPage(page + 1)}
-                    className={`h-8 px-2 text-xs ${page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
       </div>
 
       {/* 作品详情弹窗 */}
