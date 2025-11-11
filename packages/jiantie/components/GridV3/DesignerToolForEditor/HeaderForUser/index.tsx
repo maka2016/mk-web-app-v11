@@ -49,6 +49,7 @@ const HeaderForUser = () => {
   const worksId = worksStore.worksDetail.id;
   const [creating, setCreating] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
   const isPoster =
@@ -145,8 +146,10 @@ const HeaderForUser = () => {
       }
     } catch (error) {
       toast.dismiss();
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      setErrorMessage(errorMsg);
       setShowErrorMessage(true);
-      toast.error(t('failed'));
+      toast.error(errorMsg);
       setCreating(false);
     }
   };
@@ -283,6 +286,7 @@ const HeaderForUser = () => {
         open={showErrorMessage}
         onOpenChange={setShowErrorMessage}
         onRetry={() => {}}
+        errorMessage={errorMessage}
       ></SaveErrorDialog>
 
       <ResponsiveDialog

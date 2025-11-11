@@ -1,6 +1,5 @@
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -14,12 +13,14 @@ interface SaveErrorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRetry: () => void;
+  errorMessage?: string;
 }
 
 export default function SaveErrorDialog({
   open,
   onOpenChange,
   onRetry,
+  errorMessage,
 }: SaveErrorDialogProps) {
   const handleReload = () => {
     window.location.reload();
@@ -33,6 +34,11 @@ export default function SaveErrorDialog({
           <AlertDialogTitle>{t('saveError')}</AlertDialogTitle>
           <AlertDialogDescription className='text-black/88'>
             {t('errorTip')}
+            {errorMessage && (
+              <div className='mt-2 p-2 bg-red-50 rounded text-sm text-red-600 break-words'>
+                {errorMessage}
+              </div>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
