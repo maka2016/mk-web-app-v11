@@ -1,6 +1,9 @@
 import { getAppId, getToken, getUid } from '@/services';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
-import type { WorksEntity } from '@workspace/database/generated/client';
+import type {
+  WorksEntity,
+  WorksSpecEntity,
+} from '@workspace/database/generated/client';
 import type { AppRouter } from '@workspace/server';
 
 /**
@@ -38,6 +41,7 @@ export type SerializedWorksEntity = Omit<
   create_time: string;
   update_time: string;
   custom_time: string | null;
+  specInfo?: WorksSpecEntity;
 };
 
 /**
