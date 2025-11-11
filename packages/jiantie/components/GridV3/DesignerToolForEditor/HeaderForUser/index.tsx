@@ -50,6 +50,7 @@ const HeaderForUser = () => {
   const [creating, setCreating] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorStack, setErrorStack] = useState<string>('');
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
   const isPoster =
@@ -147,7 +148,10 @@ const HeaderForUser = () => {
     } catch (error) {
       toast.dismiss();
       const errorMsg = error instanceof Error ? error.message : String(error);
+      const errorStackTrace =
+        error instanceof Error && error.stack ? error.stack : '';
       setErrorMessage(errorMsg);
+      setErrorStack(errorStackTrace);
       setShowErrorMessage(true);
       toast.error(errorMsg);
       setCreating(false);
@@ -287,6 +291,7 @@ const HeaderForUser = () => {
         onOpenChange={setShowErrorMessage}
         onRetry={() => {}}
         errorMessage={errorMessage}
+        errorStack={errorStack}
       ></SaveErrorDialog>
 
       <ResponsiveDialog
