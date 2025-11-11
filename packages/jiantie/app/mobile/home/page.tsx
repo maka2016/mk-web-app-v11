@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { Suspense } from 'react';
 import Main from './components/main';
 import { getChannelData, getStoreChannelV1 } from './provider';
+import { redirect } from 'next/navigation';
 
 export default async function Page({
   searchParams,
@@ -19,6 +20,11 @@ export default async function Page({
   const headersList = await headers();
   const userAgent = headersList.get('user-agent') || '';
   const isMiniProgram = /miniProgram/i.test(userAgent);
+
+  //如果是安卓则跳转home2
+  if (userAgent.toLocaleLowerCase().includes('android')) {
+    return redirect('/mobile/home2');
+  }
 
   const isStoreV1 =
     appid === 'jiantie' || appid === 'xueji' || storeChannelV1 === 'true';
