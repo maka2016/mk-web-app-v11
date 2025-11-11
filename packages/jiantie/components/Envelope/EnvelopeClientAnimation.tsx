@@ -27,7 +27,7 @@ function parseEasing(easing?: string): [number, number, number, number] {
 }
 
 const Container = styled.div<{ $clickable: boolean }>`
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -96,6 +96,17 @@ const EnvelopeLayer = styled(motion.div)`
   height: 100%;
   perspective: 1000px;
   transform-style: preserve-3d;
+`;
+
+/**
+ * 信封背景层
+ */
+const InvitationContentBg = styled(motion.div)`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 `;
 
 /**
@@ -176,10 +187,10 @@ const RightFlap = styled(motion.img)`
   position: absolute;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   transform-origin: right center;
   backface-visibility: hidden;
-  z-index: 2;
+  z-index: 3;
 `;
 
 const SealImage = styled(motion.img)`
@@ -235,7 +246,7 @@ export function EnvelopeClientAnimation({
   const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('idle');
   const contentShownRef = useRef(false); // 跟踪内容是否已经显示过
   const searchParams = useSearchParams();
-  const rsvp_invitee = searchParams.get('rsvp_invitee');
+  const [rsvp_invitee] = useState(searchParams.get('rsvp_invitee') || '');
 
   // 通过 URL 参数控制调试模式：?envelope_debug=true
   const isDebugMode = searchParams.get('envelope_debug') === 'true';
@@ -257,7 +268,7 @@ export function EnvelopeClientAnimation({
   // 动画时序配置（毫秒）
   const SEAL_DISAPPEAR_DURATION = 300;
   const LEFT_OPEN_DURATION = 1200;
-  const CONTENT_SEPARATE_DURATION = 1200; // 内容和信封分离的时长
+  const CONTENT_SEPARATE_DURATION = 800; // 内容和信封分离的时长
   const CONTENT_EXPAND_DURATION = 1600;
 
   const LEFT_OPEN_DELAY = 300; // 印章消失后开始
@@ -466,7 +477,7 @@ export function EnvelopeClientAnimation({
           {/* 背景层 - 重复铺满 */}
           <BackgroundLayer
             key='background'
-            title='背景层'
+            title='作品背景层'
             $bgImage={config?.backgroundImage || ''}
             initial={{ opacity: 1 }}
             animate={{
@@ -474,64 +485,6 @@ export function EnvelopeClientAnimation({
             }}
             transition={{ duration: 0.5 }}
           />
-
-          {/* 邀请函内容，需要与信封分离显示 */}
-          <InvitationContentLayer
-            title='邀请函内容预览层'
-            initial={{ left: '50%', scale: 0.5, x: '-50%', y: '-50%' }}
-            animate={{
-              left: isContentSeparating
-                ? isContentExpanding
-                  ? '50%' // expanding 阶段：回到中心
-                  : '15%' // separating 阶段：往左移动
-                : '50%', // 初始：中心
-              scale:
-                animationPhase === 'content-separating'
-                  ? 0.3
-                  : isContentExpanding
-                    ? 1
-                    : 0.5,
-              x: '-50%',
-              y: '-50%',
-            }}
-            transition={{
-              left: {
-                duration:
-                  animationPhase === 'content-separating'
-                    ? CONTENT_SEPARATE_DURATION / 1000
-                    : animationPhase === 'content-expanding'
-                      ? CONTENT_EXPAND_DURATION / 1000
-                      : 0,
-                ease:
-                  animationPhase === 'content-separating'
-                    ? [0, 0, 1, 1] // linear
-                    : [0.4, 0, 0.2, 1], // ease-in-out
-              },
-              scale: {
-                duration:
-                  animationPhase === 'content-expanding'
-                    ? CONTENT_EXPAND_DURATION / 1000
-                    : 0,
-                ease: [0.4, 0, 0.2, 1],
-              },
-            }}
-            style={{
-              zIndex: isContentExpanding ? 10000 : 3,
-            }}
-          >
-            <InvitationContentInner>
-              <div
-                id='envelope-invitation-preview'
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  position: 'relative',
-                  // overflow: 'hidden',
-                  // aspectRatio: '3/4',
-                }}
-              />
-            </InvitationContentInner>
-          </InvitationContentLayer>
 
           {/* 信封层：完成后完全退出画布 */}
           <AnimatePresence>
@@ -541,21 +494,51 @@ export function EnvelopeClientAnimation({
                 title='信封层容器'
                 initial={{ left: '50%', x: '-50%', y: '-50%', opacity: 1 }}
                 animate={{
-                  left: isContentSeparating
-                    ? isContentExpanding
-                      ? '120%' // expanding 阶段：继续往右移出
-                      : '95%' // separating 阶段：往右移动
-                    : '50%', // 初始：中心
-                  x: '-50%',
+                  left: '50%', // 初始：中心
+                  x: isContentSeparating ? '75%' : '-50%',
                   y: '-50%',
-                  scale: animationPhase === 'content-separating' ? 0.6 : 1,
-                  opacity: isContentExpanding ? 0 : 1, // expanding 阶段淡出
+                  height: isContentExpanding
+                    ? '100%'
+                    : 'calc(80vw * 162 / 114)',
+                  width: isContentExpanding ? '100%' : '80vw',
+                  scale: animationPhase === 'content-separating' ? 1 : 1,
+                  // opacity: isContentExpanding ? 0 : 1, // expanding 阶段淡出
                 }}
                 exit={{
                   opacity: 0,
                   transition: { duration: 0 },
                 }}
                 transition={{
+                  height: {
+                    duration:
+                      animationPhase === 'content-separating'
+                        ? CONTENT_SEPARATE_DURATION / 1000
+                        : animationPhase === 'content-expanding'
+                          ? CONTENT_EXPAND_DURATION / 1000
+                          : 0,
+                    ease: easing,
+                  },
+                  width: {
+                    duration:
+                      animationPhase === 'content-separating'
+                        ? CONTENT_SEPARATE_DURATION / 1000
+                        : animationPhase === 'content-expanding'
+                          ? CONTENT_EXPAND_DURATION / 1000
+                          : 0,
+                    ease: easing,
+                  },
+                  x: {
+                    duration:
+                      animationPhase === 'content-separating'
+                        ? CONTENT_SEPARATE_DURATION / 1000
+                        : animationPhase === 'content-expanding'
+                          ? CONTENT_EXPAND_DURATION / 1000
+                          : 0,
+                    ease:
+                      animationPhase === 'content-separating'
+                        ? [0, 0, 1, 1] // linear
+                        : easing, // ease-in-out
+                  },
                   left: {
                     duration:
                       animationPhase === 'content-separating'
@@ -591,11 +574,79 @@ export function EnvelopeClientAnimation({
                     },
                   }}
                 >
+                  <InvitationContentBg
+                    title='邀请函内容背景层'
+                    style={{
+                      backgroundImage: `url(${config?.envelopeInnerImage || ''})`,
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'repeat',
+                    }}
+                  ></InvitationContentBg>
+
+                  <InvitationContentLayer
+                    title='邀请函内容预览层'
+                    initial={{ left: '50%', scale: 0.9, x: '-50%', y: '-50%' }}
+                    animate={{
+                      left: '50%', // 初始：中心
+                      scale: isContentExpanding ? 1 : 0.9,
+                      x: isContentSeparating ? '-175%' : '-50%',
+                      y: '-50%',
+                    }}
+                    transition={{
+                      x: {
+                        duration:
+                          animationPhase === 'content-separating'
+                            ? CONTENT_SEPARATE_DURATION / 1000
+                            : animationPhase === 'content-expanding'
+                              ? CONTENT_EXPAND_DURATION / 1000
+                              : 0,
+                        ease:
+                          animationPhase === 'content-separating'
+                            ? [0, 0, 1, 1] // linear
+                            : easing, // ease-in-out
+                      },
+                      left: {
+                        duration:
+                          animationPhase === 'content-separating'
+                            ? CONTENT_SEPARATE_DURATION / 1000
+                            : animationPhase === 'content-expanding'
+                              ? CONTENT_EXPAND_DURATION / 1000
+                              : 0,
+                        ease:
+                          animationPhase === 'content-separating'
+                            ? [0, 0, 1, 1] // linear
+                            : [0.4, 0, 0.2, 1], // ease-in-out
+                      },
+                      scale: {
+                        duration:
+                          animationPhase === 'content-expanding'
+                            ? CONTENT_EXPAND_DURATION / 1000
+                            : 0,
+                        ease: [0.4, 0, 0.2, 1],
+                      },
+                    }}
+                    style={{
+                      zIndex: isContentExpanding ? 10000 : 3,
+                    }}
+                  >
+                    <InvitationContentInner>
+                      <div
+                        id='envelope-invitation-preview'
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          position: 'relative',
+                          // overflow: 'hidden',
+                          // aspectRatio: '3/4',
+                        }}
+                      />
+                    </InvitationContentInner>
+                  </InvitationContentLayer>
                   {/* 左侧翻转卡片 */}
                   <LeftFlapCard title='左侧翻转卡片'>
                     <LeftFlapInner
                       initial={{ rotateY: 0 }}
-                      animate={{ rotateY: hasLeftOpened ? -180 : 0 }}
+                      animate={{ rotateY: hasLeftOpened ? -260 : 0 }}
                       transition={{
                         duration:
                           animationPhase === 'left-opening'
@@ -630,7 +681,7 @@ export function EnvelopeClientAnimation({
 
                   <RightFlap
                     title='信封右开口，不做动画'
-                    src={config?.envelopeInnerImage || ''}
+                    src={config?.envelopeRightOpeningImage || ''}
                     alt='信封右开口'
                   ></RightFlap>
 
@@ -671,17 +722,17 @@ export function EnvelopeClientAnimation({
             {rsvp_invitee && animationPhase === 'idle' && (
               <GuestNameText
                 key='guest-name'
-                initial={{ opacity: 0, left: '8vw' }}
-                animate={{ opacity: 1, left: '10vw' }}
+                initial={{ opacity: 0, left: '0' }}
+                animate={{ opacity: 1, left: '5vw' }}
                 exit={{
                   opacity: 0,
-                  left: '8vw',
+                  left: '0',
                   transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
                 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 <p className='text-sm'>诚邀</p>
-                <p>{decodeURIComponent(rsvp_invitee)}</p>
+                <p>{decodeURIComponent(rsvp_invitee || '')}</p>
               </GuestNameText>
             )}
           </AnimatePresence>
@@ -691,14 +742,14 @@ export function EnvelopeClientAnimation({
             {animationPhase === 'idle' && (
               <ClickHintText
                 key='click-hint'
-                initial={{ opacity: 0, right: '8vw' }}
+                initial={{ opacity: 0, right: '0' }}
                 animate={{
-                  opacity: [1, 0.6, 1],
-                  right: '10vw',
+                  opacity: [0, 1, 0.6, 1],
+                  right: '5vw',
                 }}
                 exit={{
                   opacity: 0,
-                  right: '8vw',
+                  right: '0',
                   transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
                 }}
                 transition={{
