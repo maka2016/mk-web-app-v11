@@ -8,6 +8,7 @@ import { generateAndSharePoster } from '@/utils/poster-share';
 import { useShareNavigation } from '@/utils/share';
 import { SerializedWorksEntity, trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
+import { cdnApi } from '@mk/services';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,7 @@ import {
   FileText,
   Globe,
   Pencil,
+  Share2,
   Target,
   Trash2,
 } from 'lucide-react';
@@ -245,7 +247,7 @@ export function WorkDetailContent({
     navigateWithBridge({ path: url, router });
   };
 
-  // 分享给微信好友（图片/视频规格）
+  // 分享给微信好友
   const handleShareToWechat = async () => {
     if (!work || !workId) return;
 
@@ -256,7 +258,35 @@ export function WorkDetailContent({
       return;
     }
 
+    if (!isImageOrVideoSpec()) {
+      // 微信分享缩略图尺寸限制：建议 500x400 (5:4 比例)，使用 cdnApi 调整尺寸
+      const thumbUrl = work.cover
+        ? cdnApi(work.cover, {
+            resizeWidth: 500,
+            resizeHeight: 400,
+            format: 'webp',
+            quality: 85,
+            mode: 'lfit',
+          })
+        : '';
+
+      APPBridge.appCall({
+        type: 'MKShare',
+        appid: 'jiantie',
+        params: {
+          title: work.title || '邀请函',
+          content: work.desc || '',
+          thumb: thumbUrl,
+          type: 'link',
+          shareType: 'wechat',
+          url: `${location.origin}/viewer2/${work.id}?appid=${getAppId()}`,
+        },
+      });
+      return;
+    }
+
     try {
+      // 图片/视频规格
       setIsGeneratingPoster(true);
       toast.loading('生成海报中...');
       // 使用通用函数生成并分享海报
@@ -287,39 +317,19 @@ export function WorkDetailContent({
       } else {
         toVideoShare(work.id);
       }
+    } else {
+      toPosterShare(work.id);
     }
   };
 
-  // 更多分享方式（系统分享）（图片/视频规格）
+  // 更多分享方式（系统分享）非rsvp
   const handleMoreShare = async () => {
     if (!work || !workId) return;
-
-    // 检查分享权限
-    const hasPermission = await checkSharePermission();
-    if (!hasPermission) {
-      showVipInterceptor();
-      return;
-    }
-
-    try {
-      setIsGeneratingPoster(true);
-      toast.loading('生成海报中...');
-      // 使用通用函数生成并分享海报
-      const success = await generateAndSharePoster({
-        worksId: workId,
-        title: work.title || '邀请函',
-        desc: (work as any).desc || '',
-        cover: work.cover,
-        shareType: 'system',
-      });
-
-      if (!success) {
-        toast.error('分享失败，请重试');
-      }
-    } finally {
-      setIsGeneratingPoster(false);
-      toast.dismiss();
-    }
+    navigator.share({
+      title: work.title || '邀请函',
+      text: work.desc || '',
+      url: `${location.origin}/viewer2/${work.id}?appid=${getAppId()}`,
+    });
   };
 
   if (!work) {
@@ -389,12 +399,12 @@ export function WorkDetailContent({
         </div>
 
         {/* 分享邀请 */}
-        {(work.is_rsvp || isImageOrVideoSpec()) && (
+        {
           <div className='space-y-3'>
             <h3 className='text-sm font-semibold text-[#71717a]'>分享邀请</h3>
 
-            {/* 图片/视频规格的分享选项 */}
-            {isImageOrVideoSpec() && !isMiniP && (
+            {/* 非rsvp规格的分享选项 */}
+            {!work.is_rsvp && !isMiniP && (
               <div className='space-y-2'>
                 {/* 分享给微信好友 */}
                 {isInApp && (
@@ -440,40 +450,44 @@ export function WorkDetailContent({
                 )}
 
                 {/* 保存到手机相册 */}
-                <button
-                  onClick={handleSaveToAlbum}
-                  disabled={isGeneratingPoster}
-                  className='w-full bg-white border border-[#e4e4e7] rounded-[14px] p-4 flex items-center gap-3 active:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
-                >
-                  <div className='w-11 h-11 flex items-center justify-center flex-shrink-0'>
-                    <span className='text-2xl'>📥</span>
-                  </div>
-                  <div className='flex-1 text-left'>
-                    <div className='text-base font-semibold text-[#09090b] leading-6'>
-                      保存到手机相册
+                {
+                  <button
+                    onClick={handleSaveToAlbum}
+                    disabled={isGeneratingPoster}
+                    className='w-full bg-white border border-[#e4e4e7] rounded-[14px] p-4 flex items-center gap-3 active:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
+                  >
+                    <div className='w-11 h-11 flex items-center justify-center flex-shrink-0'>
+                      <span className='text-2xl'>📥</span>
                     </div>
-                    <div className='text-xs text-[#6a7282] leading-[18px]'>
-                      保存高清海报至相册，便于转发分享
+                    <div className='flex-1 text-left'>
+                      <div className='text-base font-semibold text-[#09090b] leading-6'>
+                        保存到手机相册
+                      </div>
+                      <div className='text-xs text-[#6a7282] leading-[18px]'>
+                        保存高清海报至相册，便于转发分享
+                      </div>
                     </div>
-                  </div>
-                  <div className='text-[#99a1af] text-xl'>›</div>
-                </button>
+                    <div className='text-[#99a1af] text-xl'>›</div>
+                  </button>
+                }
 
                 {/* 更多分享方式 */}
-                {/* <Button
-                  onClick={handleMoreShare}
-                  disabled={isGeneratingPoster}
-                  variant='outline'
-                  className='w-full h-auto py-2 px-4 bg-white border-[#e4e4e7] rounded-md text-[#09090b] hover:bg-gray-50'
-                >
-                  <Share2 size={14} className='mr-1' />
-                  <span className='text-sm font-semibold'>更多分享方式</span>
-                </Button> */}
+                {!isImageOrVideoSpec() && (
+                  <Button
+                    onClick={handleMoreShare}
+                    disabled={isGeneratingPoster}
+                    variant='outline'
+                    className='w-full h-auto py-2 px-4 bg-white border-[#e4e4e7] rounded-md text-[#09090b] hover:bg-gray-50'
+                  >
+                    <Share2 size={14} className='mr-1' />
+                    <span className='text-sm font-semibold'>更多分享方式</span>
+                  </Button>
+                )}
               </div>
             )}
 
             {/* RSVP 类型的分享选项 */}
-            {work.is_rsvp && !isImageOrVideoSpec() && (
+            {work.is_rsvp && (
               <div className='space-y-3'>
                 {/* 指定嘉宾 */}
                 <button
@@ -515,7 +529,7 @@ export function WorkDetailContent({
               </div>
             )}
           </div>
-        )}
+        }
 
         {/* 宾客回执（仅 RSVP 类型） */}
         {work.is_rsvp && (
