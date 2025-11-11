@@ -163,7 +163,7 @@ export function WorkDetailContent({
     if (!work) return;
     const uid = getUid();
     const appid = getAppId();
-    const url = `/mobile/editor?works_id=${work.id}&uid=${uid}&appid=${appid}`;
+    const url = `/editor?works_id=${work.id}&uid=${uid}&appid=${appid}`;
     navigateWithBridge({ path: url, router });
   };
 
