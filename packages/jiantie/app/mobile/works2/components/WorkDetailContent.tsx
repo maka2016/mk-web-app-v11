@@ -21,7 +21,6 @@ import {
 } from '@workspace/ui/components/alert-dialog';
 import { Button } from '@workspace/ui/components/button';
 import {
-  ChevronRight,
   Copy,
   Eye,
   FileText,
@@ -34,6 +33,8 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { ActionButton, RoundedActionButton } from './ActionButton';
+import { SmallActionButton } from './SmallActionButton';
 import { WorkInfoCard } from './WorkInfoCard';
 
 type RSVPStats = {
@@ -310,6 +311,12 @@ export function WorkDetailContent({
   // 保存到手机相册（图片/视频规格）
   const handleSaveToAlbum = async () => {
     if (!work) return;
+    // 检查分享权限
+    const hasPermission = await checkSharePermission();
+    if (!hasPermission) {
+      showVipInterceptor();
+      return;
+    }
     if (isImageOrVideoSpec()) {
       const specInfo = (work as any).specInfo;
       if (specInfo?.export_format?.includes('image')) {
@@ -325,6 +332,12 @@ export function WorkDetailContent({
   // 更多分享方式（系统分享）非rsvp
   const handleMoreShare = async () => {
     if (!work || !workId) return;
+    // 检查分享权限
+    const hasPermission = await checkSharePermission();
+    if (!hasPermission) {
+      showVipInterceptor();
+      return;
+    }
     navigator.share({
       title: work.title || '邀请函',
       text: work.desc || '',
@@ -356,45 +369,33 @@ export function WorkDetailContent({
           <h3 className='text-sm font-semibold text-[#09090B]'>编辑操作</h3>
           <div className='flex gap-2'>
             {!isImageOrVideoSpec() && (
-              <Button
-                variant='outline'
+              <SmallActionButton
+                icon={Eye}
+                label='预览'
                 onClick={handlePreview}
                 disabled={isCopying || isDeleting}
-                className='flex items-center justify-center gap-1 h-auto py-2 px-2 flex-1'
-              >
-                <Eye className='w-4 h-4 text-gray-600' />
-                <span className='text-xs text-gray-600'>预览</span>
-              </Button>
+              />
             )}
-            <Button
-              variant='outline'
+            <SmallActionButton
+              icon={Pencil}
+              label='编辑'
               onClick={handleEdit}
               disabled={isCopying || isDeleting}
-              className='flex items-center justify-center gap-1 h-auto py-2 px-2 flex-1'
-            >
-              <Pencil className='w-4 h-4 text-gray-600' />
-              <span className='text-xs text-gray-600'>编辑</span>
-            </Button>
-            <Button
-              variant='outline'
+            />
+            <SmallActionButton
+              icon={Copy}
+              label='复制'
               onClick={handleCopy}
-              disabled={isCopying || isDeleting}
-              className='flex items-center justify-center gap-1 h-auto py-2 px-2 flex-1'
-            >
-              <Copy className='w-4 h-4 text-gray-600' />
-              <span className='text-xs text-gray-600'>
-                {isCopying ? '复制中...' : '复制'}
-              </span>
-            </Button>
-            <Button
-              variant='outline'
+              disabled={isDeleting}
+              loading={isCopying}
+            />
+            <SmallActionButton
+              icon={Trash2}
+              label='删除'
               onClick={() => setDeleteDialogOpen(true)}
-              disabled={isCopying || isDeleting}
-              className='flex items-center justify-center gap-1 h-auto py-2 px-2 flex-1'
-            >
-              <Trash2 className='w-4 h-4 text-red-500' />
-              <span className='text-xs text-red-500'>删除</span>
-            </Button>
+              disabled={isCopying}
+              variant='destructive'
+            />
           </div>
         </div>
 
@@ -408,68 +409,30 @@ export function WorkDetailContent({
               <div className='space-y-2'>
                 {/* 分享给微信好友 */}
                 {isInApp && (
-                  <button
+                  <ActionButton
+                    icon={
+                      <img
+                        src='https://img2.maka.im/cdn/webstore10/jiantie/icon_weixin.png'
+                        alt='微信'
+                        className='w-6 h-6'
+                      />
+                    }
+                    iconBgColor='bg-[#67d773]'
+                    title='分享给微信好友'
+                    description='生成可直接发送给好友的邀请函'
                     onClick={handleShareToWechat}
                     disabled={isGeneratingPoster}
-                    className='w-full bg-white border border-[#e4e4e7] rounded-[14px] p-4 flex items-center gap-3 active:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
-                  >
-                    <div className='w-11 h-11 bg-[#67d773] rounded-xl flex items-center justify-center flex-shrink-0'>
-                      <svg
-                        width='24'
-                        height='24'
-                        viewBox='0 0 24 24'
-                        fill='none'
-                        xmlns='http://www.w3.org/2000/svg'
-                      >
-                        <path
-                          d='M8.5 11.5C8.91421 11.5 9.25 11.1642 9.25 10.75C9.25 10.3358 8.91421 10 8.5 10C8.08579 10 7.75 10.3358 7.75 10.75C7.75 11.1642 8.08579 11.5 8.5 11.5Z'
-                          fill='white'
-                        />
-                        <path
-                          d='M11.5 11.5C11.9142 11.5 12.25 11.1642 12.25 10.75C12.25 10.3358 11.9142 10 11.5 10C11.0858 10 10.75 10.3358 10.75 10.75C10.75 11.1642 11.0858 11.5 11.5 11.5Z'
-                          fill='white'
-                        />
-                        <path
-                          fillRule='evenodd'
-                          clipRule='evenodd'
-                          d='M10 4C6.13401 4 3 6.79086 3 10.2C3 11.8326 3.68813 13.3116 4.81619 14.4018C4.73866 15.0764 4.52952 15.7181 4.20989 16.2975C3.89026 16.8769 3.46731 17.3846 2.96681 17.7946C2.75926 17.9651 2.68186 18.2482 2.77304 18.5007C2.86423 18.7532 3.10433 18.9233 3.37495 18.9319C4.82253 18.9694 6.18364 18.4632 7.24984 17.5766C8.08808 17.8519 8.99611 18 9.95 18C13.816 18 17 15.2091 17 11.8C17 8.39086 13.866 5.6 10 5.6C9.66863 5.6 9 6.26863 9 6.6V10.8C9 11.4627 9.53726 12 10.2 12H13.95C14.2814 12 14.55 11.7314 14.55 11.4C14.55 11.0686 14.2814 10.8 13.95 10.8H10.2V6.6C10.2 6.26863 9.86863 6 9.53726 6C13.816 6 17 8.79086 17 12.2C17 15.6091 13.866 18.4 10 18.4C6.13401 18.4 3 15.6091 3 12.2C3 8.79086 6.13401 6 10 6V4Z'
-                          fill='white'
-                        />
-                      </svg>
-                    </div>
-                    <div className='flex-1 text-left'>
-                      <div className='text-base font-semibold text-[#09090b] leading-6'>
-                        分享给微信好友
-                      </div>
-                      <div className='text-xs text-[#6a7282] leading-[18px]'>
-                        生成可直接发送给好友的邀请函
-                      </div>
-                    </div>
-                    <div className='text-[#99a1af] text-xl'>›</div>
-                  </button>
+                  />
                 )}
 
                 {/* 保存到手机相册 */}
-                {
-                  <button
-                    onClick={handleSaveToAlbum}
-                    disabled={isGeneratingPoster}
-                    className='w-full bg-white border border-[#e4e4e7] rounded-[14px] p-4 flex items-center gap-3 active:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
-                  >
-                    <div className='w-11 h-11 flex items-center justify-center flex-shrink-0'>
-                      <span className='text-2xl'>📥</span>
-                    </div>
-                    <div className='flex-1 text-left'>
-                      <div className='text-base font-semibold text-[#09090b] leading-6'>
-                        保存到手机相册
-                      </div>
-                      <div className='text-xs text-[#6a7282] leading-[18px]'>
-                        保存高清海报至相册，便于转发分享
-                      </div>
-                    </div>
-                    <div className='text-[#99a1af] text-xl'>›</div>
-                  </button>
-                }
+                <ActionButton
+                  icon={<span className='text-2xl'>📥</span>}
+                  title='保存到手机相册'
+                  description='保存高清海报至相册，便于转发分享'
+                  onClick={handleSaveToAlbum}
+                  disabled={isGeneratingPoster}
+                />
 
                 {/* 更多分享方式 */}
                 {!isImageOrVideoSpec() && (
@@ -490,42 +453,22 @@ export function WorkDetailContent({
             {work.is_rsvp && (
               <div className='space-y-3'>
                 {/* 指定嘉宾 */}
-                <button
+                <RoundedActionButton
+                  icon={<Target className='w-5 h-5 text-red-500' />}
+                  iconBgColor='bg-red-50'
+                  title='指定嘉宾'
+                  description='向个别嘉宾发送带有专属链接的邀请'
                   onClick={handleTargetInvitee}
-                  className='w-full flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-100 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors'
-                >
-                  <div className='w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0'>
-                    <Target className='w-5 h-5 text-red-500' />
-                  </div>
-                  <div className='flex-1 text-left'>
-                    <span className='text-sm font-medium text-[#09090B]'>
-                      指定嘉宾
-                    </span>
-                    <p className='text-xs text-gray-500 mt-1'>
-                      向个别嘉宾发送带有专属链接的邀请
-                    </p>
-                  </div>
-                  <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
-                </button>
+                />
 
                 {/* 公开分享 */}
-                <button
+                <RoundedActionButton
+                  icon={<Globe className='w-5 h-5 text-blue-500' />}
+                  iconBgColor='bg-blue-50'
+                  title='公开分享'
+                  description='生成公开链接，任何人可填写回执'
                   onClick={handlePublicShare}
-                  className='w-full flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-100 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors'
-                >
-                  <div className='w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0'>
-                    <Globe className='w-5 h-5 text-blue-500' />
-                  </div>
-                  <div className='flex-1 text-left'>
-                    <span className='text-sm font-medium text-[#09090B]'>
-                      公开分享
-                    </span>
-                    <p className='text-xs text-gray-500 mt-1'>
-                      生成公开链接，任何人可填写回执
-                    </p>
-                  </div>
-                  <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
-                </button>
+                />
               </div>
             )}
           </div>
@@ -535,25 +478,13 @@ export function WorkDetailContent({
         {work.is_rsvp && (
           <div className='space-y-3'>
             <h3 className='text-sm font-semibold text-[#09090B]'>宾客回执</h3>
-            <div className='bg-white rounded-lg border border-gray-100 shadow-sm'>
-              <button
-                onClick={handleManageGuests}
-                className='w-full flex items-center gap-3 p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors'
-              >
-                <div className='w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0'>
-                  <FileText className='w-5 h-5 text-gray-600' />
-                </div>
-                <div className='flex-1 text-left'>
-                  <span className='text-sm font-medium text-[#09090B]'>
-                    管理宾客回执
-                  </span>
-                  <p className='text-xs text-gray-500 mt-1'>
-                    查看宾客列表和回执信息
-                  </p>
-                </div>
-                <ChevronRight className='w-5 h-5 text-gray-400 flex-shrink-0' />
-              </button>
-            </div>
+            <RoundedActionButton
+              icon={<FileText className='w-5 h-5 text-gray-600' />}
+              iconBgColor='bg-gray-100'
+              title='管理宾客回执'
+              description='查看宾客列表和回执信息'
+              onClick={handleManageGuests}
+            />
           </div>
         )}
       </div>
