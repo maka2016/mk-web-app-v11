@@ -152,9 +152,8 @@ export function WorkDetailContent({
   const handlePreview = () => {
     if (!work) return;
     const uid = getUid();
-    const appid = getAppId();
 
-    const url = `/mobile/preview?works_id=${work.id}&uid=${uid}&appid=${appid}`;
+    const url = `/mobile/preview?works_id=${work.id}&uid=${uid}`;
     navigateWithBridge({ path: url, router });
   };
 
@@ -162,8 +161,7 @@ export function WorkDetailContent({
   const handleEdit = () => {
     if (!work) return;
     const uid = getUid();
-    const appid = getAppId();
-    const url = `/editor?works_id=${work.id}&uid=${uid}&appid=${appid}`;
+    const url = `/editor?works_id=${work.id}&uid=${uid}`;
     navigateWithBridge({ path: url, router });
   };
 
