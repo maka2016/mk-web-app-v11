@@ -365,6 +365,31 @@ export const GridCompV2: React.FC<
       {/* 用户的组件设置 */}
       {renderWidgetSetting()}
 
+      {worksDetail?.specInfo?.is_flat_page && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            width: '100%',
+            zIndex: 100,
+          }}
+          onClick={() => {
+            window.open(
+              'https://sj.qq.com/appdetail/im.maka.jiantie',
+              '_blank'
+            );
+          }}
+          className='flex justify-center items-center gap-2 text-[11px] font-medium uppercase tracking-[0.32em] text-white/80'
+        >
+          <img
+            src='https://res.maka.im/assets/jiantie/Frame%201321318475.png'
+            alt='logo'
+            className='w-full  '
+          />
+        </div>
+      )}
+
       {/* 快捷键说明组件 - 外挂到designer_scroll_container */}
       {fullStack && (
         <>
