@@ -349,13 +349,13 @@ export default function WorksManagerForUser() {
   return (
     <>
       <div
-        className='flex flex-col h-full'
+        className='flex flex-col h-full bg-white'
         style={{
           paddingTop: 'var(--safe-area-inset-top)',
         }}
       >
         {/* 头部 */}
-        <div className='bg-white px-4 py-3 border-b border-gray-200'>
+        <div className='px-4 py-3 border-b border-gray-200'>
           <h1 className='text-lg font-semibold text-[#09090B]'>我的邀请函</h1>
         </div>
 
