@@ -26,7 +26,6 @@ import {
   FileText,
   Globe,
   Pencil,
-  Share2,
   Target,
   Trash2,
 } from 'lucide-react';
@@ -461,7 +460,7 @@ export function WorkDetailContent({
                 </button>
 
                 {/* 更多分享方式 */}
-                <Button
+                {/* <Button
                   onClick={handleMoreShare}
                   disabled={isGeneratingPoster}
                   variant='outline'
@@ -469,7 +468,7 @@ export function WorkDetailContent({
                 >
                   <Share2 size={14} className='mr-1' />
                   <span className='text-sm font-semibold'>更多分享方式</span>
-                </Button>
+                </Button> */}
               </div>
             )}
 

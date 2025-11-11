@@ -374,16 +374,13 @@ export default function WorkDetailPage() {
     const urls = await generateInvitationPoster();
     if (!urls || urls.length === 0) return;
 
-    // 调用系统分享
-    APPBridge.appCall({
-      type: 'MKShare',
-      appid: 'jiantie',
-      params: {
-        title: work.title || '邀请函',
-        type: 'images',
-        shareType: 'system',
-        urls,
-      },
+    navigator.share({
+      title: work.title || '邀请函',
+      text: work.desc || '',
+      url: `${location.origin}/viewer2/${work.id}?appid=${getAppId()}`,
+      files: urls.map(
+        url => new File([url], 'poster.png', { type: 'image/png' })
+      ),
     });
   };
 
