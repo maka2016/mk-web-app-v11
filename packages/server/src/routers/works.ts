@@ -252,12 +252,28 @@ export const worksRouter = router({
         };
       }
 
-      return ctx.prisma.worksEntity.findMany({
+      const works = await ctx.prisma.worksEntity.findMany({
         where,
         skip: input?.skip,
         take: input?.take,
         orderBy: { update_time: 'desc' },
       });
+
+      // 手动查询 specInfo 并组合数据
+      const specIds = works
+        .map(w => w.spec_id)
+        .filter((id): id is string => !!id);
+
+      const specs = await ctx.prisma.worksSpecEntity.findMany({
+        where: { id: { in: specIds } },
+      });
+
+      const specMap = new Map(specs.map(s => [s.id, s]));
+
+      return works.map(work => ({
+        ...work,
+        specInfo: work.spec_id ? specMap.get(work.spec_id) : undefined,
+      }));
     }),
 
   // 根据ID查询
