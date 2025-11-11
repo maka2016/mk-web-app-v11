@@ -67,7 +67,8 @@ export const GridCompV2: React.FC<
   const supportAutoScroll = useMemo(() => {
     return (
       isWebsite &&
-      worksDetail?.specInfo?.interactive_features?.includes('zidong_gundong')
+      worksDetail?.specInfo?.interactive_features?.includes('zidong_gundong') &&
+      !worksDetail.envelope_config
     );
   }, [worksDetail, isWebsite]);
 
