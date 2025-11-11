@@ -259,6 +259,7 @@ export function WorkDetailContent({
 
     try {
       setIsGeneratingPoster(true);
+      toast.loading('生成海报中...');
       // 使用通用函数生成并分享海报
       const success = await generateAndSharePoster({
         worksId: workId,
@@ -273,6 +274,7 @@ export function WorkDetailContent({
       }
     } finally {
       setIsGeneratingPoster(false);
+      toast.dismiss();
     }
   };
 
@@ -302,6 +304,7 @@ export function WorkDetailContent({
 
     try {
       setIsGeneratingPoster(true);
+      toast.loading('生成海报中...');
       // 使用通用函数生成并分享海报
       const success = await generateAndSharePoster({
         worksId: workId,
@@ -316,6 +319,7 @@ export function WorkDetailContent({
       }
     } finally {
       setIsGeneratingPoster(false);
+      toast.dismiss();
     }
   };
 
