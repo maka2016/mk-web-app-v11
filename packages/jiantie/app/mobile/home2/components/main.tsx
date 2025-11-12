@@ -1,6 +1,6 @@
 'use client';
 
-import Chanel2 from '@/app/mobile/channel2/page';
+import Chanel2V2 from '@/app/mobile/channel2/homev2/page';
 import Mine from '@/app/mobile/mine/page';
 import Works from '@/app/mobile/works2/page';
 import useIsMobile from '@/utils/use-mobile';
@@ -65,7 +65,7 @@ const TabLayout = (props: Props) => {
 
   const getTabs = () => {
     return [
-      { label: '模板', key: 'home', component: Chanel2 },
+      { label: '模板', key: 'home', component: Chanel2V2 },
       { label: '作品', key: 'works', component: Works },
       { label: '我的', key: 'mine', component: Mine },
     ];

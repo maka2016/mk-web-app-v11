@@ -297,9 +297,9 @@ export default function Main({ appid = 'jiantie' }: Props) {
           }}
         >
           <img
-            src={cdnApi('/assets/jiantie/logo2.png')}
+            src={cdnApi('/assets/jiantie/logov2.png')}
             alt='简帖'
-            className='w-16 h-10 object-contain'
+            className='w-40 h-12 object-contain'
           />
         </button>
         <div className='flex items-center gap-2'>
