@@ -6,7 +6,6 @@ import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import { cdnApi } from '@mk/services';
 import { TemplateMarketChannelEntity } from '@workspace/database/generated/client/client';
-import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -95,7 +94,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
       <div
         className='flex
        items-center justify-between
-        px-6 pt-6 sticky top-0 z-20 '
+        px-6 py-6 sticky top-0 z-20 '
       >
         {/* 左侧Logo */}
         <div
@@ -137,7 +136,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
         </div>
       </div>
       {/* 顶部搜索栏 */}
-      <div className=' p-6 sticky top-12 z-10'>
+      {/* <div className=' p-6 sticky top-12 z-10'>
         <div
           onClick={() =>
             navigateWithBridge({
@@ -155,7 +154,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
           <Search className='w-5 h-5 text-gray-400 flex-shrink-0' />
           <span className='text-gray-400 text-base flex-1'>模板搜索</span>
         </div>
-      </div>
+      </div> */}
       {/* 主内容区 */}
       <div className='flex-1 overflow-y-auto'>
         {loading ? (
