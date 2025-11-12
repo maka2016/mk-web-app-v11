@@ -70,7 +70,6 @@ export async function tokenToUid(token: string): Promise<{
     );
     return { uid: null, appid: null };
   }
-  console.log('userCenterUrl', userCenterUrl, process.env.NODE_ENV);
 
   const url = `${userCenterUrl}/auth/v2/validate-token`;
 

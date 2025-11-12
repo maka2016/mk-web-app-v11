@@ -1,14 +1,9 @@
 'use client';
 
 import { getAppId, getUid } from '@/services';
-import { useStore } from '@/store';
-import { useCheckPublish } from '@/utils/checkPubulish';
-import { navigateWithBridge } from '@/utils/navigate-with-bridge';
+import { useEnvironment, useNavigation, useShare } from '@/store';
 import { generateAndSharePoster } from '@/utils/poster-share';
-import { useShareNavigation } from '@/utils/share';
 import { SerializedWorksEntity, trpc } from '@/utils/trpc';
-import APPBridge from '@mk/app-bridge';
-import { cdnApi } from '@mk/services';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +25,6 @@ import {
   Target,
   Trash2,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { ActionButton, RoundedActionButton } from './ActionButton';
@@ -55,57 +49,20 @@ export function WorkDetailContent({
   onClose,
   onDataChange,
 }: WorkDetailContentProps) {
-  const router = useRouter();
-  const { isVip, setVipShow } = useStore();
-  const { canShareWithoutWatermark } = useCheckPublish();
-  const { toPosterShare, toVideoShare } = useShareNavigation();
+  const env = useEnvironment();
+  const nav = useNavigation();
+  const share = useShare();
 
   const [rsvpStats, setRsvpStats] = useState<RSVPStats | null>(null);
   const [formConfigId, setFormConfigId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isGeneratingPoster, setIsGeneratingPoster] = useState(false);
-  const [isMiniP, setIsMiniP] = useState(false);
-  const [isInApp, setIsInApp] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const workId = work?.id;
 
-  // 初始化环境检测
-  useEffect(() => {
-    setIsMiniP(APPBridge.judgeIsInMiniP());
-    setIsInApp(APPBridge.judgeIsInApp());
-  }, []);
-
-  // 检查分享权限
-  const checkSharePermission = async (): Promise<boolean> => {
-    if (!workId) return false;
-
-    // 如果是会员，直接有权限
-    if (isVip) {
-      return true;
-    }
-
-    // 检查分享权限
-    try {
-      const hasPermission = await canShareWithoutWatermark(workId);
-      return hasPermission;
-    } catch (error) {
-      console.error('Failed to check share permission:', error);
-      return false;
-    }
-  };
-
-  // 显示VIP拦截
-  const showVipInterceptor = () => {
-    if (!work) return;
-    const appid = getAppId();
-    setVipShow(true, {
-      works_id: work.id,
-      ref_object_id: work.template_id || '',
-      tab: appid === 'xueji' ? 'business' : 'personal',
-      vipType: 'rsvp',
-    });
-  };
+  const exportFormat = work?.specInfo?.export_format;
+  const isVideo = exportFormat?.includes('video');
 
   // 加载 RSVP 统计信息
   useEffect(() => {
@@ -156,17 +113,19 @@ export function WorkDetailContent({
   const handlePreview = () => {
     if (!work) return;
     const uid = getUid();
-
-    const url = `/mobile/preview?works_id=${work.id}&uid=${uid}`;
-    navigateWithBridge({ path: url, router });
+    nav.push(`/mobile/preview`, {
+      query: {
+        works_id: work.id,
+        uid,
+      },
+    });
   };
 
   // 编辑作品
   const handleEdit = () => {
     if (!work) return;
     const uid = getUid();
-    const url = `/editor?works_id=${work.id}&uid=${uid}`;
-    navigateWithBridge({ path: url, router });
+    nav.toEditor(work.id, uid);
   };
 
   // 复制作品
@@ -210,86 +169,110 @@ export function WorkDetailContent({
   const handleTargetInvitee = async () => {
     if (!work || !formConfigId) return;
 
-    // 检查分享权限
-    const hasPermission = await checkSharePermission();
-    if (!hasPermission) {
-      showVipInterceptor();
-      return;
-    }
+    // 使用统一的权限检查
+    const appid = getAppId();
+    const hasPermission = await share.checkSharePermission(work.id, {
+      trackData: {
+        works_id: work.id,
+        ref_object_id: work.template_id || '',
+        tab: appid === 'xueji' ? 'business' : 'personal',
+        vipType: 'rsvp',
+      },
+    });
 
-    const url = `/mobile/rsvp/invitees/create?works_id=${work.id}&form_config_id=${formConfigId}`;
-    navigateWithBridge({ path: url, router });
+    if (!hasPermission) return;
+
+    nav.push(`/mobile/rsvp/invitees/create`, {
+      query: {
+        works_id: work.id,
+        form_config_id: formConfigId,
+      },
+    });
   };
 
   // 跳转到公开分享页面
   const handlePublicShare = async () => {
     if (!work || !formConfigId) return;
 
-    // 检查分享权限
-    const hasPermission = await checkSharePermission();
-    if (!hasPermission) {
-      showVipInterceptor();
-      return;
-    }
+    // 使用统一的权限检查
+    const appid = getAppId();
+    const hasPermission = await share.checkSharePermission(work.id, {
+      trackData: {
+        works_id: work.id,
+        ref_object_id: work.template_id || '',
+        tab: appid === 'xueji' ? 'business' : 'personal',
+        vipType: 'rsvp',
+      },
+    });
 
-    const url = `/mobile/rsvp/share?works_id=${work.id}&mode=public&form_config_id=${formConfigId}`;
-    navigateWithBridge({ path: url, router });
+    if (!hasPermission) return;
+
+    nav.push(`/mobile/rsvp/share`, {
+      query: {
+        works_id: work.id,
+        mode: 'public',
+        form_config_id: formConfigId,
+      },
+    });
   };
 
   // 跳转到宾客管理页面
   const handleManageGuests = async () => {
     if (!work || !formConfigId) return;
-    // 检查分享权限
-    const hasPermission = await checkSharePermission();
-    if (!hasPermission) {
-      showVipInterceptor();
-      return;
-    }
 
-    const url = `/mobile/rsvp/invitees?works_id=${work.id}&form_config_id=${formConfigId}`;
-    navigateWithBridge({ path: url, router });
+    // 使用统一的权限检查
+    const appid = getAppId();
+    const hasPermission = await share.checkSharePermission(work.id, {
+      trackData: {
+        works_id: work.id,
+        ref_object_id: work.template_id || '',
+        tab: appid === 'xueji' ? 'business' : 'personal',
+        vipType: 'rsvp',
+      },
+    });
+
+    if (!hasPermission) return;
+
+    nav.push(`/mobile/rsvp/invitees`, {
+      query: {
+        works_id: work.id,
+        form_config_id: formConfigId,
+      },
+    });
   };
 
   // 分享给微信好友
   const handleShareToWechat = async () => {
     if (!work || !workId) return;
 
-    // 检查分享权限
-    const hasPermission = await checkSharePermission();
-    if (!hasPermission) {
-      showVipInterceptor();
-      return;
-    }
-
     if (!isImageOrVideoSpec()) {
-      // 微信分享缩略图尺寸限制：建议 500x400 (5:4 比例)，使用 cdnApi 调整尺寸
-      const thumbUrl = work.cover
-        ? cdnApi(work.cover, {
-            resizeWidth: 500,
-            resizeHeight: 400,
-            format: 'webp',
-            quality: 85,
-            mode: 'lfit',
-          })
-        : '';
-
-      APPBridge.appCall({
-        type: 'MKShare',
-        appid: 'jiantie',
-        params: {
-          title: work.title || '邀请函',
-          content: work.desc || '',
-          thumb: thumbUrl,
-          type: 'link',
-          shareType: 'wechat',
-          url: `${location.origin}/viewer2/${work.id}?appid=${getAppId()}`,
-        },
+      // 网页类型：使用统一分享方法（自动权限检查）
+      await share.shareWork({
+        workId: work.id,
+        title: work.title || '邀请函',
+        desc: work.desc || '',
+        cover: work.cover || undefined,
+        templateId: work.template_id || undefined,
+        shareType: 'wechat',
+        checkPermission: true, // 自动权限检查和 VIP 拦截
       });
       return;
     }
 
+    // 图片/视频规格：使用统一的权限检查
+    const appid = getAppId();
+    const hasPermission = await share.checkSharePermission(work.id, {
+      trackData: {
+        works_id: work.id,
+        ref_object_id: work.template_id || '',
+        tab: appid === 'xueji' ? 'business' : 'personal',
+        vipType: 'share',
+      },
+    });
+
+    if (!hasPermission) return;
+
     try {
-      // 图片/视频规格
       setIsGeneratingPoster(true);
       toast.loading('生成海报中...');
       // 使用通用函数生成并分享海报
@@ -313,37 +296,45 @@ export function WorkDetailContent({
   // 保存到手机相册（图片/视频规格）
   const handleSaveToAlbum = async () => {
     if (!work) return;
-    // 检查分享权限
-    const hasPermission = await checkSharePermission();
-    if (!hasPermission) {
-      showVipInterceptor();
-      return;
-    }
+
+    // 使用统一的权限检查
+    const appid = getAppId();
+    const hasPermission = await share.checkSharePermission(work.id, {
+      trackData: {
+        works_id: work.id,
+        ref_object_id: work.template_id || '',
+        tab: appid === 'xueji' ? 'business' : 'personal',
+        vipType: 'share',
+      },
+    });
+
+    if (!hasPermission) return;
+
     if (isImageOrVideoSpec()) {
       const specInfo = (work as any).specInfo;
       if (specInfo?.export_format?.includes('image')) {
-        toPosterShare(work.id);
+        nav.toPosterShare(work.id);
       } else {
-        toVideoShare(work.id);
+        nav.toVideoShare(work.id);
       }
     } else {
-      toPosterShare(work.id);
+      nav.toPosterShare(work.id);
     }
   };
 
   // 更多分享方式（系统分享）非rsvp
   const handleMoreShare = async () => {
     if (!work || !workId) return;
-    // 检查分享权限
-    const hasPermission = await checkSharePermission();
-    if (!hasPermission) {
-      showVipInterceptor();
-      return;
-    }
-    navigator.share({
+
+    // 使用统一分享方法（自动权限检查）
+    await share.shareWork({
+      workId: work.id,
       title: work.title || '邀请函',
-      text: work.desc || '',
-      url: `${location.origin}/viewer2/${work.id}?appid=${getAppId()}`,
+      desc: work.desc || '',
+      cover: work.cover || undefined,
+      templateId: work.template_id || undefined,
+      shareType: 'system',
+      checkPermission: true, // 自动权限检查和 VIP 拦截
     });
   };
 
@@ -411,10 +402,10 @@ export function WorkDetailContent({
             <h3 className='text-sm font-semibold text-[#71717a]'>分享邀请</h3>
 
             {/* 非rsvp规格的分享选项 */}
-            {!work.is_rsvp && !isMiniP && (
+            {!work.is_rsvp && !env.isInMiniP && (
               <div className='space-y-2'>
                 {/* 分享给微信好友 */}
-                {isInApp && (
+                {env.isInApp && (
                   <ActionButton
                     icon={
                       <img
@@ -431,7 +422,7 @@ export function WorkDetailContent({
                   />
                 )}
 
-                {/* 保存到手机相册 */}
+                {/* 保存海报到手机相册 */}
                 <ActionButton
                   icon={<span className='text-2xl'>📥</span>}
                   title='保存到手机相册'
@@ -439,6 +430,17 @@ export function WorkDetailContent({
                   onClick={handleSaveToAlbum}
                   disabled={isGeneratingPoster}
                 />
+
+                {/* 保存视频到手机相册 */}
+                {isVideo && (
+                  <ActionButton
+                    icon={<span className='text-2xl'>📥</span>}
+                    title='保存视频'
+                    description='保存高清海报至相册，便于转发分享'
+                    onClick={handleSaveToAlbum}
+                    disabled={isGeneratingPoster}
+                  />
+                )}
 
                 {/* 更多分享方式 */}
                 {!isImageOrVideoSpec() && (

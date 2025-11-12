@@ -6,19 +6,14 @@ import {
   getToken,
   getUid,
 } from '@/services';
-import { useStore } from '@/store';
+import { useEnvironment, useNavigation, useStore } from '@/store';
 import { safeCopy } from '@/utils';
 import { navigateToVipPage } from '@/utils/jiantie';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
 import CommonLogger from '@mk/loggerv7/logger';
 import { cdnApi } from '@mk/services';
-import {
-  isMakaAppAndroid,
-  isMakaAppClient,
-  isMakaAppIOS,
-  setCookie,
-} from '@mk/utils';
+import { setCookie } from '@mk/utils';
 import { Button } from '@workspace/ui/components/button';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Progress } from '@workspace/ui/components/progress';
@@ -27,7 +22,6 @@ import cls from 'classnames';
 import dayjs from 'dayjs';
 import { observer } from 'mobx-react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import styles from './index.module.scss';
@@ -61,22 +55,23 @@ const Mine = (props: Props) => {
     setLoginShow,
     permissions,
     setBindPhoneShow,
-    setVipShow,
     vipABTest,
     isVip,
-    isSVip,
   } = useStore();
-  const [isApp, setIsApp] = useState(false);
-  const router = useRouter();
-
-  const [isMiniProgram, setIsMiniProgram] = useState(false);
+  const env = useEnvironment();
+  const nav = useNavigation();
 
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [invoiceShow, setInvoiceShow] = useState(false);
   const [total, setTotal] = useState(0);
-  const [showVipInfo, setShowVipInfo] = useState(false);
   const t = useTranslations('Profile');
   const isOversea = getIsOverSeas();
+
+  // 计算是否显示 VIP 信息（使用 env store 避免 SSR 问题）
+  const showVipInfo =
+    typeof window === 'undefined'
+      ? true // SSR 时默认显示
+      : !(appid === 'jiantie' && env.isMakaAppIOS && !env.isRN);
 
   const getTotal = async () => {
     const uid = getUid();
@@ -92,21 +87,18 @@ const Mine = (props: Props) => {
   };
 
   useEffect(() => {
-    getTotal();
-    setIsApp(isMakaAppClient());
-    setIsMiniProgram(APPBridge.judgeIsInMiniP());
-    setShowVipInfo(
-      !(appid === 'jiantie' && isMakaAppIOS() && !APPBridge.isRN())
-    );
+    if (props.active) {
+      getTotal();
 
-    CommonLogger.track_pageview({
-      page_type: 'mine_page',
-      page_id: `mine_page`,
-    });
+      CommonLogger.track_pageview({
+        page_type: 'mine_page',
+        page_id: `mine_page`,
+      });
+    }
   }, [props.active]);
 
   const setting = () => {
-    if (APPBridge.judgeIsInApp()) {
+    if (env.isInApp) {
       APPBridge.navToPage({ url: `maka://home/mine/account`, type: 'NATIVE' });
     }
   };
@@ -117,12 +109,12 @@ const Mine = (props: Props) => {
   };
 
   const login = () => {
-    if (APPBridge.judgeIsInApp()) {
+    if (env.isInApp) {
       APPBridge.appCall({
         type: 'MKLogOut',
         jsCbFnName: '', // 回传方法 Json值：
       });
-    } else if (APPBridge.judgeIsInMiniP()) {
+    } else if (env.isInMiniP) {
       APPBridge.miniPlogin();
     } else {
       setLoginShow(true);
@@ -139,85 +131,16 @@ const Mine = (props: Props) => {
     }, 200);
   };
 
-  const worksOrder = () => {
-    const queryObj = {
-      form_id: '85',
-      module: '会员拦截',
-      form_type: '功能缺陷',
-      uid: getUid(),
-      appid: getAppId(),
-      token: getToken(),
-      is_full_screen: '1',
-      env: 'prod',
-      device: isMakaAppAndroid() ? 'Android' : 'web',
-      service: '1',
-    };
-    const queryStr = new URLSearchParams(queryObj).toString();
-    const url = `${location.origin}/works-order?${queryStr}`;
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url,
-        type: 'URL',
-      });
-    } else {
-      location.href = url;
-    }
-  };
-
   const onLogout = () => {
-    if (APPBridge.judgeIsInApp()) {
+    if (env.isInApp) {
       APPBridge.appCall({
         type: 'MKLogOut',
         jsCbFnName: '', // 回传方法 Json值：
       });
-    } else if (APPBridge.judgeIsInMiniP()) {
+    } else if (env.isInMiniP) {
       APPBridge.miniPlogin();
     } else {
       setLogoutOpen(true);
-    }
-  };
-
-  const toComment = () => {
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: 'maka://store/comment',
-        type: 'NATIVE',
-      });
-    } else {
-    }
-  };
-
-  const toInvoice = () => {
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}/invoice/home?appid=${appid}`,
-        type: 'URL',
-      });
-    } else {
-      router.push(`/invoice/home?appid=${appid}`);
-    }
-    // setInvoiceShow(true);
-  };
-
-  const toTerms = () => {
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}/mobile/terms?is_full_screen=1`,
-        type: 'URL',
-      });
-    } else {
-      location.href = `${location.origin}/mobile/terms`;
-    }
-  };
-
-  const toUserBrand = () => {
-    if (APPBridge.judgeIsInApp()) {
-      APPBridge.navToPage({
-        url: `${location.origin}/mobile/user-brand?is_full_screen=1`,
-        type: 'URL',
-      });
-    } else {
-      location.href = `${location.origin}/mobile/user-brand`;
     }
   };
 
@@ -237,13 +160,10 @@ const Mine = (props: Props) => {
   // };
 
   const kefu = () => {
-    if (APPBridge.judgeIsInApp()) {
-      // (window as any).androidApi?.openWeixinChat?.();
+    if (env.isInApp) {
       APPBridge.appCall({
         type: 'MkOpenAppKefu',
-        params: {
-          //不需要
-        },
+        params: {},
       });
     } else {
       window.location.href =
@@ -410,7 +330,7 @@ const Mine = (props: Props) => {
       {userProfile?.uid && (
         <div className={styles.menus}>
           <div className={styles.menusTitle}>账户管理</div>
-          {!isMiniProgram && (
+          {!env.isInMiniP && (
             <div className={styles.menuItem} onClick={() => setting()}>
               <Icon name='setting2' size={18} />
               <div className='flex-1'>
@@ -447,7 +367,9 @@ const Mine = (props: Props) => {
           {appid === 'jiantie' && vipABTest === 'default' && (
             <div
               className={cls([styles.menuItem, styles.brand])}
-              onClick={() => toUserBrand()}
+              onClick={() => {
+                nav.push('/mobile/user-brand');
+              }}
             >
               <Icon name='ai-magic' size={18} color='#3358D4' />
               <div className='flex-1'>
@@ -465,11 +387,28 @@ const Mine = (props: Props) => {
         </div>
       )}
 
-      {!isMiniProgram && (
+      {!env.isInMiniP && (
         <div className={styles.menus}>
           <div className={styles.menusTitle}>帮助与支持</div>
           {!isOversea && (
-            <div className={styles.menuItem} onClick={() => worksOrder()}>
+            <div
+              className={styles.menuItem}
+              onClick={() => {
+                nav.push('/works-order', {
+                  query: {
+                    form_id: '85',
+                    module: '会员拦截',
+                    form_type: '功能缺陷',
+                    uid: getUid(),
+                    appid: getAppId(),
+                    token: getToken(),
+                    env: 'prod',
+                    device: env.isMakaAppAndroid ? 'Android' : 'web',
+                    service: '1',
+                  },
+                });
+              }}
+            >
               <Icon name='file-editing' size={18} />
               <div className='flex-1'>
                 <div className={styles.tit}>意见反馈</div>
@@ -488,7 +427,14 @@ const Mine = (props: Props) => {
               <Icon name='right' />
             </div>
           )}
-          <div className={styles.menuItem} onClick={toInvoice}>
+          <div
+            className={styles.menuItem}
+            onClick={() => {
+              nav.push('/invoice/home', {
+                query: { appid },
+              });
+            }}
+          >
             <Icon name='dindan' size={18} />
             <div className='flex-1'>
               <div className={styles.tit}>开票管理</div>
@@ -496,8 +442,16 @@ const Mine = (props: Props) => {
             </div>
             <Icon name='right' />
           </div>
-          {isApp && isMakaAppAndroid() && (
-            <div className={styles.menuItem} onClick={() => toComment()}>
+          {env.isInApp && env.isMakaAppAndroid && (
+            <div
+              className={styles.menuItem}
+              onClick={() => {
+                APPBridge.navToPage({
+                  url: 'maka://store/comment',
+                  type: 'NATIVE',
+                });
+              }}
+            >
               <Icon name='thumbs' size={18} />
               <div className='flex-1'>
                 <div className={styles.tit}>给我们好评</div>
@@ -506,7 +460,14 @@ const Mine = (props: Props) => {
               <Icon name='right' />
             </div>
           )}
-          <div className={styles.menuItem} onClick={toTerms}>
+          <div
+            className={styles.menuItem}
+            onClick={() => {
+              nav.push('/mobile/terms', {
+                query: { appid },
+              });
+            }}
+          >
             <Icon name='fapiao' size={18} />
             <div className='flex-1'>
               <div className={styles.tit}>使用条款</div>

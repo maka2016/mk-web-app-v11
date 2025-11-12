@@ -246,10 +246,19 @@ export function EnvelopeClientAnimation({
   const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('idle');
   const contentShownRef = useRef(false); // 跟踪内容是否已经显示过
   const searchParams = useSearchParams();
-  const [rsvp_invitee] = useState(searchParams.get('rsvp_invitee') || '');
+  const [mounted, setMounted] = useState(false);
 
-  // 通过 URL 参数控制调试模式：?envelope_debug=true
-  const isDebugMode = searchParams.get('envelope_debug') === 'true';
+  // 在客户端挂载后才读取 URL 参数，避免 hydration 不匹配
+  useEffect(() => {
+    // eslint-disable-next-line
+    setMounted(true);
+  }, []);
+
+  // 只在客户端挂载后读取 URL 参数
+  const rsvp_invitee = mounted ? searchParams.get('rsvp_invitee') || '' : '';
+  const isDebugMode = mounted
+    ? searchParams.get('envelope_debug') === 'true'
+    : false;
 
   // 检查是否有有效配置
   const leftOpeningImage = config?.envelopeLeftOpeningImage;
@@ -267,7 +276,7 @@ export function EnvelopeClientAnimation({
 
   // 动画时序配置（毫秒）
   const SEAL_DISAPPEAR_DURATION = 300;
-  const LEFT_OPEN_DURATION = 1200;
+  const LEFT_OPEN_DURATION = 3200;
   const CONTENT_SEPARATE_DURATION = 800; // 内容和信封分离的时长
   const CONTENT_EXPAND_DURATION = 1600;
 
@@ -646,7 +655,7 @@ export function EnvelopeClientAnimation({
                   <LeftFlapCard title='左侧翻转卡片'>
                     <LeftFlapInner
                       initial={{ rotateY: 0 }}
-                      animate={{ rotateY: hasLeftOpened ? -260 : 0 }}
+                      animate={{ rotateY: hasLeftOpened ? -180 : 0 }}
                       transition={{
                         duration:
                           animationPhase === 'left-opening'
@@ -663,24 +672,29 @@ export function EnvelopeClientAnimation({
                       }}
                     >
                       {/* 正面 - 左侧开口外侧 */}
-                      <FlapSide>
-                        <img
-                          src={leftOpeningImage || ''}
-                          alt='envelope-left-outer'
-                        />
-                      </FlapSide>
+                      <FlapSide
+                        style={{
+                          backgroundImage: `url(${leftOpeningImage || ''})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'left center',
+                          backgroundRepeat: 'no-repeat',
+                        }}
+                      />
                       {/* 背面 - 左侧开口内侧 */}
-                      <FlapSide className='back'>
-                        <img
-                          src={leftInnerImage || leftOpeningImage || ''}
-                          alt='envelope-left-inner'
-                        />
-                      </FlapSide>
+                      <FlapSide
+                        className='back'
+                        style={{
+                          backgroundImage: `url(${leftInnerImage || leftOpeningImage || ''})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'left center',
+                          backgroundRepeat: 'no-repeat',
+                        }}
+                      />
                     </LeftFlapInner>
                   </LeftFlapCard>
 
                   <RightFlap
-                    title='信封右开口，不做动画'
+                    title='信封右开口'
                     src={config?.envelopeRightOpeningImage || ''}
                     alt='信封右开口'
                   ></RightFlap>

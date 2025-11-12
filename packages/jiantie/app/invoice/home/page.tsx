@@ -1,5 +1,6 @@
 'use client';
 import { Suspense } from 'react';
+import MobileHeader from '../../../components/DeviceWrapper/mobile/Header';
 import Tabs, { TabItemProp } from '../components/UI/Tabs';
 import InvoiceInfoManageTabPanel from './components/InvoiceInfoManageTabPanel';
 import InvoiceRecordTabPanel from './components/InvoiceRecordTabPanel';
@@ -21,6 +22,7 @@ export default function Page() {
   return (
     <Suspense>
       <div className={styles.main}>
+        <MobileHeader title='发票管理' />
         <Tabs
           items={items}
           defaultActiveKey='0'

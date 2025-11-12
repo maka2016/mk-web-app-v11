@@ -6,6 +6,7 @@ import { cookies, headers } from 'next/headers';
 // import { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
+import { EnvironmentProvider } from '@/components/EnvironmentProvider';
 
 const title: any = {
   jiantie: '简帖',
@@ -44,12 +45,14 @@ export default async function RootLayout({
           <title>{title[appid]}</title>
         </head>
         <body suppressHydrationWarning={true}>
-          <Script src='https://lf1-cdn-tos.bytegoofy.com/obj/iconpark/icons_36068_385.42878de689ce7ec6e35e3a7428cbe279.js'></Script>
-          {children}
-          <Toaster containerStyle={{ top: 56, bottom: 88, zIndex: 99999 }} />
-          {(isWechat || isWechatBrowser) && (
-            <Script src='https://res.maka.im/cdn/mk-widgets/sdk/jweixin-1.6.0.js'></Script>
-          )}
+          <EnvironmentProvider>
+            <Script src='https://lf1-cdn-tos.bytegoofy.com/obj/iconpark/icons_36068_385.42878de689ce7ec6e35e3a7428cbe279.js'></Script>
+            {children}
+            <Toaster containerStyle={{ top: 56, bottom: 88, zIndex: 99999 }} />
+            {(isWechat || isWechatBrowser) && (
+              <Script src='https://res.maka.im/cdn/mk-widgets/sdk/jweixin-1.6.0.js'></Script>
+            )}
+          </EnvironmentProvider>
         </body>
       </NextIntlClientProvider>
     </html>
