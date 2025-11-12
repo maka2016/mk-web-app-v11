@@ -2,7 +2,7 @@
  * 服务端渲染的信封 Loading 组件
  * 显示信封的初始状态，客户端接管后播放动画
  */
-import { EnvelopeConfig } from './types';
+import { ENVELOPE_MASKS, EnvelopeConfig } from './types';
 
 interface EnvelopeLoadingProps {
   config?: EnvelopeConfig;
@@ -56,48 +56,26 @@ export function EnvelopeLoading({ config }: EnvelopeLoadingProps) {
           aspectRatio: '114 / 162',
         }}
       >
-        {/* 信封右开口（底层） */}
-        {config.backgroundImage && (
-          <img
-            src={config.backgroundImage}
-            alt='envelope-base'
+        {/* 信封左开口外侧材质 */}
+        {config.outerTexture && (
+          <div
             style={{
               position: 'absolute',
               width: '100%',
               height: '100%',
-              objectFit: 'contain',
+              backgroundImage: `url(${config.outerTexture})`,
+              backgroundRepeat: 'repeat',
+              backgroundSize: 'auto',
+              backgroundPosition: 'center',
+              maskImage: `url(${ENVELOPE_MASKS.leftFlap})`,
+              WebkitMaskImage: `url(${ENVELOPE_MASKS.leftFlap})`,
+              maskSize: 'contain',
+              WebkitMaskSize: 'contain',
+              maskRepeat: 'no-repeat',
+              WebkitMaskRepeat: 'no-repeat',
+              maskPosition: 'center',
+              WebkitMaskPosition: 'center',
               zIndex: 0,
-            }}
-          />
-        )}
-
-        {config.envelopeRightOpeningImage && (
-          <img
-            src={config.envelopeRightOpeningImage}
-            alt='envelope-right-opening'
-            style={{
-              position: 'absolute',
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              zIndex: 1,
-              objectPosition: 'right center',
-            }}
-          />
-        )}
-
-        {/* 信封左开口（覆盖右侧） */}
-        {config.envelopeLeftOpeningImage && (
-          <img
-            src={config.envelopeLeftOpeningImage}
-            alt='envelope-left-opening'
-            style={{
-              position: 'absolute',
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              zIndex: 2,
-              objectPosition: 'left center',
             }}
           />
         )}
@@ -112,7 +90,7 @@ export function EnvelopeLoading({ config }: EnvelopeLoadingProps) {
               width: '100%',
               height: '100%',
               objectFit: 'contain',
-              zIndex: 3,
+              zIndex: 1,
             }}
           />
         )}

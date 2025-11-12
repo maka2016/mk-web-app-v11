@@ -1,18 +1,28 @@
 /**
+ * 信封开口阴影配置
+ */
+export interface FlapShadow {
+  /** 水平偏移（px） */
+  offsetX?: number;
+  /** 垂直偏移（px） */
+  offsetY?: number;
+  /** 模糊半径（px） */
+  blur?: number;
+  /** 阴影颜色 */
+  color?: string;
+}
+
+/**
  * 信封功能完整配置
  * 包含信封图片与动画相关参数
  */
 export interface EnvelopeConfig {
-  /** 信封底图（完全展开状态的底层图） */
+  /** 作品背景图（作为整个加载页面的背景） */
   backgroundImage?: string;
-  /** 信封左开口外页图（正面） */
-  envelopeLeftOpeningImage?: string;
-  /** 信封左开口内页图（反面） */
-  envelopeLeftInnerImage?: string;
-  /** 信封右开口图 */
-  envelopeRightOpeningImage?: string;
-  /** 信封内页图（完整邀请函纸张） */
-  envelopeInnerImage?: string;
+  /** 外侧材质贴纸图（用于左右开口的外侧，平铺重复） */
+  outerTexture?: string;
+  /** 内侧材质贴纸图（用于左右开口的内侧和信封内页背景，平铺重复） */
+  innerTexture?: string;
   /** 信封印章图 */
   envelopeSealImage?: string;
   /** 动画持续时间（毫秒，默认 2000） */
@@ -21,19 +31,31 @@ export interface EnvelopeConfig {
   delay?: number;
   /** 缓动函数（默认 ease-in-out） */
   easing?: string;
+  /** 左侧开口阴影配置 */
+  leftFlapShadow?: FlapShadow;
+  /** 右侧开口阴影配置 */
+  rightFlapShadow?: FlapShadow;
 }
 
 /**
- * 检查信封配置是否完整（是否包含所有必需的6张图片）
+ * 固定的形状蒙版路径
+ * 这些图片定义了信封的形状，用于裁切材质贴纸
+ */
+export const ENVELOPE_MASKS = {
+  leftFlap: '/assets/envelope/left-open.png',
+  rightFlap: '/assets/envelope/right-open.png',
+  inner: '/assets/envelope/inner.png',
+} as const;
+
+/**
+ * 检查信封配置是否完整（是否包含所有必需的4张图片）
  */
 export function isEnvelopeConfigComplete(config?: EnvelopeConfig): boolean {
   if (!config) return false;
   return !!(
     config.backgroundImage &&
-    config.envelopeLeftOpeningImage &&
-    config.envelopeLeftInnerImage &&
-    config.envelopeRightOpeningImage &&
-    config.envelopeInnerImage &&
+    config.outerTexture &&
+    config.innerTexture &&
     config.envelopeSealImage
   );
 }
