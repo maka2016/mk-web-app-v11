@@ -3,7 +3,7 @@
 import Home from '@/app/mobile/channel/page';
 import Chanel2 from '@/app/mobile/channel2/page';
 import Mine from '@/app/mobile/mine/page';
-import Works from '@/app/mobile/works2/page';
+import Works from '@/app/mobile/works/page';
 import { getUid } from '@/services';
 import { trpc } from '@/utils/trpc';
 import useIsMobile from '@/utils/use-mobile';

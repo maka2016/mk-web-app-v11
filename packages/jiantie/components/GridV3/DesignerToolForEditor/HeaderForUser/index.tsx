@@ -145,8 +145,9 @@ const HeaderForUser = () => {
         // 预览页
         toPreview();
       } else {
-        setDetailDialogOpen(true);
-        // checkPublish();
+        // setDetailDialogOpen(true);
+        checkPublish();
+        setCreating(false);
       }
     } catch (error) {
       toast.dismiss();
