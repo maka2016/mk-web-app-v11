@@ -446,35 +446,30 @@ export default function Main({ appid = 'jiantie' }: Props) {
                           key={floor.id}
                           className='rounded-2xl bg-white'
                         >
-                          {floors.length > 1 ? (
-                            <h4 className='mb-3 text-base font-semibold text-neutral-900'>
+                          <div className='mb-3 flex items-center justify-between'>
+                            <h4 className='text-base font-semibold text-neutral-900'>
                               {floor.display_name || '场景名称'}
                             </h4>
-                          ) : (
-                            <div className='mb-3 flex items-center justify-between'>
-                              <h4 className='text-base font-semibold text-neutral-900'>
-                                {floor.display_name || '场景名称'}
-                              </h4>
-                              {shouldShowToggle ? (
-                                <button
-                                  className='flex items-center gap-1 text-sm font-semibold text-[#D53933]'
-                                  onClick={() => {
-                                    setExpandedFloors(prev => ({
-                                      ...prev,
-                                      [floor.id]: !isExpanded,
-                                    }));
-                                  }}
-                                >
-                                  {isExpanded ? '收起' : '查看全部'}
-                                  <ChevronRight
-                                    className={`h-4 w-4 transform transition-transform duration-200 ${
-                                      isExpanded ? 'rotate-90' : 'rotate-0'
-                                    }`}
-                                  />
-                                </button>
-                              ) : null}
-                            </div>
-                          )}
+                            {shouldShowToggle ? (
+                              <button
+                                className='flex items-center gap-1 text-sm font-semibold text-[#D53933]'
+                                onClick={() => {
+                                  setExpandedFloors(prev => ({
+                                    ...prev,
+                                    [floor.id]: !isExpanded,
+                                  }));
+                                }}
+                              >
+                                {isExpanded ? '收起' : '查看全部'}
+                                <ChevronRight
+                                  className={`h-4 w-4 transform transition-transform duration-200 ${
+                                    isExpanded ? 'rotate-90' : 'rotate-0'
+                                  }`}
+                                />
+                              </button>
+                            ) : null}
+                          </div>
+
                           {collections.length === 0 ? (
                             <div className='rounded-xl bg-gray-50 px-4 py-6 text-center text-sm text-gray-400'>
                               该楼层暂无集合
