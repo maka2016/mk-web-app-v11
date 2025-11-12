@@ -98,7 +98,12 @@ export default function Main({ appid = 'jiantie' }: Props) {
         px-6 pt-6 sticky top-0 z-20 '
       >
         {/* 左侧Logo */}
-        <div className='flex items-start'>
+        <div
+          className='flex items-start'
+          onDoubleClick={() => {
+            router.push('/mobile/home');
+          }}
+        >
           <div className='relative w-14 h-10'>
             <img
               src={cdnApi('/assets/jiantie/logo2.png')}
