@@ -54,6 +54,9 @@ export default function Main({ appid = 'jiantie' }: Props) {
   const [floorsLoading, setFloorsLoading] = useState(false);
   const [floorsInitialized, setFloorsInitialized] = useState(false);
   const [floorsError, setFloorsError] = useState<string | null>(null);
+  const [expandedFloors, setExpandedFloors] = useState<Record<number, boolean>>(
+    {}
+  );
 
   const [unread, setUnread] = useState(0);
 
@@ -71,17 +74,17 @@ export default function Main({ appid = 'jiantie' }: Props) {
         setChannelsLoading(true);
         setChannelsError(null);
 
-        const data = await trpc.channel.getChannels.query({
+        const data = (await trpc.channel.getChannels.query({
           appid,
           locale: 'zh-CN',
           env: 'production',
-        });
+        })) as ChannelEntity[];
 
         if (cancel) return;
 
         const map = new Map<number, ChannelEntity>();
-        data.forEach(topLevel => {
-          (topLevel.children || []).forEach(child => {
+        data.forEach((topLevel: ChannelEntity) => {
+          (topLevel.children || []).forEach((child: ChannelEntity) => {
             if (!map.has(child.id)) {
               map.set(child.id, child as ChannelEntity);
             }
@@ -158,7 +161,9 @@ export default function Main({ appid = 'jiantie' }: Props) {
         if (thirdLevel.length > 0) {
           const firstId = thirdLevel[0].id;
           setSelectedHotwordId(prev =>
-            thirdLevel.some(item => item.id === prev) ? prev : firstId
+            thirdLevel.some((item: ChannelEntity) => item.id === prev)
+              ? prev
+              : firstId
           );
         } else {
           setSelectedHotwordId(null);
@@ -233,6 +238,20 @@ export default function Main({ appid = 'jiantie' }: Props) {
     };
   }, [selectedHotwordId]);
 
+  useEffect(() => {
+    setExpandedFloors(prev => {
+      const next: Record<number, boolean> = {};
+      floors.forEach(floor => {
+        if (floors.length === 1) {
+          next[floor.id] = true;
+        } else {
+          next[floor.id] = prev[floor.id] || false;
+        }
+      });
+      return next;
+    });
+  }, [floors]);
+
   const toNotificationCenter = () => {
     if (APPBridge.judgeIsInApp()) {
       APPBridge.navToPage({
@@ -256,6 +275,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
 
   const isFloorsUpdating = floorsLoading && floorsInitialized;
   const isDetailUpdating = detailLoading && detailInitialized;
+  const isSingleFloor = floors.length === 1;
 
   return (
     <div
@@ -364,7 +384,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
                 ) : (
                   <div className='-mx-1 overflow-x-auto px-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
                     <div className='flex gap-2'>
-                      {hotwords.map(item => {
+                      {hotwords.map((item: ChannelEntity) => {
                         const isActive = item.id === selectedHotwordId;
                         return (
                           <button
@@ -414,42 +434,55 @@ export default function Main({ appid = 'jiantie' }: Props) {
                   <div className='space-y-6 px-4 py-3'>
                     {floors.map(floor => {
                       const collections = floor.children || [];
+                      const isExpanded = expandedFloors[floor.id] || false;
+                      const shouldShowToggle =
+                        collections.length > 4 && floors.length > 1;
+                      const visibleCollections =
+                        isExpanded || !shouldShowToggle
+                          ? collections
+                          : collections.slice(0, 4);
                       return (
                         <section
                           key={floor.id}
                           className='rounded-2xl bg-white'
                         >
-                          <div className='mb-3 flex items-center justify-between'>
-                            <h4 className='text-base font-semibold text-neutral-900'>
+                          {floors.length > 1 ? (
+                            <h4 className='mb-3 text-base font-semibold text-neutral-900'>
                               {floor.display_name || '场景名称'}
                             </h4>
-                            <button
-                              className='flex items-center gap-1 text-sm font-semibold text-[#D53933]'
-                              onClick={() => {
-                                if (!selectedChannelId) return;
-                                navigateWithBridge({
-                                  path: `/mobile/channel2/${selectedChannelId}`,
-                                  router,
-                                });
-                              }}
-                            >
-                              查看全部
-                              <ChevronRight className='h-4 w-4' />
-                            </button>
-                          </div>
+                          ) : (
+                            <div className='mb-3 flex items-center justify-between'>
+                              <h4 className='text-base font-semibold text-neutral-900'>
+                                {floor.display_name || '场景名称'}
+                              </h4>
+                              {shouldShowToggle ? (
+                                <button
+                                  className='flex items-center gap-1 text-sm font-semibold text-[#D53933]'
+                                  onClick={() => {
+                                    setExpandedFloors(prev => ({
+                                      ...prev,
+                                      [floor.id]: !isExpanded,
+                                    }));
+                                  }}
+                                >
+                                  {isExpanded ? '收起' : '查看全部'}
+                                  <ChevronRight
+                                    className={`h-4 w-4 transform transition-transform duration-200 ${
+                                      isExpanded ? 'rotate-90' : 'rotate-0'
+                                    }`}
+                                  />
+                                </button>
+                              ) : null}
+                            </div>
+                          )}
                           {collections.length === 0 ? (
                             <div className='rounded-xl bg-gray-50 px-4 py-6 text-center text-sm text-gray-400'>
                               该楼层暂无集合
                             </div>
                           ) : (
                             <div className='grid grid-cols-2 gap-4'>
-                              {collections.map(collection => {
+                              {visibleCollections.map(collection => {
                                 const label = collection.display_name || '集合';
-                                const badge =
-                                  collection.alias &&
-                                  collection.alias.includes('VIP')
-                                    ? collection.alias
-                                    : collection.remark || '';
                                 return (
                                   <BehaviorBox
                                     key={collection.id}
