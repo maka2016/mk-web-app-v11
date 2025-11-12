@@ -1,5 +1,7 @@
 'use client';
 
+import { WorkDetailContent } from '@/components/WorksDetailContent';
+import { WorkInfoCard } from '@/components/WorksDetailContent/WorkInfoCard';
 import { getUid, request } from '@/services';
 import { useStore } from '@/store';
 import { trpc, trpcWorks, type SerializedWorksEntity } from '@/utils/trpc';
@@ -16,8 +18,6 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { ArrowDown, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { WorkDetailContent } from '../../../components/WorksDetailContent';
-import { WorkInfoCard } from '../../../components/WorksDetailContent/WorkInfoCard';
 
 dayjs.extend(relativeTime);
 
@@ -279,7 +279,6 @@ export default function WorksManagerForUser() {
   // 关闭弹窗
   const handleDetailDialogClose = () => {
     setDetailDialogOpen(false);
-    setSelectedWorkId(null);
   };
 
   // 数据变更时刷新列表
