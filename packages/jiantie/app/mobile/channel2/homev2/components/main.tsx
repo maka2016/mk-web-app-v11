@@ -323,7 +323,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
 
       <section className=' pb-4 pt-3'>
         <div className='w-full  overflow-x-auto  [--scrollbar-color:transparent] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
-          <div className='flex gap-4 px-4 pr-16'>
+          <div className='flex items-center gap-4 px-4 pr-16'>
             {channels.map(channel => {
               const isActive = channel.id === selectedChannelId;
               const label = channel.display_name || '频道';
@@ -336,7 +336,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all ${
                       isActive
-                        ? 'bg-gradient-to-br from-[#ff4667] to-[#ff6f91] text-white'
+                        ? 'w-12 h-12 bg-gradient-to-br from-[#D53933] to-[#D53933] text-white'
                         : 'bg-[#f4f4f5] text-neutral-900 border border-white '
                     }`}
                   >
@@ -354,7 +354,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
                   </div>
                   <span
                     className={`text-center text-base font-semibold leading-4 ${
-                      isActive ? 'text-[#ff4667]' : 'text-neutral-700'
+                      isActive ? 'text-[#D53933]' : 'text-neutral-700'
                     }`}
                   >
                     {label.slice(0, 2)}
