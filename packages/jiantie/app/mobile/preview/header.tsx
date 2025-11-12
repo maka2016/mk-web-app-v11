@@ -99,12 +99,12 @@ const PreviewHeader = (props: Props) => {
   };
 
   const handleSave = async () => {
-    // if (isSharing) {
-    //   return;
-    // }
-    // setIsSharing(true);
-    setDetailDialogOpen(true);
-    // await checkPublish();
+    if (isSharing) {
+      return;
+    }
+    setIsSharing(true);
+    // setDetailDialogOpen(true);
+    await checkPublish();
   };
 
   const closePage = async () => {

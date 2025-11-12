@@ -514,11 +514,7 @@ export default function WorksManagerForUser() {
 
       {/* 作品详情弹窗 */}
       <ResponsiveDialog
-        title={
-          selectedWorkId
-            ? worksList.find(work => work.id === selectedWorkId)?.title
-            : ''
-        }
+        title={'邀请函详情'}
         isOpen={detailDialogOpen}
         onOpenChange={open => {
           if (!open) {
