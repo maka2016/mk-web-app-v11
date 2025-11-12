@@ -4,7 +4,7 @@ import styled from '@emotion/styled';
 import { AnimatePresence, motion } from 'motion/react';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { EnvelopeConfig } from './types';
+import { ENVELOPE_MASKS, EnvelopeConfig } from './types';
 
 /**
  * 将字符串格式的 easing 转换为 Framer Motion 支持的数组格式
@@ -54,8 +54,10 @@ const EnvelopeWrapper = styled(motion.div)`
   top: 50%;
   left: 50%;
   width: 80vw;
-  aspect-ratio: 114 / 162;
+  aspect-ratio: 1 / 2;
   z-index: 8;
+  /* box-shadow: 5px 5px 10px 0 rgba(0, 0, 0, 0.3); */
+  filter: drop-shadow(5px 5px 5px rgba(0, 0, 0, 0.3));
 `;
 
 const GuestNameText = styled(motion.div)`
@@ -99,14 +101,26 @@ const EnvelopeLayer = styled(motion.div)`
 `;
 
 /**
- * 信封背景层
+ * 信封背景层 - 内侧材质贴纸
  */
-const InvitationContentBg = styled(motion.div)`
+const InvitationContentBg = styled(motion.div)<{
+  $texture?: string;
+  $mask?: string;
+}>`
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  background-image: ${props =>
+    props.$texture ? `url(${props.$texture})` : 'none'};
+  background-repeat: repeat;
+  background-size: auto;
+  background-position: center;
+  mask-image: ${props => (props.$mask ? `url(${props.$mask})` : 'none')};
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
 `;
 
 /**
@@ -147,6 +161,7 @@ const LeftFlapCard = styled.div`
   height: 100%;
   z-index: 9;
   perspective: 1000px;
+  filter: drop-shadow(3px 0 2px rgba(0, 0, 0, 0.3));
 `;
 
 // 左侧翻转内层 - 执行旋转动画
@@ -158,8 +173,11 @@ const LeftFlapInner = styled(motion.div)`
   transform-style: preserve-3d;
 `;
 
-// 翻转卡片的两面
-const FlapSide = styled.div`
+// 翻转卡片的两面 - 使用背景图平铺，用蒙版裁切
+const FlapSide = styled.div<{
+  $texture?: string;
+  $mask?: string;
+}>`
   position: absolute;
   top: 0;
   left: 0;
@@ -167,36 +185,63 @@ const FlapSide = styled.div`
   height: 100%;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  background-image: ${props =>
+    props.$texture ? `url(${props.$texture})` : 'none'};
+  background-repeat: repeat;
+  background-size: auto;
+  mask-image: ${props => (props.$mask ? `url(${props.$mask})` : 'none')};
+  mask-size: contain;
+  mask-repeat: no-repeat;
 
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: left center;
+  &.left {
+    mask-position: left center;
+    background-position: left center;
+  }
+
+  &.right {
+    mask-position: right center;
+    background-position: right center;
   }
 
   &.back {
-    transform: rotateY(-180deg);
-    img {
-      object-position: right center;
-    }
+    transform: rotateY(-180deg) rotateZ(180deg);
   }
 `;
 
-const RightFlap = styled(motion.img)`
+// 右侧翻转卡片容器 - 提供 perspective
+const RightFlapCard = styled.div`
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transform-origin: right center;
-  backface-visibility: hidden;
   z-index: 3;
+  perspective: 1000px;
+  filter: drop-shadow(-3px 0 2px rgba(0, 0, 0, 0.3));
 `;
 
-const SealImage = styled(motion.img)`
-  position: absolute;
+// 右侧翻转内层 - 执行旋转动画
+const RightFlapInner = styled(motion.div)`
+  position: relative;
   width: 100%;
   height: 100%;
+  transform-origin: right center;
+  transform-style: preserve-3d;
+`;
+
+const SealImageContainer = styled(motion.div)`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+`;
+
+const SealImage = styled.img`
+  position: absolute;
   object-fit: contain;
   z-index: 11;
   cursor: pointer;
@@ -209,31 +254,28 @@ interface EnvelopeClientAnimationProps {
 
 /**
  * 动画阶段定义
+ * 使用 enum 自动获得数字索引，便于阶段比较
  */
-type AnimationPhase =
-  | 'idle' // 初始状态，等待点击
-  | 'seal-disappearing' // 印章消失
-  | 'left-opening' // 左侧打开
-  | 'content-separating' // 内容和信封分离
-  | 'content-expanding' // 内容铺满
-  | 'complete'; // 完成
+enum AnimationPhase {
+  Idle = 0, // 初始状态，等待点击
+  SealDisappearing = 1, // 印章消失
+  Opening = 2, // 信封打开（左右同时，右侧延迟开始）
+  ContentExpanding = 3, // 内容铺满
+  Complete = 4, // 完成
+}
 
-const PHASE_SEQUENCE: AnimationPhase[] = [
-  'idle',
-  'seal-disappearing',
-  'left-opening',
-  'content-separating',
-  'content-expanding',
-  'complete',
-];
+// 动画时序配置（秒）
+const SEAL_DISAPPEAR_DURATION = 0.3; // 印章消失持续时间
+const FLAP_OPEN_START_DELAY = 0.3; // 印章消失后，开口动画开始的延迟
+const LEFT_FLAP_DURATION = 2.2; // 左侧开口打开持续时间
+const RIGHT_FLAP_DELAY = 1.1; // 右侧相对左侧的延迟（左侧打开到一半时右侧开始）
+const RIGHT_FLAP_DURATION = 2.2; // 右侧开口打开持续时间
+const CONTENT_EXPAND_DURATION = 1.2; // 内容展开持续时间
 
-const phaseIndexMap = PHASE_SEQUENCE.reduce<Record<AnimationPhase, number>>(
-  (acc, phase, index) => {
-    acc[phase] = index;
-    return acc;
-  },
-  {} as Record<AnimationPhase, number>
-);
+// Opening 阶段的总持续时间 = 左侧延迟 + max(左侧持续时间, 右侧延迟 + 右侧持续时间)
+const OPENING_TOTAL_DURATION =
+  FLAP_OPEN_START_DELAY +
+  Math.max(LEFT_FLAP_DURATION, RIGHT_FLAP_DELAY + RIGHT_FLAP_DURATION);
 
 /**
  * 客户端信封动画组件
@@ -243,7 +285,9 @@ export function EnvelopeClientAnimation({
   config,
   onComplete,
 }: EnvelopeClientAnimationProps) {
-  const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('idle');
+  const [animationPhase, setAnimationPhase] = useState<AnimationPhase>(
+    AnimationPhase.Idle
+  );
   const contentShownRef = useRef(false); // 跟踪内容是否已经显示过
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
@@ -260,60 +304,40 @@ export function EnvelopeClientAnimation({
     ? searchParams.get('envelope_debug') === 'true'
     : false;
 
-  // 检查是否有有效配置
-  const leftOpeningImage = config?.envelopeLeftOpeningImage;
-  const leftInnerImage = config?.envelopeLeftInnerImage;
-
-  const hasValidConfig =
-    config &&
-    config.backgroundImage &&
-    leftOpeningImage &&
-    leftInnerImage &&
-    config.envelopeInnerImage &&
-    config.envelopeSealImage;
+  const hasValidConfig = !!config;
 
   const easing = parseEasing(config?.easing);
-
-  // 动画时序配置（毫秒）
-  const SEAL_DISAPPEAR_DURATION = 300;
-  const LEFT_OPEN_DURATION = 3200;
-  const CONTENT_SEPARATE_DURATION = 800; // 内容和信封分离的时长
-  const CONTENT_EXPAND_DURATION = 1600;
-
-  const LEFT_OPEN_DELAY = 300; // 印章消失后开始
 
   // 处理点击/触摸事件
   const handleStartAnimation = () => {
     if (isDebugMode) {
       // 调试模式：手动切换到下一个阶段
-      const currentIndex = PHASE_SEQUENCE.indexOf(animationPhase);
-      if (currentIndex === -1 || currentIndex === PHASE_SEQUENCE.length - 1) {
+      if (animationPhase >= AnimationPhase.Complete) {
         return;
       }
 
-      const nextPhase = PHASE_SEQUENCE[currentIndex + 1];
+      const nextPhase = animationPhase + 1;
       console.log(
-        `[EnvelopeClientAnimation] 手动调试，阶段 ${animationPhase} → ${nextPhase}`
+        `[EnvelopeClientAnimation] 手动调试，阶段 ${AnimationPhase[animationPhase]} → ${AnimationPhase[nextPhase]}`
       );
       setAnimationPhase(nextPhase);
     } else {
       // 正常模式：从 idle 开始自动播放完整动画
-      if (animationPhase === 'idle') {
+      if (animationPhase === AnimationPhase.Idle) {
         console.log('[EnvelopeClientAnimation] 开始播放动画');
-        setAnimationPhase('seal-disappearing');
+        setAnimationPhase(AnimationPhase.SealDisappearing);
       }
     }
   };
 
   const handlePrevPhase = () => {
-    const currentIndex = PHASE_SEQUENCE.indexOf(animationPhase);
-    if (currentIndex <= 0) {
+    if (animationPhase <= AnimationPhase.Idle) {
       return;
     }
 
-    const prevPhase = PHASE_SEQUENCE[currentIndex - 1];
+    const prevPhase = animationPhase - 1;
     console.log(
-      `[EnvelopeClientAnimation] 手动调试，阶段 ${animationPhase} → ${prevPhase}`
+      `[EnvelopeClientAnimation] 手动调试，阶段 ${AnimationPhase[animationPhase]} → ${AnimationPhase[prevPhase]}`
     );
     setAnimationPhase(prevPhase);
   };
@@ -322,8 +346,8 @@ export function EnvelopeClientAnimation({
   useEffect(() => {
     if (
       isDebugMode ||
-      animationPhase === 'idle' ||
-      animationPhase === 'complete'
+      animationPhase === AnimationPhase.Idle ||
+      animationPhase === AnimationPhase.Complete
     ) {
       return;
     }
@@ -331,26 +355,22 @@ export function EnvelopeClientAnimation({
     let timer: NodeJS.Timeout;
 
     // 根据当前阶段设置延迟时间，然后自动进入下一个阶段
-    if (animationPhase === 'seal-disappearing') {
+    // 注意：setTimeout 需要毫秒，所以要乘以 1000
+    if (animationPhase === AnimationPhase.SealDisappearing) {
       timer = setTimeout(() => {
-        console.log('[EnvelopeClientAnimation] 自动进入：left-opening');
-        setAnimationPhase('left-opening');
-      }, SEAL_DISAPPEAR_DURATION);
-    } else if (animationPhase === 'left-opening') {
+        console.log('[EnvelopeClientAnimation] 自动进入：Opening');
+        setAnimationPhase(AnimationPhase.Opening);
+      }, SEAL_DISAPPEAR_DURATION * 1000);
+    } else if (animationPhase === AnimationPhase.Opening) {
       timer = setTimeout(() => {
-        console.log('[EnvelopeClientAnimation] 自动进入：content-separating');
-        setAnimationPhase('content-separating');
-      }, LEFT_OPEN_DELAY + LEFT_OPEN_DURATION);
-    } else if (animationPhase === 'content-separating') {
+        console.log('[EnvelopeClientAnimation] 自动进入：ContentExpanding');
+        setAnimationPhase(AnimationPhase.ContentExpanding);
+      }, OPENING_TOTAL_DURATION * 1000);
+    } else if (animationPhase === AnimationPhase.ContentExpanding) {
       timer = setTimeout(() => {
-        console.log('[EnvelopeClientAnimation] 自动进入：content-expanding');
-        setAnimationPhase('content-expanding');
-      }, CONTENT_SEPARATE_DURATION);
-    } else if (animationPhase === 'content-expanding') {
-      timer = setTimeout(() => {
-        console.log('[EnvelopeClientAnimation] 自动进入：complete');
-        setAnimationPhase('complete');
-      }, CONTENT_EXPAND_DURATION);
+        console.log('[EnvelopeClientAnimation] 自动进入：Complete');
+        setAnimationPhase(AnimationPhase.Complete);
+      }, CONTENT_EXPAND_DURATION * 1000);
     }
 
     return () => {
@@ -360,7 +380,7 @@ export function EnvelopeClientAnimation({
 
   // 动画完成回调
   useEffect(() => {
-    if (animationPhase === 'complete') {
+    if (animationPhase === AnimationPhase.Complete) {
       console.log('[EnvelopeClientAnimation] 动画完成');
       onComplete?.();
     }
@@ -396,25 +416,18 @@ export function EnvelopeClientAnimation({
     return null;
   }
 
-  const currentPhaseIndex = phaseIndexMap[animationPhase] ?? 0;
-  const isClickable = animationPhase !== 'complete';
-  const showEnvelope = animationPhase !== 'complete';
-  const isComplete = animationPhase === 'complete';
+  const isClickable = animationPhase !== AnimationPhase.Complete;
+  const showEnvelope = animationPhase !== AnimationPhase.Complete;
+  const isComplete = animationPhase === AnimationPhase.Complete;
 
-  const hasLeftOpened = currentPhaseIndex >= phaseIndexMap['left-opening'];
+  // 左右开口在 Opening 阶段开始打开
+  const hasOpening = animationPhase >= AnimationPhase.Opening;
   const hasSealDisappeared =
-    currentPhaseIndex >= phaseIndexMap['seal-disappearing'] &&
-    animationPhase !== 'idle';
-
-  // 内容和信封分离阶段
-  const isContentSeparating =
-    animationPhase === 'content-separating' ||
-    currentPhaseIndex >= phaseIndexMap['content-separating'];
+    animationPhase >= AnimationPhase.SealDisappearing &&
+    animationPhase !== AnimationPhase.Idle;
 
   // 内容展开铺满阶段
-  const isContentExpanding =
-    animationPhase === 'content-expanding' ||
-    currentPhaseIndex >= phaseIndexMap['content-expanding'];
+  const isContentExpanding = animationPhase >= AnimationPhase.ContentExpanding;
 
   const renderDebugControls = () => {
     return (
@@ -432,16 +445,20 @@ export function EnvelopeClientAnimation({
         <button
           type='button'
           onClick={handlePrevPhase}
-          disabled={animationPhase === 'idle'}
+          disabled={animationPhase === AnimationPhase.Idle}
           style={{
             padding: '8px 16px',
             borderRadius: 999,
             border: '1px solid #cbd5f5',
-            background: animationPhase === 'idle' ? '#edf2fe' : '#fff',
+            background:
+              animationPhase === AnimationPhase.Idle ? '#edf2fe' : '#fff',
             color: '#3b82f6',
             fontSize: 14,
-            cursor: animationPhase === 'idle' ? 'not-allowed' : 'pointer',
-            opacity: animationPhase === 'idle' ? 0.6 : 1,
+            cursor:
+              animationPhase === AnimationPhase.Idle
+                ? 'not-allowed'
+                : 'pointer',
+            opacity: animationPhase === AnimationPhase.Idle ? 0.6 : 1,
             transition: 'background 0.2s ease',
           }}
         >
@@ -450,16 +467,22 @@ export function EnvelopeClientAnimation({
         <button
           type='button'
           onClick={handleStartAnimation}
-          disabled={animationPhase === 'complete'}
+          disabled={animationPhase === AnimationPhase.Complete}
           style={{
             padding: '8px 16px',
             borderRadius: 999,
             border: '1px solid #2563eb',
-            background: animationPhase === 'complete' ? '#bfdbfe' : '#3b82f6',
+            background:
+              animationPhase === AnimationPhase.Complete
+                ? '#bfdbfe'
+                : '#3b82f6',
             color: '#fff',
             fontSize: 14,
-            cursor: animationPhase === 'complete' ? 'not-allowed' : 'pointer',
-            opacity: animationPhase === 'complete' ? 0.7 : 1,
+            cursor:
+              animationPhase === AnimationPhase.Complete
+                ? 'not-allowed'
+                : 'pointer',
+            opacity: animationPhase === AnimationPhase.Complete ? 0.7 : 1,
             transition: 'background 0.2s ease',
           }}
         >
@@ -504,14 +527,8 @@ export function EnvelopeClientAnimation({
                 initial={{ left: '50%', x: '-50%', y: '-50%', opacity: 1 }}
                 animate={{
                   left: '50%', // 初始：中心
-                  x: isContentSeparating ? '75%' : '-50%',
+                  x: '-50%',
                   y: '-50%',
-                  height: isContentExpanding
-                    ? '100%'
-                    : 'calc(80vw * 162 / 114)',
-                  width: isContentExpanding ? '100%' : '80vw',
-                  scale: animationPhase === 'content-separating' ? 1 : 1,
-                  // opacity: isContentExpanding ? 0 : 1, // expanding 阶段淡出
                 }}
                 exit={{
                   opacity: 0,
@@ -519,52 +536,11 @@ export function EnvelopeClientAnimation({
                 }}
                 transition={{
                   height: {
-                    duration:
-                      animationPhase === 'content-separating'
-                        ? CONTENT_SEPARATE_DURATION / 1000
-                        : animationPhase === 'content-expanding'
-                          ? CONTENT_EXPAND_DURATION / 1000
-                          : 0,
+                    duration: CONTENT_EXPAND_DURATION,
                     ease: easing,
                   },
                   width: {
-                    duration:
-                      animationPhase === 'content-separating'
-                        ? CONTENT_SEPARATE_DURATION / 1000
-                        : animationPhase === 'content-expanding'
-                          ? CONTENT_EXPAND_DURATION / 1000
-                          : 0,
-                    ease: easing,
-                  },
-                  x: {
-                    duration:
-                      animationPhase === 'content-separating'
-                        ? CONTENT_SEPARATE_DURATION / 1000
-                        : animationPhase === 'content-expanding'
-                          ? CONTENT_EXPAND_DURATION / 1000
-                          : 0,
-                    ease:
-                      animationPhase === 'content-separating'
-                        ? [0, 0, 1, 1] // linear
-                        : easing, // ease-in-out
-                  },
-                  left: {
-                    duration:
-                      animationPhase === 'content-separating'
-                        ? CONTENT_SEPARATE_DURATION / 1000
-                        : animationPhase === 'content-expanding'
-                          ? CONTENT_EXPAND_DURATION / 1000
-                          : 0,
-                    ease:
-                      animationPhase === 'content-separating'
-                        ? [0, 0, 1, 1] // linear
-                        : easing, // ease-in-out
-                  },
-                  opacity: {
-                    duration:
-                      animationPhase === 'content-expanding'
-                        ? CONTENT_EXPAND_DURATION / 1000
-                        : 0,
+                    duration: CONTENT_EXPAND_DURATION,
                     ease: easing,
                   },
                 }}
@@ -578,60 +554,36 @@ export function EnvelopeClientAnimation({
                   initial={{ scale: 1, opacity: 1 }}
                   transition={{
                     opacity: {
-                      duration: CONTENT_EXPAND_DURATION / 1000,
+                      duration: CONTENT_EXPAND_DURATION,
                       ease: easing,
                     },
                   }}
                 >
                   <InvitationContentBg
                     title='邀请函内容背景层'
-                    style={{
-                      backgroundImage: `url(${config?.envelopeInnerImage || ''})`,
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'repeat',
-                    }}
-                  ></InvitationContentBg>
+                    $texture={config?.innerTexture}
+                    $mask={ENVELOPE_MASKS.inner}
+                  />
 
                   <InvitationContentLayer
                     title='邀请函内容预览层'
-                    initial={{ left: '50%', scale: 0.9, x: '-50%', y: '-50%' }}
+                    initial={{ left: '50%', x: '-50%', y: '-50%' }}
                     animate={{
-                      left: '50%', // 初始：中心
-                      scale: isContentExpanding ? 1 : 0.9,
-                      x: isContentSeparating ? '-175%' : '-50%',
-                      y: '-50%',
+                      height: isContentExpanding ? '100vh' : 'calc(70vw * 2)',
+                      width: isContentExpanding ? '100vw' : '70vw',
                     }}
                     transition={{
-                      x: {
-                        duration:
-                          animationPhase === 'content-separating'
-                            ? CONTENT_SEPARATE_DURATION / 1000
-                            : animationPhase === 'content-expanding'
-                              ? CONTENT_EXPAND_DURATION / 1000
-                              : 0,
-                        ease:
-                          animationPhase === 'content-separating'
-                            ? [0, 0, 1, 1] // linear
-                            : easing, // ease-in-out
+                      height: {
+                        duration: CONTENT_EXPAND_DURATION,
+                        ease: easing,
                       },
-                      left: {
-                        duration:
-                          animationPhase === 'content-separating'
-                            ? CONTENT_SEPARATE_DURATION / 1000
-                            : animationPhase === 'content-expanding'
-                              ? CONTENT_EXPAND_DURATION / 1000
-                              : 0,
-                        ease:
-                          animationPhase === 'content-separating'
-                            ? [0, 0, 1, 1] // linear
-                            : [0.4, 0, 0.2, 1], // ease-in-out
+                      width: {
+                        duration: CONTENT_EXPAND_DURATION,
+                        ease: easing,
                       },
                       scale: {
-                        duration:
-                          animationPhase === 'content-expanding'
-                            ? CONTENT_EXPAND_DURATION / 1000
-                            : 0,
-                        ease: [0.4, 0, 0.2, 1],
+                        duration: CONTENT_EXPAND_DURATION,
+                        ease: easing,
                       },
                     }}
                     style={{
@@ -651,19 +603,20 @@ export function EnvelopeClientAnimation({
                       />
                     </InvitationContentInner>
                   </InvitationContentLayer>
-                  {/* 左侧翻转卡片 */}
-                  <LeftFlapCard title='左侧翻转卡片'>
-                    <LeftFlapInner
+
+                  {/* 右侧翻转卡片 */}
+                  <RightFlapCard title='右侧翻转卡片'>
+                    <RightFlapInner
                       initial={{ rotateY: 0 }}
-                      animate={{ rotateY: hasLeftOpened ? -180 : 0 }}
+                      animate={{ rotateY: hasOpening ? 180 : 0 }}
                       transition={{
                         duration:
-                          animationPhase === 'left-opening'
-                            ? LEFT_OPEN_DURATION / 1000
+                          animationPhase === AnimationPhase.Opening
+                            ? RIGHT_FLAP_DURATION
                             : 0,
                         delay:
-                          animationPhase === 'left-opening'
-                            ? LEFT_OPEN_DELAY / 1000
+                          animationPhase === AnimationPhase.Opening
+                            ? FLAP_OPEN_START_DELAY + RIGHT_FLAP_DELAY
                             : 0,
                         ease: easing,
                       }}
@@ -671,52 +624,70 @@ export function EnvelopeClientAnimation({
                         transformStyle: 'preserve-3d',
                       }}
                     >
+                      {/* 正面 - 右侧开口外侧 */}
+                      <FlapSide
+                        className='right'
+                        $texture={config?.outerTexture}
+                        $mask={ENVELOPE_MASKS.rightFlap}
+                      />
+                      {/* 背面 - 右侧开口内侧 */}
+                      <FlapSide
+                        className='right back'
+                        $texture={config?.innerTexture}
+                        $mask={ENVELOPE_MASKS.rightFlap}
+                      />
+                    </RightFlapInner>
+                  </RightFlapCard>
+
+                  {/* 左侧翻转卡片 */}
+                  <LeftFlapCard title='左侧翻转卡片'>
+                    <LeftFlapInner
+                      initial={{ rotateY: 0 }}
+                      animate={{ rotateY: hasOpening ? -180 : 0 }}
+                      transition={{
+                        duration:
+                          animationPhase === AnimationPhase.Opening
+                            ? LEFT_FLAP_DURATION
+                            : 0,
+                        delay:
+                          animationPhase === AnimationPhase.Opening
+                            ? FLAP_OPEN_START_DELAY
+                            : 0,
+                        ease: easing,
+                      }}
+                    >
                       {/* 正面 - 左侧开口外侧 */}
                       <FlapSide
-                        style={{
-                          backgroundImage: `url(${leftOpeningImage || ''})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'left center',
-                          backgroundRepeat: 'no-repeat',
-                        }}
+                        className='left'
+                        $texture={config?.outerTexture}
+                        $mask={ENVELOPE_MASKS.leftFlap}
                       />
                       {/* 背面 - 左侧开口内侧 */}
                       <FlapSide
-                        className='back'
-                        style={{
-                          backgroundImage: `url(${leftInnerImage || leftOpeningImage || ''})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'left center',
-                          backgroundRepeat: 'no-repeat',
-                        }}
+                        className='left back'
+                        $texture={config?.innerTexture}
+                        $mask={ENVELOPE_MASKS.leftFlap}
                       />
                     </LeftFlapInner>
                   </LeftFlapCard>
 
-                  <RightFlap
-                    title='信封右开口'
-                    src={config?.envelopeRightOpeningImage || ''}
-                    alt='信封右开口'
-                  ></RightFlap>
-
-                  <SealImage
-                    src={config?.envelopeSealImage || ''}
-                    alt='envelope-seal'
+                  <SealImageContainer
+                    title='信封印章'
                     initial={{ opacity: 1, scale: 1 }}
                     animate={{
                       opacity: hasSealDisappeared ? 0 : 1,
-                      scale: hasSealDisappeared ? 0.8 : 1,
+                      scale: hasSealDisappeared ? 0.6 : 1,
                     }}
                     transition={{
                       duration:
-                        animationPhase === 'seal-disappearing'
-                          ? SEAL_DISAPPEAR_DURATION / 1000
+                        animationPhase === AnimationPhase.SealDisappearing
+                          ? SEAL_DISAPPEAR_DURATION
                           : 0,
                       ease: easing,
                     }}
                     style={{
                       cursor:
-                        isClickable && animationPhase === 'idle'
+                        isClickable && animationPhase === AnimationPhase.Idle
                           ? 'pointer'
                           : 'default',
                     }}
@@ -725,7 +696,12 @@ export function EnvelopeClientAnimation({
                         ? handleStartAnimation
                         : undefined
                     }
-                  />
+                  >
+                    <SealImage
+                      src={config?.envelopeSealImage || ''}
+                      alt='envelope-seal'
+                    />
+                  </SealImageContainer>
                 </EnvelopeLayer>
               </EnvelopeWrapper>
             )}
@@ -733,11 +709,11 @@ export function EnvelopeClientAnimation({
 
           {/* 左侧：嘉宾名称 - 相对于屏幕固定定位 */}
           <AnimatePresence mode='wait'>
-            {rsvp_invitee && animationPhase === 'idle' && (
+            {animationPhase === AnimationPhase.Idle && (
               <GuestNameText
                 key='guest-name'
                 initial={{ opacity: 0, left: '0' }}
-                animate={{ opacity: 1, left: '5vw' }}
+                animate={{ opacity: 1, left: '15vw' }}
                 exit={{
                   opacity: 0,
                   left: '0',
@@ -746,14 +722,16 @@ export function EnvelopeClientAnimation({
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 <p className='text-sm'>诚邀</p>
-                <p>{decodeURIComponent(rsvp_invitee || '')}</p>
+                {rsvp_invitee && (
+                  <p>{decodeURIComponent(rsvp_invitee || '')}</p>
+                )}
               </GuestNameText>
             )}
           </AnimatePresence>
 
           {/* 右侧：点击提示 - 相对于屏幕固定定位 */}
           <AnimatePresence mode='wait'>
-            {animationPhase === 'idle' && (
+            {animationPhase === AnimationPhase.Idle && (
               <ClickHintText
                 key='click-hint'
                 initial={{ opacity: 0, right: '0' }}

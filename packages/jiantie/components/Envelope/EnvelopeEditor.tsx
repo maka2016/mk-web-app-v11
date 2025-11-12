@@ -44,33 +44,27 @@ const ENVELOPE_HEIGHT_PX = Math.round((162 / 114) * ENVELOPE_WIDTH_PX);
 const IMAGE_FIELDS = [
   {
     key: 'backgroundImage',
-    label: '信封底图',
-    sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
+    label: '作品背景图',
+    sizeHint: '建议较大尺寸，用于平铺',
+    description: '作为整个加载页面的背景',
   },
   {
-    key: 'envelopeLeftOpeningImage',
-    label: '信封左开口外页图',
-    sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
+    key: 'outerTexture',
+    label: '外侧材质贴纸',
+    sizeHint: '建议较大尺寸，用于平铺',
+    description: '用于左右开口的外侧',
   },
   {
-    key: 'envelopeLeftInnerImage',
-    label: '信封左开口内页图',
-    sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
-  },
-  {
-    key: 'envelopeRightOpeningImage',
-    label: '信封右开口图',
-    sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
-  },
-  {
-    key: 'envelopeInnerImage',
-    label: '信封内页',
-    sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
+    key: 'innerTexture',
+    label: '内侧材质贴纸',
+    sizeHint: '建议较大尺寸，用于平铺',
+    description: '用于左右开口的内侧和信封内页',
   },
   {
     key: 'envelopeSealImage',
     label: '信封印章',
     sizeHint: `${ENVELOPE_WIDTH_PX} × ${ENVELOPE_HEIGHT_PX}px`,
+    description: '引导用户点击开启',
   },
 ] as const;
 
@@ -105,7 +99,7 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
   // 保存
   const handleSave = async () => {
     if (!isConfigComplete) {
-      toast.error('请先上传信封所需的6张图片');
+      toast.error('请先上传信封所需的4张图片');
       return;
     }
 
@@ -137,15 +131,14 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
     <div className='space-y-4 p-4 max-h-[80vh] overflow-y-auto'>
       {/* 图片上传区域 */}
       <div className='space-y-3'>
-        <Label>信封图片 (共6张)</Label>
+        <Label>信封图片 (共4张)</Label>
         <div className='grid grid-cols-2 gap-3'>
-          {IMAGE_FIELDS.map(({ key, label, sizeHint }) => (
+          {IMAGE_FIELDS.map(({ key, label, sizeHint, description }) => (
             <div key={key} className='space-y-2'>
-              <Label className='text-xs flex items-center justify-between'>
-                <span>{label}</span>
-                <span className='text-[10px] text-gray-400'>
-                  建议尺寸：{sizeHint}
-                </span>
+              <Label className='text-xs flex flex-col gap-1'>
+                <span className='font-medium'>{label}</span>
+                <span className='text-[10px] text-gray-400'>{description}</span>
+                <span className='text-[10px] text-gray-500'>{sizeHint}</span>
               </Label>
               <UploadHelper
                 image={localConfig[key as keyof EnvelopeConfig] as string}
