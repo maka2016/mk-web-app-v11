@@ -365,7 +365,7 @@ export const GridCompV2: React.FC<
       {/* 用户的组件设置 */}
       {renderWidgetSetting()}
 
-      {worksDetail?.specInfo?.is_flat_page && (
+      {!fullStack && worksDetail?.specInfo?.is_flat_page && (
         <div
           style={{
             position: 'absolute',
