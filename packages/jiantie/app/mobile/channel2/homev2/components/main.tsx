@@ -279,7 +279,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
 
   return (
     <div
-      className='flex min-h-dvh flex-col'
+      className='flex h-dvh flex-col'
       style={{
         paddingTop: 'var(--safe-area-inset-top)',
         // backgroundImage: gradientBackground,
@@ -367,14 +367,14 @@ export default function Main({ appid = 'jiantie' }: Props) {
         </div>
       </section>
 
-      <div className='flex-1 overflow-hidden rounded-t-2xl bg-white shadow-[0_-6px_20px_rgba(0,0,0,0.04)]'>
+      <div className='flex-1 min-h-0 overflow-hidden rounded-t-2xl bg-white shadow-[0_-6px_20px_rgba(0,0,0,0.04)]'>
         {channelsError ? (
           <div className='flex h-full flex-col items-center justify-center px-6 text-center text-red-500'>
             <p className='mb-2 text-xl'>加载失败</p>
             <p className='text-sm text-red-400'>{channelsError}</p>
           </div>
         ) : (
-          <div className='flex h-full flex-col'>
+          <div className='flex h-full min-h-0 flex-col'>
             {(detailError || hotwords.length !== 1) && (
               <section className='px-3 py-3'>
                 {detailError ? (
@@ -409,7 +409,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
               </section>
             )}
 
-            <div className='flex-1 overflow-y-auto'>
+            <div className='flex-1 min-h-0 overflow-y-auto'>
               {!floorsInitialized && floorsLoading ? (
                 <div className='flex h-full items-center justify-center'>
                   <div className='text-center text-gray-500'>
@@ -431,7 +431,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
                       </div>
                     </div>
                   ) : null}
-                  <div className='space-y-6 px-4 py-3'>
+                  <div className='space-y-6 px-4 py-3 pb-24'>
                     {floors.map(floor => {
                       const collections = floor.children || [];
                       const isExpanded = expandedFloors[floor.id] || false;
@@ -444,7 +444,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
                       return (
                         <section
                           key={floor.id}
-                          className='rounded-2xl bg-white'
+                          className='rounded-2xl bg-white '
                         >
                           <div className='mb-3 flex items-center justify-between'>
                             <h4 className='text-base font-semibold text-neutral-900'>
