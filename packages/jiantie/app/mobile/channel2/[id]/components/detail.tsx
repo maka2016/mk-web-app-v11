@@ -5,7 +5,9 @@ import {
   navigateWithBridge,
 } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
+import CommonLogger from '@mk/loggerv7/logger';
 import { cdnApi } from '@mk/services';
+import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
 import { ChevronRight, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -76,6 +78,11 @@ export default function Detail({ channelId }: DetailProps) {
     };
 
     fetchChannelDetail();
+
+    CommonLogger.track_pageview({
+      page_type: 'home_page_v2',
+      page_id: channelId,
+    });
   }, [channelId]);
 
   // 获取四级楼层（包含五级集合）
@@ -282,7 +289,11 @@ export default function Detail({ channelId }: DetailProps) {
                             collection.id % GRADIENT_CLASSES.length
                           ];
                         return (
-                          <div
+                          <BehaviorBox
+                            behavior={{
+                              object_type: 'template_collection_btn',
+                              object_id: `${collection.id}`,
+                            }}
                             key={collection.id}
                             className={`bg-white rounded-tl-lg rounded-tr-lg rounded-bl-lg overflow-hidden active:opacity-80 transition-all duration-300 ${
                               !isInInitial4 && isExpanded
@@ -333,7 +344,7 @@ export default function Detail({ channelId }: DetailProps) {
                                 </div>
                               )}
                             </div>
-                          </div>
+                          </BehaviorBox>
                         );
                       })}
                     </div>

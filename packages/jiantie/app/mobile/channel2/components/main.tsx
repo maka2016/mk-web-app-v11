@@ -4,8 +4,10 @@ import { getUid } from '@/services';
 import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
+import CommonLogger from '@mk/loggerv7/logger';
 import { cdnApi } from '@mk/services';
 import { TemplateMarketChannelEntity } from '@workspace/database/generated/client/client';
+import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -78,6 +80,11 @@ export default function Main({ appid = 'jiantie' }: Props) {
 
     fetchChannels();
     fetchUnreadNotifications();
+
+    CommonLogger.track_pageview({
+      page_type: 'home_page_v2',
+      page_id: `home_page_v2`,
+    });
   }, [appid]);
 
   return (
@@ -218,8 +225,14 @@ export default function Main({ appid = 'jiantie' }: Props) {
                           }}
                         >
                           {child.thumb_path ? (
-                            <div className='w-12 h-12 relative  overflow-hidden'>
-                              {/* <Image
+                            <BehaviorBox
+                              behavior={{
+                                object_type: 'channel_2_entry_btn',
+                                object_id: child.display_name,
+                              }}
+                            >
+                              <div className='w-12 h-12 relative  overflow-hidden'>
+                                {/* <Image
                                 src={cdnApi(child.thumb_path)}
                                 alt={child.display_name}
                                 width={48}
@@ -227,15 +240,16 @@ export default function Main({ appid = 'jiantie' }: Props) {
                                 style={{ objectFit: 'cover' }}
                                 className='object-contain'
                               /> */}
-                              <img
-                                src={`${cdnApi(child.thumb_path)}`}
-                                alt={child.display_name}
-                                width={64}
-                                height={64}
-                                style={{ objectFit: 'cover' }}
-                                className='object-contain w-full h-full'
-                              />
-                            </div>
+                                <img
+                                  src={`${cdnApi(child.thumb_path)}`}
+                                  alt={child.display_name}
+                                  width={64}
+                                  height={64}
+                                  style={{ objectFit: 'cover' }}
+                                  className='object-contain w-full h-full'
+                                />
+                              </div>
+                            </BehaviorBox>
                           ) : (
                             <span className='text-2xl'>
                               {child.display_name.substring(0, 2)}
