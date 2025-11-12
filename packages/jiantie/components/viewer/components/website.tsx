@@ -114,12 +114,6 @@ export default function WebsiteApp(props: WebsiteAppProps) {
     ? (worksDetail.envelope_config as EnvelopeConfig)
     : undefined;
 
-  console.log('[WebsiteApp] 信封配置:', {
-    envelope_enabled: envelopeEnabled,
-    hasEnvelopeConfig: !!envelopeConfig,
-    config: envelopeConfig,
-  });
-
   const inviteVisit = () => {
     const personId = query.inviteId;
     request.post(

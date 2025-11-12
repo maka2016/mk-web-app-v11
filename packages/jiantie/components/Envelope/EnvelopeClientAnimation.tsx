@@ -1,9 +1,10 @@
 'use client';
 
 import styled from '@emotion/styled';
+import { cdnApi } from '@mk/services';
 import { AnimatePresence, motion } from 'motion/react';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ENVELOPE_MASKS, EnvelopeConfig } from './types';
 
 /**
@@ -57,7 +58,7 @@ const EnvelopeWrapper = styled(motion.div)`
   aspect-ratio: 1 / 2;
   z-index: 8;
   /* box-shadow: 5px 5px 10px 0 rgba(0, 0, 0, 0.3); */
-  filter: drop-shadow(5px 5px 5px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(10px 10px 6px rgba(0, 0, 0, 0.2));
 `;
 
 const GuestNameText = styled(motion.div)`
@@ -78,8 +79,7 @@ const GuestNameText = styled(motion.div)`
 
 const ClickHintText = styled(motion.div)`
   position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
+  transform: translate(0, -50%);
   font-size: 20px;
   font-weight: 400;
   color: #666;
@@ -89,6 +89,15 @@ const ClickHintText = styled(motion.div)`
 
   @media (max-width: 768px) {
     font-size: 16px;
+  }
+
+  img {
+    width: auto;
+    height: 100px;
+
+    @media (max-width: 768px) {
+      height: 80px;
+    }
   }
 `;
 
@@ -161,7 +170,7 @@ const LeftFlapCard = styled.div`
   height: 100%;
   z-index: 9;
   perspective: 1000px;
-  filter: drop-shadow(3px 0 2px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(3px 0 2px rgba(0, 0, 0, 0.2));
 `;
 
 // 左侧翻转内层 - 执行旋转动画
@@ -208,6 +217,37 @@ const FlapSide = styled.div<{
   }
 `;
 
+// 渐变质感层 - 从上到下白黑渐变
+const GradientOverlay = styled.div<{
+  $mask?: string;
+}>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, #d9d9d9 0%, #000000 100%);
+  mask-image: ${props => (props.$mask ? `url(${props.$mask})` : 'none')};
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+
+  &.left {
+    mask-position: left center;
+  }
+
+  &.right {
+    mask-position: right center;
+  }
+
+  &.back {
+    transform: rotateY(-180deg) rotateZ(180deg);
+  }
+`;
+
 // 右侧翻转卡片容器 - 提供 perspective
 const RightFlapCard = styled.div`
   position: absolute;
@@ -237,14 +277,24 @@ const SealImageContainer = styled(motion.div)`
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: end;
+  justify-content: center;
 `;
 
 const SealImage = styled.img`
   position: absolute;
+  right: 8%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: auto;
+  height: 18%;
   object-fit: contain;
   z-index: 11;
   cursor: pointer;
+
+  @media (max-width: 768px) {
+    right: 5%;
+    height: 16%;
+  }
 `;
 
 interface EnvelopeClientAnimationProps {
@@ -307,6 +357,33 @@ export function EnvelopeClientAnimation({
   const hasValidConfig = !!config;
 
   const easing = parseEasing(config?.easing);
+
+  // 使用 cdnApi 处理图片资源，转换为 webp 格式
+  const processedImages = useMemo(() => {
+    if (!config) {
+      return {
+        backgroundImage: '',
+        innerTexture: '',
+        outerTexture: '',
+        envelopeSealImage: '',
+      };
+    }
+
+    return {
+      backgroundImage: config.backgroundImage
+        ? cdnApi(config.backgroundImage, { format: 'webp' })
+        : '',
+      innerTexture: config.innerTexture
+        ? cdnApi(config.innerTexture, { format: 'webp' })
+        : '',
+      outerTexture: config.outerTexture
+        ? cdnApi(config.outerTexture, { format: 'webp' })
+        : '',
+      envelopeSealImage: config.envelopeSealImage
+        ? cdnApi(config.envelopeSealImage, { format: 'webp' })
+        : '',
+    };
+  }, [config]);
 
   // 处理点击/触摸事件
   const handleStartAnimation = () => {
@@ -510,7 +587,7 @@ export function EnvelopeClientAnimation({
           <BackgroundLayer
             key='background'
             title='作品背景层'
-            $bgImage={config?.backgroundImage || ''}
+            $bgImage={processedImages.backgroundImage}
             initial={{ opacity: 1 }}
             animate={{
               opacity: showEnvelope ? 1 : 0,
@@ -561,7 +638,7 @@ export function EnvelopeClientAnimation({
                 >
                   <InvitationContentBg
                     title='邀请函内容背景层'
-                    $texture={config?.innerTexture}
+                    $texture={processedImages.innerTexture}
                     $mask={ENVELOPE_MASKS.inner}
                   />
 
@@ -627,13 +704,23 @@ export function EnvelopeClientAnimation({
                       {/* 正面 - 右侧开口外侧 */}
                       <FlapSide
                         className='right'
-                        $texture={config?.outerTexture}
+                        $texture={processedImages.outerTexture}
+                        $mask={ENVELOPE_MASKS.rightFlap}
+                      />
+                      {/* 正面渐变质感层 */}
+                      <GradientOverlay
+                        className='right'
                         $mask={ENVELOPE_MASKS.rightFlap}
                       />
                       {/* 背面 - 右侧开口内侧 */}
                       <FlapSide
                         className='right back'
-                        $texture={config?.innerTexture}
+                        $texture={processedImages.innerTexture}
+                        $mask={ENVELOPE_MASKS.rightFlap}
+                      />
+                      {/* 背面渐变质感层 */}
+                      <GradientOverlay
+                        className='right back'
                         $mask={ENVELOPE_MASKS.rightFlap}
                       />
                     </RightFlapInner>
@@ -659,13 +746,23 @@ export function EnvelopeClientAnimation({
                       {/* 正面 - 左侧开口外侧 */}
                       <FlapSide
                         className='left'
-                        $texture={config?.outerTexture}
+                        $texture={processedImages.outerTexture}
+                        $mask={ENVELOPE_MASKS.leftFlap}
+                      />
+                      {/* 正面渐变质感层 */}
+                      <GradientOverlay
+                        className='left'
                         $mask={ENVELOPE_MASKS.leftFlap}
                       />
                       {/* 背面 - 左侧开口内侧 */}
                       <FlapSide
                         className='left back'
-                        $texture={config?.innerTexture}
+                        $texture={processedImages.innerTexture}
+                        $mask={ENVELOPE_MASKS.leftFlap}
+                      />
+                      {/* 背面渐变质感层 */}
+                      <GradientOverlay
+                        className='left back'
                         $mask={ENVELOPE_MASKS.leftFlap}
                       />
                     </LeftFlapInner>
@@ -698,7 +795,7 @@ export function EnvelopeClientAnimation({
                     }
                   >
                     <SealImage
-                      src={config?.envelopeSealImage || ''}
+                      src={processedImages.envelopeSealImage}
                       alt='envelope-seal'
                     />
                   </SealImageContainer>
@@ -734,10 +831,11 @@ export function EnvelopeClientAnimation({
             {animationPhase === AnimationPhase.Idle && (
               <ClickHintText
                 key='click-hint'
-                initial={{ opacity: 0, right: '0' }}
+                initial={{ opacity: 0, right: '0', top: '50%' }}
                 animate={{
                   opacity: [0, 1, 0.6, 1],
-                  right: '5vw',
+                  right: '8vw',
+                  top: '56%',
                 }}
                 exit={{
                   opacity: 0,
@@ -754,7 +852,7 @@ export function EnvelopeClientAnimation({
                   },
                 }}
               >
-                点击开启
+                <img src='/assets/envelope/open-geust.svg' alt='点击开启' />
               </ClickHintText>
             )}
           </AnimatePresence>
