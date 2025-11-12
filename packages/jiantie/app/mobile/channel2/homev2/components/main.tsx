@@ -262,7 +262,11 @@ export default function Main({ appid = 'jiantie' }: Props) {
       className='flex min-h-dvh flex-col'
       style={{
         paddingTop: 'var(--safe-area-inset-top)',
-        backgroundImage: gradientBackground,
+        // backgroundImage: gradientBackground,
+        backgroundImage: 'url(https://res.maka.im/assets/jiantie/beijing4.jpg)',
+        backgroundSize: '100% ',
+        backgroundPosition: 'top',
+        backgroundRepeat: 'no-repeat',
       }}
     >
       <header className='px-4  pt-4 flex items-center justify-between'>
@@ -351,41 +355,39 @@ export default function Main({ appid = 'jiantie' }: Props) {
           </div>
         ) : (
           <div className='flex h-full flex-col'>
-            <section className='border-b border-gray-100 px-3 py-3'>
-              {detailError ? (
-                <div className='rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-500'>
-                  {detailError}
-                </div>
-              ) : hotwords.length === 0 ? (
-                <div className='rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-500'>
-                  暂无热词
-                </div>
-              ) : (
-                <div className='-mx-1 overflow-x-auto px-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
-                  <div className='flex gap-2'>
-                    {hotwords.map(item => {
-                      const isActive = item.id === selectedHotwordId;
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => handleHotwordSelect(item.id)}
-                          className={`whitespace-nowrap rounded-full px-4 py-2 text-base font-semibold transition-all shadow-sm ${
-                            isActive
-                              ? 'bg-[#D53933] text-white'
-                              : 'bg-[#F4F4F5] text-neutral-900'
-                          }`}
-                          style={{
-                            border: isActive ? 'none' : '1px solid #fff',
-                          }}
-                        >
-                          {item.display_name}
-                        </button>
-                      );
-                    })}
+            {(detailError || hotwords.length !== 1) && (
+              <section className='px-3 py-3'>
+                {detailError ? (
+                  <div className='rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-500'>
+                    {detailError}
                   </div>
-                </div>
-              )}
-            </section>
+                ) : (
+                  <div className='-mx-1 overflow-x-auto px-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
+                    <div className='flex gap-2'>
+                      {hotwords.map(item => {
+                        const isActive = item.id === selectedHotwordId;
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => handleHotwordSelect(item.id)}
+                            className={`whitespace-nowrap rounded-full px-2 py-1 text-base font-semibold transition-all shadow-sm ${
+                              isActive
+                                ? 'bg-[#D53933] text-white'
+                                : 'bg-[#F4F4F5] text-neutral-900'
+                            }`}
+                            style={{
+                              border: isActive ? 'none' : '1px solid #fff',
+                            }}
+                          >
+                            {item.display_name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
 
             <div className='flex-1 overflow-y-auto'>
               {!floorsInitialized && floorsLoading ? (
@@ -399,10 +401,6 @@ export default function Main({ appid = 'jiantie' }: Props) {
                 <div className='px-4 py-6 text-center text-sm text-rose-500'>
                   {floorsError}
                 </div>
-              ) : floors.length === 0 ? (
-                <div className='px-4 py-6 text-center text-sm text-gray-400'>
-                  暂无楼层内容
-                </div>
               ) : (
                 <div className='relative'>
                   {isFloorsUpdating ? (
@@ -413,7 +411,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
                       </div>
                     </div>
                   ) : null}
-                  <div className='space-y-6 px-4 py-6'>
+                  <div className='space-y-6 px-4 py-3'>
                     {floors.map(floor => {
                       const collections = floor.children || [];
                       return (
@@ -483,21 +481,6 @@ export default function Main({ appid = 'jiantie' }: Props) {
                                           </div>
                                         )}
                                       </div>
-                                      {badge ? (
-                                        <span className='absolute left-3 top-3 rounded-full bg-black/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white'>
-                                          {badge}
-                                        </span>
-                                      ) : null}
-                                    </div>
-                                    <div className='px-3 py-3'>
-                                      <p className='text-sm font-semibold text-neutral-900'>
-                                        {label}
-                                      </p>
-                                      {collection.desc ? (
-                                        <p className='mt-1 text-xs text-gray-500'>
-                                          {collection.desc}
-                                        </p>
-                                      ) : null}
                                     </div>
                                   </BehaviorBox>
                                 );
