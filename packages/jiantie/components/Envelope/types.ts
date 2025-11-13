@@ -52,9 +52,9 @@ export interface EnvelopeConfig {
  * 这些图片定义了信封的形状，用于裁切材质贴纸
  */
 export const ENVELOPE_MASKS = {
-  leftFlap: '/assets/envelope/left-open.png',
-  rightFlap: '/assets/envelope/right-open.png',
-  inner: '/assets/envelope/inner.png',
+  leftFlap: '/assets/envelope/left-open.svg',
+  rightFlap: '/assets/envelope/right-open.svg',
+  inner: '/assets/envelope/inner.svg',
 } as const;
 
 /**

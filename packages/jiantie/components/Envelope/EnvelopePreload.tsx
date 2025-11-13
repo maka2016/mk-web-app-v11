@@ -30,6 +30,9 @@ export function EnvelopePreload({ config }: EnvelopePreloadProps) {
       ? cdnApi(config.envelopeSealImage, { format: 'webp' })
       : null,
     '/assets/envelope/open-geust.svg',
+    '/assets/envelope/left-open.svg',
+    '/assets/envelope/right-open.svg',
+    '/assets/envelope/inner.svg',
   ].filter(Boolean) as string[];
 
   return (

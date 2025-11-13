@@ -112,14 +112,6 @@ const ClickHintText = styled(motion.div)`
   }
 `;
 
-const EnvelopeLayer = styled.div`
-  position: relative;
-  width: 100%;
-  height: 100%;
-  perspective: 1000px;
-  transform-style: preserve-3d;
-`;
-
 /**
  * 信封背景层 - 内侧材质贴纸
  */
@@ -269,7 +261,7 @@ const RightFlapCard = styled.div`
   height: 100%;
   z-index: 3;
   perspective: 1000px;
-  filter: drop-shadow(-3px 0 2px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(-3px 0 2px rgba(0, 0, 0, 0.1));
 `;
 
 // 右侧翻转内层 - 执行旋转动画
@@ -281,7 +273,7 @@ const RightFlapInner = styled(motion.div)`
   transform-style: preserve-3d;
 `;
 
-const SealImageContainer = styled(motion.div)`
+const SealImageContainer = styled.div`
   position: absolute;
   top: 0;
   left: 0;
@@ -292,21 +284,14 @@ const SealImageContainer = styled(motion.div)`
   justify-content: center;
 `;
 
-const SealImage = styled.img`
+const SealImage = styled(motion.img)`
   position: absolute;
-  right: 8%;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 12px;
   width: auto;
   height: 18%;
   object-fit: contain;
   z-index: 11;
   cursor: pointer;
-
-  @media (max-width: 768px) {
-    right: 5%;
-    height: 16%;
-  }
 `;
 
 interface EnvelopeClientAnimationProps {
@@ -529,9 +514,7 @@ export function EnvelopeClientAnimation({
 
   // 左右开口在 Opening 阶段开始打开
   const hasOpening = animationPhase >= AnimationPhase.Opening;
-  const hasSealDisappeared =
-    animationPhase >= AnimationPhase.SealDisappearing &&
-    animationPhase !== AnimationPhase.Idle;
+  const hasSealDisappeared = animationPhase >= AnimationPhase.SealDisappearing;
 
   // 内容展开铺满阶段
   const isContentExpanding = animationPhase >= AnimationPhase.ContentExpanding;
@@ -632,8 +615,8 @@ export function EnvelopeClientAnimation({
               title='信封内容和背景容器'
               style={{
                 pointerEvents: isClickable ? 'auto' : 'none',
-                zIndex:
-                  animationPhase >= AnimationPhase.ContentExpanding ? 10 : 3,
+                // zIndex:
+                //   animationPhase >= AnimationPhase.ContentExpanding ? 10 : 3,
               }}
             >
               <EnvelopeWrapper
@@ -650,6 +633,16 @@ export function EnvelopeClientAnimation({
                   $mask={ENVELOPE_MASKS.inner}
                 />
               </EnvelopeWrapper>
+            </EnvelopeContentWrapper>
+
+            <EnvelopeContentWrapper
+              title='信封内容和背景容器'
+              style={{
+                pointerEvents: isClickable ? 'auto' : 'none',
+                zIndex:
+                  animationPhase >= AnimationPhase.ContentExpanding ? 10 : 3,
+              }}
+            >
               <InvitationContentLayer
                 title='邀请函内容预览层'
                 initial={{ scale: 0.7 }}
@@ -680,7 +673,7 @@ export function EnvelopeClientAnimation({
 
             <EnvelopeWrapper
               title='信封开口容器'
-              className='shadow'
+              // className='shadow'
               style={{
                 pointerEvents: isClickable ? 'auto' : 'none',
               }}
@@ -689,7 +682,7 @@ export function EnvelopeClientAnimation({
               <RightFlapCard title='右侧翻转卡片'>
                 <RightFlapInner
                   initial={{ rotateY: 0 }}
-                  animate={{ rotateY: hasOpening ? 180 : 0 }}
+                  animate={{ rotateY: hasOpening ? 150 : 0 }}
                   transition={{
                     duration:
                       animationPhase === AnimationPhase.Opening
@@ -734,7 +727,7 @@ export function EnvelopeClientAnimation({
               <LeftFlapCard title='左侧翻转卡片'>
                 <LeftFlapInner
                   initial={{ rotateY: 0 }}
-                  animate={{ rotateY: hasOpening ? -180 : 0 }}
+                  animate={{ rotateY: hasOpening ? -150 : 0 }}
                   transition={{
                     duration:
                       animationPhase === AnimationPhase.Opening
@@ -752,7 +745,24 @@ export function EnvelopeClientAnimation({
                     className='left'
                     $texture={processedImages.outerTexture}
                     $mask={ENVELOPE_MASKS.leftFlap}
-                  />
+                  >
+                    <GuestNameText
+                      key='guest-name'
+                      initial={{ opacity: 0, left: '0' }}
+                      animate={{ opacity: 1, left: '15vw' }}
+                      exit={{
+                        opacity: 0,
+                        left: '0',
+                        transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
+                      }}
+                      transition={{ duration: 0.6, delay: 0.3 }}
+                    >
+                      <p className='text-sm'>诚邀</p>
+                      {rsvp_invitee && (
+                        <p>{decodeURIComponent(rsvp_invitee || '')}</p>
+                      )}
+                    </GuestNameText>
+                  </FlapSide>
                   {/* 正面渐变质感层 */}
                   <GradientOverlay
                     className='left'
@@ -772,65 +782,39 @@ export function EnvelopeClientAnimation({
                 </LeftFlapInner>
               </LeftFlapCard>
 
-              <SealImageContainer
-                title='信封印章'
-                initial={{ opacity: 1, scale: 1 }}
-                animate={{
-                  opacity: hasSealDisappeared ? 0 : 1,
-                  scale: hasSealDisappeared ? 0.6 : 1,
-                }}
-                transition={{
-                  duration:
-                    animationPhase === AnimationPhase.SealDisappearing
-                      ? timing.SEAL_DISAPPEAR_DURATION
-                      : 0,
-                  ease: easing,
-                }}
-                style={{
-                  cursor:
-                    isClickable && animationPhase === AnimationPhase.Idle
-                      ? 'pointer'
-                      : 'default',
-                }}
-                onClick={
-                  isDebugMode && isClickable ? handleStartAnimation : undefined
-                }
-              >
+              <SealImageContainer title='信封印章'>
                 <SealImage
+                  initial={{ opacity: 1, scale: 1 }}
+                  animate={{
+                    opacity: hasSealDisappeared ? 0 : 1,
+                    scale: hasSealDisappeared ? 0.6 : 1,
+                  }}
+                  transition={{
+                    opacity: {
+                      duration: hasSealDisappeared
+                        ? timing.SEAL_DISAPPEAR_DURATION
+                        : 0,
+                      ease: easing,
+                    },
+                    scale: {
+                      duration: hasSealDisappeared
+                        ? timing.SEAL_DISAPPEAR_DURATION
+                        : 0,
+                      ease: easing,
+                    },
+                  }}
                   src={processedImages.envelopeSealImage}
                   alt='envelope-seal'
                 />
               </SealImageContainer>
             </EnvelopeWrapper>
 
-            {/* 左侧：嘉宾名称 - 相对于屏幕固定定位 */}
-            <AnimatePresence mode='wait'>
-              {animationPhase === AnimationPhase.Idle && (
-                <GuestNameText
-                  key='guest-name'
-                  initial={{ opacity: 0, left: '0' }}
-                  animate={{ opacity: 1, left: '15vw' }}
-                  exit={{
-                    opacity: 0,
-                    left: '0',
-                    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
-                  }}
-                  transition={{ duration: 0.6, delay: 0.3 }}
-                >
-                  <p className='text-sm'>诚邀</p>
-                  {rsvp_invitee && (
-                    <p>{decodeURIComponent(rsvp_invitee || '')}</p>
-                  )}
-                </GuestNameText>
-              )}
-            </AnimatePresence>
-
             {/* 右侧：点击提示 - 相对于屏幕固定定位 */}
             <AnimatePresence mode='wait'>
               {animationPhase === AnimationPhase.Idle && (
                 <ClickHintText
                   key='click-hint'
-                  initial={{ opacity: 0, right: '0', top: '50%' }}
+                  initial={{ opacity: 1, right: '0', top: '50%' }}
                   animate={{
                     opacity: [0, 1, 0.6, 1],
                     right: '8vw',
