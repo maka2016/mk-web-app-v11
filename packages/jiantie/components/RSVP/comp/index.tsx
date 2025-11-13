@@ -2,11 +2,13 @@
 import { trpc } from '@/utils/trpc';
 import styled from '@emotion/styled';
 import { zodResolver } from '@hookform/resolvers/zod';
+import APPBridge from '@mk/app-bridge';
 import { EditorSDK, LayerElemItem } from '@mk/works-store/types';
 import { Form } from '@workspace/ui/components/form';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
 import * as z from 'zod';
 import { ResponsiveDialog } from '../../Drawer';
 import { RSVPConfigPanel } from '../configPanel';
@@ -206,7 +208,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const rsvp = useRSVP();
-  const { config, loading, error, fields } = rsvp;
+  const { config, loading, error, fields, isTemplate } = rsvp;
 
   // 合并主题设置，使用默认值填充缺失的项
   const mergedTheme = useMemo(() => {
@@ -575,6 +577,10 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
 
   const handleSubmit = async (willAttendValue: boolean) => {
     if (!config) return;
+    if (isTemplate || APPBridge.judgeIsInApp()) {
+      toast.error('请分享后提交');
+      return;
+    }
 
     // 公开链接必须填写姓名
     if (!isInviteeLink && !guestName.trim()) {
@@ -782,7 +788,7 @@ function RSVPCompInner({ attrs, editorSDK }: RSVPCompProps) {
     );
   }
 
-  if (error) {
+  if (error && !isTemplate) {
     // 检查是否是配置错误（关联错误）
     const isConfigError =
       error.includes('表单配置异常') || error.includes('关联');

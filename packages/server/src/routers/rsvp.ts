@@ -1464,4 +1464,80 @@ export const rsvpRouter = router({
 
       return { count: submissionIds.length - readCount };
     }),
+
+  // ===== 管理员功能 =====
+  // 获取所有RSVP列表（管理员视角）
+  listAllRSVPs: protectedProcedure
+    .input(
+      z.object({
+        keyword: z.string().optional(),
+        skip: z.number().optional(),
+        take: z.number().optional().default(20),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // 1. 获取所有未删除的RSVP配置
+      const allFormConfigs = await ctx.prisma.rsvpFormConfigEntity.findMany({
+        where: {
+          deleted: false,
+        },
+        orderBy: { create_time: 'desc' },
+      });
+
+      // 2. 获取所有关联的作品ID
+      const worksIds = allFormConfigs
+        .map(config => config.works_id)
+        .filter((id): id is string => !!id);
+
+      // 3. 批量查询作品信息
+      const works = await ctx.prisma.worksEntity.findMany({
+        where: {
+          id: { in: worksIds },
+          deleted: false,
+        },
+        select: {
+          id: true,
+          title: true,
+          cover: true,
+          uid: true,
+          create_time: true,
+        },
+      });
+
+      // 4. 创建作品映射
+      const worksMap = new Map(works.map(w => [w.id, w]));
+
+      // 5. 关键字搜索过滤（如果有关键字）
+      let filteredConfigs = allFormConfigs;
+      if (input.keyword) {
+        const keyword = input.keyword.toLowerCase();
+        filteredConfigs = allFormConfigs.filter(config => {
+          const work = worksMap.get(config.works_id);
+          return (
+            config.title?.toLowerCase().includes(keyword) ||
+            work?.title?.toLowerCase().includes(keyword)
+          );
+        });
+      }
+
+      // 6. 计算总数
+      const total = filteredConfigs.length;
+
+      // 7. 分页
+      const paginatedConfigs = filteredConfigs.slice(
+        input.skip || 0,
+        (input.skip || 0) + (input.take || 20)
+      );
+
+      // 8. 组合数据
+      const data = paginatedConfigs.map(config => ({
+        ...config,
+        works: worksMap.get(config.works_id) || null,
+      }));
+
+      return {
+        data,
+        total,
+      };
+    }),
 });
