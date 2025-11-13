@@ -179,8 +179,7 @@ export const EnvelopeManagerHelperForPage = () => {
           envelope_config: null,
         });
       } else {
-        await trpc.works.update.mutate({
-          id: worksDetail.id,
+        editorSDK?.fullSDK.api.updateWorksDetail({
           envelope_enabled: false,
           envelope_config: null,
         });

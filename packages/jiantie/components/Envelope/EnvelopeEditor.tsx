@@ -4,7 +4,7 @@ import { Button } from '@workspace/ui/components/button';
 import { Label } from '@workspace/ui/components/label';
 import { Slider } from '@workspace/ui/components/slider';
 import { UploadHelper } from '@workspace/ui/components/Upload';
-import { RotateCcw, Save, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, RotateCcw, Save, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { showSelector } from '../showSelector';
@@ -76,6 +76,7 @@ const IMAGE_FIELDS = [
 export default function EnvelopeEditor(props: EnvelopeEditorProps) {
   const { onRemove } = props;
   const [saving, setSaving] = useState(false);
+  const [isTimingExpanded, setIsTimingExpanded] = useState(false);
   // 本地状态
   const [localConfig, setLocalConfig] = useState<EnvelopeConfig>(
     normalizeConfig(props.value)
@@ -165,127 +166,141 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
       {/* 动画参数 */}
       <div className='space-y-3'>
-        <Label>动画时序参数</Label>
+        <button
+          type='button'
+          onClick={() => setIsTimingExpanded(!isTimingExpanded)}
+          className='flex items-center gap-2 w-full text-left hover:opacity-80 transition-opacity'
+        >
+          <Label className='cursor-pointer'>动画时序参数</Label>
+          {isTimingExpanded ? (
+            <ChevronUp className='w-4 h-4 text-gray-500' />
+          ) : (
+            <ChevronDown className='w-4 h-4 text-gray-500' />
+          )}
+        </button>
 
-        <div className='space-y-2'>
-          <Label className='text-xs'>
-            印章消失持续时间: {localConfig.sealDisappearDuration ?? 0.3}秒
-          </Label>
-          <Slider
-            value={[localConfig.sealDisappearDuration ?? 0.3]}
-            onValueChange={value => {
-              setLocalConfig({
-                ...localConfig,
-                sealDisappearDuration: value[0],
-              });
-            }}
-            min={0.1}
-            max={1.0}
-            step={0.05}
-          />
-        </div>
+        {isTimingExpanded && (
+          <div className='space-y-3 pl-2 border-l-2 border-gray-200'>
+            <div className='space-y-2'>
+              <Label className='text-xs'>
+                印章消失持续时间: {localConfig.sealDisappearDuration ?? 0.3}秒
+              </Label>
+              <Slider
+                value={[localConfig.sealDisappearDuration ?? 0.3]}
+                onValueChange={value => {
+                  setLocalConfig({
+                    ...localConfig,
+                    sealDisappearDuration: value[0],
+                  });
+                }}
+                min={0.1}
+                max={1.0}
+                step={0.05}
+              />
+            </div>
 
-        <div className='space-y-2'>
-          <Label className='text-xs'>
-            开口动画延迟: {localConfig.flapOpenStartDelay ?? 0.3}秒
-          </Label>
-          <Slider
-            value={[localConfig.flapOpenStartDelay ?? 0.3]}
-            onValueChange={value => {
-              setLocalConfig({
-                ...localConfig,
-                flapOpenStartDelay: value[0],
-              });
-            }}
-            min={0}
-            max={1.0}
-            step={0.05}
-          />
-        </div>
+            <div className='space-y-2'>
+              <Label className='text-xs'>
+                开口动画延迟: {localConfig.flapOpenStartDelay ?? 0.3}秒
+              </Label>
+              <Slider
+                value={[localConfig.flapOpenStartDelay ?? 0.3]}
+                onValueChange={value => {
+                  setLocalConfig({
+                    ...localConfig,
+                    flapOpenStartDelay: value[0],
+                  });
+                }}
+                min={0}
+                max={1.0}
+                step={0.05}
+              />
+            </div>
 
-        <div className='space-y-2'>
-          <Label className='text-xs'>
-            左侧开口持续时间: {localConfig.leftFlapDuration ?? 2.2}秒
-          </Label>
-          <Slider
-            value={[localConfig.leftFlapDuration ?? 2.2]}
-            onValueChange={value => {
-              setLocalConfig({
-                ...localConfig,
-                leftFlapDuration: value[0],
-              });
-            }}
-            min={0.5}
-            max={5.0}
-            step={0.1}
-          />
-        </div>
+            <div className='space-y-2'>
+              <Label className='text-xs'>
+                左侧开口持续时间: {localConfig.leftFlapDuration ?? 2.2}秒
+              </Label>
+              <Slider
+                value={[localConfig.leftFlapDuration ?? 2.2]}
+                onValueChange={value => {
+                  setLocalConfig({
+                    ...localConfig,
+                    leftFlapDuration: value[0],
+                  });
+                }}
+                min={0.5}
+                max={5.0}
+                step={0.1}
+              />
+            </div>
 
-        <div className='space-y-2'>
-          <Label className='text-xs'>
-            右侧开口延迟: {localConfig.rightFlapDelay ?? 1.1}秒
-          </Label>
-          <Slider
-            value={[localConfig.rightFlapDelay ?? 1.1]}
-            onValueChange={value => {
-              setLocalConfig({
-                ...localConfig,
-                rightFlapDelay: value[0],
-              });
-            }}
-            min={0}
-            max={3.0}
-            step={0.1}
-          />
-        </div>
+            <div className='space-y-2'>
+              <Label className='text-xs'>
+                右侧开口延迟: {localConfig.rightFlapDelay ?? 1.1}秒
+              </Label>
+              <Slider
+                value={[localConfig.rightFlapDelay ?? 1.1]}
+                onValueChange={value => {
+                  setLocalConfig({
+                    ...localConfig,
+                    rightFlapDelay: value[0],
+                  });
+                }}
+                min={0}
+                max={3.0}
+                step={0.1}
+              />
+            </div>
 
-        <div className='space-y-2'>
-          <Label className='text-xs'>
-            右侧开口持续时间: {localConfig.rightFlapDuration ?? 2.2}秒
-          </Label>
-          <Slider
-            value={[localConfig.rightFlapDuration ?? 2.2]}
-            onValueChange={value => {
-              setLocalConfig({
-                ...localConfig,
-                rightFlapDuration: value[0],
-              });
-            }}
-            min={0.5}
-            max={5.0}
-            step={0.1}
-          />
-        </div>
+            <div className='space-y-2'>
+              <Label className='text-xs'>
+                右侧开口持续时间: {localConfig.rightFlapDuration ?? 2.2}秒
+              </Label>
+              <Slider
+                value={[localConfig.rightFlapDuration ?? 2.2]}
+                onValueChange={value => {
+                  setLocalConfig({
+                    ...localConfig,
+                    rightFlapDuration: value[0],
+                  });
+                }}
+                min={0.5}
+                max={5.0}
+                step={0.1}
+              />
+            </div>
 
-        <div className='space-y-2'>
-          <Label className='text-xs'>
-            内容展开持续时间: {localConfig.contentExpandDuration ?? 1.2}秒
-          </Label>
-          <Slider
-            value={[localConfig.contentExpandDuration ?? 1.2]}
-            onValueChange={value => {
-              setLocalConfig({
-                ...localConfig,
-                contentExpandDuration: value[0],
-              });
-            }}
-            min={0.3}
-            max={3.0}
-            step={0.1}
-          />
-        </div>
+            <div className='space-y-2'>
+              <Label className='text-xs'>
+                内容展开持续时间: {localConfig.contentExpandDuration ?? 1.2}秒
+              </Label>
+              <Slider
+                value={[localConfig.contentExpandDuration ?? 1.2]}
+                onValueChange={value => {
+                  setLocalConfig({
+                    ...localConfig,
+                    contentExpandDuration: value[0],
+                  });
+                }}
+                min={0.3}
+                max={3.0}
+                step={0.1}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 操作按钮 */}
       <div className='flex gap-2 pt-4 border-t'>
-        <Button
-          onClick={handleSave}
-          disabled={saving || !hasUnsavedChanges || !isConfigComplete}
-          className='flex-1'
-        >
-          <Save className='w-4 h-4 mr-1' />
-          {saving ? '保存中...' : '保存'}
-        </Button>
+        {onRemove && (
+          <Button variant='outline' onClick={handleRemove}>
+            <Trash2 className='w-4 h-4 mr-1' />
+            删除
+          </Button>
+        )}
+        <span className='flex-1'></span>
         <Button
           variant='outline'
           onClick={handleReset}
@@ -294,12 +309,13 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
           <RotateCcw className='w-4 h-4 mr-1' />
           重置
         </Button>
-        {onRemove && (
-          <Button variant='destructive' onClick={handleRemove}>
-            <Trash2 className='w-4 h-4 mr-1' />
-            删除
-          </Button>
-        )}
+        <Button
+          onClick={handleSave}
+          disabled={saving || !hasUnsavedChanges || !isConfigComplete}
+        >
+          <Save className='w-4 h-4 mr-1' />
+          {saving ? '保存中...' : '保存'}
+        </Button>
       </div>
     </div>
   );
