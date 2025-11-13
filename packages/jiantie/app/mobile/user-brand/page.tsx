@@ -1,22 +1,20 @@
 'use client';
 
 import MobileHeader from '@/components/DeviceWrapper/mobile/Header';
-import styles from './index.module.scss';
-import { Icon } from '@workspace/ui/components/Icon';
-import { useEffect, useRef, useState } from 'react';
+import LibPicture from '@/components/LibPicture';
 import { getAppId, getUid, request } from '@/services';
-import { API } from '@mk/services';
-import { isMakaAppAndroid } from '@mk/utils';
-import APPBridge from '@mk/app-bridge';
-import { Button } from '@workspace/ui/components/button';
-import OssUploader from '@/components/OssUpload';
-import toast from 'react-hot-toast';
 import { useStore } from '@/store';
 import { toVipPage } from '@/utils/jiantie';
-import { observer } from 'mobx-react';
+import APPBridge from '@mk/app-bridge';
+import { API } from '@mk/services';
+import { Button } from '@workspace/ui/components/button';
+import { Icon } from '@workspace/ui/components/Icon';
 import { ResponsiveDialog } from '@workspace/ui/components/responsive-dialog';
+import { observer } from 'mobx-react';
+import { useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 import ImageCropper from './ImageCropper';
-import LibPicture from '@/components/LibPicture';
+import styles from './index.module.scss';
 
 function Page() {
   const appid = getAppId();
@@ -251,7 +249,6 @@ function Page() {
       >
         <LibPicture
           preUpload={false}
-          worksId=''
           onSelectItem={(url: string) => {
             setCropImageUrl(url);
             setShowCrop(true);

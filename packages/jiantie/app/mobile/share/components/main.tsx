@@ -41,14 +41,14 @@ import {
 import { Loading } from '@workspace/ui/components/loading';
 // import { IWorksData } from "@mk/works-store/types";
 import { getAllLayers } from '@/app/editor/SimpleEditor/utils';
-import { useCheckPublish } from '@/utils/checkPubulish';
-import { toVipPage } from '@/utils/jiantie';
-import { canUseRnChoosePic, showRnChoosePic } from '@/utils/rnChoosePic';
-import { useShareNavigation } from '@/utils/share';
 import {
   CanvaInfo2,
   getCanvaInfo2,
 } from '@/components/GridV3/comp/provider/utils';
+import { useCheckPublish } from '@/utils/checkPubulish';
+import { toVipPage } from '@/utils/jiantie';
+import { canUseRnChoosePic, showRnChoosePic } from '@/utils/rnChoosePic';
+import { useShareNavigation } from '@/utils/share';
 import { IWorksData } from '@mk/works-store/types';
 import { Label } from '@workspace/ui/components/label';
 import { Separator } from '@workspace/ui/components/separator';
@@ -968,7 +968,6 @@ const Share = () => {
       >
         <LibPicture
           preUpload={false}
-          worksId={workInfo.id}
           onSelectItem={(url: string) => {
             setCropImageUrl(url);
             setShowCrop(true);

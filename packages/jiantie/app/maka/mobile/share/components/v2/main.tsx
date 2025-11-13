@@ -428,7 +428,6 @@ const Share = () => {
       >
         <LibPicture
           preUpload={false}
-          worksId={workInfo.id}
           onSelectItem={(url: string) => {
             setCropImageUrl(url);
             setShowCrop(true);

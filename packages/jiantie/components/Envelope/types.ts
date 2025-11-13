@@ -25,16 +25,26 @@ export interface EnvelopeConfig {
   innerTexture?: string;
   /** 信封印章图 */
   envelopeSealImage?: string;
-  /** 动画持续时间（毫秒，默认 2000） */
-  duration?: number;
-  /** 延迟时间（毫秒，默认 500） */
-  delay?: number;
   /** 缓动函数（默认 ease-in-out） */
   easing?: string;
   /** 左侧开口阴影配置 */
   leftFlapShadow?: FlapShadow;
   /** 右侧开口阴影配置 */
   rightFlapShadow?: FlapShadow;
+
+  // 细化的动画时序参数（秒）
+  /** 印章消失持续时间（秒，默认 0.3） */
+  sealDisappearDuration?: number;
+  /** 印章消失后，开口动画开始的延迟（秒，默认 0.3） */
+  flapOpenStartDelay?: number;
+  /** 左侧开口打开持续时间（秒，默认 2.2） */
+  leftFlapDuration?: number;
+  /** 右侧相对左侧的延迟（秒，默认 1.1） */
+  rightFlapDelay?: number;
+  /** 右侧开口打开持续时间（秒，默认 2.2） */
+  rightFlapDuration?: number;
+  /** 内容展开持续时间（秒，默认 1.2） */
+  contentExpandDuration?: number;
 }
 
 /**

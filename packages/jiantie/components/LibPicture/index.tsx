@@ -1,18 +1,17 @@
-import React, { useEffect, useState } from 'react';
 import appBridge from '@mk/app-bridge';
 import { isMakaAppClient } from '@mk/utils';
+import { useEffect, useState } from 'react';
 import PicturePanel from '../PicturePanel';
 import NativePhotoCollection from './PhoneAlbum';
 
 interface Props {
   preUpload?: boolean;
   multiple?: boolean;
-  worksId: string;
   onSelectItem: (url: string) => void;
 }
 
 const PhoneAlbum = (props: Props) => {
-  const { worksId, multiple = false, preUpload = true, onSelectItem } = props;
+  const { multiple = false, preUpload = true, onSelectItem } = props;
 
   const [ready, setReady] = useState(false);
   const [loadLocalImageAvaliable, setLoadLocalImageAvaliable] = useState(false);
@@ -42,14 +41,13 @@ const PhoneAlbum = (props: Props) => {
 
   return loadLocalImageAvaliable ? (
     <NativePhotoCollection
-      worksId={worksId}
       onSelectItem={onSelectItem}
       multiple={multiple}
       t={undefined}
       preUpload={preUpload}
     />
   ) : (
-    <PicturePanel worksId={worksId} onSelectItem={onSelectItem} />
+    <PicturePanel onSelectItem={onSelectItem} />
   );
 };
 
