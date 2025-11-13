@@ -299,7 +299,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
           <img
             src={cdnApi('/assets/jiantie/logov2.png')}
             alt='简帖'
-            className='w-40 h-12 object-contain'
+            className='w-28 h-8 object-contain'
           />
         </button>
         <div className='flex items-center gap-2'>
