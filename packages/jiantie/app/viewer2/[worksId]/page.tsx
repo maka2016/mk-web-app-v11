@@ -1,3 +1,4 @@
+import { EnvelopePreload } from '@/components/Envelope/EnvelopePreload';
 import { EnvelopeConfig } from '@/components/Envelope/types';
 import { getShareInfo } from '@/components/GridV3/comp/provider/utils';
 import MiniPShare from '@/components/MiniPShare';
@@ -253,8 +254,8 @@ export default async function Page({
 
   return (
     <>
-      {/* 服务端渲染的信封 Loading */}
-      {/* <EnvelopeLoading config={envelopeConfig} /> */}
+      {/* 服务端预加载信封图片资源 - 在 SSR 阶段输出 preload 标签 */}
+      <EnvelopePreload config={envelopeConfig} />
 
       <MiniPShare
         title={initProps.worksDetail?.title || '详情'}

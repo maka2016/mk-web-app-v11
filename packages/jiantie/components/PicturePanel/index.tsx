@@ -1,5 +1,5 @@
-import styles from './index.module.scss';
-import { useEffect, useRef, useState } from 'react';
+import { compressImg } from '@/utils/compressImg';
+import APPBridge from '@mk/app-bridge';
 import {
   cdnApi,
   deleteFile,
@@ -7,13 +7,8 @@ import {
   getFiles,
   uploadFile,
 } from '@mk/services';
-import toast from 'react-hot-toast';
-import cls from 'classnames';
-import { Loading } from '@workspace/ui/components/loading';
 import { isMakaAppAndroid } from '@mk/utils';
-import APPBridge from '@mk/app-bridge';
-import { compressImg } from '@/utils/compressImg';
-import { FileVideo, FolderArchive, Plus } from 'lucide-react';
+import { Loading } from '@workspace/ui/components/loading';
 import {
   Pagination,
   PaginationContent,
@@ -22,16 +17,20 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@workspace/ui/components/pagination';
+import cls from 'classnames';
+import { FileVideo, FolderArchive, Plus } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
+import styles from './index.module.scss';
 
 interface Props {
-  worksId: string;
   onSelectItem: (url: string) => void;
 }
 
 const pageSize = 30;
 
 const PicturePanel = (props: Props) => {
-  const { worksId, onSelectItem } = props;
+  const { onSelectItem } = props;
   const inputRef = useRef<any>(null);
   const [list, setList] = useState<FileItem[]>([]);
   const [page, setPage] = useState(1);
@@ -100,7 +99,6 @@ const PicturePanel = (props: Props) => {
     try {
       const res = await uploadFile({
         file: fileCompress,
-        // worksId: works_id,
       });
       return res;
     } catch (error: any) {

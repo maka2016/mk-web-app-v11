@@ -7,13 +7,19 @@ import { UploadHelper } from '@workspace/ui/components/Upload';
 import { RotateCcw, Save, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { showSelector } from '../showSelector';
 import { EnvelopeConfig, isEnvelopeConfigComplete } from './types';
 
 const normalizeConfig = (config?: EnvelopeConfig): EnvelopeConfig => {
   const fallback: EnvelopeConfig = {
-    duration: 2000,
-    delay: 500,
     easing: 'ease-in-out',
+    // 细化的动画时序参数（秒）
+    sealDisappearDuration: 0.3,
+    flapOpenStartDelay: 0.3,
+    leftFlapDuration: 2.2,
+    rightFlapDelay: 1.1,
+    rightFlapDuration: 2.2,
+    contentExpandDuration: 1.2,
   };
 
   if (!config) {
@@ -32,7 +38,6 @@ const normalizeConfig = (config?: EnvelopeConfig): EnvelopeConfig => {
 };
 
 interface EnvelopeEditorProps {
-  editorCtx: any;
   value?: EnvelopeConfig;
   onChange: (config: EnvelopeConfig) => Promise<void>;
   onRemove?: () => void;
@@ -69,7 +74,7 @@ const IMAGE_FIELDS = [
 ] as const;
 
 export default function EnvelopeEditor(props: EnvelopeEditorProps) {
-  const { editorCtx, onRemove } = props;
+  const { onRemove } = props;
   const [saving, setSaving] = useState(false);
   // 本地状态
   const [localConfig, setLocalConfig] = useState<EnvelopeConfig>(
@@ -132,7 +137,7 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
       {/* 图片上传区域 */}
       <div className='space-y-3'>
         <Label>信封图片 (共4张)</Label>
-        <div className='grid grid-cols-2 gap-3'>
+        <div className='grid grid-cols-4 gap-2'>
           {IMAGE_FIELDS.map(({ key, label, sizeHint, description }) => (
             <div key={key} className='space-y-2'>
               <Label className='text-xs flex flex-col gap-1'>
@@ -144,7 +149,7 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
                 image={localConfig[key as keyof EnvelopeConfig] as string}
                 onRemove={() => handleImageChange(key, '')}
                 onUpload={() => {
-                  editorCtx?.utils.showSelector({
+                  showSelector({
                     onSelected: (params: any) => {
                       const { url } = params;
                       handleImageChange(key, url);
@@ -160,35 +165,113 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
       {/* 动画参数 */}
       <div className='space-y-3'>
-        <Label>动画参数</Label>
+        <Label>动画时序参数</Label>
+
         <div className='space-y-2'>
-          <Label className='text-xs'>持续时间: {localConfig.duration}ms</Label>
+          <Label className='text-xs'>
+            印章消失持续时间: {localConfig.sealDisappearDuration ?? 0.3}秒
+          </Label>
           <Slider
-            value={[localConfig.duration || 2000]}
+            value={[localConfig.sealDisappearDuration ?? 0.3]}
             onValueChange={value => {
               setLocalConfig({
                 ...localConfig,
-                duration: value[0],
+                sealDisappearDuration: value[0],
               });
             }}
-            min={500}
-            max={5000}
-            step={100}
+            min={0.1}
+            max={1.0}
+            step={0.05}
           />
         </div>
+
         <div className='space-y-2'>
-          <Label className='text-xs'>延迟时间: {localConfig.delay}ms</Label>
+          <Label className='text-xs'>
+            开口动画延迟: {localConfig.flapOpenStartDelay ?? 0.3}秒
+          </Label>
           <Slider
-            value={[localConfig.delay || 500]}
+            value={[localConfig.flapOpenStartDelay ?? 0.3]}
             onValueChange={value => {
               setLocalConfig({
                 ...localConfig,
-                delay: value[0],
+                flapOpenStartDelay: value[0],
               });
             }}
             min={0}
-            max={3000}
-            step={100}
+            max={1.0}
+            step={0.05}
+          />
+        </div>
+
+        <div className='space-y-2'>
+          <Label className='text-xs'>
+            左侧开口持续时间: {localConfig.leftFlapDuration ?? 2.2}秒
+          </Label>
+          <Slider
+            value={[localConfig.leftFlapDuration ?? 2.2]}
+            onValueChange={value => {
+              setLocalConfig({
+                ...localConfig,
+                leftFlapDuration: value[0],
+              });
+            }}
+            min={0.5}
+            max={5.0}
+            step={0.1}
+          />
+        </div>
+
+        <div className='space-y-2'>
+          <Label className='text-xs'>
+            右侧开口延迟: {localConfig.rightFlapDelay ?? 1.1}秒
+          </Label>
+          <Slider
+            value={[localConfig.rightFlapDelay ?? 1.1]}
+            onValueChange={value => {
+              setLocalConfig({
+                ...localConfig,
+                rightFlapDelay: value[0],
+              });
+            }}
+            min={0}
+            max={3.0}
+            step={0.1}
+          />
+        </div>
+
+        <div className='space-y-2'>
+          <Label className='text-xs'>
+            右侧开口持续时间: {localConfig.rightFlapDuration ?? 2.2}秒
+          </Label>
+          <Slider
+            value={[localConfig.rightFlapDuration ?? 2.2]}
+            onValueChange={value => {
+              setLocalConfig({
+                ...localConfig,
+                rightFlapDuration: value[0],
+              });
+            }}
+            min={0.5}
+            max={5.0}
+            step={0.1}
+          />
+        </div>
+
+        <div className='space-y-2'>
+          <Label className='text-xs'>
+            内容展开持续时间: {localConfig.contentExpandDuration ?? 1.2}秒
+          </Label>
+          <Slider
+            value={[localConfig.contentExpandDuration ?? 1.2]}
+            onValueChange={value => {
+              setLocalConfig({
+                ...localConfig,
+                contentExpandDuration: value[0],
+              });
+            }}
+            min={0.3}
+            max={3.0}
+            step={0.1}
           />
         </div>
       </div>

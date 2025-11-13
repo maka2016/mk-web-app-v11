@@ -135,7 +135,7 @@ export const CoverAnimateManagerHelperForPage = () => {
 };
 
 export const EnvelopeManagerHelperForPage = () => {
-  const { editorCtx, editorSDK } = useGridContext();
+  const { editorSDK } = useGridContext();
   const [showEnvelopeForm, setShowEnvelopeForm] = useState(false);
   const worksDetail = editorSDK?.fullSDK?.worksDetail;
   const isTemplate = worksDetail?.template_id === worksDetail?.id;
@@ -156,17 +156,10 @@ export const EnvelopeManagerHelperForPage = () => {
           envelope_config: config,
         });
       } else {
-        await trpc.works.update.mutate({
-          id: worksDetail.id,
+        editorSDK?.fullSDK.api.updateWorksDetail({
           envelope_enabled: true,
           envelope_config: config,
         });
-      }
-
-      // 更新本地状态
-      if (editorSDK?.fullSDK?.worksDetail) {
-        editorSDK.fullSDK.worksDetail.envelope_enabled = true;
-        editorSDK.fullSDK.worksDetail.envelope_config = config;
       }
 
       setShowEnvelopeForm(false);
@@ -191,12 +184,6 @@ export const EnvelopeManagerHelperForPage = () => {
           envelope_enabled: false,
           envelope_config: null,
         });
-      }
-
-      // 更新本地状态
-      if (editorSDK?.fullSDK?.worksDetail) {
-        editorSDK.fullSDK.worksDetail.envelope_enabled = false;
-        editorSDK.fullSDK.worksDetail.envelope_config = undefined;
       }
 
       setShowEnvelopeForm(false);
@@ -225,9 +212,11 @@ export const EnvelopeManagerHelperForPage = () => {
         isOpen={showEnvelopeForm}
         onOpenChange={setShowEnvelopeForm}
         title={'信封设置'}
+        contentProps={{
+          style: { width: '70vw', maxWidth: '800px' },
+        }}
       >
         <EnvelopeEditor
-          editorCtx={editorCtx}
           value={envelopeConfig}
           onChange={handleSave}
           onRemove={handleRemove}

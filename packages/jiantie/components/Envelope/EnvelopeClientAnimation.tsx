@@ -314,18 +314,33 @@ enum AnimationPhase {
   Complete = 4, // 完成
 }
 
-// 动画时序配置（秒）
-const SEAL_DISAPPEAR_DURATION = 0.3; // 印章消失持续时间
-const FLAP_OPEN_START_DELAY = 0.3; // 印章消失后，开口动画开始的延迟
-const LEFT_FLAP_DURATION = 2.2; // 左侧开口打开持续时间
-const RIGHT_FLAP_DELAY = 1.1; // 右侧相对左侧的延迟（左侧打开到一半时右侧开始）
-const RIGHT_FLAP_DURATION = 2.2; // 右侧开口打开持续时间
-const CONTENT_EXPAND_DURATION = 1.2; // 内容展开持续时间
+/**
+ * 从配置中获取动画时序参数（秒）
+ */
+const getAnimationTiming = (config?: EnvelopeConfig) => {
+  // 配置值已经是秒，直接使用
+  const SEAL_DISAPPEAR_DURATION = config?.sealDisappearDuration ?? 0.3;
+  const FLAP_OPEN_START_DELAY = config?.flapOpenStartDelay ?? 0.3;
+  const LEFT_FLAP_DURATION = config?.leftFlapDuration ?? 2.2;
+  const RIGHT_FLAP_DELAY = config?.rightFlapDelay ?? 1.1;
+  const RIGHT_FLAP_DURATION = config?.rightFlapDuration ?? 2.2;
+  const CONTENT_EXPAND_DURATION = config?.contentExpandDuration ?? 1.2;
 
-// Opening 阶段的总持续时间 = 左侧延迟 + max(左侧持续时间, 右侧延迟 + 右侧持续时间)
-const OPENING_TOTAL_DURATION =
-  FLAP_OPEN_START_DELAY +
-  Math.max(LEFT_FLAP_DURATION, RIGHT_FLAP_DELAY + RIGHT_FLAP_DURATION);
+  // Opening 阶段的总持续时间 = 左侧延迟 + max(左侧持续时间, 右侧延迟 + 右侧持续时间)
+  const OPENING_TOTAL_DURATION =
+    FLAP_OPEN_START_DELAY +
+    Math.max(LEFT_FLAP_DURATION, RIGHT_FLAP_DELAY + RIGHT_FLAP_DURATION);
+
+  return {
+    SEAL_DISAPPEAR_DURATION,
+    FLAP_OPEN_START_DELAY,
+    LEFT_FLAP_DURATION,
+    RIGHT_FLAP_DELAY,
+    RIGHT_FLAP_DURATION,
+    CONTENT_EXPAND_DURATION,
+    OPENING_TOTAL_DURATION,
+  };
+};
 
 /**
  * 客户端信封动画组件
@@ -357,6 +372,9 @@ export function EnvelopeClientAnimation({
   const hasValidConfig = !!config;
 
   const easing = parseEasing(config?.easing);
+
+  // 获取动画时序参数
+  const timing = useMemo(() => getAnimationTiming(config), [config]);
 
   // 使用 cdnApi 处理图片资源，转换为 webp 格式
   const processedImages = useMemo(() => {
@@ -437,23 +455,23 @@ export function EnvelopeClientAnimation({
       timer = setTimeout(() => {
         console.log('[EnvelopeClientAnimation] 自动进入：Opening');
         setAnimationPhase(AnimationPhase.Opening);
-      }, SEAL_DISAPPEAR_DURATION * 1000);
+      }, timing.SEAL_DISAPPEAR_DURATION * 1000);
     } else if (animationPhase === AnimationPhase.Opening) {
       timer = setTimeout(() => {
         console.log('[EnvelopeClientAnimation] 自动进入：ContentExpanding');
         setAnimationPhase(AnimationPhase.ContentExpanding);
-      }, OPENING_TOTAL_DURATION * 1000);
+      }, timing.OPENING_TOTAL_DURATION * 1000);
     } else if (animationPhase === AnimationPhase.ContentExpanding) {
       timer = setTimeout(() => {
         console.log('[EnvelopeClientAnimation] 自动进入：Complete');
         setAnimationPhase(AnimationPhase.Complete);
-      }, CONTENT_EXPAND_DURATION * 1000);
+      }, timing.CONTENT_EXPAND_DURATION * 1000);
     }
 
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [animationPhase, isDebugMode]);
+  }, [animationPhase, isDebugMode, timing]);
 
   // 动画完成回调
   useEffect(() => {
@@ -613,11 +631,11 @@ export function EnvelopeClientAnimation({
                 }}
                 transition={{
                   height: {
-                    duration: CONTENT_EXPAND_DURATION,
+                    duration: timing.CONTENT_EXPAND_DURATION,
                     ease: easing,
                   },
                   width: {
-                    duration: CONTENT_EXPAND_DURATION,
+                    duration: timing.CONTENT_EXPAND_DURATION,
                     ease: easing,
                   },
                 }}
@@ -631,7 +649,7 @@ export function EnvelopeClientAnimation({
                   initial={{ scale: 1, opacity: 1 }}
                   transition={{
                     opacity: {
-                      duration: CONTENT_EXPAND_DURATION,
+                      duration: timing.CONTENT_EXPAND_DURATION,
                       ease: easing,
                     },
                   }}
@@ -651,15 +669,15 @@ export function EnvelopeClientAnimation({
                     }}
                     transition={{
                       height: {
-                        duration: CONTENT_EXPAND_DURATION,
+                        duration: timing.CONTENT_EXPAND_DURATION,
                         ease: easing,
                       },
                       width: {
-                        duration: CONTENT_EXPAND_DURATION,
+                        duration: timing.CONTENT_EXPAND_DURATION,
                         ease: easing,
                       },
                       scale: {
-                        duration: CONTENT_EXPAND_DURATION,
+                        duration: timing.CONTENT_EXPAND_DURATION,
                         ease: easing,
                       },
                     }}
@@ -689,11 +707,12 @@ export function EnvelopeClientAnimation({
                       transition={{
                         duration:
                           animationPhase === AnimationPhase.Opening
-                            ? RIGHT_FLAP_DURATION
+                            ? timing.RIGHT_FLAP_DURATION
                             : 0,
                         delay:
                           animationPhase === AnimationPhase.Opening
-                            ? FLAP_OPEN_START_DELAY + RIGHT_FLAP_DELAY
+                            ? timing.FLAP_OPEN_START_DELAY +
+                              timing.RIGHT_FLAP_DELAY
                             : 0,
                         ease: easing,
                       }}
@@ -734,11 +753,11 @@ export function EnvelopeClientAnimation({
                       transition={{
                         duration:
                           animationPhase === AnimationPhase.Opening
-                            ? LEFT_FLAP_DURATION
+                            ? timing.LEFT_FLAP_DURATION
                             : 0,
                         delay:
                           animationPhase === AnimationPhase.Opening
-                            ? FLAP_OPEN_START_DELAY
+                            ? timing.FLAP_OPEN_START_DELAY
                             : 0,
                         ease: easing,
                       }}
@@ -778,7 +797,7 @@ export function EnvelopeClientAnimation({
                     transition={{
                       duration:
                         animationPhase === AnimationPhase.SealDisappearing
-                          ? SEAL_DISAPPEAR_DURATION
+                          ? timing.SEAL_DISAPPEAR_DURATION
                           : 0,
                       ease: easing,
                     }}

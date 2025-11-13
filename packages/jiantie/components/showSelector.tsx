@@ -16,7 +16,6 @@ interface OnSelectedParams {
 interface ShowSelectorParams {
   type: 'upload' | 'picture';
   onSelected?: (params: OnSelectedParams) => void;
-  worksId: string;
   preUpload?: boolean;
 }
 
@@ -85,7 +84,6 @@ export const showSelector = async (params: ShowSelectorParams) => {
           return (
             <LibPictureV2
               preUpload={params.preUpload}
-              worksId={params.worksId}
               onSelectItem={url => {
                 params.onSelected?.({
                   ossPath: url,

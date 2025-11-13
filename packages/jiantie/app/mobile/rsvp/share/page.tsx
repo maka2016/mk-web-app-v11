@@ -710,7 +710,6 @@ export default function SharePage() {
       >
         <LibPicture
           preUpload={false}
-          worksId={worksId}
           onSelectItem={(url: string) => {
             setCropImageUrl(url);
             setShowCrop(true);

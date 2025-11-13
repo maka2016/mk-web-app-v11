@@ -1,20 +1,19 @@
-import React from 'react';
+import { compressImg } from '@/utils/compressImg';
 import appBridge from '@mk/app-bridge';
-import styles from './index.module.scss';
-import { Loading } from '@workspace/ui/components/loading';
-import InfiniteScroll from 'react-infinite-scroller';
+import { uploadFile } from '@mk/services';
+import { getCookie } from '@mk/utils';
 import { Icon } from '@workspace/ui/components/Icon';
 import { Button } from '@workspace/ui/components/button';
-import { uploadFile } from '@mk/services';
+import { Loading } from '@workspace/ui/components/loading';
+import React from 'react';
 import toast from 'react-hot-toast';
-import { compressImg } from '@/utils/compressImg';
-import { getCookie } from '@mk/utils';
+import InfiniteScroll from 'react-infinite-scroller';
+import styles from './index.module.scss';
 
 interface Props {
   preUpload: boolean;
   onSelectItem: (url: string) => void;
   multiple: boolean;
-  worksId: string;
   t: any;
 }
 
@@ -152,7 +151,6 @@ class NativePhotoCollection extends React.Component<Props, State> {
   };
 
   uploadAction = async (file: File, len = 1) => {
-    const { worksId } = this.props;
     const fileCompress = await compressImg(file);
     if (!fileCompress) {
       toast.error('不支持的图片格式');
@@ -162,7 +160,6 @@ class NativePhotoCollection extends React.Component<Props, State> {
     try {
       const res = await uploadFile({
         file: fileCompress,
-        // worksId: works_id,
       });
       return res;
     } catch (error: any) {
