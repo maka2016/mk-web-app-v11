@@ -3,6 +3,7 @@
 import { backWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
+import CommonLogger from '@mk/loggerv7/logger';
 import { cdnApi, getAppId } from '@mk/services';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -83,6 +84,13 @@ export default function Templates({ collectionId }: TemplatesProps) {
     };
 
     fetchData();
+
+    if (collectionId) {
+      CommonLogger.track_pageview({
+        page_type: 'collection_detail',
+        page_id: collectionId,
+      });
+    }
   }, [collectionId]);
 
   if (loading) {

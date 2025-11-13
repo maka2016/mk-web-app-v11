@@ -375,10 +375,8 @@ export const GridCompV2: React.FC<
             zIndex: 100,
           }}
           onClick={() => {
-            window.open(
-              'https://sj.qq.com/appdetail/im.maka.jiantie',
-              '_blank'
-            );
+            // router.push('/mobile/channel2/homev2/appDownload');
+            window.location.replace('/mobile/channel2/homev2/appDownload');
           }}
           className='flex justify-center items-center gap-2 text-[11px] font-medium uppercase tracking-[0.32em] text-white/80'
         >

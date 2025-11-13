@@ -4,9 +4,10 @@ import { getUid } from '@/services';
 import { navigateWithBridge } from '@/utils/navigate-with-bridge';
 import { trpc } from '@/utils/trpc';
 import APPBridge from '@mk/app-bridge';
+import CommonLogger from '@mk/loggerv7/logger';
 import { cdnApi } from '@mk/services';
 import { TemplateMarketChannelEntity } from '@workspace/database/generated/client/client';
-import { Search } from 'lucide-react';
+import { BehaviorBox } from '@workspace/ui/components/BehaviorTracker';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -79,6 +80,11 @@ export default function Main({ appid = 'jiantie' }: Props) {
 
     fetchChannels();
     fetchUnreadNotifications();
+
+    CommonLogger.track_pageview({
+      page_type: 'home_page_v2',
+      page_id: `home_page_v2`,
+    });
   }, [appid]);
 
   return (
@@ -95,10 +101,15 @@ export default function Main({ appid = 'jiantie' }: Props) {
       <div
         className='flex
        items-center justify-between
-        px-6 pt-6 sticky top-0 z-20 '
+        px-6 py-6 sticky top-0 z-20 '
       >
         {/* 左侧Logo */}
-        <div className='flex items-start'>
+        <div
+          className='flex items-start'
+          onDoubleClick={() => {
+            router.push('/mobile/home');
+          }}
+        >
           <div className='relative w-14 h-10'>
             <img
               src={cdnApi('/assets/jiantie/logo2.png')}
@@ -132,7 +143,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
         </div>
       </div>
       {/* 顶部搜索栏 */}
-      <div className=' p-6 sticky top-12 z-10'>
+      {/* <div className=' p-6 sticky top-12 z-10'>
         <div
           onClick={() =>
             navigateWithBridge({
@@ -150,7 +161,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
           <Search className='w-5 h-5 text-gray-400 flex-shrink-0' />
           <span className='text-gray-400 text-base flex-1'>模板搜索</span>
         </div>
-      </div>
+      </div> */}
       {/* 主内容区 */}
       <div className='flex-1 overflow-y-auto'>
         {loading ? (
@@ -214,8 +225,14 @@ export default function Main({ appid = 'jiantie' }: Props) {
                           }}
                         >
                           {child.thumb_path ? (
-                            <div className='w-12 h-12 relative  overflow-hidden'>
-                              {/* <Image
+                            <BehaviorBox
+                              behavior={{
+                                object_type: 'channel_2_entry_btn',
+                                object_id: child.display_name,
+                              }}
+                            >
+                              <div className='w-12 h-12 relative  overflow-hidden'>
+                                {/* <Image
                                 src={cdnApi(child.thumb_path)}
                                 alt={child.display_name}
                                 width={48}
@@ -223,15 +240,16 @@ export default function Main({ appid = 'jiantie' }: Props) {
                                 style={{ objectFit: 'cover' }}
                                 className='object-contain'
                               /> */}
-                              <img
-                                src={`${cdnApi(child.thumb_path)}`}
-                                alt={child.display_name}
-                                width={64}
-                                height={64}
-                                style={{ objectFit: 'cover' }}
-                                className='object-contain w-full h-full'
-                              />
-                            </div>
+                                <img
+                                  src={`${cdnApi(child.thumb_path)}`}
+                                  alt={child.display_name}
+                                  width={64}
+                                  height={64}
+                                  style={{ objectFit: 'cover' }}
+                                  className='object-contain w-full h-full'
+                                />
+                              </div>
+                            </BehaviorBox>
                           ) : (
                             <span className='text-2xl'>
                               {child.display_name.substring(0, 2)}
