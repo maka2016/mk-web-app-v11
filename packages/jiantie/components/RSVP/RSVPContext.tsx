@@ -13,6 +13,7 @@ import {
 } from './type';
 
 interface RSVPContextValue {
+  isTemplate: boolean;
   // 状态
   loading: boolean;
   error: string | null;
@@ -58,6 +59,7 @@ export function RSVPProvider({
   const [configId, setConfigId] = useState<string | null>(null);
   const [title, setTitle] = useState<string>('诚邀');
   const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
+  const isTemplate = /^T_/gi.test(getPageId() || '');
 
   // 从 config 中提取 fields
   const fields: RSVPField[] = useMemo(() => {
@@ -107,8 +109,9 @@ export function RSVPProvider({
           // 检查是否被复制到其他作品：belongToWorksId != currWorksId 或 data.works_id != currWorksId
           const dataWorksId = dataAsAny?.works_id;
           const needCreateNew =
-            (belongToWorksId && belongToWorksId !== currWorksId) ||
-            (dataWorksId && dataWorksId !== currWorksId);
+            !isTemplate &&
+            ((belongToWorksId && belongToWorksId !== currWorksId) ||
+              (dataWorksId && dataWorksId !== currWorksId));
 
           if (needCreateNew) {
             // 该 RSVP 是被复制到其他作品的，或者表单配置的 works_id 与当前作品不匹配
@@ -319,6 +322,7 @@ export function RSVPProvider({
   };
 
   const value: RSVPContextValue = {
+    isTemplate,
     loading,
     error,
     config,
