@@ -369,7 +369,6 @@ const WorksManager = () => {
 
     showSelector({
       type: 'picture',
-      worksId: workToEditCover.id,
       onSelected: async (params: any) => {
         console.log('params', params);
         setNewCover(cdnApi(params.ossPath));
