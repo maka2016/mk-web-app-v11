@@ -269,7 +269,7 @@ const RightFlapCard = styled.div`
   height: 100%;
   z-index: 3;
   perspective: 1000px;
-  filter: drop-shadow(-3px 0 2px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(-3px 0 2px rgba(0, 0, 0, 0.1));
 `;
 
 // 右侧翻转内层 - 执行旋转动画
@@ -632,8 +632,8 @@ export function EnvelopeClientAnimation({
               title='信封内容和背景容器'
               style={{
                 pointerEvents: isClickable ? 'auto' : 'none',
-                zIndex:
-                  animationPhase >= AnimationPhase.ContentExpanding ? 10 : 3,
+                // zIndex:
+                //   animationPhase >= AnimationPhase.ContentExpanding ? 10 : 3,
               }}
             >
               <EnvelopeWrapper
@@ -650,6 +650,16 @@ export function EnvelopeClientAnimation({
                   $mask={ENVELOPE_MASKS.inner}
                 />
               </EnvelopeWrapper>
+            </EnvelopeContentWrapper>
+
+            <EnvelopeContentWrapper
+              title='信封内容和背景容器'
+              style={{
+                pointerEvents: isClickable ? 'auto' : 'none',
+                zIndex:
+                  animationPhase >= AnimationPhase.ContentExpanding ? 10 : 3,
+              }}
+            >
               <InvitationContentLayer
                 title='邀请函内容预览层'
                 initial={{ scale: 0.7 }}
@@ -680,7 +690,7 @@ export function EnvelopeClientAnimation({
 
             <EnvelopeWrapper
               title='信封开口容器'
-              className='shadow'
+              // className='shadow'
               style={{
                 pointerEvents: isClickable ? 'auto' : 'none',
               }}
@@ -689,7 +699,7 @@ export function EnvelopeClientAnimation({
               <RightFlapCard title='右侧翻转卡片'>
                 <RightFlapInner
                   initial={{ rotateY: 0 }}
-                  animate={{ rotateY: hasOpening ? 180 : 0 }}
+                  animate={{ rotateY: hasOpening ? 150 : 0 }}
                   transition={{
                     duration:
                       animationPhase === AnimationPhase.Opening
@@ -734,7 +744,7 @@ export function EnvelopeClientAnimation({
               <LeftFlapCard title='左侧翻转卡片'>
                 <LeftFlapInner
                   initial={{ rotateY: 0 }}
-                  animate={{ rotateY: hasOpening ? -180 : 0 }}
+                  animate={{ rotateY: hasOpening ? -150 : 0 }}
                   transition={{
                     duration:
                       animationPhase === AnimationPhase.Opening
@@ -830,7 +840,7 @@ export function EnvelopeClientAnimation({
               {animationPhase === AnimationPhase.Idle && (
                 <ClickHintText
                   key='click-hint'
-                  initial={{ opacity: 0, right: '0', top: '50%' }}
+                  initial={{ opacity: 1, right: '0', top: '50%' }}
                   animate={{
                     opacity: [0, 1, 0.6, 1],
                     right: '8vw',

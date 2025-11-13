@@ -22,8 +22,37 @@ export const templateRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      let finalInput = { ...input };
+
+      // 如果提供了 designer_works_id，从设计师作品中获取信封配置
+      if (input.designer_works_id) {
+        const works = await ctx.prisma.worksEntity.findUnique({
+          where: { id: input.designer_works_id },
+          select: {
+            envelope_enabled: true,
+            envelope_config: true,
+          },
+        });
+
+        if (works) {
+          // 如果 input 中没有指定信封配置，则从作品中继承
+          if (
+            input.envelope_enabled === undefined &&
+            works.envelope_enabled != null
+          ) {
+            finalInput.envelope_enabled = works.envelope_enabled;
+          }
+          if (
+            input.envelope_config === undefined &&
+            works.envelope_config != null
+          ) {
+            finalInput.envelope_config = works.envelope_config;
+          }
+        }
+      }
+
       return ctx.prisma.templateEntity.create({
-        data: input,
+        data: finalInput,
       });
     }),
 
@@ -364,11 +393,39 @@ export const templateRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { content, ...templateData } = input;
+      let finalTemplateData = { ...templateData };
+
+      // 如果提供了 designer_works_id，从设计师作品中获取信封配置
+      if (input.designer_works_id) {
+        const works = await ctx.prisma.worksEntity.findUnique({
+          where: { id: input.designer_works_id },
+          select: {
+            envelope_enabled: true,
+            envelope_config: true,
+          },
+        });
+
+        if (works) {
+          // 如果 input 中没有指定信封配置，则从作品中继承
+          if (
+            input.envelope_enabled === undefined &&
+            works.envelope_enabled != null
+          ) {
+            finalTemplateData.envelope_enabled = works.envelope_enabled;
+          }
+          if (
+            input.envelope_config === undefined &&
+            works.envelope_config != null
+          ) {
+            finalTemplateData.envelope_config = works.envelope_config;
+          }
+        }
+      }
 
       // 创建模板记录
       const template = await ctx.prisma.templateEntity.create({
         data: {
-          ...templateData,
+          ...finalTemplateData,
           version: 1,
         },
       });
