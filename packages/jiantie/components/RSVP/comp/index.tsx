@@ -69,9 +69,9 @@ function themeToCSSVariables(theme: RSVPTheme): React.CSSProperties {
     '--rsvp-header-padding': `${formatPaddingValue(
       String(mergedTheme.headerPadding ?? DEFAULT_RSVP_THEME.headerPadding)
     )}`,
-    '--rsvp-content-padding': `${
-      mergedTheme.contentPadding ?? DEFAULT_RSVP_THEME.contentPadding
-    }`,
+    '--rsvp-content-padding': `${formatPaddingValue(
+      String(mergedTheme.contentPadding ?? DEFAULT_RSVP_THEME.contentPadding)
+    )}`,
     '--rsvp-primary-btn-color': mergedTheme.primaryButtonColor,
     '--rsvp-primary-btn-text-color': mergedTheme.primaryButtonTextColor,
     '--rsvp-secondary-btn-color': mergedTheme.secondaryButtonColor,
@@ -205,7 +205,7 @@ const FormCompWrapper = styled.div`
     box-shadow: 0 0 1px 1px rgba(0, 0, 0, 0.1);
   }
   .content {
-    padding: var(--rsvp-content-padding, 16px);
+    padding: var(--rsvp-content-padding, '16px');
   }
 `;
 

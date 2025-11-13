@@ -1,10 +1,15 @@
 'use client';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@workspace/ui/components/collapsible';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Separator } from '@workspace/ui/components/separator';
 import { Slider } from '@workspace/ui/components/slider';
 import cls from 'classnames';
-import { Palette } from 'lucide-react';
+import { ChevronDown, Palette } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { SettingItemFor4Value } from '../../GridV3/DesignerToolForEditor/ElementAttrsEditor/StyleSetting';
 import ColorPickerPopover from '../../GridV3/shared/ColorPicker';
@@ -653,249 +658,320 @@ export default function RSVPThemeSetting({
   return (
     <div className='p-2 py-4 flex flex-col gap-4'>
       {/* 预设配色方案 */}
-      <div>
-        <div className='text-xs font-semibold flex items-center gap-1 mb-3'>
-          <Palette size={14} />
-          <span>预设配色</span>
-        </div>
-        <div className='grid grid-cols-3 gap-2'>
-          <button
-            onClick={() => applyPreset('white')}
-            className={cls(
-              'flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all',
-              selectedPreset === 'white'
-                ? 'border-[#09090B] bg-[#f3f4f6]'
-                : 'border-gray-200 hover:border-gray-300 bg-white'
-            )}
-          >
-            <div
-              className='w-full h-12 rounded-md border border-gray-200'
-              style={{
-                backgroundColor: RSVP_THEME_PRESETS.white.backgroundColor,
-              }}
-            />
-            <span className='text-xs font-medium'>白色</span>
-          </button>
-          <button
-            onClick={() => applyPreset('glass')}
-            className={cls(
-              'flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all',
-              selectedPreset === 'glass'
-                ? 'border-[#09090B] bg-[#f3f4f6]'
-                : 'border-gray-200 hover:border-gray-300 bg-white'
-            )}
-          >
-            <div
-              className='w-full h-12 rounded-[20px] relative overflow-hidden'
-              style={{
-                backgroundImage: `repeating-linear-gradient(
+      <Collapsible defaultOpen={true}>
+        <CollapsibleTrigger className='w-full flex items-center justify-between mb-3'>
+          <div className='text-xs font-semibold flex items-center gap-1'>
+            <Palette size={14} />
+            <span>预设配色</span>
+          </div>
+          <ChevronDown
+            size={14}
+            className='text-gray-500 transition-transform duration-200 data-[state=open]:rotate-180'
+          />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className='grid grid-cols-3 gap-2'>
+            <button
+              onClick={() => applyPreset('white')}
+              className={cls(
+                'flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all',
+                selectedPreset === 'white'
+                  ? 'border-[#09090B] bg-[#f3f4f6]'
+                  : 'border-gray-200 hover:border-gray-300 bg-white'
+              )}
+            >
+              <div
+                className='w-full h-12 rounded-md border border-gray-200'
+                style={{
+                  backgroundColor: RSVP_THEME_PRESETS.white.backgroundColor,
+                }}
+              />
+              <span className='text-xs font-medium'>白色</span>
+            </button>
+            <button
+              onClick={() => applyPreset('glass')}
+              className={cls(
+                'flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all',
+                selectedPreset === 'glass'
+                  ? 'border-[#09090B] bg-[#f3f4f6]'
+                  : 'border-gray-200 hover:border-gray-300 bg-white'
+              )}
+            >
+              <div
+                className='w-full h-12 rounded-[20px] relative overflow-hidden'
+                style={{
+                  backgroundImage: `repeating-linear-gradient(
                   45deg,
                   #e5e5e5 0px,
                   #e5e5e5 8px,
                   #f5f5f5 8px,
                   #f5f5f5 16px
                 )`,
-                boxShadow:
-                  '0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04)',
-              }}
-            >
-              <div
-                className='absolute inset-0'
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.75)',
-                  backdropFilter: RSVP_THEME_PRESETS.glass.backdropFilter,
-                  WebkitBackdropFilter: RSVP_THEME_PRESETS.glass.backdropFilter,
-                  border: '1px solid rgba(255, 255, 255, 0.6)',
+                  boxShadow:
+                    '0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04)',
                 }}
-              />
-              {/* 预览按钮 */}
-              <div className='absolute bottom-1 right-1'>
+              >
                 <div
-                  className='h-5 px-2 rounded-md flex items-center justify-center'
+                  className='absolute inset-0'
                   style={{
-                    backgroundColor: 'rgba(0, 122, 255, 0.9)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.75)',
+                    backdropFilter: RSVP_THEME_PRESETS.glass.backdropFilter,
+                    WebkitBackdropFilter:
+                      RSVP_THEME_PRESETS.glass.backdropFilter,
+                    border: '1px solid rgba(255, 255, 255, 0.6)',
                   }}
-                >
-                  <span className='text-[8px] text-white font-medium'>
-                    按钮
-                  </span>
+                />
+                {/* 预览按钮 */}
+                <div className='absolute bottom-1 right-1'>
+                  <div
+                    className='h-5 px-2 rounded-md flex items-center justify-center'
+                    style={{
+                      backgroundColor: 'rgba(0, 122, 255, 0.9)',
+                    }}
+                  >
+                    <span className='text-[8px] text-white font-medium'>
+                      按钮
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <span className='text-xs font-medium'>毛玻璃</span>
-          </button>
-          <button
-            onClick={() => applyPreset('black')}
-            className={cls(
-              'flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all',
-              selectedPreset === 'black'
-                ? 'border-[#09090B] bg-[#f3f4f6]'
-                : 'border-gray-200 hover:border-gray-300 bg-white'
-            )}
-          >
-            <div
-              className='w-full h-12 rounded-md border border-gray-700'
-              style={{
-                backgroundColor: RSVP_THEME_PRESETS.black.backgroundColor,
-              }}
-            />
-            <span className='text-xs font-medium'>黑色</span>
-          </button>
-        </div>
-      </div>
+              <span className='text-xs font-medium'>毛玻璃</span>
+            </button>
+            <button
+              onClick={() => applyPreset('black')}
+              className={cls(
+                'flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all',
+                selectedPreset === 'black'
+                  ? 'border-[#09090B] bg-[#f3f4f6]'
+                  : 'border-gray-200 hover:border-gray-300 bg-white'
+              )}
+            >
+              <div
+                className='w-full h-12 rounded-md border border-gray-700'
+                style={{
+                  backgroundColor: RSVP_THEME_PRESETS.black.backgroundColor,
+                }}
+              />
+              <span className='text-xs font-medium'>黑色</span>
+            </button>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <Separator />
 
       {/* 主要配色设置 */}
-      <div>
-        <div className='text-xs font-semibold flex items-center gap-1 mb-3'>
-          <Palette size={14} />
-          <span>主要配色</span>
-        </div>
-        <div className='flex flex-col gap-2'>
-          {primaryColorItems.map(item => {
-            if (item.type === 'number') {
-              // 数字类型（目前没有，保留以备将来使用）
-              return null;
-            } else if (item.type === 'text') {
-              // 文本类型：背景虚化
-              return (
-                <TextItemSetting
-                  key={item.value}
-                  item={item}
-                  theme={theme}
-                  onChangeTheme={onChangeTheme}
-                  getValue={getValue}
-                />
-              );
-            } else {
-              // 颜色类型
-              return (
-                <ColorItemSetting
-                  key={item.value}
-                  item={item}
-                  theme={theme}
-                  onChangeTheme={onChangeTheme}
-                />
-              );
-            }
-          })}
-        </div>
-      </div>
+      <Collapsible defaultOpen={true}>
+        <CollapsibleTrigger className='w-full flex items-center justify-between mb-3'>
+          <div className='text-xs font-semibold flex items-center gap-1'>
+            <Palette size={14} />
+            <span>主要配色</span>
+          </div>
+          <ChevronDown
+            size={14}
+            className='text-gray-500 transition-transform duration-200 data-[state=open]:rotate-180'
+          />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className='flex flex-col gap-2'>
+            {primaryColorItems.map(item => {
+              if (item.type === 'number') {
+                // 数字类型（目前没有，保留以备将来使用）
+                return null;
+              } else if (item.type === 'text') {
+                // 文本类型：背景虚化
+                return (
+                  <TextItemSetting
+                    key={item.value}
+                    item={item}
+                    theme={theme}
+                    onChangeTheme={onChangeTheme}
+                    getValue={getValue}
+                  />
+                );
+              } else {
+                // 颜色类型
+                return (
+                  <ColorItemSetting
+                    key={item.value}
+                    item={item}
+                    theme={theme}
+                    onChangeTheme={onChangeTheme}
+                  />
+                );
+              }
+            })}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <Separator />
 
       {/* 控件样式设置 */}
-      <div>
-        <div className='text-xs font-semibold flex items-center gap-1 mb-3'>
-          <Palette size={14} />
-          <span>控件样式</span>
-        </div>
-        <div className='flex flex-col gap-4'>
-          <div>
-            <div className='text-[11px] font-medium text-gray-500 mb-2'>
-              按钮
-            </div>
-            <div className='flex flex-col gap-2'>
-              {buttonStyleItems.map(item => (
-                <ColorItemSetting
-                  key={item.value}
-                  item={item}
-                  theme={theme}
-                  onChangeTheme={onChangeTheme}
+      <Collapsible defaultOpen={true}>
+        <CollapsibleTrigger className='w-full flex items-center justify-between mb-3'>
+          <div className='text-xs font-semibold flex items-center gap-1'>
+            <Palette size={14} />
+            <span>控件样式</span>
+          </div>
+          <ChevronDown
+            size={14}
+            className='text-gray-500 transition-transform duration-200 data-[state=open]:rotate-180'
+          />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className='flex flex-col gap-4'>
+            <Collapsible defaultOpen={true}>
+              <CollapsibleTrigger className='w-full flex items-center justify-between mb-2'>
+                <div className='text-[11px] font-medium text-gray-500'>
+                  按钮
+                </div>
+                <ChevronDown
+                  size={12}
+                  className='text-gray-400 transition-transform duration-200 data-[state=open]:rotate-180'
                 />
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className='text-[11px] font-medium text-gray-500 mb-2'>
-              输入框
-            </div>
-            <div className='flex flex-col gap-2'>
-              {inputFieldItems.map(item => (
-                <ColorItemSetting
-                  key={item.value}
-                  item={item}
-                  theme={theme}
-                  onChangeTheme={onChangeTheme}
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className='flex flex-col gap-2'>
+                  {buttonStyleItems.map(item => (
+                    <ColorItemSetting
+                      key={item.value}
+                      item={item}
+                      theme={theme}
+                      onChangeTheme={onChangeTheme}
+                    />
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+            <Collapsible defaultOpen={true}>
+              <CollapsibleTrigger className='w-full flex items-center justify-between mb-2'>
+                <div className='text-[11px] font-medium text-gray-500'>
+                  输入框
+                </div>
+                <ChevronDown
+                  size={12}
+                  className='text-gray-400 transition-transform duration-200 data-[state=open]:rotate-180'
                 />
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className='text-[11px] font-medium text-gray-500 mb-2'>
-              文本
-            </div>
-            <div className='flex flex-col gap-2'>
-              {textStyleItems.map(item => (
-                <ColorItemSetting
-                  key={item.value}
-                  item={item}
-                  theme={theme}
-                  onChangeTheme={onChangeTheme}
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className='flex flex-col gap-2'>
+                  {inputFieldItems.map(item => (
+                    <ColorItemSetting
+                      key={item.value}
+                      item={item}
+                      theme={theme}
+                      onChangeTheme={onChangeTheme}
+                    />
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+            <Collapsible defaultOpen={true}>
+              <CollapsibleTrigger className='w-full flex items-center justify-between mb-2'>
+                <div className='text-[11px] font-medium text-gray-500'>
+                  文本
+                </div>
+                <ChevronDown
+                  size={12}
+                  className='text-gray-400 transition-transform duration-200 data-[state=open]:rotate-180'
                 />
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className='text-[11px] font-medium text-gray-500 mb-2'>
-              布局
-            </div>
-            <div className='flex flex-col gap-2'>
-              {dimensionItems.map(item => (
-                <NumberItemSetting
-                  key={`${item.value}-${getValue(item.value)}`}
-                  item={{ value: item.value, label: item.label }}
-                  theme={theme}
-                  onChangeTheme={onChangeTheme}
-                  min={item.min}
-                  max={item.max}
-                  step={item.step}
-                  presets={item.presets}
-                  currentValue={Number(getValue(item.value) ?? 0)}
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className='flex flex-col gap-2'>
+                  {textStyleItems.map(item => (
+                    <ColorItemSetting
+                      key={item.value}
+                      item={item}
+                      theme={theme}
+                      onChangeTheme={onChangeTheme}
+                    />
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+            <Collapsible defaultOpen={true}>
+              <CollapsibleTrigger className='w-full flex items-center justify-between mb-2'>
+                <div className='text-[11px] font-medium text-gray-500'>
+                  布局
+                </div>
+                <ChevronDown
+                  size={12}
+                  className='text-gray-400 transition-transform duration-200 data-[state=open]:rotate-180'
                 />
-              ))}
-            </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className='flex flex-col gap-2'>
+                  {dimensionItems.map(item => (
+                    <NumberItemSetting
+                      key={`${item.value}-${getValue(item.value)}`}
+                      item={{ value: item.value, label: item.label }}
+                      theme={theme}
+                      onChangeTheme={onChangeTheme}
+                      min={item.min}
+                      max={item.max}
+                      step={item.step}
+                      presets={item.presets}
+                      currentValue={Number(getValue(item.value) ?? 0)}
+                    />
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+            <Collapsible defaultOpen={false}>
+              <CollapsibleTrigger className='w-full flex items-center justify-between mb-2'>
+                <div className='text-[11px] font-medium text-gray-500'>
+                  内边距
+                </div>
+                <ChevronDown
+                  size={12}
+                  className='text-gray-400 transition-transform duration-200 data-[state=open]:rotate-180'
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className='flex flex-col gap-2'>
+                  <div className='text-[11px] font-medium text-gray-500 mb-2'>
+                    标题内间距
+                  </div>
+                  <SettingItemFor4Value
+                    value={String(getValue('headerPadding') ?? 0)}
+                    label='标题内间距'
+                    inputOnly={true}
+                    // shortcutData={paddingData}
+                    onChange={nextValue => {
+                      onChangeTheme(
+                        {
+                          ...theme,
+                          headerPadding: nextValue,
+                        },
+                        'headerPadding'
+                      );
+                    }}
+                  />
+                  <div className='text-[11px] font-medium text-gray-500 mb-2'>
+                    内容内间距
+                  </div>
+                  <SettingItemFor4Value
+                    value={String(getValue('contentPadding') ?? 0)}
+                    label='内容内间距'
+                    inputOnly={true}
+                    // shortcutData={paddingData}
+                    onChange={nextValue => {
+                      onChangeTheme(
+                        {
+                          ...theme,
+                          contentPadding: nextValue,
+                        },
+                        'contentPadding'
+                      );
+                    }}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
-          <div>
-            <div className='text-[11px] font-medium text-gray-500 mb-2'>
-              内边距
-            </div>
-            <div className='flex flex-col gap-2'>
-              <SettingItemFor4Value
-                value={String(getValue('headerPadding') ?? 0)}
-                label='标题内间距'
-                inputOnly={true}
-                // shortcutData={paddingData}
-                onChange={nextValue => {
-                  onChangeTheme(
-                    {
-                      ...theme,
-                      headerPadding: nextValue,
-                    },
-                    'headerPadding'
-                  );
-                }}
-              />
-              <SettingItemFor4Value
-                value={String(getValue('contentPadding') ?? 0)}
-                label='内容内间距'
-                inputOnly={true}
-                // shortcutData={paddingData}
-                onChange={nextValue => {
-                  onChangeTheme(
-                    {
-                      ...theme,
-                      contentPadding: nextValue,
-                    },
-                    'contentPadding'
-                  );
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
