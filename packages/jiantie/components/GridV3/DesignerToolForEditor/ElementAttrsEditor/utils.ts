@@ -39,6 +39,10 @@ export function extractOtherFilters(filterStr: string): string {
     .trim();
 }
 
+export const formatPaddingValue = (value: string): string => {
+  return numberChunkValueToString(stringValueTo4Chunk(value)) || value;
+};
+
 /**
  * 将 CSS padding 字符串解析为上、右、下、左四个方向的纯数字数组（单位统一为 px）
  * @param paddingValue - CSS padding 字符串（支持 '1px', '0 1', '1px 2px 3px' 等格式）

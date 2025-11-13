@@ -142,6 +142,8 @@ export interface RSVPTheme {
   backdropFilter?: string; // 背景虚化（完整的 backdrop-filter 值，如 "blur(16px) saturate(180%)"）
   controlFontSize?: number; // 控件字体大小（px）
   controlPadding?: number; // 控件内间距（px）
+  headerPadding?: string; // 头部垂直方向内间距（px）
+  contentPadding?: string; // 内容区域内间距（px）
 
   // 按钮相关
   primaryButtonColor?: string; // 主要按钮背景色（参加、确认按钮）
@@ -173,6 +175,8 @@ export const DEFAULT_RSVP_THEME: RSVPTheme = {
   backdropFilter: 'none',
   controlFontSize: 14,
   controlPadding: 12,
+  headerPadding: '8 16',
+  contentPadding: '16',
   primaryButtonColor: '#09090B',
   primaryButtonTextColor: '#ffffff',
   secondaryButtonColor: '#ffffff',
@@ -199,6 +203,8 @@ export const RSVP_THEME_PRESETS: Record<string, RSVPTheme> = {
     backdropFilter: 'none',
     controlFontSize: 14,
     controlPadding: 12,
+    headerPadding: '8 16',
+    contentPadding: '16',
     primaryButtonColor: '#09090B',
     primaryButtonTextColor: '#ffffff',
     secondaryButtonColor: '#ffffff',
@@ -221,6 +227,8 @@ export const RSVP_THEME_PRESETS: Record<string, RSVPTheme> = {
     backdropFilter: 'blur(16px) saturate(180%)',
     controlFontSize: 14,
     controlPadding: 12,
+    headerPadding: '8 16',
+    contentPadding: '16',
     primaryButtonColor: 'rgba(0, 122, 255, 0.9)',
     primaryButtonTextColor: '#ffffff',
     secondaryButtonColor: 'rgba(255, 255, 255, 0.5)',
@@ -242,6 +250,8 @@ export const RSVP_THEME_PRESETS: Record<string, RSVPTheme> = {
     backdropFilter: 'none',
     controlFontSize: 14,
     controlPadding: 12,
+    headerPadding: '8 16',
+    contentPadding: '16',
     primaryButtonColor: '#ffffff',
     primaryButtonTextColor: '#09090B',
     secondaryButtonColor: '#27272a',

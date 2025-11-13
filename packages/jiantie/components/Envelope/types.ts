@@ -47,6 +47,17 @@ export interface EnvelopeConfig {
   contentExpandDuration?: number;
 }
 
+export const getDefaultTiming = (): EnvelopeConfig => {
+  return {
+    sealDisappearDuration: 0.3,
+    flapOpenStartDelay: 0.3,
+    leftFlapDuration: 2.2,
+    rightFlapDelay: 0.6,
+    rightFlapDuration: 2.2,
+    contentExpandDuration: 1.2,
+  };
+};
+
 /**
  * 固定的形状蒙版路径
  * 这些图片定义了信封的形状，用于裁切材质贴纸

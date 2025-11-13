@@ -8,18 +8,17 @@ import { ChevronDown, ChevronUp, RotateCcw, Save, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { showSelector } from '../showSelector';
-import { EnvelopeConfig, isEnvelopeConfigComplete } from './types';
+import {
+  EnvelopeConfig,
+  getDefaultTiming,
+  isEnvelopeConfigComplete,
+} from './types';
 
 const normalizeConfig = (config?: EnvelopeConfig): EnvelopeConfig => {
+  const defaultTiming = getDefaultTiming();
   const fallback: EnvelopeConfig = {
     easing: 'ease-in-out',
-    // 细化的动画时序参数（秒）
-    sealDisappearDuration: 0.3,
-    flapOpenStartDelay: 0.3,
-    leftFlapDuration: 2.2,
-    rightFlapDelay: 1.1,
-    rightFlapDuration: 2.2,
-    contentExpandDuration: 1.2,
+    ...defaultTiming,
   };
 
   if (!config) {
@@ -31,9 +30,22 @@ const normalizeConfig = (config?: EnvelopeConfig): EnvelopeConfig => {
   };
   delete restConfig.videoBgConfig;
 
+  // 确保所有 timing 字段都有值，如果传入的 config 中某些字段是 undefined，使用默认值
   return {
     ...fallback,
     ...(restConfig as EnvelopeConfig),
+    // 确保 timing 字段始终有值
+    sealDisappearDuration:
+      restConfig.sealDisappearDuration ?? defaultTiming.sealDisappearDuration,
+    flapOpenStartDelay:
+      restConfig.flapOpenStartDelay ?? defaultTiming.flapOpenStartDelay,
+    leftFlapDuration:
+      restConfig.leftFlapDuration ?? defaultTiming.leftFlapDuration,
+    rightFlapDelay: restConfig.rightFlapDelay ?? defaultTiming.rightFlapDelay,
+    rightFlapDuration:
+      restConfig.rightFlapDuration ?? defaultTiming.rightFlapDuration,
+    contentExpandDuration:
+      restConfig.contentExpandDuration ?? defaultTiming.contentExpandDuration,
   };
 };
 
@@ -183,10 +195,10 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
           <div className='space-y-3 pl-2 border-l-2 border-gray-200'>
             <div className='space-y-2'>
               <Label className='text-xs'>
-                印章消失持续时间: {localConfig.sealDisappearDuration ?? 0.3}秒
+                印章消失持续时间: {localConfig.sealDisappearDuration}秒
               </Label>
               <Slider
-                value={[localConfig.sealDisappearDuration ?? 0.3]}
+                value={[localConfig.sealDisappearDuration!]}
                 onValueChange={value => {
                   setLocalConfig({
                     ...localConfig,
@@ -201,10 +213,10 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
             <div className='space-y-2'>
               <Label className='text-xs'>
-                开口动画延迟: {localConfig.flapOpenStartDelay ?? 0.3}秒
+                开口动画延迟: {localConfig.flapOpenStartDelay}秒
               </Label>
               <Slider
-                value={[localConfig.flapOpenStartDelay ?? 0.3]}
+                value={[localConfig.flapOpenStartDelay!]}
                 onValueChange={value => {
                   setLocalConfig({
                     ...localConfig,
@@ -219,10 +231,10 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
             <div className='space-y-2'>
               <Label className='text-xs'>
-                左侧开口持续时间: {localConfig.leftFlapDuration ?? 2.2}秒
+                左侧开口持续时间: {localConfig.leftFlapDuration}秒
               </Label>
               <Slider
-                value={[localConfig.leftFlapDuration ?? 2.2]}
+                value={[localConfig.leftFlapDuration!]}
                 onValueChange={value => {
                   setLocalConfig({
                     ...localConfig,
@@ -237,10 +249,10 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
             <div className='space-y-2'>
               <Label className='text-xs'>
-                右侧开口延迟: {localConfig.rightFlapDelay ?? 1.1}秒
+                右侧开口延迟: {localConfig.rightFlapDelay}秒
               </Label>
               <Slider
-                value={[localConfig.rightFlapDelay ?? 1.1]}
+                value={[localConfig.rightFlapDelay!]}
                 onValueChange={value => {
                   setLocalConfig({
                     ...localConfig,
@@ -255,10 +267,10 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
             <div className='space-y-2'>
               <Label className='text-xs'>
-                右侧开口持续时间: {localConfig.rightFlapDuration ?? 2.2}秒
+                右侧开口持续时间: {localConfig.rightFlapDuration}秒
               </Label>
               <Slider
-                value={[localConfig.rightFlapDuration ?? 2.2]}
+                value={[localConfig.rightFlapDuration!]}
                 onValueChange={value => {
                   setLocalConfig({
                     ...localConfig,
@@ -273,10 +285,10 @@ export default function EnvelopeEditor(props: EnvelopeEditorProps) {
 
             <div className='space-y-2'>
               <Label className='text-xs'>
-                内容展开持续时间: {localConfig.contentExpandDuration ?? 1.2}秒
+                内容展开持续时间: {localConfig.contentExpandDuration}秒
               </Label>
               <Slider
-                value={[localConfig.contentExpandDuration ?? 1.2]}
+                value={[localConfig.contentExpandDuration!]}
                 onValueChange={value => {
                   setLocalConfig({
                     ...localConfig,

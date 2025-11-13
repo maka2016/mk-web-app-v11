@@ -5,7 +5,7 @@ import { cdnApi } from '@mk/services';
 import { AnimatePresence, motion } from 'motion/react';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ENVELOPE_MASKS, EnvelopeConfig } from './types';
+import { ENVELOPE_MASKS, EnvelopeConfig, getDefaultTiming } from './types';
 
 /**
  * 将字符串格式的 easing 转换为 Framer Motion 支持的数组格式
@@ -46,7 +46,7 @@ const BackgroundLayer = styled(motion.div)<{ $bgImage: string }>`
   height: 100%;
   background-image: ${props => `url(${props.$bgImage})`};
   background-repeat: repeat;
-  background-size: auto;
+  background-size: cover;
   background-position: center;
 `;
 
@@ -66,18 +66,19 @@ const EnvelopeContentFadeIn = styled(motion.div)`
   width: 100%;
   height: 100%;
   pointer-events: none;
+  filter: drop-shadow(8px 8px 3px rgba(0, 0, 0, 0.4));
 `;
 
 const EnvelopeWrapper = styled.div`
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 80vw;
+  width: 70vw;
   transform: translate(-50%, -50%);
   aspect-ratio: 1 / 2;
   z-index: 8;
   &.shadow {
-    filter: drop-shadow(10px 10px 6px rgba(0, 0, 0, 0.2));
+    box-shadow: 12px 12px 6px rgba(15, 23, 42, 0.24);
   }
 `;
 
@@ -136,7 +137,7 @@ const InvitationContentBg = styled(motion.div)<{
   background-image: ${props =>
     props.$texture ? `url(${props.$texture})` : 'none'};
   background-repeat: repeat;
-  background-size: auto;
+  background-size: cover;
   background-position: center;
   mask-image: ${props => (props.$mask ? `url(${props.$mask})` : 'none')};
   mask-size: contain;
@@ -155,23 +156,24 @@ const InvitationContentLayer = styled(motion.div)`
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border-radius: 6px;
   will-change: transform, opacity;
   pointer-events: none;
   transform-origin: center center;
   z-index: 2;
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.24);
 `;
 
 const InvitationContentInner = styled.div`
   width: 100%;
   height: 100%;
   pointer-events: none;
-  overflow: hidden;
-  border-radius: 6px;
-  display: flex;
+  /* display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center; */
+  /* .inner {
+    overflow: hidden;
+    border-radius: 6px;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.24);
+  } */
 `;
 
 // 左侧翻转卡片容器 - 提供 perspective
@@ -183,7 +185,7 @@ const LeftFlapCard = styled.div`
   height: 100%;
   z-index: 9;
   perspective: 1000px;
-  filter: drop-shadow(3px 0 2px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(3px 0 1px rgba(0, 0, 0, 0.2));
 `;
 
 // 左侧翻转内层 - 执行旋转动画
@@ -210,7 +212,7 @@ const FlapSide = styled.div<{
   background-image: ${props =>
     props.$texture ? `url(${props.$texture})` : 'none'};
   background-repeat: repeat;
-  background-size: auto;
+  background-size: cover;
   mask-image: ${props => (props.$mask ? `url(${props.$mask})` : 'none')};
   mask-size: contain;
   mask-repeat: no-repeat;
@@ -270,7 +272,7 @@ const RightFlapCard = styled.div`
   height: 100%;
   z-index: 3;
   perspective: 1000px;
-  filter: drop-shadow(-3px 0 2px rgba(0, 0, 0, 0.1));
+  filter: drop-shadow(-3px 0 1px rgba(0, 0, 0, 0.1));
 `;
 
 // 右侧翻转内层 - 执行旋转动画
@@ -323,13 +325,13 @@ enum AnimationPhase {
 /**
  * 从配置中获取动画时序参数（秒）
  */
-const getAnimationTiming = (config?: EnvelopeConfig) => {
+const getAnimationTiming = (config: EnvelopeConfig = getDefaultTiming()) => {
   // 配置值已经是秒，直接使用
   const SEAL_DISAPPEAR_DURATION = config?.sealDisappearDuration ?? 0.3;
   const FLAP_OPEN_START_DELAY = config?.flapOpenStartDelay ?? 0.3;
-  const LEFT_FLAP_DURATION = config?.leftFlapDuration ?? 2.2;
-  const RIGHT_FLAP_DELAY = config?.rightFlapDelay ?? 1.1;
-  const RIGHT_FLAP_DURATION = config?.rightFlapDuration ?? 2.2;
+  const LEFT_FLAP_DURATION = config?.leftFlapDuration ?? 2.0;
+  const RIGHT_FLAP_DELAY = config?.rightFlapDelay ?? 0.6;
+  const RIGHT_FLAP_DURATION = config?.rightFlapDuration ?? 2.0;
   const CONTENT_EXPAND_DURATION = config?.contentExpandDuration ?? 1.2;
 
   // Opening 阶段的总持续时间 = 左侧延迟 + max(左侧持续时间, 右侧延迟 + 右侧持续时间)
@@ -705,19 +707,9 @@ export function EnvelopeClientAnimation({
                 ease: [0.4, 0, 0.2, 1],
               }}
             >
-              <EnvelopeContentWrapper
-                title='信封内容和背景容器'
-                style={{
-                  pointerEvents: isClickable ? 'auto' : 'none',
-                  // zIndex:
-                  //   animationPhase >= AnimationPhase.ContentExpanding ? 10 : 3,
-                }}
-              >
+              <EnvelopeContentWrapper title='背景容器'>
                 <EnvelopeWrapper
-                  key='envelope-wrapper'
-                  title='信封开口容器'
                   style={{
-                    pointerEvents: isClickable ? 'auto' : 'none',
                     zIndex: 1,
                   }}
                 >
@@ -730,18 +722,17 @@ export function EnvelopeClientAnimation({
               </EnvelopeContentWrapper>
 
               <EnvelopeContentWrapper
-                title='信封内容和背景容器'
+                title='内容容器'
                 style={{
-                  pointerEvents: isClickable ? 'auto' : 'none',
                   zIndex:
                     animationPhase >= AnimationPhase.ContentExpanding ? 10 : 3,
                 }}
               >
                 <InvitationContentLayer
                   title='邀请函内容预览层'
-                  initial={{ scale: 0.7 }}
+                  initial={{ scale: 0.6 }}
                   animate={{
-                    scale: isContentExpanding ? 1 : 0.7,
+                    scale: isContentExpanding ? 1 : 0.6,
                   }}
                   transition={{
                     scale: {
@@ -753,41 +744,31 @@ export function EnvelopeClientAnimation({
                   <InvitationContentInner>
                     <div
                       id='envelope-invitation-preview'
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        position: 'relative',
-                        // overflow: 'hidden',
-                        // aspectRatio: '3/4',
-                      }}
-                    />
+                      className='inner'
+                    ></div>
                   </InvitationContentInner>
                 </InvitationContentLayer>
               </EnvelopeContentWrapper>
 
-              <EnvelopeWrapper
-                title='信封开口容器'
-                // className='shadow'
-                style={{
-                  pointerEvents: isClickable ? 'auto' : 'none',
-                }}
-              >
+              <EnvelopeWrapper title='信封开口容器'>
                 {/* 右侧翻转卡片 */}
                 <RightFlapCard title='右侧翻转卡片'>
                   <RightFlapInner
                     initial={{ rotateY: 0 }}
                     animate={{ rotateY: hasOpening ? 150 : 0 }}
                     transition={{
-                      duration:
-                        animationPhase === AnimationPhase.Opening
-                          ? timing.RIGHT_FLAP_DURATION
-                          : 0,
-                      delay:
-                        animationPhase === AnimationPhase.Opening
-                          ? timing.FLAP_OPEN_START_DELAY +
-                            timing.RIGHT_FLAP_DELAY
-                          : 0,
-                      ease: easing,
+                      rotateY: {
+                        duration:
+                          animationPhase === AnimationPhase.Opening
+                            ? timing.RIGHT_FLAP_DURATION
+                            : 0,
+                        delay:
+                          animationPhase === AnimationPhase.Opening
+                            ? timing.FLAP_OPEN_START_DELAY +
+                              timing.RIGHT_FLAP_DELAY
+                            : 0,
+                        ease: easing,
+                      },
                     }}
                     style={{
                       transformStyle: 'preserve-3d',
@@ -810,29 +791,27 @@ export function EnvelopeClientAnimation({
                       $texture={processedImages.innerTexture}
                       $mask={ENVELOPE_MASKS.rightFlap}
                     />
-                    {/* 背面渐变质感层 */}
-                    <GradientOverlay
-                      className='right back'
-                      $mask={ENVELOPE_MASKS.rightFlap}
-                    />
                   </RightFlapInner>
                 </RightFlapCard>
 
                 {/* 左侧翻转卡片 */}
                 <LeftFlapCard title='左侧翻转卡片'>
                   <LeftFlapInner
+                    data-timing={timing.LEFT_FLAP_DURATION}
                     initial={{ rotateY: 0 }}
                     animate={{ rotateY: hasOpening ? -150 : 0 }}
                     transition={{
-                      duration:
-                        animationPhase === AnimationPhase.Opening
-                          ? timing.LEFT_FLAP_DURATION
-                          : 0,
-                      delay:
-                        animationPhase === AnimationPhase.Opening
-                          ? timing.FLAP_OPEN_START_DELAY
-                          : 0,
-                      ease: easing,
+                      rotateY: {
+                        duration:
+                          animationPhase === AnimationPhase.Opening
+                            ? timing.LEFT_FLAP_DURATION
+                            : 0,
+                        delay:
+                          animationPhase === AnimationPhase.Opening
+                            ? timing.FLAP_OPEN_START_DELAY
+                            : 0,
+                        ease: easing,
+                      },
                     }}
                   >
                     {/* 正面 - 左侧开口外侧 */}
@@ -867,11 +846,6 @@ export function EnvelopeClientAnimation({
                     <FlapSide
                       className='left back'
                       $texture={processedImages.innerTexture}
-                      $mask={ENVELOPE_MASKS.leftFlap}
-                    />
-                    {/* 背面渐变质感层 */}
-                    <GradientOverlay
-                      className='left back'
                       $mask={ENVELOPE_MASKS.leftFlap}
                     />
                   </LeftFlapInner>
