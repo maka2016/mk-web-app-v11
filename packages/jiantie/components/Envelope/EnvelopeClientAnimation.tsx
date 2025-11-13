@@ -59,6 +59,15 @@ const EnvelopeContentWrapper = styled.div`
   pointer-events: none;
 `;
 
+const EnvelopeContentFadeIn = styled(motion.div)`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+`;
+
 const EnvelopeWrapper = styled.div`
   position: absolute;
   top: 50%;
@@ -353,10 +362,10 @@ export function EnvelopeClientAnimation({
   const contentShownRef = useRef(false); // 跟踪内容是否已经显示过
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false); // 图片加载状态
 
   // 在客户端挂载后才读取 URL 参数，避免 hydration 不匹配
   useEffect(() => {
-    // eslint-disable-next-line
     setMounted(true);
   }, []);
 
@@ -399,6 +408,80 @@ export function EnvelopeClientAnimation({
         : '',
     };
   }, [config]);
+
+  // 预加载信封所需的图片（不包括背景图）
+  useEffect(() => {
+    if (!hasValidConfig) {
+      return;
+    }
+
+    // 当配置变化时，重置加载状态
+    setImagesLoaded(false);
+
+    const imagesToLoad: string[] = [];
+
+    // 收集需要加载的图片
+    if (processedImages.innerTexture) {
+      imagesToLoad.push(processedImages.innerTexture);
+    }
+    if (processedImages.outerTexture) {
+      imagesToLoad.push(processedImages.outerTexture);
+    }
+    if (processedImages.envelopeSealImage) {
+      imagesToLoad.push(processedImages.envelopeSealImage);
+    }
+
+    // 如果没有需要加载的图片，直接设置为已加载
+    if (imagesToLoad.length === 0) {
+      setImagesLoaded(true);
+      return;
+    }
+
+    // 预加载所有图片
+    let loadedCount = 0;
+    let errorCount = 0;
+    let isCancelled = false;
+
+    const checkAllLoaded = () => {
+      // 如果组件已卸载或配置已变化，不再更新状态
+      if (isCancelled) {
+        return;
+      }
+      // 如果所有图片都加载完成（成功或失败），则显示信封
+      if (loadedCount + errorCount >= imagesToLoad.length) {
+        console.log('[EnvelopeClientAnimation] 所有图片加载完成');
+        setImagesLoaded(true);
+      }
+    };
+
+    imagesToLoad.forEach(imageUrl => {
+      const img = new Image();
+      img.onload = () => {
+        if (!isCancelled) {
+          loadedCount++;
+          checkAllLoaded();
+        }
+      };
+      img.onerror = () => {
+        if (!isCancelled) {
+          errorCount++;
+          console.warn(`[EnvelopeClientAnimation] 图片加载失败: ${imageUrl}`);
+          checkAllLoaded();
+        }
+      };
+      img.src = imageUrl;
+    });
+
+    // 清理函数：当配置变化时，取消之前的加载
+    return () => {
+      isCancelled = true;
+    };
+  }, [
+    hasValidConfig,
+    processedImages.innerTexture,
+    processedImages.outerTexture,
+    processedImages.envelopeSealImage,
+  ]);
 
   // 处理点击/触摸事件
   const handleStartAnimation = () => {
@@ -599,7 +682,7 @@ export function EnvelopeClientAnimation({
             }}
             transition={{ duration: 0.5 }}
           >
-            {/* 背景层 - 重复铺满 */}
+            {/* 背景层 - 重复铺满，立即显示 */}
             <BackgroundLayer
               key='background'
               title='作品背景层'
@@ -611,234 +694,248 @@ export function EnvelopeClientAnimation({
               transition={{ duration: 0.5 }}
             />
 
-            <EnvelopeContentWrapper
-              title='信封内容和背景容器'
-              style={{
-                pointerEvents: isClickable ? 'auto' : 'none',
-                // zIndex:
-                //   animationPhase >= AnimationPhase.ContentExpanding ? 10 : 3,
+            {/* 信封内容 - 等待图片加载完成后淡入 */}
+            <EnvelopeContentFadeIn
+              initial={{ opacity: 0 }}
+              animate={{
+                opacity: imagesLoaded ? 1 : 0,
+              }}
+              transition={{
+                duration: 0.6,
+                ease: [0.4, 0, 0.2, 1],
               }}
             >
-              <EnvelopeWrapper
-                key='envelope-wrapper'
-                title='信封开口容器'
+              <EnvelopeContentWrapper
+                title='信封内容和背景容器'
                 style={{
                   pointerEvents: isClickable ? 'auto' : 'none',
-                  zIndex: 1,
+                  // zIndex:
+                  //   animationPhase >= AnimationPhase.ContentExpanding ? 10 : 3,
                 }}
               >
-                <InvitationContentBg
-                  title='邀请函内容背景层'
-                  $texture={processedImages.innerTexture}
-                  $mask={ENVELOPE_MASKS.inner}
-                />
-              </EnvelopeWrapper>
-            </EnvelopeContentWrapper>
-
-            <EnvelopeContentWrapper
-              title='信封内容和背景容器'
-              style={{
-                pointerEvents: isClickable ? 'auto' : 'none',
-                zIndex:
-                  animationPhase >= AnimationPhase.ContentExpanding ? 10 : 3,
-              }}
-            >
-              <InvitationContentLayer
-                title='邀请函内容预览层'
-                initial={{ scale: 0.7 }}
-                animate={{
-                  scale: isContentExpanding ? 1 : 0.7,
-                }}
-                transition={{
-                  scale: {
-                    duration: timing.CONTENT_EXPAND_DURATION,
-                    ease: easing,
-                  },
-                }}
-              >
-                <InvitationContentInner>
-                  <div
-                    id='envelope-invitation-preview'
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      position: 'relative',
-                      // overflow: 'hidden',
-                      // aspectRatio: '3/4',
-                    }}
-                  />
-                </InvitationContentInner>
-              </InvitationContentLayer>
-            </EnvelopeContentWrapper>
-
-            <EnvelopeWrapper
-              title='信封开口容器'
-              // className='shadow'
-              style={{
-                pointerEvents: isClickable ? 'auto' : 'none',
-              }}
-            >
-              {/* 右侧翻转卡片 */}
-              <RightFlapCard title='右侧翻转卡片'>
-                <RightFlapInner
-                  initial={{ rotateY: 0 }}
-                  animate={{ rotateY: hasOpening ? 150 : 0 }}
-                  transition={{
-                    duration:
-                      animationPhase === AnimationPhase.Opening
-                        ? timing.RIGHT_FLAP_DURATION
-                        : 0,
-                    delay:
-                      animationPhase === AnimationPhase.Opening
-                        ? timing.FLAP_OPEN_START_DELAY + timing.RIGHT_FLAP_DELAY
-                        : 0,
-                    ease: easing,
-                  }}
+                <EnvelopeWrapper
+                  key='envelope-wrapper'
+                  title='信封开口容器'
                   style={{
-                    transformStyle: 'preserve-3d',
+                    pointerEvents: isClickable ? 'auto' : 'none',
+                    zIndex: 1,
                   }}
                 >
-                  {/* 正面 - 右侧开口外侧 */}
-                  <FlapSide
-                    className='right'
-                    $texture={processedImages.outerTexture}
-                    $mask={ENVELOPE_MASKS.rightFlap}
-                  />
-                  {/* 正面渐变质感层 */}
-                  <GradientOverlay
-                    className='right'
-                    $mask={ENVELOPE_MASKS.rightFlap}
-                  />
-                  {/* 背面 - 右侧开口内侧 */}
-                  <FlapSide
-                    className='right back'
+                  <InvitationContentBg
+                    title='邀请函内容背景层'
                     $texture={processedImages.innerTexture}
-                    $mask={ENVELOPE_MASKS.rightFlap}
+                    $mask={ENVELOPE_MASKS.inner}
                   />
-                  {/* 背面渐变质感层 */}
-                  <GradientOverlay
-                    className='right back'
-                    $mask={ENVELOPE_MASKS.rightFlap}
-                  />
-                </RightFlapInner>
-              </RightFlapCard>
+                </EnvelopeWrapper>
+              </EnvelopeContentWrapper>
 
-              {/* 左侧翻转卡片 */}
-              <LeftFlapCard title='左侧翻转卡片'>
-                <LeftFlapInner
-                  initial={{ rotateY: 0 }}
-                  animate={{ rotateY: hasOpening ? -150 : 0 }}
-                  transition={{
-                    duration:
-                      animationPhase === AnimationPhase.Opening
-                        ? timing.LEFT_FLAP_DURATION
-                        : 0,
-                    delay:
-                      animationPhase === AnimationPhase.Opening
-                        ? timing.FLAP_OPEN_START_DELAY
-                        : 0,
-                    ease: easing,
-                  }}
-                >
-                  {/* 正面 - 左侧开口外侧 */}
-                  <FlapSide
-                    className='left'
-                    $texture={processedImages.outerTexture}
-                    $mask={ENVELOPE_MASKS.leftFlap}
-                  >
-                    <GuestNameText
-                      key='guest-name'
-                      initial={{ opacity: 0, left: '0' }}
-                      animate={{ opacity: 1, left: '15vw' }}
-                      exit={{
-                        opacity: 0,
-                        left: '0',
-                        transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
-                      }}
-                      transition={{ duration: 0.6, delay: 0.3 }}
-                    >
-                      <p className='text-sm'>诚邀</p>
-                      {rsvp_invitee && (
-                        <p>{decodeURIComponent(rsvp_invitee || '')}</p>
-                      )}
-                    </GuestNameText>
-                  </FlapSide>
-                  {/* 正面渐变质感层 */}
-                  <GradientOverlay
-                    className='left'
-                    $mask={ENVELOPE_MASKS.leftFlap}
-                  />
-                  {/* 背面 - 左侧开口内侧 */}
-                  <FlapSide
-                    className='left back'
-                    $texture={processedImages.innerTexture}
-                    $mask={ENVELOPE_MASKS.leftFlap}
-                  />
-                  {/* 背面渐变质感层 */}
-                  <GradientOverlay
-                    className='left back'
-                    $mask={ENVELOPE_MASKS.leftFlap}
-                  />
-                </LeftFlapInner>
-              </LeftFlapCard>
-
-              <SealImageContainer title='信封印章'>
-                <SealImage
-                  initial={{ opacity: 1, scale: 1 }}
+              <EnvelopeContentWrapper
+                title='信封内容和背景容器'
+                style={{
+                  pointerEvents: isClickable ? 'auto' : 'none',
+                  zIndex:
+                    animationPhase >= AnimationPhase.ContentExpanding ? 10 : 3,
+                }}
+              >
+                <InvitationContentLayer
+                  title='邀请函内容预览层'
+                  initial={{ scale: 0.7 }}
                   animate={{
-                    opacity: hasSealDisappeared ? 0 : 1,
-                    scale: hasSealDisappeared ? 0.6 : 1,
+                    scale: isContentExpanding ? 1 : 0.7,
                   }}
                   transition={{
-                    opacity: {
-                      duration: hasSealDisappeared
-                        ? timing.SEAL_DISAPPEAR_DURATION
-                        : 0,
-                      ease: easing,
-                    },
                     scale: {
-                      duration: hasSealDisappeared
-                        ? timing.SEAL_DISAPPEAR_DURATION
-                        : 0,
+                      duration: timing.CONTENT_EXPAND_DURATION,
                       ease: easing,
                     },
                   }}
-                  src={processedImages.envelopeSealImage}
-                  alt='envelope-seal'
-                />
-              </SealImageContainer>
-            </EnvelopeWrapper>
-
-            {/* 右侧：点击提示 - 相对于屏幕固定定位 */}
-            <AnimatePresence mode='wait'>
-              {animationPhase === AnimationPhase.Idle && (
-                <ClickHintText
-                  key='click-hint'
-                  initial={{ opacity: 1, right: '0', top: '50%' }}
-                  animate={{
-                    opacity: [0, 1, 0.6, 1],
-                    right: '8vw',
-                    top: '56%',
-                  }}
-                  exit={{
-                    opacity: 0,
-                    right: '0',
-                    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
-                  }}
-                  transition={{
-                    duration: 0.6,
-                    delay: 0.5,
-                    opacity: {
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    },
-                  }}
                 >
-                  <img src='/assets/envelope/open-geust.svg' alt='点击开启' />
-                </ClickHintText>
-              )}
-            </AnimatePresence>
+                  <InvitationContentInner>
+                    <div
+                      id='envelope-invitation-preview'
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        position: 'relative',
+                        // overflow: 'hidden',
+                        // aspectRatio: '3/4',
+                      }}
+                    />
+                  </InvitationContentInner>
+                </InvitationContentLayer>
+              </EnvelopeContentWrapper>
+
+              <EnvelopeWrapper
+                title='信封开口容器'
+                // className='shadow'
+                style={{
+                  pointerEvents: isClickable ? 'auto' : 'none',
+                }}
+              >
+                {/* 右侧翻转卡片 */}
+                <RightFlapCard title='右侧翻转卡片'>
+                  <RightFlapInner
+                    initial={{ rotateY: 0 }}
+                    animate={{ rotateY: hasOpening ? 150 : 0 }}
+                    transition={{
+                      duration:
+                        animationPhase === AnimationPhase.Opening
+                          ? timing.RIGHT_FLAP_DURATION
+                          : 0,
+                      delay:
+                        animationPhase === AnimationPhase.Opening
+                          ? timing.FLAP_OPEN_START_DELAY +
+                            timing.RIGHT_FLAP_DELAY
+                          : 0,
+                      ease: easing,
+                    }}
+                    style={{
+                      transformStyle: 'preserve-3d',
+                    }}
+                  >
+                    {/* 正面 - 右侧开口外侧 */}
+                    <FlapSide
+                      className='right'
+                      $texture={processedImages.outerTexture}
+                      $mask={ENVELOPE_MASKS.rightFlap}
+                    />
+                    {/* 正面渐变质感层 */}
+                    <GradientOverlay
+                      className='right'
+                      $mask={ENVELOPE_MASKS.rightFlap}
+                    />
+                    {/* 背面 - 右侧开口内侧 */}
+                    <FlapSide
+                      className='right back'
+                      $texture={processedImages.innerTexture}
+                      $mask={ENVELOPE_MASKS.rightFlap}
+                    />
+                    {/* 背面渐变质感层 */}
+                    <GradientOverlay
+                      className='right back'
+                      $mask={ENVELOPE_MASKS.rightFlap}
+                    />
+                  </RightFlapInner>
+                </RightFlapCard>
+
+                {/* 左侧翻转卡片 */}
+                <LeftFlapCard title='左侧翻转卡片'>
+                  <LeftFlapInner
+                    initial={{ rotateY: 0 }}
+                    animate={{ rotateY: hasOpening ? -150 : 0 }}
+                    transition={{
+                      duration:
+                        animationPhase === AnimationPhase.Opening
+                          ? timing.LEFT_FLAP_DURATION
+                          : 0,
+                      delay:
+                        animationPhase === AnimationPhase.Opening
+                          ? timing.FLAP_OPEN_START_DELAY
+                          : 0,
+                      ease: easing,
+                    }}
+                  >
+                    {/* 正面 - 左侧开口外侧 */}
+                    <FlapSide
+                      className='left'
+                      $texture={processedImages.outerTexture}
+                      $mask={ENVELOPE_MASKS.leftFlap}
+                    >
+                      <GuestNameText
+                        key='guest-name'
+                        initial={{ opacity: 0, left: '0' }}
+                        animate={{ opacity: 1, left: '15vw' }}
+                        exit={{
+                          opacity: 0,
+                          left: '0',
+                          transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
+                        }}
+                        transition={{ duration: 0.6, delay: 0.3 }}
+                      >
+                        <p className='text-sm'>诚邀</p>
+                        {rsvp_invitee && (
+                          <p>{decodeURIComponent(rsvp_invitee || '')}</p>
+                        )}
+                      </GuestNameText>
+                    </FlapSide>
+                    {/* 正面渐变质感层 */}
+                    <GradientOverlay
+                      className='left'
+                      $mask={ENVELOPE_MASKS.leftFlap}
+                    />
+                    {/* 背面 - 左侧开口内侧 */}
+                    <FlapSide
+                      className='left back'
+                      $texture={processedImages.innerTexture}
+                      $mask={ENVELOPE_MASKS.leftFlap}
+                    />
+                    {/* 背面渐变质感层 */}
+                    <GradientOverlay
+                      className='left back'
+                      $mask={ENVELOPE_MASKS.leftFlap}
+                    />
+                  </LeftFlapInner>
+                </LeftFlapCard>
+
+                <SealImageContainer title='信封印章'>
+                  <SealImage
+                    initial={{ opacity: 1, scale: 1 }}
+                    animate={{
+                      opacity: hasSealDisappeared ? 0 : 1,
+                      scale: hasSealDisappeared ? 0.6 : 1,
+                    }}
+                    transition={{
+                      opacity: {
+                        duration: hasSealDisappeared
+                          ? timing.SEAL_DISAPPEAR_DURATION
+                          : 0,
+                        ease: easing,
+                      },
+                      scale: {
+                        duration: hasSealDisappeared
+                          ? timing.SEAL_DISAPPEAR_DURATION
+                          : 0,
+                        ease: easing,
+                      },
+                    }}
+                    src={processedImages.envelopeSealImage}
+                    alt='envelope-seal'
+                  />
+                </SealImageContainer>
+              </EnvelopeWrapper>
+
+              {/* 右侧：点击提示 - 相对于屏幕固定定位 */}
+              <AnimatePresence mode='wait'>
+                {animationPhase === AnimationPhase.Idle && imagesLoaded && (
+                  <ClickHintText
+                    key='click-hint'
+                    initial={{ opacity: 1, right: '0', top: '50%' }}
+                    animate={{
+                      opacity: [0, 1, 0.6, 1],
+                      right: '8vw',
+                      top: '56%',
+                    }}
+                    exit={{
+                      opacity: 0,
+                      right: '0',
+                      transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
+                    }}
+                    transition={{
+                      duration: 0.6,
+                      delay: 0.5,
+                      opacity: {
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      },
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src='/assets/envelope/open-geust.svg' alt='点击开启' />
+                  </ClickHintText>
+                )}
+              </AnimatePresence>
+            </EnvelopeContentFadeIn>
           </Container>
         )}
       </AnimatePresence>
