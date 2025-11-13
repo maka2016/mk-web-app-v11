@@ -334,7 +334,7 @@ export default function Main({ appid = 'jiantie' }: Props) {
                   className='flex w-10 flex-col items-center gap-2'
                 >
                   <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm transition-all ${
+                    className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm  ${
                       isActive
                         ? 'w-12 h-12 bg-gradient-to-br from-[#D53933] to-[#D53933] text-white'
                         : 'bg-[#f4f4f5] text-neutral-900 border border-white '
