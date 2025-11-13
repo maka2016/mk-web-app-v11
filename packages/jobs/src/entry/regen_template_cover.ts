@@ -70,7 +70,7 @@ const dealOneTemplate = async (data: TemplateChannelItem) => {
     count1++;
 
     const width = 540; //9
-    const height = 960; //21
+    const height = (540 * 16) / 9;
 
     const templateUrl = `https://www.jiantieapp.com/mobile/template?id=${templateId}&screenshot=true`;
 
@@ -112,7 +112,7 @@ const dealOneTemplate = async (data: TemplateChannelItem) => {
         {
           record_id: data.record_id,
           fields: {
-            封面V2生成状态: '已恢复',
+            封面V2生成状态: '已生成',
           },
         },
       ],
@@ -134,7 +134,7 @@ const dealOneTemplate = async (data: TemplateChannelItem) => {
     bitUpdateArr.push({
       record_id: data.record_id,
       fields: {
-        封面V2生成状态: '已恢复',
+        封面V2生成状态: '已生成',
       },
     });
 
@@ -158,7 +158,7 @@ const main = async () => {
           {
             field_name: '封面V2生成状态',
             operator: 'is',
-            value: ['已生成'],
+            value: ['未生成'],
           },
           {
             field_name: '集合',

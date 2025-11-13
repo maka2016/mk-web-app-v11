@@ -1,6 +1,6 @@
 'use client';
 
-import Chanel2 from '@/app/mobile/channel2/page';
+import Chanel2 from '@/app/mobile/channel2/homev2/page';
 import Mine from '@/app/mobile/mine/page';
 import Works from '@/app/mobile/works2/page';
 import useIsMobile from '@/utils/use-mobile';
