@@ -11,6 +11,7 @@ import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import * as z from 'zod';
 import { ResponsiveDialog } from '../../Drawer';
+import { formatPaddingValue } from '../../GridV3/DesignerToolForEditor/ElementAttrsEditor/utils';
 import { RSVPConfigPanel } from '../configPanel';
 import { RSVPProvider, useRSVP } from '../RSVPContext';
 import { DEFAULT_RSVP_THEME, RSVPAttrs, RSVPField, RSVPTheme } from '../type';
@@ -62,9 +63,15 @@ function themeToCSSVariables(theme: RSVPTheme): React.CSSProperties {
     '--rsvp-control-font-size': `${
       mergedTheme.controlFontSize ?? DEFAULT_RSVP_THEME.controlFontSize
     }px`,
-    '--rsvp-control-padding': `${
-      mergedTheme.controlPadding ?? DEFAULT_RSVP_THEME.controlPadding
-    }px`,
+    '--rsvp-control-padding': `${formatPaddingValue(
+      String(mergedTheme.controlPadding ?? DEFAULT_RSVP_THEME.controlPadding)
+    )}`,
+    '--rsvp-header-padding': `${formatPaddingValue(
+      String(mergedTheme.headerPadding ?? DEFAULT_RSVP_THEME.headerPadding)
+    )}`,
+    '--rsvp-content-padding': `${
+      mergedTheme.contentPadding ?? DEFAULT_RSVP_THEME.contentPadding
+    }`,
     '--rsvp-primary-btn-color': mergedTheme.primaryButtonColor,
     '--rsvp-primary-btn-text-color': mergedTheme.primaryButtonTextColor,
     '--rsvp-secondary-btn-color': mergedTheme.secondaryButtonColor,
@@ -193,12 +200,12 @@ const FormCompWrapper = styled.div`
   -webkit-backdrop-filter: var(--rsvp-backdrop-filter, none);
 
   .header {
-    padding: 8px 16px;
+    padding: var(--rsvp-header-padding, '8px 16px');
     /* border-bottom: 1px solid var(--rsvp-border-color, #e5e7eb); */
     box-shadow: 0 0 1px 1px rgba(0, 0, 0, 0.1);
   }
   .content {
-    padding: 16px;
+    padding: var(--rsvp-content-padding, 16px);
   }
 `;
 

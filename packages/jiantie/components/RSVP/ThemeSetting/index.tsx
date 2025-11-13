@@ -5,7 +5,8 @@ import { Separator } from '@workspace/ui/components/separator';
 import { Slider } from '@workspace/ui/components/slider';
 import cls from 'classnames';
 import { Palette } from 'lucide-react';
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { SettingItemFor4Value } from '../../GridV3/DesignerToolForEditor/ElementAttrsEditor/StyleSetting';
 import ColorPickerPopover from '../../GridV3/shared/ColorPicker';
 import { colorValueBuilder } from '../../GridV3/shared/ColorPicker/utils';
 import { DEFAULT_RSVP_THEME, RSVP_THEME_PRESETS, RSVPTheme } from '../type';
@@ -219,6 +220,152 @@ const TextItemSetting = ({
           onChangeTheme(newTheme, item.value);
         }}
       />
+    </div>
+  );
+};
+
+// 通用 Padding 输入组件（支持 CSS padding 规则：1-4 个值）
+const PaddingInputSetting = ({
+  label,
+  theme,
+  onChangeTheme,
+  // 读取值的函数：返回 padding 值的字符串表示（如 "8 16" 或 "16"）
+  getPaddingValue,
+  // 写入值的函数：根据 padding 字符串更新主题
+  setPaddingValue,
+  placeholder = '8 16',
+}: {
+  label: string;
+  theme: RSVPTheme;
+  onChangeTheme: (newTheme: RSVPTheme, changedKey: keyof RSVPTheme) => void;
+  getPaddingValue: () => string;
+  setPaddingValue: (value: string) => {
+    newTheme: RSVPTheme;
+    changedKey: keyof RSVPTheme;
+  };
+  placeholder?: string;
+}) => {
+  const initialValue = getPaddingValue();
+  const [inputValue, setInputValue] = useState<string>(initialValue);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const prevValueRef = useRef<string>(initialValue);
+
+  const handleChange = (value: string) => {
+    setInputValue(value);
+    setIsEditing(true);
+  };
+
+  const parseAndValidate = (value: string): number[] | null => {
+    const parts = value
+      .trim()
+      .split(/\s+/)
+      .filter(p => p !== '');
+    if (parts.length === 0) return null;
+
+    const numbers = parts.map(p => Number(p));
+    // 检查是否所有值都是有效的数字且 >= 0
+    if (numbers.some(n => Number.isNaN(n) || n < 0)) {
+      return null;
+    }
+
+    // 根据 CSS padding 规则处理不同数量的值
+    // 1个值: 所有方向相同
+    // 2个值: 垂直 水平
+    // 3个值: 上 水平 下
+    // 4个值: 上 右 下 左
+    if (numbers.length === 1) {
+      return [numbers[0], numbers[0], numbers[0], numbers[0]];
+    } else if (numbers.length === 2) {
+      return [numbers[0], numbers[1], numbers[0], numbers[1]];
+    } else if (numbers.length === 3) {
+      return [numbers[0], numbers[1], numbers[2], numbers[1]];
+    } else if (numbers.length === 4) {
+      return numbers;
+    } else {
+      // 超过4个值，取前4个
+      return numbers.slice(0, 4);
+    }
+  };
+
+  const formatPaddingValue = (numbers: number[]): string => {
+    // 如果所有值相同，返回单个值
+    if (
+      numbers.length === 4 &&
+      numbers[0] === numbers[1] &&
+      numbers[1] === numbers[2] &&
+      numbers[2] === numbers[3]
+    ) {
+      return String(numbers[0]);
+    }
+    // 如果垂直方向相同，水平方向相同，返回 "垂直 水平"
+    if (
+      numbers.length === 4 &&
+      numbers[0] === numbers[2] &&
+      numbers[1] === numbers[3]
+    ) {
+      return `${numbers[0]} ${numbers[1]}`;
+    }
+    // 其他情况返回完整值
+    return numbers.join(' ');
+  };
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    const numbers = parseAndValidate(inputValue);
+    if (numbers) {
+      const formatted = formatPaddingValue(numbers);
+      const { newTheme, changedKey } = setPaddingValue(formatted);
+      onChangeTheme(newTheme, changedKey);
+      setInputValue(formatted);
+      prevValueRef.current = formatted;
+    } else {
+      // 无效输入，恢复原值
+      setInputValue(prevValueRef.current);
+    }
+  };
+
+  // 监听主题变化，同步输入框（仅在非编辑状态下）
+  // 使用 JSON.stringify 来检测 theme 对象的深层变化
+  const themeKey = JSON.stringify(theme);
+  useLayoutEffect(() => {
+    if (!isEditing) {
+      const latestValue = getPaddingValue();
+      if (latestValue !== prevValueRef.current) {
+        prevValueRef.current = latestValue;
+        setInputValue(latestValue);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [themeKey, isEditing]);
+
+  return (
+    <div className='flex items-center gap-2'>
+      <Label
+        className='text-xs w-[80px] flex-shrink-0'
+        style={{ fontSize: 12 }}
+      >
+        {label}
+      </Label>
+      <div className='flex items-center gap-1 flex-1'>
+        <Input
+          variantSize='xs'
+          value={inputValue}
+          className='h-6 text-xs flex-1'
+          style={{
+            backgroundColor: '#f3f3f5',
+            border: 'none',
+          }}
+          placeholder={placeholder}
+          onChange={e => handleChange(e.target.value)}
+          onBlur={handleBlur}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              handleBlur();
+            }
+          }}
+        />
+        <span className='text-xs text-gray-600'>px</span>
+      </div>
     </div>
   );
 };
@@ -708,6 +855,43 @@ export default function RSVPThemeSetting({
                   currentValue={Number(getValue(item.value) ?? 0)}
                 />
               ))}
+            </div>
+          </div>
+          <div>
+            <div className='text-[11px] font-medium text-gray-500 mb-2'>
+              内边距
+            </div>
+            <div className='flex flex-col gap-2'>
+              <SettingItemFor4Value
+                value={String(getValue('headerPadding') ?? 0)}
+                label='标题内间距'
+                inputOnly={true}
+                // shortcutData={paddingData}
+                onChange={nextValue => {
+                  onChangeTheme(
+                    {
+                      ...theme,
+                      headerPadding: nextValue,
+                    },
+                    'headerPadding'
+                  );
+                }}
+              />
+              <SettingItemFor4Value
+                value={String(getValue('contentPadding') ?? 0)}
+                label='内容内间距'
+                inputOnly={true}
+                // shortcutData={paddingData}
+                onChange={nextValue => {
+                  onChangeTheme(
+                    {
+                      ...theme,
+                      contentPadding: nextValue,
+                    },
+                    'contentPadding'
+                  );
+                }}
+              />
             </div>
           </div>
         </div>
