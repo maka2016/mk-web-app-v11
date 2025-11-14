@@ -4,6 +4,19 @@ import { auth } from '../../../utils/auth';
 export async function GET() {
   const headerInfo = await headers();
 
+  // const newUser = await auth.api.createUser({
+  //   body: {
+  //     email: 'use2r@example.com', // required
+  //     password: 'some-secure-password', // required
+  //     name: 'James Smith', // required
+  //     role: 'user',
+  //   },
+  // });
+  // return NextResponse.json({ message: 'helloworld @api' });
+
+  auth.jwt.verifyToken(
+    headerInfo.get('Authorization')?.split(' ')[1] as string
+  );
   const session = await auth.api.getSession({
     headers: (await headers()) as Headers,
   });
