@@ -14,9 +14,6 @@ export async function GET() {
   // });
   // return NextResponse.json({ message: 'helloworld @api' });
 
-  auth.jwt.verifyToken(
-    headerInfo.get('Authorization')?.split(' ')[1] as string
-  );
   const session = await auth.api.getSession({
     headers: (await headers()) as Headers,
   });
