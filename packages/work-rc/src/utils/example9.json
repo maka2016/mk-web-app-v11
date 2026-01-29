@@ -1,0 +1,3540 @@
+{
+  "_version": 17,
+  "pageId": "GRSTTXVIW605551486",
+  "title": "",
+  "type": "h5",
+  "pageSetting": {
+    "paginAnimateSetting": {
+      "autoPlay": false,
+      "indicator": "slim",
+      "pageNumber": "none",
+      "pageTurningEffect": "layer",
+      "autoPlayTime": 3
+    }
+  },
+  "canvasData": {
+    "width": 375,
+    "height": 738,
+    "visualHeight": 738,
+    "content": {
+      "pages": [
+        {
+          "id": "MfRTjJ2MJeHpjcGBAbY6ZcxsAREkRhXt",
+          "layers": [
+            {
+              "elementRef": "MkPicture",
+              "type": "element",
+              "elemId": "psd_v2_ymPEcogzCz",
+              "attrs": {
+                "baseW": 315.4296875,
+                "baseH": 175,
+                "orgWidth": 630.859375,
+                "orgHeight": 350,
+                "ossPath": "user/9784688/v7-psd-uploader/9784688/psd_v2_ymPEcogzCz.png",
+                "borderRadius": 0,
+                "cropData": {
+                  "left": 0,
+                  "top": 0,
+                  "width": 315.4296875,
+                  "height": 175
+                }
+              },
+              "_idx": 4,
+              "from": "psd"
+            },
+            {
+              "elementRef": "MkPicture",
+              "type": "element",
+              "elemId": "pKNmaueERJ",
+              "attrs": {
+                "baseW": 315.4296875,
+                "baseH": 175,
+                "orgWidth": 630.859375,
+                "orgHeight": 350,
+                "ossPath": "user/9784688/v7-psd-uploader/9784688/psd_v2_ymPEcogzCz.png",
+                "borderRadius": 0,
+                "cropData": {
+                  "left": 0,
+                  "top": 0,
+                  "width": 123.34749571917808,
+                  "height": 175
+                }
+              },
+              "_idx": 4,
+              "from": "psd"
+            },
+            {
+              "elementRef": "MkPicture",
+              "type": "element",
+              "elemId": "psd_v2_DqFEpKJcYA",
+              "attrs": {
+                "baseW": 80.078125,
+                "baseH": 54.4921875,
+                "orgWidth": 160.15625,
+                "orgHeight": 108.984375,
+                "ossPath": "user/9784688/v7-psd-uploader/9784688/psd_v2_DqFEpKJcYA.png",
+                "borderRadius": 0,
+                "cropData": {
+                  "left": 0,
+                  "top": 0,
+                  "width": 80.078125,
+                  "height": 54.4921875
+                },
+                "flipHorizontal": true
+              },
+              "_idx": 2,
+              "from": "psd"
+            },
+            {
+              "elementRef": "MkPicture",
+              "type": "element",
+              "elemId": "psd_v2_ZWzriWlJGc",
+              "attrs": {
+                "baseW": 71.484375,
+                "baseH": 24.0234375,
+                "orgWidth": 142.96875,
+                "orgHeight": 48.046875,
+                "ossPath": "user/9784688/v7-psd-uploader/9784688/psd_v2_ZWzriWlJGc.png",
+                "borderRadius": 0,
+                "cropData": {
+                  "left": 0,
+                  "top": 0,
+                  "width": 71.484375,
+                  "height": 24.0234375
+                }
+              },
+              "_idx": 0,
+              "from": "psd"
+            },
+            {
+              "elementRef": "MkPicture",
+              "type": "element",
+              "elemId": "psd_v2_iEBfzuEcuo",
+              "attrs": {
+                "baseW": 618.992677699717,
+                "baseH": 217.1147371258008,
+                "orgWidth": 750,
+                "orgHeight": 263.0662020905923,
+                "ossPath": "user/9784688/v7-psd-uploader/9784688/psd_v2_iEBfzuEcuo.png",
+                "borderRadius": 0,
+                "cropData": {
+                  "left": 15.164383561643831,
+                  "top": 0,
+                  "width": 603.8282941380731,
+                  "height": 217.11473712580081
+                }
+              },
+              "_idx": 0,
+              "from": "psd"
+            },
+            {
+              "attrs": {
+                "hasChangedWidth": true,
+                "textDirection": "left",
+                "fontUrl": "https://font.maka.im/sanji/sanji_sanjixiangxiangti.ttf",
+                "fontFamily": "sanji_sanjixiangxiangti",
+                "originContent": "添加标题",
+                "text": "<p>点击进入活动</p>",
+                "fontSize": 47.52632716160706,
+                "originBoxInfo": {
+                  "width": 47.52632716160703,
+                  "height": 399.5202285539209
+                },
+                "textCrop": {
+                  "content": "点击进入活动",
+                  "fontFamily": "sanji_sanjixiangxiangti"
+                },
+                "textScale": 1,
+                "letterSpacing": "0",
+                "lineHeight": "1",
+                "planText": "点击进入活动",
+                "rawData": {
+                  "blocks": [
+                    {
+                      "key": "a2j21",
+                      "text": "点击进入活动",
+                      "type": "unstyled",
+                      "depth": 0,
+                      "inlineStyleRanges": [],
+                      "entityRanges": [],
+                      "data": {}
+                    }
+                  ],
+                  "entityMap": {}
+                },
+                "version": 30,
+                "color": "rgba(10,78,109,1)",
+                "colorRaw": {
+                  "hsl": {
+                    "h": 198.7878787878788,
+                    "s": 0.8319327731092436,
+                    "l": 0.23333333333333334,
+                    "a": 1
+                  },
+                  "hex": "#0a4e6d",
+                  "rgb": { "r": 10, "g": 78, "b": 109, "a": 1 },
+                  "hsv": {
+                    "h": 198.7878787878788,
+                    "s": 0.9082568807339448,
+                    "v": 0.42745098039215684,
+                    "a": 1
+                  },
+                  "oldHue": 198.7878787878788,
+                  "source": "hex",
+                  "value": "rgba(10,78,109,1)"
+                },
+                "writingMode": "vertical-rl"
+              },
+              "elementRef": "MkText",
+              "elemId": "kMbjNPlbiX",
+              "type": "element",
+              "from": "maka"
+            },
+            {
+              "elementRef": "MkPicture",
+              "type": "element",
+              "elemId": "psd_v2_AXnMQzDPrZ",
+              "attrs": {
+                "baseW": 609.0410037768199,
+                "baseH": 297.44685492236096,
+                "orgWidth": 750,
+                "orgHeight": 366.2891986062718,
+                "ossPath": "user/9784688/v7-psd-uploader/9784688/psd_v2_AXnMQzDPrZ.png",
+                "borderRadius": 0,
+                "cropData": {
+                  "left": 0,
+                  "top": 0,
+                  "width": 609.0410037768199,
+                  "height": 297.44685492236096
+                }
+              },
+              "_idx": 0,
+              "from": "psd"
+            }
+          ],
+          "background": {
+            "bgcolor": "",
+            "bgpic": "https://img1.maka.im/user/9784688/v7-psd-uploader/9784688/psd_v2_omqJWDTuME.png",
+            "bgpicleft": -36.71994408201306,
+            "bgpictop": 0,
+            "bgpicwidth": 448.4398881640261,
+            "opacity": 0.4,
+            "bgpictype": "picture",
+            "bgpicheight": 738,
+            "canvaswidth": 750,
+            "canvasheight": 1476,
+            "bgpicscalerate": 1,
+            "colors": {
+              "degress": 180,
+              "points": [
+                {
+                  "position": 0,
+                  "rgb": { "r": 196, "g": 245, "b": 230, "a": 1 }
+                },
+                {
+                  "position": 100,
+                  "rgb": { "r": 112, "g": 205, "b": 235, "a": 1 }
+                }
+              ]
+            },
+            "flipHorizontal": true,
+            "materialId": "",
+            "atmosphere": {
+              "materialId": "M_KU7VA8EYW6OY",
+              "url": "https://res.maka.im/other/20230323161108422901.gif",
+              "name": "白色粒子飘散"
+            },
+            "originwidth": 978,
+            "originheight": 1609.5
+          },
+          "height": 738,
+          "width": 375
+        }
+      ],
+      "fixedPages": [],
+      "fixedLayer": [
+        {
+          "elementRef": "MkWatermark",
+          "elemId": "l_soMZhmze",
+          "attrs": [],
+          "type": "element"
+        }
+      ]
+    },
+    "actions": [],
+    "music": {
+      "title": "氛围音乐,积极/明快,钢琴",
+      "materialId": "M_M0P0DW92",
+      "type": "maka",
+      "duration": 102,
+      "url": "/materialStore/yinyue/shangwu/10/M_M0P0DW92/M_M0P0DW92_v1.mp3",
+      "preview": "https://res.maka.im/materialStore/yinyue/beijingyinyue/beijingtu/white-petaled-flowers-3911432.jpg"
+    },
+    "__unitProcessed": 8
+  },
+  "positionLink": {
+    "EyYZZntmxM": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 1,
+      "mount": true,
+      "x": -11.691780821917806,
+      "y": -9.098630136986301,
+      "moduleId": "",
+      "width": 773.383561643836,
+      "height": 1498.241095890411,
+      "animation": [
+        {
+          "label": "淡入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 500,
+          "animationRef": "FadeInNormal",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInNormal"
+        }
+      ]
+    },
+    "RuzpmGtjAP": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 2,
+      "mount": true,
+      "x": -181.1739726027398,
+      "y": 181.8260273972602,
+      "moduleId": "",
+      "width": 1112.3479452054796,
+      "height": 1112.3479452054796,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 800,
+          "animationRef": "RotateIn",
+          "duration": 500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "NFasqNRiAq": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 3,
+      "mount": true,
+      "x": -63.397260273972506,
+      "y": 299.6027397260273,
+      "moduleId": "",
+      "width": 876.794520547945,
+      "height": 876.7945205479454,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "RotateIn",
+          "duration": 500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "teibXvxzrM": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 4,
+      "mount": true,
+      "x": 46.797260273972654,
+      "y": 409.79726027397254,
+      "moduleId": "",
+      "width": 656.4054794520547,
+      "height": 656.4054794520549,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1200,
+          "animationRef": "RotateIn",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "peMXFTgXRJ": {
+      "x": 42.31232876712329,
+      "y": 248,
+      "width": 665.3753424657534,
+      "height": 1015,
+      "name": "000",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 5,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向下滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1500,
+          "animationRef": "SlideDown",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideDown"
+        }
+      ]
+    },
+    "pryjExexvW": {
+      "x": 51.80136986301369,
+      "y": 258,
+      "width": 646.3972602739726,
+      "height": 995,
+      "name": "2 拷贝",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 6,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1500,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "WRlJBQiCrt": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 14,
+      "mount": true,
+      "x": 141.43098035397543,
+      "y": 299.6027800259525,
+      "width": 467.13803929204914,
+      "height": 72,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 2200,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "bKlDWlBHZJ": {
+      "x": 0.00777470836902106,
+      "y": 1055.9700936781849,
+      "width": 246.55199890059762,
+      "height": 240.85607813391715,
+      "name": "组 5",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 7,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1500,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "niPBhCYviY": {
+      "x": -145,
+      "y": 1066.1878237371575,
+      "width": 1040,
+      "height": 582,
+      "name": "0",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 9,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 600,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "QsuEJqkGqk": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 8,
+      "mount": true,
+      "x": 503.4557758077714,
+      "y": 1055.970090518925,
+      "width": 246.55199890059762,
+      "height": 240.85607813391715,
+      "name": "组 5",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1500,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "tkvCcuv_cF": {
+      "x": -145,
+      "y": 1127.8095718174766,
+      "width": 1040,
+      "height": 543,
+      "name": "0",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 10,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1000,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "FEsCSRJpxy": {
+      "x": -2.842170943040401e-14,
+      "y": -9.098624337255686,
+      "width": 320.4972023869985,
+      "height": 271.5125167538979,
+      "name": "色阶 1 拷贝 2",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 11,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右飞入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "FadeInLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInLeft"
+        }
+      ]
+    },
+    "ClbNbpRKYF": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 12,
+      "mount": true,
+      "x": 429.4892227253731,
+      "y": -9.098627496501916,
+      "width": 320.4972023869985,
+      "height": 271.5125167538979,
+      "name": "色阶 1 拷贝 2",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1000,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "MbpdFzMw_K": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 13,
+      "mount": true,
+      "x": -14.124501640318613,
+      "y": -16.104655996143038,
+      "moduleId": "",
+      "width": 778.2490032806372,
+      "height": 1508.209311992286,
+      "animation": []
+    },
+    "tkCEueYwaS": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 16,
+      "mount": true,
+      "x": 87.70341541361057,
+      "y": 387.25036214444447,
+      "moduleId": "",
+      "width": 574.5829263030229,
+      "height": 22.551889598924156,
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 2200,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "heKjRzGFbq": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 17,
+      "mount": true,
+      "x": 93.91591186082474,
+      "y": 671.4164786560895,
+      "width": 562.1681762783505,
+      "height": 378,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 3600,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "noKiBEuiyh": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 18,
+      "mount": true,
+      "x": 70.00000000000003,
+      "y": 0,
+      "moduleId": "",
+      "width": 120,
+      "height": 120,
+      "parentId": "KaMkFEMvhW"
+    },
+    "aXxdfNYtKy": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 19,
+      "mount": true,
+      "x": 0,
+      "y": 125,
+      "moduleId": "",
+      "width": 260,
+      "height": 50,
+      "parentId": "KaMkFEMvhW"
+    },
+    "KaMkFEMvhW": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 19,
+      "mount": true,
+      "extraLink": {
+        "noKiBEuiyh": {
+          "transformCompCoordinateSystemStandardRect": {
+            "leftTop": { "x": 314.99234869970036, "y": 591.7643835616439 },
+            "rightTop": { "x": 434.99234869970036, "y": 471.76438356164385 },
+            "leftBottom": { "x": 314.99234869970036, "y": 591.7643835616439 },
+            "rightBottm": { "x": 434.99234869970036, "y": 591.7643835616439 }
+          },
+          "inTransformCompCoordinateSystemPoint": {
+            "x": 314.99234869970036,
+            "y": 471.76438356164385
+          },
+          "transformCompCoordinateSystemRect": {
+            "leftTop": { "x": 314.99234869970036, "y": 471.76438356164385 },
+            "rightTop": { "x": 434.99234869970036, "y": 471.76438356164385 },
+            "leftBottom": { "x": 314.99234869970036, "y": 591.7643835616439 },
+            "rightBottm": { "x": 434.99234869970036, "y": 591.7643835616439 }
+          },
+          "transformCompCoordinateSystemCenter": {
+            "x": 374.99234869970036,
+            "y": 531.7643835616439
+          },
+          "inCombinationPoint": { "x": 70.00000000000003, "y": 0 }
+        },
+        "aXxdfNYtKy": {
+          "transformCompCoordinateSystemStandardRect": {
+            "leftTop": { "x": 244.99234869970033, "y": 646.7643835616439 },
+            "rightTop": { "x": 504.9923486997003, "y": 596.7643835616439 },
+            "leftBottom": { "x": 244.99234869970033, "y": 646.7643835616439 },
+            "rightBottm": { "x": 504.9923486997003, "y": 646.7643835616439 }
+          },
+          "inTransformCompCoordinateSystemPoint": {
+            "x": 244.99234869970033,
+            "y": 596.7643835616439
+          },
+          "transformCompCoordinateSystemRect": {
+            "leftTop": { "x": 244.99234869970033, "y": 596.7643835616439 },
+            "rightTop": { "x": 504.9923486997003, "y": 596.7643835616439 },
+            "leftBottom": { "x": 244.99234869970033, "y": 646.7643835616439 },
+            "rightBottm": { "x": 504.9923486997003, "y": 646.7643835616439 }
+          },
+          "transformCompCoordinateSystemCenter": {
+            "x": 374.9923486997003,
+            "y": 621.7643835616439
+          },
+          "inCombinationPoint": { "x": 0, "y": 125 }
+        }
+      },
+      "width": 260,
+      "height": 175,
+      "x": 244.99234869970033,
+      "y": 471.76438356164385,
+      "moduleId": "",
+      "groupType": "keep",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 3000,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "ZtpAkwySHv": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 1,
+      "mount": true,
+      "x": -11.691780821917806,
+      "y": -9.098630136986301,
+      "moduleId": "",
+      "width": 773.383561643836,
+      "height": 1498.241095890411,
+      "animation": [
+        {
+          "label": "淡入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 500,
+          "animationRef": "FadeInNormal",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInNormal"
+        }
+      ]
+    },
+    "QHsBAsRPDG": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 2,
+      "mount": true,
+      "x": -181.1739726027398,
+      "y": 181.8260273972602,
+      "moduleId": "",
+      "width": 1112.3479452054796,
+      "height": 1112.3479452054796,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 800,
+          "animationRef": "RotateIn",
+          "duration": 500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "PmvehHDbfR": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 3,
+      "mount": true,
+      "x": -63.397260273972506,
+      "y": 299.6027397260273,
+      "moduleId": "",
+      "width": 876.794520547945,
+      "height": 876.7945205479454,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "RotateIn",
+          "duration": 500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "uaqYGmXeHx": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 4,
+      "mount": true,
+      "x": 46.797260273972654,
+      "y": 409.79726027397254,
+      "moduleId": "",
+      "width": 656.4054794520547,
+      "height": 656.4054794520549,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1200,
+          "animationRef": "RotateIn",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "YyJcfiwwmQ": {
+      "x": 42.31232876712329,
+      "y": 248,
+      "width": 665.3753424657534,
+      "height": 1015,
+      "name": "000",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 5,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向下滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1500,
+          "animationRef": "SlideDown",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideDown"
+        }
+      ]
+    },
+    "gkKCucWWmN": {
+      "x": 51.80136986301369,
+      "y": 258,
+      "width": 646.3972602739726,
+      "height": 995,
+      "name": "2 拷贝",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 6,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1500,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "AdtAtZnKTC": {
+      "x": 0.00777470836902106,
+      "y": 1055.9700936781849,
+      "width": 246.55199890059762,
+      "height": 240.85607813391715,
+      "name": "组 5",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 7,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1500,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "unlfrdGCAR": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 8,
+      "mount": true,
+      "x": 503.4557758077714,
+      "y": 1055.970090518925,
+      "width": 246.55199890059762,
+      "height": 240.85607813391715,
+      "name": "组 5",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1500,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "EoRzxdHuEp": {
+      "x": -145,
+      "y": 1066.1878237371575,
+      "width": 1040,
+      "height": 582,
+      "name": "0",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 9,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 600,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "ciMjJfJrHr": {
+      "x": -145,
+      "y": 1127.8095718174766,
+      "width": 1040,
+      "height": 543,
+      "name": "0",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 10,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1000,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "ytBExsaGPD": {
+      "x": -2.842170943040401e-14,
+      "y": -9.098624337255686,
+      "width": 320.4972023869985,
+      "height": 271.5125167538979,
+      "name": "色阶 1 拷贝 2",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 11,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右飞入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "FadeInLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInLeft"
+        }
+      ]
+    },
+    "MpkQyTHgDE": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 12,
+      "mount": true,
+      "x": 429.4892227253731,
+      "y": -9.098627496501916,
+      "width": 320.4972023869985,
+      "height": 271.5125167538979,
+      "name": "色阶 1 拷贝 2",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1000,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "qeCBAs_Tid": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 13,
+      "mount": true,
+      "x": -14.124501640318613,
+      "y": -16.104655996143038,
+      "moduleId": "",
+      "width": 778.2490032806372,
+      "height": 1508.209311992286,
+      "animation": []
+    },
+    "HmjsCexXZG": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 14,
+      "mount": true,
+      "x": 141.43098035397543,
+      "y": 299.6027800259525,
+      "width": 467.13803929204914,
+      "height": 72,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 2200,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "gzkecMvEKR": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 16,
+      "mount": true,
+      "x": 87.70341541361057,
+      "y": 387.25036214444447,
+      "moduleId": "",
+      "width": 574.5829263030229,
+      "height": 22.551889598924156,
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 2200,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "aieAvAJBxE": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 17,
+      "mount": true,
+      "x": 90.88544160584826,
+      "y": 697.7014101629387,
+      "width": 568.2339297030081,
+      "height": 162,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "弹性放大",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 3000,
+          "animationRef": "ExpandFadeIn",
+          "duration": 1500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "ExpandFadeIn"
+        }
+      ]
+    },
+    "gEHwdhQwnx": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 20,
+      "mount": true,
+      "x": 90.44794520547941,
+      "y": 438.377656082318,
+      "moduleId": "",
+      "width": 569.1041095890412,
+      "height": 239.34331797235023,
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 3000,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "cZlGHYkqbS": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 21,
+      "mount": true,
+      "x": 90.44794520547941,
+      "y": 880.9584780001263,
+      "moduleId": "",
+      "width": 569.1041095890412,
+      "height": 239.34331797235023,
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 3000,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "BdlxEyRTxW": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 1,
+      "mount": true,
+      "x": -11.691780821917806,
+      "y": -9.098630136986301,
+      "moduleId": "",
+      "width": 773.383561643836,
+      "height": 1498.241095890411,
+      "animation": [
+        {
+          "label": "淡入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 500,
+          "animationRef": "FadeInNormal",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInNormal"
+        }
+      ]
+    },
+    "pWHwNlHfpt": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 2,
+      "mount": true,
+      "x": -181.1739726027398,
+      "y": 181.8260273972602,
+      "moduleId": "",
+      "width": 1112.3479452054796,
+      "height": 1112.3479452054796,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 800,
+          "animationRef": "RotateIn",
+          "duration": 500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "ZyPJXvyauY": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 3,
+      "mount": true,
+      "x": -63.397260273972506,
+      "y": 299.6027397260273,
+      "moduleId": "",
+      "width": 876.794520547945,
+      "height": 876.7945205479454,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "RotateIn",
+          "duration": 500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "gabBnqGt_F": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 4,
+      "mount": true,
+      "x": 46.797260273972654,
+      "y": 409.79726027397254,
+      "moduleId": "",
+      "width": 656.4054794520547,
+      "height": 656.4054794520549,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1200,
+          "animationRef": "RotateIn",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "bz_ycWCThT": {
+      "x": 42.31232876712329,
+      "y": 248,
+      "width": 665.3753424657534,
+      "height": 1015,
+      "name": "000",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 5,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向下滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1500,
+          "animationRef": "SlideDown",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideDown"
+        }
+      ]
+    },
+    "kJhWaWopvm": {
+      "x": 51.80136986301369,
+      "y": 258,
+      "width": 646.3972602739726,
+      "height": 995,
+      "name": "2 拷贝",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 6,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1500,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "ephJeXQKaZ": {
+      "x": 0.00777470836902106,
+      "y": 1055.9700936781849,
+      "width": 246.55199890059762,
+      "height": 240.85607813391715,
+      "name": "组 5",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 7,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1500,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "pTfRBgKxKw": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 8,
+      "mount": true,
+      "x": 503.4557758077714,
+      "y": 1055.970090518925,
+      "width": 246.55199890059762,
+      "height": 240.85607813391715,
+      "name": "组 5",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1500,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "H_ffizGlHn": {
+      "x": -145,
+      "y": 1066.1878237371575,
+      "width": 1040,
+      "height": 582,
+      "name": "0",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 9,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 600,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "wGr_sxsATh": {
+      "x": -145,
+      "y": 1127.8095718174766,
+      "width": 1040,
+      "height": 543,
+      "name": "0",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 10,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1000,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "aHRHtGZwnu": {
+      "x": -2.842170943040401e-14,
+      "y": -9.098624337255686,
+      "width": 320.4972023869985,
+      "height": 271.5125167538979,
+      "name": "色阶 1 拷贝 2",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 11,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右飞入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "FadeInLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInLeft"
+        }
+      ]
+    },
+    "AFYhadRZYo": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 12,
+      "mount": true,
+      "x": 429.4892227253731,
+      "y": -9.098627496501916,
+      "width": 320.4972023869985,
+      "height": 271.5125167538979,
+      "name": "色阶 1 拷贝 2",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1000,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "zpEaQWgwWq": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 13,
+      "mount": true,
+      "x": -14.124501640318613,
+      "y": -16.104655996143038,
+      "moduleId": "",
+      "width": 778.2490032806372,
+      "height": 1508.209311992286,
+      "animation": []
+    },
+    "NDnYbmaeGv": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 14,
+      "mount": true,
+      "x": 141.43098035397543,
+      "y": 299.6027800259525,
+      "width": 467.13803929204914,
+      "height": 72,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 2200,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "chNWafcwXN": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 16,
+      "mount": true,
+      "x": 87.70341541361057,
+      "y": 387.25036214444447,
+      "moduleId": "",
+      "width": 574.5829263030229,
+      "height": 22.551889598924156,
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 2200,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "CJfvGYpvnZ": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 17,
+      "mount": true,
+      "x": 90.88303514849595,
+      "y": 952.4630539985552,
+      "width": 568.2339297030081,
+      "height": 96,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 4200,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "KAGvy_QdAW": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 20,
+      "mount": true,
+      "x": 224.90547945205475,
+      "y": 438.377656082318,
+      "moduleId": "",
+      "width": 300.1890410958905,
+      "height": 407.16249605454203,
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 3000,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "QkYyEWnxzb": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 22,
+      "mount": true,
+      "x": 90.88303514849594,
+      "y": 873.3890813958154,
+      "width": 568.2339297030081,
+      "height": 60,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 3600,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "uflrPgzhcH": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 1,
+      "mount": true,
+      "x": -11.691780821917806,
+      "y": -9.098630136986301,
+      "moduleId": "",
+      "width": 773.383561643836,
+      "height": 1498.241095890411,
+      "animation": [
+        {
+          "label": "淡入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 500,
+          "animationRef": "FadeInNormal",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInNormal"
+        }
+      ]
+    },
+    "AjRGRrsJlw": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 2,
+      "mount": true,
+      "x": -181.1739726027398,
+      "y": 181.8260273972602,
+      "moduleId": "",
+      "width": 1112.3479452054796,
+      "height": 1112.3479452054796,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 800,
+          "animationRef": "RotateIn",
+          "duration": 500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "wSgvWlFmtq": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 3,
+      "mount": true,
+      "x": -63.397260273972506,
+      "y": 299.6027397260273,
+      "moduleId": "",
+      "width": 876.794520547945,
+      "height": 876.7945205479454,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "RotateIn",
+          "duration": 500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "cpkiXcCbuv": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 4,
+      "mount": true,
+      "x": 46.797260273972654,
+      "y": 409.79726027397254,
+      "moduleId": "",
+      "width": 656.4054794520547,
+      "height": 656.4054794520549,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1200,
+          "animationRef": "RotateIn",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "rCxDCcDZjy": {
+      "x": 42.31232876712329,
+      "y": 248,
+      "width": 665.3753424657534,
+      "height": 1015,
+      "name": "000",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 5,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向下滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1500,
+          "animationRef": "SlideDown",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideDown"
+        }
+      ]
+    },
+    "mZrrmcofzP": {
+      "x": 51.80136986301369,
+      "y": 258,
+      "width": 646.3972602739726,
+      "height": 995,
+      "name": "2 拷贝",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 6,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1500,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "KREBRmJ_ro": {
+      "x": 0.00777470836902106,
+      "y": 1055.9700936781849,
+      "width": 246.55199890059762,
+      "height": 240.85607813391715,
+      "name": "组 5",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 7,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1500,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "ssfGogwubz": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 8,
+      "mount": true,
+      "x": 503.4557758077714,
+      "y": 1055.970090518925,
+      "width": 246.55199890059762,
+      "height": 240.85607813391715,
+      "name": "组 5",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1500,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "TjQbgtTrJn": {
+      "x": -145,
+      "y": 1066.1878237371575,
+      "width": 1040,
+      "height": 582,
+      "name": "0",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 9,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 600,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "lBDfeTSstZ": {
+      "x": -145,
+      "y": 1127.8095718174766,
+      "width": 1040,
+      "height": 543,
+      "name": "0",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 10,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1000,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "zcthriCYBf": {
+      "x": -2.842170943040401e-14,
+      "y": -9.098624337255686,
+      "width": 320.4972023869985,
+      "height": 271.5125167538979,
+      "name": "色阶 1 拷贝 2",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 11,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右飞入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "FadeInLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInLeft"
+        }
+      ]
+    },
+    "xFSplkxMnX": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 12,
+      "mount": true,
+      "x": 429.4892227253731,
+      "y": -9.098627496501916,
+      "width": 320.4972023869985,
+      "height": 271.5125167538979,
+      "name": "色阶 1 拷贝 2",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1000,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "HSmMgHyRzN": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 13,
+      "mount": true,
+      "x": -14.124501640318613,
+      "y": -16.104655996143038,
+      "moduleId": "",
+      "width": 778.2490032806372,
+      "height": 1508.209311992286,
+      "animation": []
+    },
+    "KixdCTpeiy": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 14,
+      "mount": true,
+      "x": 141.43098035397543,
+      "y": 299.6027800259525,
+      "width": 467.13803929204914,
+      "height": 72,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 2200,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "TtjeqiRGXT": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 16,
+      "mount": true,
+      "x": 87.70341541361057,
+      "y": 387.25036214444447,
+      "moduleId": "",
+      "width": 574.5829263030229,
+      "height": 22.551889598924156,
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 2200,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "BFg_Dbfnfq": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 22,
+      "mount": true,
+      "x": -71.88134841314789,
+      "y": 435.50001295951944,
+      "width": 351.88872422355604,
+      "height": 640,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 3000,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "bluQQKjmpb": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 23,
+      "mount": true,
+      "x": 306.8283931322288,
+      "y": 435.500007608492,
+      "width": 396.37091600437793,
+      "height": 640,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 3000,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "PYEYlhzhjX": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 1,
+      "mount": true,
+      "x": -11.691780821917806,
+      "y": -9.098630136986301,
+      "moduleId": "",
+      "width": 773.383561643836,
+      "height": 1498.241095890411,
+      "animation": [
+        {
+          "label": "淡入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 500,
+          "animationRef": "FadeInNormal",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInNormal"
+        }
+      ]
+    },
+    "BiMxcFcMtM": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 2,
+      "mount": true,
+      "x": -181.1739726027398,
+      "y": 181.8260273972602,
+      "moduleId": "",
+      "width": 1112.3479452054796,
+      "height": 1112.3479452054796,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 800,
+          "animationRef": "RotateIn",
+          "duration": 500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "SFddluwrgz": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 3,
+      "mount": true,
+      "x": -63.397260273972506,
+      "y": 299.6027397260273,
+      "moduleId": "",
+      "width": 876.794520547945,
+      "height": 876.7945205479454,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "RotateIn",
+          "duration": 500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "dYmjGnNECu": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 4,
+      "mount": true,
+      "x": 46.797260273972654,
+      "y": 409.79726027397254,
+      "moduleId": "",
+      "width": 656.4054794520547,
+      "height": 656.4054794520549,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1200,
+          "animationRef": "RotateIn",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "JZal_qNRWq": {
+      "x": 42.31232876712329,
+      "y": 248,
+      "width": 665.3753424657534,
+      "height": 1015,
+      "name": "000",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 5,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向下滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1500,
+          "animationRef": "SlideDown",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideDown"
+        }
+      ]
+    },
+    "ZBbfXQRWPG": {
+      "x": 51.80136986301369,
+      "y": 258,
+      "width": 646.3972602739726,
+      "height": 995,
+      "name": "2 拷贝",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 6,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1500,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "nqFe_HCHCH": {
+      "x": 0.00777470836902106,
+      "y": 1055.9700936781849,
+      "width": 246.55199890059762,
+      "height": 240.85607813391715,
+      "name": "组 5",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 7,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1500,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "fKKsyaGYJW": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 8,
+      "mount": true,
+      "x": 503.4557758077714,
+      "y": 1055.970090518925,
+      "width": 246.55199890059762,
+      "height": 240.85607813391715,
+      "name": "组 5",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1500,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "aqjfbKj_Mh": {
+      "x": -145,
+      "y": 1066.1878237371575,
+      "width": 1040,
+      "height": 582,
+      "name": "0",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 9,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 600,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "yMqKYpMXcP": {
+      "x": -145,
+      "y": 1127.8095718174766,
+      "width": 1040,
+      "height": 543,
+      "name": "0",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 10,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1000,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "HbHlwKaxFH": {
+      "x": -2.842170943040401e-14,
+      "y": -9.098624337255686,
+      "width": 320.4972023869985,
+      "height": 271.5125167538979,
+      "name": "色阶 1 拷贝 2",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 11,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右飞入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "FadeInLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInLeft"
+        }
+      ]
+    },
+    "JNwGgREzHP": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 12,
+      "mount": true,
+      "x": 429.4892227253731,
+      "y": -9.098627496501916,
+      "width": 320.4972023869985,
+      "height": 271.5125167538979,
+      "name": "色阶 1 拷贝 2",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1000,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "xXzoodcgAS": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 13,
+      "mount": true,
+      "x": -14.124501640318613,
+      "y": -16.104655996143038,
+      "moduleId": "",
+      "width": 778.2490032806372,
+      "height": 1508.209311992286,
+      "animation": []
+    },
+    "vFvaxx_fCC": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 14,
+      "mount": true,
+      "x": 141.43098035397543,
+      "y": 299.6027800259525,
+      "width": 467.13803929204914,
+      "height": 72,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 2200,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "ZZEhnNcfNT": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 16,
+      "mount": true,
+      "x": 87.70341541361057,
+      "y": 387.25036214444447,
+      "moduleId": "",
+      "width": 574.5829263030229,
+      "height": 22.551889598924156,
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 2200,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "BgnqCtkj_t": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 24,
+      "mount": true,
+      "x": 90.4533751605308,
+      "y": 439.34085606358946,
+      "moduleId": "",
+      "width": 267.83835616438364,
+      "height": 384.92140016413106,
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 3000,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "GXnBfabxrv": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 25,
+      "mount": true,
+      "x": 93.19797062285956,
+      "y": 860.1801379557129,
+      "moduleId": "",
+      "width": 569.1041095890412,
+      "height": 267.6501672874187,
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 3600,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "WKiFhQdoMQ": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 27,
+      "mount": true,
+      "x": 391.71887641802226,
+      "y": 439.34085071256203,
+      "moduleId": "",
+      "width": 267.83835616438364,
+      "height": 384.92140016413106,
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 3000,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "CpgThTrQuQ": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 1,
+      "mount": true,
+      "x": -11.691780821917806,
+      "y": -9.098630136986301,
+      "moduleId": "",
+      "width": 773.383561643836,
+      "height": 1498.241095890411,
+      "animation": [
+        {
+          "label": "淡入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 500,
+          "animationRef": "FadeInNormal",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInNormal"
+        }
+      ]
+    },
+    "NWjFYlQzyM": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 2,
+      "mount": true,
+      "x": -181.1739726027398,
+      "y": 181.8260273972602,
+      "moduleId": "",
+      "width": 1112.3479452054796,
+      "height": 1112.3479452054796,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 800,
+          "animationRef": "RotateIn",
+          "duration": 500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "WbERTNDlcE": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 3,
+      "mount": true,
+      "x": -63.397260273972506,
+      "y": 299.6027397260273,
+      "moduleId": "",
+      "width": 876.794520547945,
+      "height": 876.7945205479454,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "RotateIn",
+          "duration": 500,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "vSwRfQgbQs": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 4,
+      "mount": true,
+      "x": 46.797260273972654,
+      "y": 409.79726027397254,
+      "moduleId": "",
+      "width": 656.4054794520547,
+      "height": 656.4054794520549,
+      "animation": [
+        {
+          "label": "旋转出现",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1200,
+          "animationRef": "RotateIn",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "RotateIn"
+        }
+      ]
+    },
+    "xGWh_Becbw": {
+      "x": 42.31232876712329,
+      "y": 248,
+      "width": 665.3753424657534,
+      "height": 1015,
+      "name": "000",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 5,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向下滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1500,
+          "animationRef": "SlideDown",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideDown"
+        }
+      ]
+    },
+    "lwsFCzjRtl": {
+      "x": 51.80136986301369,
+      "y": 258,
+      "width": 646.3972602739726,
+      "height": 995,
+      "name": "2 拷贝",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 6,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1500,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "PdtPHxFpwM": {
+      "x": 0.00777470836902106,
+      "y": 1055.9700936781849,
+      "width": 246.55199890059762,
+      "height": 240.85607813391715,
+      "name": "组 5",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 7,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1500,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "oBl_HFzhGq": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 8,
+      "mount": true,
+      "x": 503.4557758077714,
+      "y": 1055.970090518925,
+      "width": 246.55199890059762,
+      "height": 240.85607813391715,
+      "name": "组 5",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1500,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "CkH_y_kWbG": {
+      "x": -145,
+      "y": 1066.1878237371575,
+      "width": 1040,
+      "height": 582,
+      "name": "0",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 9,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 600,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "rHJPhjH_PZ": {
+      "x": -145,
+      "y": 1127.8095718174766,
+      "width": 1040,
+      "height": 543,
+      "name": "0",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 10,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 1000,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "ZAGtuXeXky": {
+      "x": -2.842170943040401e-14,
+      "y": -9.098624337255686,
+      "width": 320.4972023869985,
+      "height": 271.5125167538979,
+      "name": "色阶 1 拷贝 2",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 11,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右飞入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "FadeInLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInLeft"
+        }
+      ]
+    },
+    "CpACoqAlng": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 12,
+      "mount": true,
+      "x": 429.4892227253731,
+      "y": -9.098627496501916,
+      "width": 320.4972023869985,
+      "height": 271.5125167538979,
+      "name": "色阶 1 拷贝 2",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1000,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "aTGfRPQsTn": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 13,
+      "mount": true,
+      "x": -14.124501640318613,
+      "y": -16.104655996143038,
+      "moduleId": "",
+      "width": 778.2490032806372,
+      "height": 1508.209311992286,
+      "animation": []
+    },
+    "DEwWdrr_TP": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 14,
+      "mount": true,
+      "x": 141.43098035397543,
+      "y": 299.6027800259525,
+      "width": 467.13803929204914,
+      "height": 72,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 2200,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ]
+    },
+    "skoiR_EKGm": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 16,
+      "mount": true,
+      "x": 87.70341541361057,
+      "y": 387.25036214444447,
+      "moduleId": "",
+      "width": 574.5829263030229,
+      "height": 22.551889598924156,
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 2200,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "nYFDhZhWkc": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 17,
+      "mount": true,
+      "x": 90.88303514849594,
+      "y": 737.9926022046233,
+      "width": 568.2339297030081,
+      "height": 180,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 3600,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "CJaRvsGxxW": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 21,
+      "mount": true,
+      "x": 275,
+      "y": 955.9700984249979,
+      "moduleId": "",
+      "width": 200,
+      "height": 200,
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 4200,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "WwRXNemstf": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 28,
+      "mount": true,
+      "x": 95,
+      "y": 439.0575342465753,
+      "moduleId": "",
+      "width": 560,
+      "height": 278.4219178082192,
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 3000,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ]
+    },
+    "psd_v2_ZWzriWlJGc": {
+      "x": 36.01095890410959,
+      "y": 158.75890410958903,
+      "width": 71.484375,
+      "height": 24.0234375,
+      "name": "11",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 5,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "淡入",
+          "bizType": "enter",
+          "timingFunction": "linear",
+          "delay": 1000,
+          "animationRef": "FadeInNormal",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "FadeInNormal"
+        }
+      ]
+    },
+    "psd_v2_DqFEpKJcYA": {
+      "x": 0.000007190443065379965,
+      "y": 314.5124775255826,
+      "width": 80.078125,
+      "height": 54.4921875,
+      "name": "09",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 2,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1000,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ],
+      "action": {
+        "type": "link",
+        "actionAttrs": {
+          "value": "http://tp.gogolfood.com/app/oEV9t7wnyw/home"
+        },
+        "enable": true
+      }
+    },
+    "psd_v2_ymPEcogzCz": {
+      "x": -99.70115966796875,
+      "y": 300.3535737338131,
+      "width": 315.4296875,
+      "height": 175,
+      "name": "06",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 0,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向右滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1000,
+          "animationRef": "SlideRight",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideRight"
+        }
+      ],
+      "action": {
+        "type": "link",
+        "actionAttrs": {
+          "value": "http://tp.gogolfood.com/app/oEV9t7wnyw/home"
+        },
+        "enable": true
+      }
+    },
+    "psd_v2_iEBfzuEcuo": {
+      "x": -96.04107230302232,
+      "y": 446.26298394067726,
+      "width": 603.8282941380731,
+      "height": 217.11473712580081,
+      "name": "形状 1 拷贝",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 4,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向下滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 600,
+          "animationRef": "SlideDown",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideDown"
+        }
+      ]
+    },
+    "pKNmaueERJ": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 1,
+      "mount": true,
+      "x": 325.8029807730897,
+      "y": 330.9925089378879,
+      "width": 123.34749571917808,
+      "height": 175,
+      "name": "06",
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 1000,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ]
+    },
+    "kMbjNPlbiX": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 10,
+      "mount": true,
+      "x": 163.7368483197938,
+      "y": 78.38198312554822,
+      "width": 47.52632716160703,
+      "height": 399.5202285539209,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向左滑入",
+          "bizType": "enter",
+          "timingFunction": "ease-in-out",
+          "delay": 3900,
+          "animationRef": "SlideLeft",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideLeft"
+        }
+      ],
+      "lockScaleRate": false,
+      "action": {
+        "type": "link",
+        "actionAttrs": {
+          "value": "http://tp.gogolfood.com/app/oEV9t7wnyw/home"
+        },
+        "enable": true
+      }
+    },
+    "psd_v2_AXnMQzDPrZ": {
+      "x": -66.5761852525685,
+      "y": 387.85354945533186,
+      "width": 609.0410037768199,
+      "height": 297.44685492236096,
+      "name": "图层 0 拷贝",
+      "rotate": 0,
+      "opacity": 1,
+      "borderRadius": 0,
+      "zIndex": 32,
+      "lock": false,
+      "mount": true,
+      "visibility": true,
+      "moduleId": "",
+      "animation": [
+        {
+          "label": "向上滑入",
+          "bizType": "enter",
+          "timingFunction": "ease",
+          "delay": 600,
+          "animationRef": "SlideUp",
+          "duration": 1000,
+          "direction": "normal",
+          "fillMode": "forwards",
+          "iterationCount": 1,
+          "key": "SlideUp"
+        }
+      ],
+      "action": {
+        "type": "link",
+        "actionAttrs": {
+          "value": "http://tp.gogolfood.com/app/oEV9t7wnyw/home"
+        },
+        "enable": true
+      }
+    },
+    "l_soMZhmze": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 99999,
+      "mount": true,
+      "x": 595.2,
+      "y": 1306,
+      "width": 150,
+      "height": 150
+    }
+  },
+  "meta": { "originCanvasScale": { "width": 750, "height": 1476 } },
+  "editorMode": "absulote"
+}

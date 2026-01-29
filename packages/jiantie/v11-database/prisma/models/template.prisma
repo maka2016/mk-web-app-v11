@@ -1,0 +1,213 @@
+/// 设计师实体
+model DesignerEntity {
+  id          String           @id @default(cuid())
+  /// 设计师组ID
+  group_id    String?          @map("group_id")
+  /// 设计师名称
+  name        String           @db.VarChar
+  /// 设计师描述
+  desc        String?          @db.VarChar
+  /// 头像URL
+  avatar      String?          @db.VarChar
+  /// 邮箱
+  email       String?          @db.VarChar
+  /// 电话
+  phone       String?          @db.VarChar
+  /// 是否删除
+  deleted     Boolean          @default(false)
+  /// 设计师在简帖业务中的用户ID（唯一）
+  uid         Int              @unique
+  create_time DateTime         @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time DateTime         @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  templates   TemplateEntity[]
+
+  @@index([deleted], map: "IDX_designer_entity_deleted")
+  @@index([id], map: "IDX_designer_entity_id")
+  @@index([uid], map: "IDX_designer_entity_uid")
+  @@map("designer_entity")
+}
+
+model TemplateEntity {
+  title                         String                       @db.VarChar
+  desc                          String?                      @db.VarChar
+  /// @deprecated 已废弃，请使用 coverV3
+  cover                         String?                      @db.VarChar
+  /// @deprecated 已废弃，请使用 coverV3
+  coverV2                       String?                      @db.VarChar
+  coverV3                       Json?                        @map("cover_v3")
+  deleted                       Boolean                      @default(false)
+  deleted_confirmed             Boolean                      @default(false) @map("deleted_confirmed")
+  create_time                   DateTime                     @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time                   DateTime                     @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  custom_time                   DateTime                     @default(now()) @map("custom_time") @db.Timestamptz(6)
+  version                       Int                          @default(1)
+  designer_works_id             String?                      @map("designer_works_id")
+  /// 关联的设计师UID（可选）
+  designer_uid                  Int?                         @map("designer_uid")
+  id                            String                       @id(map: "PK_83f66c7249ae42d36912d8e3def") @default(cuid())
+  spec_id                       String?                      @map("spec_id") @db.VarChar
+  /// 信封功能：是否配置了信封
+  envelope_enabled              Boolean?                     @default(false) @map("envelope_enabled")
+  /// 信封功能配置（JSON格式，包含6张信封图片、视频背景等）
+  /// 结构：{ backgroundImage, envelopeLeftOpeningImage, envelopeRightOpeningImage, envelopeInnerImage, envelopeSealImage, duration?, delay?, easing? }
+  envelope_config               Json?                        @map("envelope_config")
+  appid                         String?                      @map("appid") @db.VarChar
+  appids                        String[]                     @map("appids")
+  templateMarketChannelEntityId Int?
+  /// 编辑器版本，目前最新是2，1是旧版编辑器
+  editor_version                Int                          @default(2) @map("editor_version")
+  /// 分享类型： invite、poster、other，默认other
+  share_type                    ShareTypeEnum?               @default(other) @map("share_type")
+  /// 接力功能配置（JSON格式，包含接力相关的所有配置）
+  /// 结构：{ enabled, button_text, share_title, share_desc, show_user_list, list_display_mode, max_relay_count, theme, content_prefix, content_suffix, enable_message, message_presets }
+  relay_config                  Json?                        @map("relay_config")
+  /// RSVP功能配置（JSON格式，包含RSVP相关的所有配置）
+  /// 结构：{ title, desc, form_fields, success_feedback_config, enabled, collect_form }
+  rsvp_config                   Json?                        @map("rsvp_config")
+  aiVector                      TemplateAIVectorEntity?
+  designer                      DesignerEntity?              @relation(fields: [designer_uid], references: [uid])
+  designerWorks                 WorksEntity?                 @relation("TemplateDesignerWorks", fields: [designer_works_id], references: [id])
+  specInfo                      WorksSpecEntity?             @relation(fields: [spec_id], references: [id])
+  templateMarketChannelEntity   TemplateMarketChannelEntity? @relation(fields: [templateMarketChannelEntityId], references: [id])
+  sortMetrics                   TemplateSortMetricsEntity?
+  tags                          TemplateTag[]                @relation("TemplateTags")
+
+  @@index([designer_works_id], map: "IDX_66088e78c3bfd2706638f66598")
+  @@index([designer_uid], map: "IDX_3e730e89a9ec98217d789cd750")
+  @@index([spec_id], map: "IDX_template_entity_spec_id")
+  @@index([id], map: "IDX_83f66c7249ae42d36912d8e3de")
+  @@map("template_entity")
+}
+
+/// 模版标签实体
+model TemplateTag {
+  id          String           @id @default(cuid())
+  /// 标签类型
+  type        String           @db.VarChar
+  /// 标签名称
+  name        String           @db.VarChar
+  create_time DateTime         @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time DateTime         @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  templates   TemplateEntity[] @relation("TemplateTags")
+
+  @@index([type], map: "IDX_template_tag_type")
+  @@index([name], map: "IDX_template_tag_name")
+  @@index([id], map: "IDX_template_tag_id")
+  @@map("template_tag")
+}
+
+model TemplateFilterEntity {
+  id                            String                        @id @default(cuid())
+  alias                         String                        @unique @db.VarChar
+  name                          String                        @db.VarChar
+  config                        Json?                         @map("config")
+  create_time                   DateTime                      @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time                   DateTime                      @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  templateIds                   String[]                      @map("template_ids")
+  templateMarketChannelEntities TemplateMarketChannelEntity[]
+
+  @@index([alias], map: "IDX_template_filter_alias")
+  @@index([id], map: "IDX_template_filter_id")
+  @@map("template_filter_entity")
+}
+
+/// 模板排序依据数据表
+model TemplateSortMetricsEntity {
+  id              String         @id @default(cuid())
+  /// 关联的模板ID
+  template_id     String         @unique @map("template_id") @db.VarChar
+  /// 销量：模板被使用的次数
+  sales_count     Int            @default(0) @map("sales_count")
+  /// 创作量：基于该模板创建的作品数量
+  creation_count  Int            @default(0) @map("creation_count")
+  /// 综合排序分：综合多个维度计算出的排序分数
+  composite_score Float          @default(0) @map("composite_score")
+  /// 上架时间：模板上架到商城的时间
+  publish_time    DateTime?      @map("publish_time") @db.Timestamptz(6)
+  data            Json?          @map("data")
+  /// 运营置顶权重：数值越大越靠前，0表示不置顶
+  pin_weight      Int            @default(0) @map("pin_weight")
+  create_time     DateTime       @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time     DateTime       @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  template        TemplateEntity @relation(fields: [template_id], references: [id])
+
+  @@index([template_id], map: "IDX_template_sort_metrics_template_id")
+  @@index([sales_count], map: "IDX_template_sort_metrics_sales_count")
+  @@index([creation_count], map: "IDX_template_sort_metrics_creation_count")
+  @@index([composite_score], map: "IDX_template_sort_metrics_composite_score")
+  @@index([publish_time], map: "IDX_template_sort_metrics_publish_time")
+  @@index([pin_weight], map: "IDX_template_sort_metrics_pin_weight")
+  @@index([id], map: "IDX_template_sort_metrics_id")
+  @@map("template_sort_metrics_entity")
+}
+
+/// 模板商城频道实体 - 支持无限嵌套的树形结构
+model TemplateMarketChannelEntity {
+  id                        Int                            @id @default(autoincrement())
+  /// 频道别名（唯一标识，用于URL等场景）
+  alias                     String                         @unique @db.VarChar
+  /// 频道显示名
+  display_name              String                         @map("display_name") @db.VarChar
+  /// 频道描述
+  desc                      String?                        @map("desc") @db.VarChar
+  /// 频道缩略图URL
+  thumb_path                String?                        @map("thumb_path") @db.VarChar
+  /// 频道分类，如: level_1, level_2, level_3, level_4 等，支持扩展
+  class                     String                         @db.VarChar
+  /// i18语言类型，如: zh-CN, en-US
+  locale                    String                         @db.VarChar
+  /// 关联的多个模板ID数组
+  template_ids              String[]                       @map("template_ids")
+  /// 父频道ID
+  parent_id                 Int?                           @map("parent_id")
+  /// 应用ID
+  appid                     String?                        @db.VarChar
+  create_time               DateTime                       @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time               DateTime                       @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 环境，如: production, test, dev
+  env                       String                         @default("production") @db.VarChar
+  /// 是否上线
+  online                    Boolean                        @default(true) @map("online")
+  /// 排序权重
+  sort_weight               Int                            @default(0) @map("sort_weight")
+  templateFilterEntityAlias String?
+  daily_statistics          ChannelDailyStatisticsEntity[]
+  templateEntities          TemplateEntity[]
+  parent                    TemplateMarketChannelEntity?   @relation("ChannelTree", fields: [parent_id], references: [id])
+  children                  TemplateMarketChannelEntity[]  @relation("ChannelTree")
+  filter                    TemplateFilterEntity?          @relation(fields: [templateFilterEntityAlias], references: [alias])
+
+  @@index([alias], map: "IDX_template_market_channel_alias")
+  @@index([parent_id], map: "IDX_template_market_channel_parent_id")
+  @@index([class], map: "IDX_template_market_channel_class")
+  @@index([locale], map: "IDX_template_market_channel_locale")
+  @@index([appid], map: "IDX_template_market_channel_appid")
+  @@index([id], map: "IDX_template_market_channel_id")
+  @@index([env], map: "IDX_template_market_channel_env")
+  @@index([online], map: "IDX_template_market_channel_online")
+  @@map("template_market_channel_entity")
+}
+
+/// 模版 AI 向量实体 - 用于 AI 生成海报的模版匹配
+model TemplateAIVectorEntity {
+  id          String         @id @default(cuid())
+  /// 关联的模板ID
+  template_id String         @unique @map("template_id") @db.VarChar
+  /// AI 匹配相关元数据（JSON格式）
+  /// 结构：{ sceneTags, industryTags, styleTags, audienceTags, slots, sampleTitle, sampleCopy }
+  ai_meta     Json?          @map("ai_meta")
+  /// 向量同步状态：pending（待同步）、synced（已同步）、failed（同步失败）
+  sync_status String         @default("pending") @map("sync_status") @db.VarChar(20)
+  /// 向量同步时间
+  synced_at   DateTime?      @map("synced_at") @db.Timestamptz(6)
+  /// 同步错误信息
+  sync_error  String?        @map("sync_error")
+  create_time DateTime       @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time DateTime       @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  template    TemplateEntity @relation(fields: [template_id], references: [id])
+
+  @@index([template_id], map: "IDX_template_ai_vector_template_id")
+  @@index([sync_status], map: "IDX_template_ai_vector_sync_status")
+  @@index([id], map: "IDX_template_ai_vector_id")
+  @@map("template_ai_vector_entity")
+}

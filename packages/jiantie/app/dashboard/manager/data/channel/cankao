@@ -1,0 +1,743 @@
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ScatterChart, Scatter, ZAxis
+} from 'recharts';
+import {
+  LayoutDashboard, ShoppingBag, Heart, Calendar, Users, Briefcase, GraduationCap,
+  Gift, Trophy, Search, Filter, ChevronDown, ChevronRight, MoreHorizontal, TrendingUp,
+  MousePointer, DollarSign, Activity, Star, Table, FileText, BarChart2,
+  Clock, CalendarRange, ArrowUpRight, ArrowDownRight, RefreshCw, Settings, CheckSquare, Square,
+  SortAsc, Layers, List, User, Crown, Zap, Rocket, Target, UserCheck, Flame, Medal, Smartphone, Monitor, Globe, History, CreditCard, MousePointer2, Gem, Info
+} from 'lucide-react';
+
+// --- Mock Data ---
+
+// 1. Business Report Data
+const trendData = [
+  { name: '2023-10-21', sales: 4000, views: 2400 },
+  { name: '2023-10-22', sales: 3000, views: 1398 },
+  { name: '2023-10-23', sales: 2000, views: 9800 },
+  { name: '2023-10-24', sales: 2780, views: 3908 },
+  { name: '2023-10-25', sales: 1890, views: 4800 },
+  { name: '2023-10-26', sales: 2390, views: 3800 },
+  { name: '2023-10-27', sales: 3490, views: 4300 },
+];
+
+const categoryData = [
+  { name: '婚庆', value: 400 },
+  { name: '生日', value: 300 },
+  { name: '商务', value: 300 },
+  { name: '教育', value: 200 },
+];
+
+const COLORS = ['#ef4444', '#f97316', '#3b82f6', '#10b981'];
+
+const intentReportData = [
+  {
+    id: 'channel_wedding',
+    name: '婚庆',
+    type: 'channel',
+    icon: <Heart size={16} className="text-pink-500" />,
+    stats: {
+      pv: 88000, uv: 45000, creations: 19700, creationRate: 22.4, pays: 5400, payRate: 27.4, gmv: 1560000, arppu: 288, score: 9.1
+    },
+    children: [
+      { id: 'cat_w1', name: '电子请柬', type: 'category', stats: { pv: 45000, uv: 21000, creations: 12000, creationRate: 26.6, pays: 3200, payRate: 26.6, gmv: 956800, arppu: 299, score: 9.5 } },
+      { id: 'cat_w2', name: '婚礼视频', type: 'category', stats: { pv: 28000, uv: 14000, creations: 5600, creationRate: 20.0, pays: 1800, payRate: 32.1, gmv: 520000, arppu: 288, score: 8.5 } },
+      { id: 'cat_w3', name: '迎宾海报', type: 'category', stats: { pv: 15000, uv: 10000, creations: 2100, creationRate: 14.0, pays: 400, payRate: 19.0, gmv: 83200, arppu: 208, score: 6.8 } },
+    ]
+  },
+  {
+    id: 'channel_baby',
+    name: '宝宝',
+    type: 'channel',
+    icon: <Users size={16} className="text-blue-500" />,
+    stats: {
+      pv: 62000, uv: 31000, creations: 14500, creationRate: 23.4, pays: 3350, payRate: 23.1, gmv: 890000, arppu: 265, score: 8.4
+    },
+    children: [
+      { id: 'cat_b1', name: '满月相册', type: 'category', stats: { pv: 32000, uv: 15000, creations: 8500, creationRate: 26.5, pays: 2100, payRate: 24.7, gmv: 620000, arppu: 295, score: 8.9 } },
+      { id: 'cat_b2', name: '百日宴邀请', type: 'category', stats: { pv: 18000, uv: 9000, creations: 4200, creationRate: 23.3, pays: 950, payRate: 22.6, gmv: 210000, arppu: 221, score: 7.4 } },
+      { id: 'cat_b3', name: '成长档案', type: 'category', stats: { pv: 12000, uv: 7000, creations: 1800, creationRate: 15.0, pays: 300, payRate: 16.6, gmv: 60000, arppu: 200, score: 6.1 } },
+    ]
+  },
+  {
+    id: 'channel_business',
+    name: '商务',
+    type: 'channel',
+    icon: <Briefcase size={16} className="text-slate-500" />,
+    stats: {
+      pv: 85000, uv: 40000, creations: 20700, creationRate: 24.3, pays: 5850, payRate: 28.2, gmv: 1980000, arppu: 338, score: 9.3
+    },
+    children: [
+      { id: 'cat_bu1', name: '商务邀请函', type: 'category', stats: { pv: 55000, uv: 25000, creations: 15000, creationRate: 27.2, pays: 4500, payRate: 30.0, gmv: 1575000, arppu: 350, score: 9.5 } },
+      { id: 'cat_bu2', name: '会议海报', type: 'category', stats: { pv: 22000, uv: 11000, creations: 4800, creationRate: 21.8, pays: 1200, payRate: 25.0, gmv: 360000, arppu: 300, score: 7.8 } },
+      { id: 'cat_bu3', name: '数据战报', type: 'category', stats: { pv: 8000, uv: 4000, creations: 900, creationRate: 11.2, pays: 150, payRate: 16.6, gmv: 45000, arppu: 300, score: 5.5 } },
+    ]
+  }
+];
+
+// 2. Creator Analysis Data
+
+// List A: Total Ranking (History)
+const creatorTotalRank = [
+  { id: 1, name: '王大锤', avatar: 'https://i.pravatar.cc/150?u=1', rank: 1, gmv: 1250000, sales: 4200, templateCount: 145, score: 9.5, trend: 0 },
+  { id: 2, name: 'Lisa Design', avatar: 'https://i.pravatar.cc/150?u=2', rank: 2, gmv: 980000, sales: 3100, templateCount: 98, score: 9.2, trend: 0 },
+  { id: 3, name: '极简主义者', avatar: 'https://i.pravatar.cc/150?u=3', rank: 3, gmv: 850000, sales: 2800, templateCount: 110, score: 8.9, trend: 0 },
+  { id: 4, name: '萌萌哒工作室', avatar: 'https://i.pravatar.cc/150?u=4', rank: 4, gmv: 420000, sales: 1500, templateCount: 45, score: 8.5, trend: 1 },
+  { id: 5, name: 'John Doe', avatar: 'https://i.pravatar.cc/150?u=5', rank: 5, gmv: 310000, sales: 980, templateCount: 32, score: 8.1, trend: -1 },
+];
+
+// List B: Trending Ranking (Current Month)
+const creatorCurrentMonthRank = [
+  { id: 1, name: '萌萌哒工作室', avatar: 'https://i.pravatar.cc/150?u=4', rank: 1, gmv: 58000, sales: 320, templateCount: 4, score: 9.8, trend: 125 },
+  { id: 2, name: '王大锤', avatar: 'https://i.pravatar.cc/150?u=1', rank: 2, gmv: 42000, sales: 180, templateCount: 3, score: 9.1, trend: 15 },
+  { id: 3, name: 'Lisa Design', avatar: 'https://i.pravatar.cc/150?u=2', rank: 3, gmv: 35000, sales: 150, templateCount: 5, score: 8.8, trend: 5 },
+  { id: 4, name: '极简主义者', avatar: 'https://i.pravatar.cc/150?u=3', rank: 4, gmv: 12000, sales: 60, templateCount: 2, score: 7.5, trend: -10 },
+  { id: 5, name: 'John Doe', avatar: 'https://i.pravatar.cc/150?u=5', rank: 5, gmv: 5000, sales: 20, templateCount: 1, score: 6.9, trend: -5 },
+];
+
+// List C: Last Month Ranking
+const creatorLastMonthRank = [
+  { id: 1, name: '王大锤', avatar: 'https://i.pravatar.cc/150?u=1', rank: 1, gmv: 48000, sales: 210, templateCount: 2, score: 9.0, trend: 0 },
+  { id: 2, name: 'Lisa Design', avatar: 'https://i.pravatar.cc/150?u=2', rank: 2, gmv: 38000, sales: 160, templateCount: 4, score: 8.7, trend: 2 },
+  { id: 3, name: '萌萌哒工作室', avatar: 'https://i.pravatar.cc/150?u=4', rank: 3, gmv: 25000, sales: 120, templateCount: 3, score: 8.5, trend: 15 },
+  { id: 4, name: '极简主义者', avatar: 'https://i.pravatar.cc/150?u=3', rank: 4, gmv: 15000, sales: 70, templateCount: 3, score: 7.8, trend: 5 },
+  { id: 5, name: 'John Doe', avatar: 'https://i.pravatar.cc/150?u=5', rank: 5, gmv: 6000, sales: 25, templateCount: 1, score: 7.0, trend: 0 },
+];
+
+// New Works with Images
+const creatorNewWorks = [
+  { id: 'NW01', title: '森系婚礼邀请函', creator: 'Lisa Design', publishTime: '2天前', exposure: 12000, ctr: 12.5, sales: 45, score: 9.2, status: '爬坡期', image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80' },
+  { id: 'NW02', title: '企业年会大气战报', creator: '王大锤', publishTime: '3天前', exposure: 8500, ctr: 8.2, sales: 22, score: 8.5, status: '平稳期', image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80' },
+  { id: 'NW03', title: '宝宝周岁INS风海报', creator: '萌萌哒工作室', publishTime: '5小时前', exposure: 2400, ctr: 15.1, sales: 12, score: 9.8, status: '爆发期', image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80' },
+  { id: 'NW04', title: '极简黑白商务函', creator: '极简主义者', publishTime: '1天前', exposure: 15000, ctr: 4.5, sales: 18, score: 6.5, status: '低效期', image: 'https://images.unsplash.com/photo-1544819667-97aa5074d2bd?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80' },
+  { id: 'NW05', title: '春季新品发布会', creator: 'John Doe', publishTime: '4天前', exposure: 3200, ctr: 6.5, sales: 8, score: 7.1, status: '冷启动', image: 'https://images.unsplash.com/photo-1519225421980-715cb0202128?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80' },
+];
+
+// Metric Definitions
+const REPORT_METRICS = [
+  { key: 'pv', label: '曝光量', group: '流量', format: 'number' },
+  { key: 'creations', label: '创作量', group: '创作', format: 'number' },
+  { key: 'creationRate', label: '创作率', group: '创作', format: 'percent' },
+  { key: 'pays', label: '付费数', group: '商业', format: 'number' },
+  { key: 'payRate', label: '转化率', group: '商业', format: 'percent' },
+  { key: 'gmv', label: 'GMV', group: '商业', format: 'currency' },
+  { key: 'score', label: '评分', group: '综合', format: 'score' },
+];
+
+// REFACTORED: Ranking Metrics - More comprehensive and sorted by funnel
+const RANKING_METRICS = [
+  // 流量 (Traffic)
+  { key: 'exposure', label: '曝光量 (PV)', group: '流量指标', format: 'number', width: 'w-28' },
+  // 创作 (Creation)
+  { key: 'creations', label: '创作量', group: '意图指标', format: 'number', width: 'w-24' },
+  { key: 'creationRate', label: '创作率', group: '意图指标', format: 'percent', width: 'w-24' },
+  // 结果/成功 (Success/Saves)
+  { key: 'successCount', label: '成功制作数', group: '意图指标', format: 'number', width: 'w-24' },
+  { key: 'successRate', label: '制作成功率', group: '意图指标', format: 'percent', width: 'w-24' },
+  // 付费 (Payment)
+  { key: 'pays', label: '付费单量', group: '商业指标', format: 'number', width: 'w-24' },
+  { key: 'payRate', label: '付费转化率', group: '商业指标', format: 'percent', width: 'w-24' },
+  // 价值 (Value)
+  { key: 'gmv', label: 'GMV (营收)', group: '商业指标', format: 'currency', width: 'w-32' },
+  { key: 'arppu', label: '客单价', group: '商业指标', format: 'currency', width: 'w-24' },
+  // 综合
+  { key: 'score', label: '综合评分', group: '综合', format: 'score', width: 'w-24' },
+];
+
+const categories = [
+  { id: 'wedding', name: '婚庆', icon: <Heart size={18} />, color: 'text-pink-500' },
+  { id: 'baby', name: '宝宝', icon: <Users size={18} />, color: 'text-blue-400' },
+  { id: 'business', name: '商务', icon: <Briefcase size={18} />, color: 'text-slate-600' },
+  { id: 'birthday', name: '生日', icon: <Gift size={18} />, color: 'text-orange-400' },
+];
+
+const subTabs = ['儿女结婚', '婚礼', '请柬', '订婚', '回门', '满月', '百日'];
+
+const clientTypes = [
+  { id: 'all', label: '全部客户端' },
+  { id: 'ios', label: 'iOS 端', icon: <Smartphone size={14}/> },
+  { id: 'android', label: '安卓端', icon: <Smartphone size={14}/> },
+  { id: 'web', label: 'Web 端', icon: <Monitor size={14}/> },
+  { id: 'mini', label: '小程序', icon: <Globe size={14}/> },
+];
+
+// Ranking View Data - UPDATED with new metric structure (Last 3 Months)
+const templates = [
+  {
+    id: 'T001',
+    rank: 1,
+    title: '儿女结婚请柬中式喜庆红色 6-1',
+    code: 'ID: 2894230958',
+    designer: '王大锤',
+    image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
+    tags: ['热销'],
+    metrics: {
+      exposure: 17126, creations: 4280, creationRate: 25.0,
+      successCount: 3852, successRate: 90.0,
+      pays: 654, payRate: 16.9,
+      gmv: 195546, arppu: 299, score: 9.8
+    }
+  },
+  {
+    id: 'T002',
+    rank: 2,
+    title: '儿女结婚请柬中式喜庆红色 3-3',
+    code: 'ID: 8374628374',
+    designer: 'Lisa Design',
+    image: 'https://images.unsplash.com/photo-1519225421980-715cb0202128?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
+    tags: ['上升'],
+    metrics: {
+      exposure: 9585, creations: 2875, creationRate: 30.0,
+      successCount: 2500, successRate: 86.9,
+      pays: 239, payRate: 9.5,
+      gmv: 47561, arppu: 199, score: 8.9
+    }
+  },
+  {
+    id: 'T003',
+    rank: 3,
+    title: '商务会议邀请函简约风',
+    code: 'ID: 1928374655',
+    designer: 'John Doe',
+    image: 'https://images.unsplash.com/photo-1544819667-97aa5074d2bd?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
+    tags: [],
+    metrics: {
+      exposure: 2550, creations: 382, creationRate: 15.0,
+      successCount: 300, successRate: 78.5,
+      pays: 42, payRate: 14.0,
+      gmv: 16758, arppu: 399, score: 8.2
+    }
+  },
+];
+
+// --- Components ---
+
+const StatCard = ({ title, value, trend, icon: Icon, color, subText }) => (
+  <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-start justify-between hover:shadow-md transition-shadow">
+    <div className="flex-1 min-w-0">
+      <p className="text-slate-500 text-xs font-medium mb-2 flex items-center gap-1 truncate">
+        {title}
+        <span className="text-slate-300">|</span>
+        <span className="text-slate-400 font-normal">本期</span>
+      </p>
+      <h3 className="text-2xl font-bold text-slate-800 tracking-tight truncate" title={value}>{value}</h3>
+      {trend !== undefined && (
+        <div className={flex items-center mt-3 text-xs font-medium ${trend > 0 ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'} inline-flex px-2 py-0.5 rounded-full}>
+          {trend > 0 ? <ArrowUpRight size={12} className="mr-1" /> : <ArrowDownRight size={12} className="mr-1" />}
+          <span>{Math.abs(trend)}%</span>
+          <span className="text-slate-400 ml-1 font-normal text-[10px]">环比</span>
+        </div>
+      )}
+      {subText && <p className="text-xs text-slate-400 mt-2">{subText}</p>}
+    </div>
+    <div className={p-3 rounded-xl ${color} bg-opacity-10 text-opacity-100 ml-2 flex-shrink-0}>
+      <Icon size={22} className={color.replace('bg-', 'text-')} />
+    </div>
+  </div>
+);
+
+const ColumnSelector = ({ definitions, visibleColumns, onChange, label = "指标配置" }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const groupedMetrics = definitions.reduce((acc, metric) => {
+    if (!acc[metric.group]) acc[metric.group] = [];
+    acc[metric.group].push(metric);
+    return acc;
+  }, {});
+
+  const toggleColumn = (key) => {
+    onChange(visibleColumns.includes(key) ? visibleColumns.filter(c => c !== key) : [...visibleColumns, key]);
+  };
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="text-xs flex items-center gap-1.5 text-slate-600 hover:text-blue-600 bg-white border border-slate-200 px-3 py-1.5 rounded shadow-sm transition-colors"
+      >
+        <Settings size={14}/> {label}
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-slate-100 z-50 animate-in fade-in zoom-in-95 duration-200">
+          <div className="p-3 border-b border-slate-100 bg-slate-50 rounded-t-lg">
+            <h4 className="font-bold text-xs text-slate-700">{label}</h4>
+          </div>
+          <div className="p-3 max-h-80 overflow-y-auto">
+            {Object.entries(groupedMetrics).map(([group, metrics]) => (
+              <div key={group} className="mb-4 last:mb-0">
+                <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{group}</h5>
+                <div className="space-y-2">
+                  {metrics.map(metric => (
+                    <label key={metric.key} className="flex items-center gap-2 cursor-pointer group hover:bg-slate-50 p-1 rounded -mx-1">
+                      <div onClick={() => toggleColumn(metric.key)} className={w-4 h-4 rounded border flex items-center justify-center transition-colors ${visibleColumns.includes(metric.key) ? 'bg-blue-500 border-blue-500' : 'bg-white border-slate-300'}}>
+                         {visibleColumns.includes(metric.key) && <CheckSquare size={12} className="text-white" />}
+                      </div>
+                      <span className={text-sm ${visibleColumns.includes(metric.key) ? 'text-slate-700' : 'text-slate-500'}}>{metric.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Common Formatters
+const formatMoney = (val) => ¥${val.toLocaleString()};
+const formatNumber = (val) => val.toLocaleString();
+const formatPercent = (val) => ${val}%;
+const renderScore = (val) => (
+  <span className="inline-flex items-center px-2 py-0.5 rounded bg-red-50 text-red-600 font-bold font-mono text-xs border border-red-100">
+    {val}
+  </span>
+);
+
+const renderMetricCell = (value, definition) => {
+  if (!definition) return value;
+  if (definition.format === 'number') return <span className="font-mono text-slate-700">{formatNumber(value)}{definition.suffix}</span>;
+  if (definition.format === 'currency') return <span className="font-mono text-slate-700">{formatMoney(value)}</span>;
+  if (definition.format === 'percent') {
+    const val = parseFloat(value);
+    const colorClass = val > 25 ? 'text-green-600 font-bold' : val < 10 ? 'text-slate-500' : 'text-slate-700';
+    return (
+      <div className="flex flex-col items-end gap-0.5 w-full">
+         <span className={${colorClass} font-mono}>{val}%</span>
+         <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
+           <div className={h-full rounded-full ${val > 20 ? 'bg-green-400' : 'bg-blue-300'}} style={{ width: ${Math.min(val * 2, 100)}% }}></div>
+         </div>
+      </div>
+    );
+  }
+  if (definition.format === 'score') return renderScore(value);
+  return value;
+};
+
+// --- View 1: Business Report Table & Overview ---
+const IntentReportTable = () => {
+  const [visibleColumns, setVisibleColumns] = useState(['pv', 'creations', 'creationRate', 'pays', 'payRate', 'gmv', 'score']);
+  const [expandedRows, setExpandedRows] = useState(['channel_wedding']);
+
+  const toggleExpand = (id) => setExpandedRows(expandedRows.includes(id) ? expandedRows.filter(r => r !== id) : [...expandedRows, id]);
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
+      {/* Table Header - Cleaned up */}
+      <div className="px-6 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4 bg-slate-50/50">
+        <h3 className="font-bold text-slate-800 flex items-center gap-2 whitespace-nowrap">
+          <FileText size={18} className="text-blue-600"/> 频道分类经营明细
+        </h3>
+        <div className="flex items-center gap-3">
+           <ColumnSelector definitions={REPORT_METRICS} visibleColumns={visibleColumns} onChange={setVisibleColumns} />
+           <div className="h-4 w-px bg-slate-300"></div>
+           <button className="text-xs flex items-center gap-1 text-slate-500 hover:text-blue-600 bg-white border border-slate-200 px-2 py-1.5 rounded shadow-sm"><ArrowDownRight size={14}/> 导出</button>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto min-h-[400px]">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
+              <th className="px-6 py-3 font-medium w-48 sticky left-0 bg-slate-50 z-10">频道 / 细分分类</th>
+              {visibleColumns.map(colKey => (
+                <th key={colKey} className="px-4 py-3 font-medium text-right whitespace-nowrap">{REPORT_METRICS.find(d => d.key === colKey)?.label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {intentReportData.map((channel) => (
+              <React.Fragment key={channel.id}>
+                <tr className="hover:bg-slate-50 bg-white group">
+                  <td className="px-6 py-4 font-bold text-slate-800 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-transparent group-hover:border-slate-100 cursor-pointer" onClick={() => toggleExpand(channel.id)}>
+                    <div className="flex items-center gap-2">
+                       <button className="p-1 rounded hover:bg-slate-200 text-slate-400">{expandedRows.includes(channel.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</button>
+                       {channel.icon} <span>{channel.name}</span>
+                    </div>
+                  </td>
+                  {visibleColumns.map(colKey => (
+                     <td key={colKey} className="px-4 py-4 text-right">{renderMetricCell(channel.stats[colKey], REPORT_METRICS.find(d => d.key === colKey))}</td>
+                  ))}
+                </tr>
+                {expandedRows.includes(channel.id) && channel.children.map((cat) => (
+                  <tr key={cat.id} className="hover:bg-blue-50/30 bg-slate-50/30">
+                     <td className="px-6 py-3 text-slate-600 sticky left-0 bg-slate-50/30 z-10 border-r border-transparent">
+                        <div className="flex items-center gap-2 pl-8 border-l-2 border-slate-200 ml-3">
+                           <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+                           <span>{cat.name}</span>
+                        </div>
+                     </td>
+                     {visibleColumns.map(colKey => (
+                        <td key={colKey} className="px-4 py-3 text-right">{renderMetricCell(cat.stats[colKey], REPORT_METRICS.find(d => d.key === colKey))}</td>
+                     ))}
+                  </tr>
+                ))}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// --- View 2: Ranking Table ---
+const RankingTable = ({ visibleMetrics }) => (
+  <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+     <div className="overflow-x-auto">
+       <table className="w-full text-left text-sm">
+         <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
+           <tr>
+             <th className="px-6 py-4 w-96 sticky left-0 bg-slate-50 z-10">模板信息 (Rank / Info)</th>
+             {visibleMetrics.map(key => {
+               const def = RANKING_METRICS.find(m => m.key === key);
+               return <th key={key} className={px-4 py-4 text-right whitespace-nowrap ${def?.width || 'w-32'}}>{def?.label}</th>
+             })}
+           </tr>
+         </thead>
+         <tbody className="divide-y divide-slate-100">
+           {templates.map(item => (
+             <tr key={item.id} className="hover:bg-blue-50/10 transition-colors group">
+               <td className="px-6 py-4 sticky left-0 bg-white group-hover:bg-blue-50/10 z-10 border-r border-transparent group-hover:border-slate-100">
+                  <div className="flex gap-4 items-center">
+                     <div className={flex-shrink-0 w-8 text-center font-bold text-lg italic ${item.rank <= 3 ? 'text-yellow-500' : 'text-slate-400'}}>{item.rank}</div>
+                     <img src={item.image} alt={item.title} className="w-14 h-14 rounded border border-slate-200 object-cover" />
+                     <div className="min-w-0 flex-1">
+                       <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-bold text-slate-800 truncate max-w-[140px]" title={item.title}>{item.title}</h4>
+                          {item.tags.map(tag => <span key={tag} className="text-[10px] bg-red-50 text-red-500 px-1.5 rounded border border-red-100 whitespace-nowrap">{tag}</span>)}
+                       </div>
+                       <p className="text-xs text-slate-400 font-mono flex items-center gap-1.5">
+                         {item.code} <span className="w-px h-3 bg-slate-300"></span> <span className="flex items-center gap-0.5 text-slate-500"><User size={10} /> {item.designer}</span>
+                       </p>
+                     </div>
+                  </div>
+               </td>
+               {visibleMetrics.map(key => (
+                 <td key={key} className="px-4 py-4 text-right align-middle">{renderMetricCell(item.metrics[key], RANKING_METRICS.find(m => m.key === key))}</td>
+               ))}
+             </tr>
+           ))}
+         </tbody>
+       </table>
+     </div>
+  </div>
+);
+
+// --- View 3: Creator Analysis ---
+const CreatorLeaderboard = () => {
+  const [mode, setMode] = useState('current_month'); // 'current_month', 'last_month', 'total'
+
+  const currentData = {
+    'current_month': creatorCurrentMonthRank,
+    'last_month': creatorLastMonthRank,
+    'total': creatorTotalRank
+  }[mode];
+
+  const getLabel = (key) => {
+    const prefix = mode === 'current_month' ? '本月' : mode === 'last_month' ? '上月' : '累计';
+    const labels = { gmv: ${prefix}GMV, sales: ${prefix}销量, templateCount: mode === 'total' ? 'S级作品' : ${prefix}新品 };
+    return labels[key] || key;
+  };
+
+  const getIcon = () => {
+    if (mode === 'current_month') return <Flame size={18} className="text-red-500"/>;
+    if (mode === 'last_month') return <History size={18} className="text-blue-500"/>;
+    return <Medal size={18} className="text-yellow-600"/>;
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-full flex flex-col">
+      <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+        <div className="flex items-center gap-4">
+           <h3 className="font-bold text-slate-800 flex items-center gap-2">
+             {getIcon()}
+             设计师排行榜
+           </h3>
+           <div className="bg-slate-200 p-1 rounded-lg flex text-xs font-medium">
+              <button onClick={() => setMode('current_month')} className={px-3 py-1 rounded-md transition-all ${mode === 'current_month' ? 'bg-white shadow text-red-600' : 'text-slate-500 hover:text-slate-700'}}>本月趋势</button>
+              <button onClick={() => setMode('last_month')} className={px-3 py-1 rounded-md transition-all ${mode === 'last_month' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}}>上月排行</button>
+              <button onClick={() => setMode('total')} className={px-3 py-1 rounded-md transition-all ${mode === 'total' ? 'bg-white shadow text-yellow-700' : 'text-slate-500 hover:text-slate-700'}}>历史总榜</button>
+           </div>
+        </div>
+      </div>
+      <div className="overflow-x-auto flex-1">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-slate-50 text-slate-500 font-medium">
+            <tr>
+              <th className="px-6 py-3 w-16 text-center">排名</th>
+              <th className="px-4 py-3">设计师</th>
+              <th className="px-4 py-3 text-right">{getLabel('gmv')}</th>
+              <th className="px-4 py-3 text-right">{getLabel('sales')}</th>
+              <th className="px-4 py-3 text-right">{getLabel('templateCount')}</th>
+              <th className="px-4 py-3 text-center">综合评分</th>
+              {mode !== 'total' && <th className="px-4 py-3 text-right">环比增长</th>}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {currentData.map((c) => (
+              <tr key={c.id} className="hover:bg-slate-50">
+                <td className="px-6 py-3 text-center">
+                   <span className={font-bold text-lg font-mono ${c.rank <= 3 ? (mode === 'total' ? 'text-yellow-600' : 'text-red-500') : 'text-slate-400'}}>{c.rank}</span>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <img src={c.avatar} alt={c.name} className="w-8 h-8 rounded-full border border-slate-200" />
+                    <span className="font-bold text-slate-700">{c.name}</span>
+                  </div>
+                </td>
+                <td className={px-4 py-3 text-right font-mono font-bold ${mode === 'total' ? 'text-slate-700' : 'text-red-600'}}>{formatMoney(c.gmv)}</td>
+                <td className="px-4 py-3 text-right font-mono text-slate-600">{formatNumber(c.sales)}</td>
+                <td className="px-4 py-3 text-right font-mono text-slate-600">{c.templateCount}</td>
+                <td className="px-4 py-3 text-center">{renderScore(c.score)}</td>
+                {mode !== 'total' && (
+                  <td className="px-4 py-3 text-right">
+                     <div className={text-xs flex items-center justify-end font-bold ${c.trend > 0 ? 'text-red-500' : c.trend < 0 ? 'text-green-500' : 'text-slate-400'}}>
+                       {c.trend !== 0 ? (c.trend > 0 ? <TrendingUp size={12} className="mr-1"/> : <TrendingUp size={12} className="mr-1 rotate-180"/>) : null}
+                       {c.trend === 0 ? '-' : ${Math.abs(c.trend)}%}
+                     </div>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+const NewWorksMonitor = () => (
+  <div className="mt-6 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+     <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <h3 className="font-bold text-slate-800 flex items-center gap-2"><Rocket size={18} className="text-orange-500"/> 近14天新品爬坡监控</h3>
+        <button className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-1 rounded">查看全部</button>
+     </div>
+     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+        {creatorNewWorks.map((work) => (
+          <div key={work.id} className="p-4 hover:bg-slate-50 transition-colors group relative overflow-hidden flex flex-col h-full">
+             {/* Status Badge */}
+             <div className={absolute top-2 right-2 px-2 py-0.5 text-[10px] text-white rounded z-10 shadow-sm                 ${work.status === '爆发期' ? 'bg-red-500' : work.status === '爬坡期' ? 'bg-blue-500' : 'bg-slate-400'}}>
+                {work.status}
+             </div>
+
+             {/* Image Preview */}
+             <div className="w-full h-28 rounded-lg overflow-hidden border border-slate-100 mb-3 relative">
+                <img src={work.image} alt={work.title} className="w-full h-full object-cover" />
+             </div>
+
+             <div className="flex justify-between items-start mb-2">
+               <div>
+                  <h4 className="font-bold text-slate-700 text-sm mb-1 truncate max-w-[140px]" title={work.title}>{work.title}</h4>
+                  <p className="text-xs text-slate-400 flex items-center gap-1"><User size={10}/> {work.creator}</p>
+               </div>
+             </div>
+
+             <div className="grid grid-cols-3 gap-2 text-center bg-slate-50 rounded-lg p-2 mb-3 mt-auto">
+                <div><div className="text-[10px] text-slate-400">曝光</div><div className="font-bold text-slate-700 text-xs">{formatNumber(work.exposure)}</div></div>
+                <div><div className="text-[10px] text-slate-400">CTR</div><div className={font-bold text-xs ${work.ctr > 10 ? 'text-green-600' : 'text-slate-700'}}>{work.ctr}%</div></div>
+                <div><div className="text-[10px] text-slate-400">销量</div><div className="font-bold text-slate-700 text-xs">{work.sales}</div></div>
+             </div>
+
+             <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className={h-full rounded-full ${work.status === '爆发期' ? 'bg-red-400' : 'bg-blue-400'}} style={{width: ${Math.random() * 60 + 20}%}}></div>
+             </div>
+          </div>
+        ))}
+     </div>
+     <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-xs text-slate-400 space-y-1">
+        <p className="font-bold text-slate-500 mb-1">指标定义说明：</p>
+        <p>• <span className="font-medium text-blue-600">冷启动期</span>: 发布 3 天内，曝光 < 5000，侧重观察点击率。</p>
+        <p>• <span className="font-medium text-blue-600">爬坡期</span>: 发布 3-7 天，销量增长率 > 10%，侧重观察转化率。</p>
+        <p>• <span className="font-medium text-red-500">爆发期</span>: 发布 14 天内，日均销量 > 50 或 综合评分 > 9.0。</p>
+     </div>
+  </div>
+);
+
+// --- Main App ---
+
+export default function App() {
+  const [viewMode, setViewMode] = useState('report');
+  const [activeTab, setActiveTab] = useState('wedding');
+  const [activeSubTab, setActiveSubTab] = useState('儿女结婚');
+
+  // Top-level state for filters
+  const [clientFilter, setClientFilter] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('near7');
+
+  const [rankingVisibleMetrics, setRankingVisibleMetrics] = useState(['score', 'onlineUsers', 'creations', 'successCount', 'pays', 'gmv', 'payRate']);
+
+  const periods = [
+    { id: 'today', label: '今日' },
+    { id: 'yesterday', label: '昨日' },
+    { id: 'near7', label: '近7天' },
+    { id: 'near30', label: '近30天' },
+    { id: 'thisMonth', label: '本月' },
+    { id: 'lastMonth', label: '上月' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-20 px-6 py-3 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="bg-blue-600 text-white p-1.5 rounded-lg shadow-sm shadow-blue-200"><LayoutDashboard size={20} /></div>
+          <h1 className="text-lg font-bold text-slate-800 tracking-tight">DataCenter</h1>
+          <div className="mx-4 h-6 w-px bg-slate-200"></div>
+
+          <div className="flex bg-slate-100 p-1 rounded-lg overflow-x-auto no-scrollbar">
+            <button onClick={() => setViewMode('report')} className={flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-md transition-all whitespace-nowrap ${viewMode === 'report' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}}><BarChart2 size={16}/> 业务报表</button>
+            <button onClick={() => setViewMode('ranking')} className={flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-md transition-all whitespace-nowrap ${viewMode === 'ranking' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}}><List size={16}/> 商城排序</button>
+            <button onClick={() => setViewMode('creator')} className={flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-md transition-all whitespace-nowrap ${viewMode === 'creator' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}}><UserCheck size={16}/> 创作者分析</button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-sm text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 hidden sm:flex">
+             <Clock size={14}/>
+             <span>数据更新: {viewMode === 'ranking' ? '实时' : '昨日 24:00'}</span>
+          </div>
+          <div className="w-8 h-8 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full flex items-center justify-center text-slate-600 font-bold text-xs border border-white shadow-sm">AD</div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+
+        {/* === View 1: Business Report === */}
+        {viewMode === 'report' && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-6">
+
+            {/* Global Filter Header Row */}
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+               <div>
+                 <h2 className="text-xl font-bold text-slate-800">业务经营概览</h2>
+                 <p className="text-sm text-slate-500 mt-1">查看历史周期内的整体业务表现与意图分布</p>
+               </div>
+
+               <div className="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+                  {/* Client Filter Dropdown */}
+                  <div className="relative group border-r border-slate-200 pr-3">
+                    <select
+                      value={clientFilter}
+                      onChange={(e) => setClientFilter(e.target.value)}
+                      className="appearance-none bg-slate-50 text-slate-700 text-sm font-medium rounded-lg pl-3 pr-8 py-2 hover:bg-slate-100 focus:outline-none cursor-pointer transition-colors"
+                    >
+                      {clientTypes.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                    </select>
+                    <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"/>
+                  </div>
+
+                  {/* Period Filter Dropdown */}
+                  <div className="relative group">
+                    <select
+                      value={selectedPeriod}
+                      onChange={(e) => setSelectedPeriod(e.target.value)}
+                      className="appearance-none bg-slate-50 text-slate-700 text-sm font-medium rounded-lg pl-3 pr-8 py-2 hover:bg-slate-100 focus:outline-none cursor-pointer transition-colors"
+                    >
+                      {periods.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                      <option value="custom">自定义周期...</option>
+                    </select>
+                    <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"/>
+                  </div>
+               </div>
+            </div>
+
+            {/* Expanded Core Metrics Grid (8 items) /}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
+                {/ Row 1 */}
+                <StatCard title="总销售额 (GMV)" value="¥1,560,000" trend={12.5} icon={DollarSign} color="bg-green-500" />
+                <StatCard title="总浏览量 (PV)" value="235,000" trend={-2.4} icon={MousePointer} color="bg-blue-500" />
+                <StatCard title="总创作量" value="54,900" trend={5.8} icon={FileText} color="bg-purple-500" />
+                <StatCard title="付费转化率" value="26.4%" trend={0.8} icon={TrendingUp} color="bg-orange-500" />
+
+                {/* Row 2: New Metrics */}
+                <StatCard title="关键行为率 (编辑)" value="42.8%" trend={1.5} icon={MousePointer2} color="bg-indigo-500" subText="进入编辑器 / 详情页UV" />
+                <StatCard title="平均客单价 (AOV)" value="¥38.5" trend={-0.5} icon={CreditCard} color="bg-teal-500" subText="GMV / 付费用户数" />
+                <StatCard title="LTV 用户价值" value="¥125.0" trend={5.2} icon={Gem} color="bg-rose-500" subText="平均生命周期贡献" />
+                <StatCard title="复购率" value="18.2%" trend={2.1} icon={RefreshCw} color="bg-cyan-500" />
+            </div>
+
+            <IntentReportTable />
+          </div>
+        )}
+
+        {/* === View 2: Store Ranking === /}
+        {viewMode === 'ranking' && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-6">
+             {/ Sticky Header */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden sticky top-20 z-10">
+               <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-2">
+                 <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                    {categories.map((cat) => (
+                      <button key={cat.id} onClick={() => setActiveTab(cat.id)} className={flex flex-col items-center justify-center p-2 rounded-lg transition-all min-w-[64px] ${activeTab === cat.id ? 'bg-white shadow-sm text-blue-600 ring-1 ring-slate-200' : 'text-slate-500 hover:bg-white/60'}}>
+                        <div className={${activeTab === cat.id ? cat.color : 'text-slate-400'}}>{cat.icon}</div>
+                        <span className="text-xs font-medium mt-1">{cat.name}</span>
+                      </button>
+                    ))}
+                 </div>
+               </div>
+               <div className="px-4 py-3 bg-white flex justify-between items-center">
+                   <div className="flex gap-2 flex-wrap">
+                      {subTabs.map((sub, idx) => (<button key={idx} onClick={() => setActiveSubTab(sub)} className={px-3 py-1 text-xs rounded-full transition-colors ${activeSubTab === sub ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}}>{sub}</button>))}
+                   </div>
+                   <div className="text-xs text-slate-400 hidden sm:block">当前展示：{categories.find(c => c.id === activeTab)?.name} / {activeSubTab}</div>
+               </div>
+            </div>
+            <div>
+               <div className="flex items-center justify-between mb-4">
+                 <div className="flex items-center gap-3">
+                   <h2 className="font-bold text-slate-700 flex items-center gap-2"><Layers size={18}/> 商城模板列表</h2>
+                   <div className="group relative flex items-center gap-1 text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded cursor-help">
+                      <Info size={12}/> 统计范围：近3个月
+                      <div className="absolute left-0 bottom-full mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                        数据每日更新，统计过去90天内的累计数据。实时指标除外。
+                      </div>
+                   </div>
+                 </div>
+                 <ColumnSelector definitions={RANKING_METRICS} visibleColumns={rankingVisibleMetrics} onChange={setRankingVisibleMetrics} label="排序指标配置"/>
+               </div>
+               <RankingTable visibleMetrics={rankingVisibleMetrics} />
+            </div>
+          </div>
+        )}
+
+        {/* === View 3: Creator Analysis (Unified) === */}
+        {viewMode === 'creator' && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-6">
+
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+               <div>
+                  <h2 className="text-xl font-bold text-slate-800">内部设计师业绩分析</h2>
+                  <p className="text-sm text-slate-500 mt-1">关注总GMV贡献与近期新品趋势</p>
+               </div>
+            </div>
+
+            {/* Unified Ranking Table */}
+            <div className="h-auto">
+               <CreatorLeaderboard />
+            </div>
+
+            {/* Bottom: New Works Monitor */}
+            <NewWorksMonitor />
+
+          </div>
+        )}
+
+      </main>
+    </div>
+  );
+}

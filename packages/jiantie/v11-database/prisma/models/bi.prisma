@@ -1,0 +1,375 @@
+model BiProductDailyEntity {
+  id           String   @id @default(cuid())
+  /// 应用ID
+  appid        String   @map("appid") @db.VarChar
+  /// 统计日期
+  date         DateTime @db.Date
+  /// 端类型：web、ios、android、wap、miniprogram、other
+  device       String   @default("web") @map("device") @db.VarChar(20)
+  /// 用户数据（UV口径）
+  /// 注册UV（注册独立访客数）
+  register_uv  Int      @default(0) @map("register_uv")
+  /// 活跃UV（活跃独立访客数）
+  active_uv    Int      @default(0) @map("active_uv")
+  /// 拦截UV（被拦截的独立访客数）
+  intercept_uv Int      @default(0) @map("intercept_uv")
+  /// 成功UV（成功完成某操作的独立访客数）
+  success_uv   Int      @default(0) @map("success_uv")
+  /// 订单数据
+  /// 订单数
+  order_count  Int      @default(0) @map("order_count")
+  /// GMV（成交总额）
+  gmv          Decimal  @default(0) @map("gmv") @db.Decimal(10, 2)
+  create_time  DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time  DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@unique([appid, date, device], map: "UQ_product_bi_daily_appid_date_device")
+  @@index([appid], map: "IDX_product_bi_daily_appid")
+  @@index([date], map: "IDX_product_bi_daily_date")
+  @@index([device], map: "IDX_product_bi_daily_device")
+  @@index([appid, date], map: "IDX_product_bi_daily_appid_date")
+  @@index([appid, date, device], map: "IDX_product_bi_daily_appid_date_device")
+  @@index([id], map: "IDX_product_bi_daily_id")
+  @@map("product_bi_daily_entity")
+}
+
+/// 产品BI每日统计实体（DWD明细数据层）
+model BiProductUserTypeDailyEntity {
+  id           String   @id @default(cuid())
+  /// 统计日期
+  date         DateTime @db.Date
+  /// 应用ID
+  appid        String   @map("appid") @db.VarChar
+  /// 端类型：web、ios、android、wap、miniprogram、other
+  device       String   @default("web") @map("device") @db.VarChar(20)
+  /// 用户类型：new（新用户）、old（老用户）
+  user_type    String   @map("user_type") @db.VarChar(20)
+  /// 新增UV（仅对新用户有意义，老用户通常为0）
+  register_uv  Int      @default(0) @map("register_uv")
+  /// 活跃UV
+  active_uv    Int      @default(0) @map("active_uv")
+  /// 点击数据
+  click_pv     Int      @default(0) @map("click_pv")
+  click_uv     Int      @default(0) @map("click_uv")
+  /// 创作数据
+  creation_pv  Int      @default(0) @map("creation_pv")
+  creation_uv  Int      @default(0) @map("creation_uv")
+  /// 成功数据（h5为分享，海报为导出）
+  success_pv   Int      @default(0) @map("success_pv")
+  success_uv   Int      @default(0) @map("success_uv")
+  /// 拦截数据（如VIP拦截）
+  intercept_pv Int      @default(0) @map("intercept_pv")
+  intercept_uv Int      @default(0) @map("intercept_uv")
+  /// 订单数据
+  order_count  Int      @default(0) @map("order_count")
+  gmv          Decimal  @default(0) @map("gmv") @db.Decimal(10, 2)
+  create_time  DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time  DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@unique([appid, date, device, user_type], map: "UQ_product_bi_user_type_daily_appid_date_device_user_type")
+  @@index([appid], map: "IDX_product_bi_user_type_daily_appid")
+  @@index([date], map: "IDX_product_bi_user_type_daily_date")
+  @@index([device], map: "IDX_product_bi_user_type_daily_device")
+  @@index([user_type], map: "IDX_product_bi_user_type_daily_user_type")
+  @@index([appid, date], map: "IDX_product_bi_user_type_daily_appid_date")
+  @@index([appid, date, device], map: "IDX_product_bi_user_type_daily_appid_date_device")
+  @@index([appid, date, device, user_type], map: "IDX_product_bi_user_type_daily_appid_date_device_user_type")
+  @@index([id], map: "IDX_product_bi_user_type_daily_id")
+  @@map("product_bi_user_type_daily_entity")
+}
+
+model BiChannelDailyEntity {
+  id                 String   @id @default(cuid())
+  /// 应用ID
+  appid              String   @map("appid") @db.VarChar
+  /// 渠道标识，例如广告渠道、活动渠道等
+  source             String   @map("channel") @db.VarChar
+  /// 端类型：web、ios、android、wap、miniprogram、other
+  device             String   @default("web") @map("device") @db.VarChar(20)
+  /// 统计日期
+  date               DateTime @db.Date
+  /// 当天新增UV
+  register_uv        Int      @default(0) @map("today_register_uv")
+  /// 累计指标（UV口径，7D 滚动口径：统计当前 date 往前 7 天内的去重人数/汇总数据）
+  /// 点击PV（7D 累计）
+  click_pv_7d        Int      @default(0) @map("click_pv_7d")
+  /// 点击UV（7D 累计）
+  click_uv_7d        Int      @default(0) @map("click_uv_7d")
+  /// 拦截PV（7D 累计）
+  intercept_pv_7d    Int      @default(0) @map("intercept_pv_7d")
+  /// 拦截UV（7D 累计）
+  intercept_uv_7d    Int      @default(0) @map("intercept_uv_7d")
+  /// 成功PV（7D 累计）
+  success_pv_7d      Int      @default(0) @map("success_pv_7d")
+  /// 成功UV（7D 累计）
+  success_uv_7d      Int      @default(0) @map("success_uv_7d")
+  /// 订单量（7D 累计）
+  order_count_7d     Int      @default(0) @map("order_count_7d")
+  /// 成交金额GMV（7D 累计）
+  gmv_7d             Decimal  @default(0) @map("gmv_7d") @db.Decimal(10, 2)
+  /// 创作PV（1D 累计）
+  create_pv_1d       Int      @default(0) @map("create_pv_1d")
+  /// 创作UV（1D 累计）
+  create_uv_1d       Int      @default(0) @map("create_uv_1d")
+  /// 创作PV（7D 累计）
+  create_pv_7d       Int      @default(0) @map("create_pv_7d")
+  /// 创作UV（7D 累计）
+  create_uv_7d       Int      @default(0) @map("create_uv_7d")
+  /// 当日指标（相对于历史累计的增量）
+  /// 当天点击PV
+  click_pv_today     Int      @default(0) @map("click_pv_today")
+  /// 当天点击UV
+  click_uv_today     Int      @default(0) @map("click_uv_today")
+  /// 当天拦截PV
+  intercept_pv_today Int      @default(0) @map("intercept_pv_today")
+  /// 当天拦截UV
+  today_intercept_uv Int      @default(0) @map("today_intercept_uv")
+  /// 当天成功PV
+  success_pv_today   Int      @default(0) @map("success_pv_today")
+  /// 当天成功UV
+  success_uv_today   Int      @default(0) @map("success_uv_today")
+  /// 当天订单量
+  order_count_today  Int      @default(0) @map("order_count_today")
+  /// 当天成交金额GMV
+  gmv_today          Decimal  @default(0) @map("gmv_today") @db.Decimal(10, 2)
+  create_time        DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time        DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@unique([appid, source, device, date], map: "UQ_channel_bi_daily_appid_channel_device_date")
+  @@index([appid], map: "IDX_channel_bi_daily_appid")
+  @@index([source], map: "IDX_channel_bi_daily_channel")
+  @@index([device], map: "IDX_channel_bi_daily_device")
+  @@index([date], map: "IDX_channel_bi_daily_date")
+  @@index([appid, source, date], map: "IDX_channel_bi_daily_appid_channel_date")
+  @@index([appid, source, device, date], map: "IDX_channel_bi_daily_appid_channel_device_date")
+  @@index([id], map: "IDX_channel_bi_daily_id")
+  @@map("channel_bi_daily_entity")
+}
+
+model BiAbtestDailyEntity {
+  id                  String   @id @default(cuid())
+  /// 应用ID
+  appid               String   @map("appid") @db.VarChar
+  /// 端类型：web、ios、android、wap、miniprogram、other
+  device              String   @default("web") @map("device") @db.VarChar(20)
+  /// UID单双号：odd（单号）、even（双号）
+  uid_parity          String   @map("uid_parity") @db.VarChar(10)
+  /// 统计日期
+  date                DateTime @db.Date
+  /// 新增UV
+  register_uv         Int      @default(0) @map("register_uv")
+  /// 当天指标（1天，新用户生命周期口径）
+  /// 当天点击UV（新用户生命周期）
+  click_uv_1d         Int      @default(0) @map("click_uv_1d")
+  /// 当天拦截UV（新用户生命周期）
+  intercept_uv_1d     Int      @default(0) @map("intercept_uv_1d")
+  /// 当天创作UV（新用户生命周期）
+  creation_uv_1d      Int      @default(0) @map("creation_uv_1d")
+  /// 当天成功UV（新用户生命周期）
+  success_uv_1d       Int      @default(0) @map("success_uv_1d")
+  /// 当天订单量（新用户生命周期）
+  order_count_1d      Int      @default(0) @map("order_count_1d")
+  /// 当天成交金额GMV（新用户生命周期）
+  gmv_1d              Decimal  @default(0) @map("gmv_1d") @db.Decimal(10, 2)
+  /// 3天指标（3天累计）
+  /// 3天点击UV
+  click_uv_3d         Int      @default(0) @map("click_uv_3d")
+  /// 3天拦截UV
+  intercept_uv_3d     Int      @default(0) @map("intercept_uv_3d")
+  /// 3天创作UV
+  creation_uv_3d      Int      @default(0) @map("creation_uv_3d")
+  /// 3天成功UV
+  success_uv_3d       Int      @default(0) @map("success_uv_3d")
+  /// 3天订单量
+  order_count_3d      Int      @default(0) @map("order_count_3d")
+  /// 3天成交金额GMV
+  gmv_3d              Decimal  @default(0) @map("gmv_3d") @db.Decimal(10, 2)
+  /// 7天指标（7天累计）
+  /// 7天点击UV
+  click_uv_7d         Int      @default(0) @map("click_uv_7d")
+  /// 7天拦截UV
+  intercept_uv_7d     Int      @default(0) @map("intercept_uv_7d")
+  /// 7天创作UV
+  creation_uv_7d      Int      @default(0) @map("creation_uv_7d")
+  /// 7天成功UV
+  success_uv_7d       Int      @default(0) @map("success_uv_7d")
+  /// 7天订单量
+  order_count_7d      Int      @default(0) @map("order_count_7d")
+  /// 7天成交金额GMV
+  gmv_7d              Decimal  @default(0) @map("gmv_7d") @db.Decimal(10, 2)
+  create_time         DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time         DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 当天活跃口径指标（当天所有活跃用户）
+  /// 当天活跃点击UV
+  active_click_uv     Int      @default(0) @map("active_click_uv")
+  /// 当天活跃创作UV
+  active_creation_uv  Int      @default(0) @map("active_creation_uv")
+  /// 当天活跃成交金额GMV
+  active_gmv          Decimal  @default(0) @map("active_gmv") @db.Decimal(10, 2)
+  /// 当天活跃拦截UV
+  active_intercept_uv Int      @default(0) @map("active_intercept_uv")
+  /// 当天活跃订单量
+  active_order_count  Int      @default(0) @map("active_order_count")
+  /// 当天活跃成功UV
+  active_success_uv   Int      @default(0) @map("active_success_uv")
+
+  @@unique([appid, device, uid_parity, date], map: "UQ_abtest_bi_daily_appid_device_uid_parity_date")
+  @@index([appid], map: "IDX_abtest_bi_daily_appid")
+  @@index([device], map: "IDX_abtest_bi_daily_device")
+  @@index([uid_parity], map: "IDX_abtest_bi_daily_uid_parity")
+  @@index([date], map: "IDX_abtest_bi_daily_date")
+  @@index([appid, date], map: "IDX_abtest_bi_daily_appid_date")
+  @@index([appid, device, date], map: "IDX_abtest_bi_daily_appid_device_date")
+  @@index([appid, device, uid_parity, date], map: "IDX_abtest_bi_daily_appid_device_parity_date")
+  @@index([id], map: "IDX_abtest_bi_daily_id")
+  @@map("abtest_bi_daily_entity")
+}
+
+model BiTemplateChannelDailyEntity {
+  id                String   @id @default(cuid())
+  /// 应用ID
+  appid             String   @map("appid") @db.VarChar
+  /// 渠道标识，例如模板所在的推荐位、列表频道等
+  source            String   @map("channel") @db.VarChar
+  /// 端类型：web、ios、android、wap、miniprogram、other
+  device            String   @default("web") @map("device") @db.VarChar(20)
+  /// 统计日期
+  date              DateTime @db.Date
+  /// 曝光PV/UV（频道曝光）
+  view_pv           Int      @default(0) @map("view_pv")
+  view_uv           Int      @default(0) @map("view_uv")
+  /// 模板点击PV/UV（点击进入模板详情或编辑页）
+  template_click_pv Int      @default(0) @map("template_click_pv")
+  template_click_uv Int      @default(0) @map("template_click_uv")
+  /// 创作PV/UV（发起创作）
+  creation_pv       Int      @default(0) @map("creation_pv")
+  creation_uv       Int      @default(0) @map("creation_uv")
+  /// 拦截PV/UV（如会员拦截）
+  intercept_pv      Int      @default(0) @map("intercept_pv")
+  intercept_uv      Int      @default(0) @map("intercept_uv")
+  /// 成功PV/UV（如分享、导出等成功行为）
+  success_pv        Int      @default(0) @map("success_pv")
+  success_uv        Int      @default(0) @map("success_uv")
+  /// 订单数据
+  order_count       Int      @default(0) @map("order_count")
+  gmv               Decimal  @default(0) @map("gmv") @db.Decimal(10, 2)
+  create_time       DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time       DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@unique([appid, source, device, date], map: "UQ_template_channel_bi_daily_appid_channel_device_date")
+  @@index([appid], map: "IDX_template_channel_bi_daily_appid")
+  @@index([source], map: "IDX_template_channel_bi_daily_channel")
+  @@index([device], map: "IDX_template_channel_bi_daily_device")
+  @@index([date], map: "IDX_template_channel_bi_daily_date")
+  @@index([appid, source, date], map: "IDX_template_channel_bi_daily_appid_channel_date")
+  @@index([appid, source, device, date], map: "IDX_template_channel_bi_daily_appid_channel_device_date")
+  @@index([id], map: "IDX_template_channel_bi_daily_id")
+  @@map("template_channel_bi_daily_entity")
+}
+
+/// 搜索词BI表日dwd表
+model BiSearchTermDailyEntity {
+  id                             String   @id @default(cuid())
+  /// 应用ID
+  appid                          String   @map("appid") @db.VarChar
+  /// 搜索词
+  search_word                    String   @map("search_word") @db.VarChar(200)
+  /// 端类型：web、ios、android、wap、miniprogram、other
+  device                         String   @default("web") @map("device") @db.VarChar(20)
+  /// 统计日期
+  date                           DateTime @db.Date
+  /// 浏览PV/UV
+  view_pv                        Int      @default(0) @map("view_pv")
+  view_uv                        Int      @default(0) @map("view_uv")
+  /// 模板点击PV/UV
+  template_click_pv              Int      @default(0) @map("template_click_pv")
+  template_click_uv              Int      @default(0) @map("template_click_uv")
+  /// 创作PV/UV
+  creation_pv                    Int      @default(0) @map("creation_pv")
+  creation_uv                    Int      @default(0) @map("creation_uv")
+  /// 拦截PV/UV
+  intercept_pv                   Int      @default(0) @map("intercept_pv")
+  intercept_uv                   Int      @default(0) @map("intercept_uv")
+  /// 成功PV/UV
+  success_pv                     Int      @default(0) @map("success_pv")
+  success_uv                     Int      @default(0) @map("success_uv")
+  /// 订单数据
+  order_count                    Int      @default(0) @map("order_count")
+  gmv                            Decimal  @default(0) @map("gmv") @db.Decimal(10, 2)
+  /// 模板数
+  template_count                 Int      @default(0) @map("template_count")
+  /// 老MAKA模板数
+  old_maka_template_count        Int      @default(0) @map("old_maka_template_count")
+  /// 老MAKA模板点击PV/UV
+  old_maka_template_click_pv     Int      @default(0) @map("old_maka_template_click_pv")
+  old_maka_template_click_uv     Int      @default(0) @map("old_maka_template_click_uv")
+  /// 老MAKA模板创作PV/UV
+  old_maka_template_creation_pv  Int      @default(0) @map("old_maka_template_creation_pv")
+  old_maka_template_creation_uv  Int      @default(0) @map("old_maka_template_creation_uv")
+  /// 老MAKA模板拦截PV/UV
+  old_maka_template_intercept_pv Int      @default(0) @map("old_maka_template_intercept_pv")
+  old_maka_template_intercept_uv Int      @default(0) @map("old_maka_template_intercept_uv")
+  /// 老MAKA模板成功PV/UV
+  old_maka_template_success_pv   Int      @default(0) @map("old_maka_template_success_pv")
+  old_maka_template_success_uv   Int      @default(0) @map("old_maka_template_success_uv")
+  create_time                    DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time                    DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@unique([appid, search_word, device, date], map: "UQ_search_term_bi_daily_appid_term_device_date")
+  @@index([appid], map: "IDX_search_term_bi_daily_appid")
+  @@index([search_word], map: "IDX_search_term_bi_daily_search_term")
+  @@index([device], map: "IDX_search_term_bi_daily_device")
+  @@index([date], map: "IDX_search_term_bi_daily_date")
+  @@index([appid, search_word, date], map: "IDX_search_term_bi_daily_appid_term_date")
+  @@index([appid, search_word, device, date], map: "IDX_search_term_bi_daily_appid_term_device_date")
+  @@index([id], map: "IDX_search_term_bi_daily_id")
+  @@map("search_term_bi_daily_entity")
+}
+
+/// 模板BI表日DWD表
+/// 模板id、appid、模板类型：v11｜old、场类型：频道or搜索orOther、曝光pvuv、点击pvuv、创作pvuv、拦截pvuv、成功pvuv、订单量、成交金额gmv
+model BiTemplateDailyEntity {
+  id            String   @id @default(cuid())
+  /// 模板ID，关联到 TemplateEntity
+  template_id   String   @map("template_id") @db.VarChar
+  /// 应用ID
+  appid         String   @map("appid") @db.VarChar
+  /// 统计日期
+  date          DateTime @db.Date
+  /// 模板类型：v11（新版）、old（旧版）
+  template_type String   @map("template_type") @db.VarChar(20)
+  /// 场类型：channel（频道）、search（搜索）、other（其他）
+  scene_type    String   @map("scene_type") @db.VarChar(20)
+  /// 曝光PV/UV（模板曝光）
+  exposure_pv   Int      @default(0) @map("exposure_pv")
+  exposure_uv   Int      @default(0) @map("exposure_uv")
+  /// 点击PV/UV（点击进入模板详情或编辑页）
+  click_pv      Int      @default(0) @map("click_pv")
+  click_uv      Int      @default(0) @map("click_uv")
+  /// 创作PV/UV（发起创作）
+  creation_pv   Int      @default(0) @map("creation_pv")
+  creation_uv   Int      @default(0) @map("creation_uv")
+  /// 拦截PV/UV（如会员拦截）
+  intercept_pv  Int      @default(0) @map("intercept_pv")
+  intercept_uv  Int      @default(0) @map("intercept_uv")
+  /// 成功PV/UV（如分享、导出等成功行为）
+  success_pv    Int      @default(0) @map("success_pv")
+  success_uv    Int      @default(0) @map("success_uv")
+  /// 订单数据
+  order_count   Int      @default(0) @map("order_count")
+  gmv           Decimal  @default(0) @map("gmv") @db.Decimal(10, 2)
+  create_time   DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time   DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@unique([template_id, appid, date, template_type, scene_type], map: "UQ_template_bi_daily_template_appid_date_type_scene")
+  @@index([template_id], map: "IDX_template_bi_daily_template_id")
+  @@index([appid], map: "IDX_template_bi_daily_appid")
+  @@index([date], map: "IDX_template_bi_daily_date")
+  @@index([template_type], map: "IDX_template_bi_daily_template_type")
+  @@index([scene_type], map: "IDX_template_bi_daily_scene_type")
+  @@index([template_id, date], map: "IDX_template_bi_daily_template_date")
+  @@index([appid, date], map: "IDX_template_bi_daily_appid_date")
+  @@index([template_id, appid, date], map: "IDX_template_bi_daily_template_appid_date")
+  @@index([id], map: "IDX_template_bi_daily_id")
+  @@map("template_bi_daily_entity")
+}

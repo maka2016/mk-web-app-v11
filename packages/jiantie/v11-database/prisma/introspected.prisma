@@ -1,0 +1,29 @@
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model template_ai_vectors {
+  template_id String
+  appid       String
+  meta        Json?
+  embedding   Unsupported("vector")?
+  created_at  DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?              @default(now()) @db.Timestamptz(6)
+
+  @@id([template_id, appid])
+  @@index([appid])
+  @@index([embedding])
+  @@index([template_id])
+}
+
+model works_ai_vectors {
+  works_id   String                 @id
+  uid        BigInt
+  appid      String?
+  meta       Json?
+  embedding  Unsupported("vector")?
+  created_at DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at DateTime?              @default(now()) @db.Timestamptz(6)
+
+  @@index([appid])
+  @@index([embedding])
+  @@index([meta], map: "works_ai_vectors_meta_gin_idx", type: Gin)
+  @@index([uid])
+}

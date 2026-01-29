@@ -1,0 +1,114 @@
+{
+  "_version": 17,
+  "pageSetting": {
+    "paginAnimateSetting": {
+      "autoPlay": false,
+      "indicator": "slim",
+      "pageNumber": "none",
+      "pageTurningEffect": "layer",
+      "autoPlayTime": 3,
+      "disableManualPageTurning": false
+    }
+  },
+  "canvasData": {
+    "width": 375,
+    "height": 738,
+    "visualHeight": 738,
+    "content": {
+      "pages": [
+        {
+          "id": "GiSa43ezk7TAYMsnFxX4DRmH2chtymhr",
+          "layers": [
+            {
+              "type": "element",
+              "attrs": {
+                "ossPath": "user/605434319/timages/1760630710017.png",
+                "version": 1,
+                "baseW": 376.4421258396915,
+                "baseH": 736.8227209768896,
+                "orgWidth": 750,
+                "orgHeight": 1468,
+                "borderRadius": 0,
+                "cropData": {
+                  "left": 0,
+                  "top": 0,
+                  "width": 376.4421258396915,
+                  "height": 736.8227209768892
+                },
+                "materialId": 137101053
+              },
+              "elementRef": "MkPicture",
+              "elemId": "HHmdychYKv"
+            }
+          ],
+          "background": {
+            "bgcolor": "rgba(250,250,250,1)",
+            "bgpic": "",
+            "bgpicleft": "0",
+            "bgpictop": "0",
+            "bgpicwidth": "640",
+            "opacity": 1
+          },
+          "width": 375,
+          "height": 738
+        }
+      ],
+      "fixedPages": { "layers": [] },
+      "fixedLayer": [
+        {
+          "elementRef": "MkWatermark",
+          "elemId": "iqkyFGbAP_",
+          "attrs": [],
+          "type": "element"
+        }
+      ]
+    },
+    "actions": [],
+    "music": {
+      "title": "日出",
+      "materialId": "M_loc24lg4",
+      "type": "MAKA",
+      "duration": 167,
+      "url": "https://res.maka.im/materialStore/yinyue/231228/M_loc24lg4.mp3",
+      "preview": "https://res.maka.im/materialStore/yinyue/231228/M_loc24lg4.jpg"
+    },
+    "__unitProcessed": 9
+  },
+  "positionLink": {
+    "iqkyFGbAP_": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 99999,
+      "mount": true,
+      "x": 297.6,
+      "y": 528,
+      "width": 75,
+      "height": 150
+    },
+    "HHmdychYKv": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 100000,
+      "mount": true,
+      "x": -0.7265002030159451,
+      "y": 0.590998380462338,
+      "width": 376.4421258396915,
+      "height": 736.8227209768892,
+      "action": {
+        "type": "link",
+        "actionAttrs": {
+          "value": "http://lxy1s9ro.azaqobp3iodzyye9.wafi.66or.cn/app/JAfUldejuH/home"
+        },
+        "enable": true
+      }
+    }
+  },
+  "meta": { "originCanvasScale": { "width": 375, "height": 738 } },
+  "pageId": "YXTYOV9UW605434319"
+}

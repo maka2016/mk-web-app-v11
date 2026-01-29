@@ -1,0 +1,273 @@
+.home {
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-color: #fff;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  height: 100%;
+  background-color: #fff;
+  background-size: 100% calc(128px + var(--safe-area-inset-top));
+
+  .banner {
+    background-color: #fff;
+    padding-top: var(--safe-area-inset-top);
+    background-size: 100% 180px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .searchInput {
+    padding: 12px 12px 0;
+
+    .input {
+      padding: 7px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0px 4px 12px -2px #0000000f;
+
+      .icon {
+        display: flex;
+        align-items: center;
+
+        span {
+          margin-left: 8px;
+          color: rgba(0, 0, 0, 0.45);
+          font-size: 14px;
+          font-weight: 400;
+          line-height: 22px;
+        }
+      }
+
+      .btn {
+        color: rgba(0, 0, 0, 0.88);
+        text-align: center;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 22px;
+      }
+    }
+  }
+
+  .channel {
+    display: flex;
+    align-items: flex-end;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 12px 12px 8px;
+    gap: 20px;
+    transition: transform 0.3s ease-in-out;
+    transform: translateY(0);
+    background-size: cover;
+    background-position-x: 0;
+    background-position-y: calc(0px - var(--safe-area-inset-top));
+    background-color: #fff;
+    flex-shrink: 0;
+    position: sticky;
+    top: var(--safe-area-inset-top);
+    z-index: 2;
+
+    .channelItem {
+      position: relative;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: #f4f4f5;
+        border: 1px solid #ffffff;
+        box-shadow:
+          0px 1px 3px 0px #0000001a,
+          0px 1px 2px -1px #0000001a;
+      }
+
+      .name {
+        margin-top: 4px;
+        font-family: PingFang SC;
+        font-weight: var(--font-semibold);
+        font-size: 16px;
+        line-height: 24px;
+        text-align: center;
+        color: #09090b;
+        text-shadow:
+          0px 1px 3px #0000001a,
+          0px 1px 2px #0000001a;
+      }
+
+      &.active {
+        .icon {
+          width: 40px;
+          height: 40px;
+          background-color: var(--theme-color);
+          border-color: var(--theme-color);
+          box-shadow:
+            0px 2px 4px -2px #0000001a,
+            0px 4px 6px -1px #0000001a;
+        }
+
+        .name {
+          color: var(--theme-color);
+          text-shadow:
+            0px 2px 4px #0000001a,
+            0px 4px 6px #0000001a;
+        }
+
+        &::after {
+          position: absolute;
+          bottom: -9px;
+          left: 50%;
+          transform: translateX(-50%);
+          content: '';
+          width: 16px;
+          height: 6px;
+          background-image: url(https://img2.maka.im/cdn/webstore7/assets/mobile_tab_arrow.png);
+          background-size: contain;
+          background-repeat: no-repeat;
+        }
+      }
+    }
+
+    &.huiyao {
+      padding: 12px 12px 8px;
+      border-bottom: 0.5px solid #e4e4e7;
+
+      .channelItem {
+        &.active {
+          .icon {
+            box-shadow: none;
+          }
+        }
+      }
+    }
+  }
+
+  .subTabsContainer {
+    position: sticky;
+    top: calc(var(--safe-area-inset-top) + 88px);
+    z-index: 2;
+    background-color: #fff;
+    margin-bottom: 12px;
+
+    .subTabs {
+      display: flex;
+      align-items: center;
+      overflow-x: auto;
+      overflow-y: hidden;
+      gap: 24px;
+      padding: 3px 12px 0;
+      border-radius: 12px 12px 0 0;
+      background-color: #fff;
+      box-shadow: 0 1px 0 0 #0000000f;
+
+      .subTabItem {
+        padding: 8px 0;
+        font-family: PingFang SC;
+        font-weight: 600;
+        font-style: Semibold;
+        font-size: 14px;
+        line-height: 22px;
+        letter-spacing: 0px;
+        vertical-align: middle;
+        color: rgba(0, 0, 0, 0.88);
+        flex-shrink: 0;
+
+        &.active {
+          color: var(--theme-color);
+          border-bottom: 2px solid var(--theme-color);
+        }
+      }
+    }
+  }
+
+  .tutorial {
+    flex-shrink: 0;
+    padding: 12px 12px 0;
+
+    .content {
+      position: relative;
+      height: 48px;
+      background: linear-gradient(
+        90deg,
+        #ffefaa 0%,
+        #ffd0e2 18.3%,
+        #eae3ff 59.38%,
+        #cde9ff 77.4%,
+        #c3d5ff 100%
+      );
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px 0 16px;
+
+      img {
+        height: 20px;
+        width: auto;
+        object-fit: contain;
+      }
+
+      .tutorialBtn {
+        flex-shrink: 0;
+        white-space: nowrap;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 8px 0 12px;
+        border-radius: 100px;
+        color: #fff;
+        font-family: PingFang SC;
+        font-weight: var(--font-semibold);
+        font-style: Semibold;
+        font-size: 13px;
+        line-height: 28px;
+        background-color: #09090b;
+      }
+
+      iconpark-icon[name='guanbi'] {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+      }
+    }
+  }
+
+  &.xueji {
+    .channel {
+      padding: 12px 12px 8px;
+      border-bottom: 0.5px solid #e4e4e7;
+
+      .channelItem {
+        .icon {
+          background: #f4f4f5;
+        }
+
+        .name {
+          color: #09090b;
+        }
+
+        &.active {
+          .icon {
+            box-shadow: none;
+            background: #fde272;
+          }
+
+          .name {
+            color: #09090b;
+          }
+        }
+      }
+    }
+  }
+}

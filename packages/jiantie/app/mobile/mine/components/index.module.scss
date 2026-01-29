@@ -1,0 +1,423 @@
+.mine {
+  // height: 100vh;
+  // height: 100dvh;
+  height: calc(100vh - 48px);
+  height: calc(100dvh - 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 16px;
+  overflow-y: auto;
+  height: calc(100vh - 42px);
+  background-color: #fff;
+  padding-top: var(--safe-area-inset-top);
+
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 0 0;
+
+    .avatar {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid #0000000f;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    .userInfo {
+      flex: 1;
+      overflow: hidden;
+
+      .name {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: var(--font-semibold);
+        font-size: 18px;
+        line-height: 26px;
+        color: rgba(0, 0, 0, 0.88);
+
+        span {
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+        }
+      }
+
+      .vipRole {
+        margin-right: 4px;
+        height: 18px;
+        padding: 0 6px;
+        background-color: #fed4a5;
+        border-radius: 100px;
+        font-family: PingFang SC;
+        font-weight: var(--font-semibold);
+        font-size: 10px;
+        line-height: 18px;
+        color: #652318;
+      }
+
+      .uid {
+        display: flex;
+        align-items: center;
+        font-weight: 400;
+        font-size: 11px;
+        line-height: 15.4px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    .vipBtn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 30px;
+      background: linear-gradient(100.86deg, #7d4620 9.32%, #43230f 60.15%);
+
+      border-radius: 25px;
+      padding: 0 8px;
+      font-weight: var(--font-semibold);
+      font-size: 12px;
+      line-height: 30px;
+      color: #ffd584;
+
+      img {
+        width: 16px;
+        height: 16px;
+        margin-right: 2px;
+      }
+    }
+
+    .template {
+      padding: 5.5px 8px;
+      background-color: #fff;
+      box-shadow: 0px 4px 12px -2px #4b4b4b0f;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+
+      img {
+        width: 16px;
+        height: 16px;
+      }
+
+      span {
+        font-weight: var(--font-semibold);
+        font-size: 10px;
+        line-height: 100%;
+        letter-spacing: 0px;
+        color: #000;
+      }
+    }
+
+    .setting {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .vipInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background-color: #e6ebf0;
+    background-image: url('https://img2.maka.im/cdn/webstore10/jiantie/mine_bg_base.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+
+    .vipName {
+      font-family: PingFang SC;
+      font-weight: var(--font-semibold);
+      font-size: 16px;
+      line-height: 24px;
+      color: #09090b;
+    }
+
+    .endTime {
+      font-family: PingFang SC;
+      font-weight: 400;
+      font-size: 11px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    .vipBtn {
+      height: 26px;
+      min-width: 64px;
+      padding: 0 12px;
+      background: linear-gradient(90deg, #fff0cc 0%, #ffd58f 100%);
+      // border: 1px solid;
+      // border-image-source: linear-gradient(90deg, #F7D4A3 0%, #FED396 100%);
+      border-radius: 40px;
+      color: #7f4d22;
+      font-family: PingFang SC;
+      font-weight: var(--font-semibold);
+      font-size: 12px;
+      line-height: 26px;
+      text-align: center;
+    }
+
+    .worksLimit {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 8px;
+      border-top: 0.5px solid #d3dee9;
+      font-family: PingFang SC;
+      font-weight: var(--font-semibold);
+      font-size: 11px;
+      line-height: 16px;
+      color: rgba(0, 0, 0, 0.6);
+
+      .num {
+        color: #09090b;
+      }
+    }
+
+    .vipInfoList {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .vipInfoItem {
+        font-family: PingFang SC;
+        font-weight: var(--font-semibold);
+        font-size: 11px;
+        line-height: 16px;
+        text-align: center;
+        color: #4c555c;
+        white-space: nowrap;
+      }
+
+      .line {
+        width: 1px;
+        height: 10px;
+        background-color: #d3dee9;
+      }
+    }
+
+    .vipUpgrade {
+      background: linear-gradient(91.47deg, #ffe2c2 0.45%, #ffe4b5 100.28%);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      color: #7f4d22;
+      border-radius: 10px;
+
+      .tit {
+        font-family: PingFang SC;
+        font-weight: var(--font-semibold);
+        font-size: 13px;
+        line-height: 20px;
+        color: #7f4d22;
+      }
+
+      .desc {
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      .btnUpgrade {
+        background-color: #fff;
+        border-radius: 6px;
+        color: #7f4d22;
+        font-family: PingFang SC;
+        font-weight: var(--font-semibold);
+        font-size: 12px;
+        line-height: 24px;
+        height: 24px;
+        padding: 0 8px;
+      }
+    }
+
+    &.vip {
+      background-image: url('https://img2.maka.im/cdn/webstore10/jiantie/mine_bg_vip.png');
+
+      .vipInfoList {
+        .line {
+          background-color: #efe6d1;
+        }
+      }
+    }
+
+    &.svip {
+      background-image: url('https://img2.maka.im/cdn/webstore10/jiantie/mine_bg_svip.png');
+
+      .vipName,
+      .endTime {
+        color: #f2f0e7;
+      }
+
+      .worksLimit {
+        color: #d8d0bf;
+
+        .num {
+          color: #f2f0e7;
+        }
+      }
+
+      .vipInfoList {
+        .vipInfoItem {
+          color: #d8d0bf;
+        }
+
+        .line {
+          background-color: #d8d0bf;
+        }
+      }
+    }
+  }
+
+  .menus {
+    border: 1px solid #e4e4e7;
+    border-radius: 10px;
+
+    .menusTitle {
+      padding: 12px 16px 8px;
+      font-family: PingFang SC;
+      font-weight: var(--font-semibold);
+      font-size: 16px;
+      line-height: 24px;
+      color: #09090b;
+    }
+
+    .menuItem {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #e4e4e7;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      iconpark-icon {
+        color: #71717a !important;
+      }
+
+      .tit {
+        font-weight: var(--font-semibold);
+        font-size: 14px;
+        line-height: 20px;
+        color: #09090b;
+      }
+
+      .desc {
+        font-family: PingFang SC;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 18px;
+
+        color: #00000099;
+      }
+
+      .red {
+        color: #ef4444 !important;
+      }
+
+      .loginid {
+        border: 1px solid #e4e4e7;
+        border-radius: 100px;
+        height: 22px;
+        padding: 0 8px;
+        font-family: PingFang SC;
+        font-weight: var(--font-semibold);
+        font-size: 12px;
+        line-height: 22px;
+        text-align: center;
+        color: #09090b;
+      }
+
+      &.brand {
+        background: linear-gradient(
+          90deg,
+          rgba(237, 238, 255, 0.5) 0%,
+          rgba(255, 207, 249, 0.5) 100%
+        );
+
+        iconpark-icon[name='ai-magic'] {
+          color: #3358d4 !important;
+        }
+
+        .tit {
+          color: #3358d4;
+          display: flex;
+          align-items: center;
+
+          .tag {
+            margin-left: 4px;
+            padding: 0px 8px;
+            height: 16px;
+            font-family: PingFang SC;
+            font-weight: var(--font-semibold);
+            font-size: 10px;
+            line-height: 16px;
+            letter-spacing: 0px;
+            text-align: center;
+            color: #fff;
+            background-color: #ff573e;
+            border-radius: 100px;
+          }
+        }
+      }
+    }
+  }
+
+  &.jiantie {
+    background-image: url('https://img1.maka.im/cdn/webstore10/jiantie/mine_bg_v3.png');
+    background-size: 100% 243px;
+    background-repeat: no-repeat;
+  }
+
+  &.xueji {
+    background-image: url('https://img1.maka.im/cdn/webstore10/xueji/mine_bg.png');
+    background-size: 100% 280px;
+    background-repeat: no-repeat;
+  }
+
+  &.huiyao {
+  }
+}
+
+.logoutDialog {
+  padding: 16px 16px 44px;
+
+  .title {
+    font-family: PingFang SC;
+    font-weight: var(--font-semibold);
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0%;
+    text-align: center;
+    vertical-align: middle;
+    color: rgba(0, 0, 0, 0.88);
+    margin-bottom: 20px;
+  }
+
+  .close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+}

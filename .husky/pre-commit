@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 确保 PATH 包含常见的可执行文件路径
+export PATH="$PATH:/usr/local/bin:$HOME/.local/bin"
+
+pnpm lint-staged

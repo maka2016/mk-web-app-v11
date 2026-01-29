@@ -1,0 +1,140 @@
+.templateItem {
+  position: relative;
+  aspect-ratio: 9/16;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 0.5px solid #e4e4e7;
+  box-shadow: 0px 1px 2px 0px #0000000d;
+
+  .cover {
+    z-index: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: drop-shadow(0px 0px 4px rgba(0, 0, 0, 0.1));
+    border-radius: 6px;
+  }
+
+  .coverMh {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    width: 120%;
+    height: 120%;
+    background-size: cover;
+    filter: blur(8px) brightness(0.9);
+    background-repeat: no-repeat;
+  }
+
+  .name {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(29, 29, 29, 0) 0%,
+      rgba(29, 29, 29, 0.5) 100%
+    );
+    height: 36px;
+    padding: 12px 0 4px;
+    font-weight: var(--font-semibold);
+    font-size: 12px;
+    line-height: 20px;
+    text-shadow: 0px 2px 2px 0px #00000066;
+    color: #fff;
+    text-align: center;
+  }
+
+  .vipTag {
+    position: absolute;
+    right: 0;
+    top: 0;
+    background-color: #fde272;
+    color: #a16207;
+    border-radius: 0 0 0 6px;
+    z-index: 1;
+    font-weight: var(--font-semibold);
+    font-size: 10px;
+    line-height: 12px;
+    padding: 2px 4px;
+
+    &.svip {
+      background-color: #09090b;
+      color: #cbc0aa;
+    }
+  }
+
+  .templateInfo {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 24px;
+    background: linear-gradient(
+      180deg,
+      rgba(102, 102, 102, 0) 21.15%,
+      #665b5b 100%
+    );
+    z-index: 1;
+    padding: 4px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    .spec {
+      font-family: PingFang SC;
+      font-weight: var(--font-semibold);
+      font-style: Semibold;
+      font-size: 10px;
+      line-height: 12px;
+      color: #fff;
+    }
+  }
+
+  .new {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: linear-gradient(98.14deg, #ffe768 14.45%, #ffbe00 120%);
+    border: 1px solid;
+    border-image-source: linear-gradient(
+      217.27deg,
+      rgba(255, 255, 255, 0.55) -9.02%,
+      rgba(255, 255, 255, 0) 53.03%
+    );
+    border-radius: 0 6px 0 6px;
+    height: 16px;
+    line-height: 16px;
+    font-weight: var(--font-semibold);
+    font-size: 10px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a16207;
+    z-index: 1;
+  }
+
+  .onlySpec {
+    position: absolute;
+    z-index: 1;
+    bottom: 4px;
+    left: 4px;
+    background-color: rgba(0, 0, 0, 0.45);
+    border-radius: 6px;
+    height: 20px;
+    padding: 0 6px;
+    font-family: PingFang SC;
+    font-weight: var(--font-semibold);
+    font-size: 12px;
+    line-height: 20px;
+    text-align: center;
+    color: #fff;
+  }
+}

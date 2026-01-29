@@ -1,0 +1,56 @@
+/// 异步任务实体
+model AsyncTaskEntity {
+  id             String              @id @default(cuid())
+  task_type      AsyncTaskTypeEnum   @map("task_type")
+  status         AsyncTaskStatusEnum @default(pending) @map("status")
+  /// 任务输入参数（JSON格式）
+  input_data     Json                @map("input_data")
+  /// 任务输出结果（JSON格式）
+  output_data    Json?               @map("output_data")
+  /// 错误信息（失败时）
+  error_message  String?             @map("error_message")
+  /// 进度信息（JSON格式，包含 total, completed, failed, current 等）
+  progress       Json?               @map("progress")
+  /// 创建人UID
+  created_by_uid Int?                @map("created_by_uid")
+  /// 开始处理时间
+  started_at     DateTime?           @map("started_at") @db.Timestamptz(6)
+  /// 完成时间
+  completed_at   DateTime?           @map("completed_at") @db.Timestamptz(6)
+  /// 时间戳
+  create_time    DateTime            @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time    DateTime            @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 任务名称
+  task_name      String              @map("task_name")
+
+  @@index([task_type], map: "IDX_async_task_task_type")
+  @@index([status], map: "IDX_async_task_status")
+  @@index([created_by_uid], map: "IDX_async_task_created_by_uid")
+  @@index([create_time], map: "IDX_async_task_create_time")
+  @@index([id], map: "IDX_async_task_id")
+  @@map("async_task_entity")
+}
+
+/// 异步任务类型枚举
+enum AsyncTaskTypeEnum {
+  /// 批量生成封面
+  batch_generate_covers
+  /// 按日期批量重新生成封面
+  batch_regenerate_covers_by_date
+
+  @@map("async_task_type_enum")
+}
+
+/// 异步任务状态枚举
+enum AsyncTaskStatusEnum {
+  /// 待处理
+  pending
+  /// 处理中
+  processing
+  /// 已完成
+  completed
+  /// 失败
+  failed
+
+  @@map("async_task_status_enum")
+}

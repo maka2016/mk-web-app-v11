@@ -1,0 +1,72 @@
+/// SLS 作品实时 Session 数据实体 - 存储3天的实时session数据
+model SlsWorksSessionEntity {
+  id          String   @id @default(cuid())
+  /// 作品ID（不建立外键约束）
+  works_id    String   @map("works_id") @db.VarChar
+  /// Session ID
+  session_id  String   @map("session_id") @db.VarChar
+  /// 用户标识ID
+  distinct_id String?  @map("distinct_id") @db.VarChar
+  /// Session数据（JSON格式）
+  data        Json     @map("data")
+  /// 额外的元数据
+  metadata    Json?    @map("metadata")
+  /// 开始时间
+  start_time  DateTime @map("start_time") @db.Timestamptz(6)
+  /// 结束时间
+  end_time    DateTime @map("end_time") @db.Timestamptz(6)
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@index([works_id], map: "IDX_sls_works_session_works_id")
+  @@index([session_id], map: "IDX_sls_works_session_session_id")
+  @@index([distinct_id], map: "IDX_sls_works_session_distinct_id")
+  @@index([create_time], map: "IDX_sls_works_session_create_time")
+  @@index([works_id, create_time], map: "IDX_sls_works_session_works_time")
+  @@index([id], map: "IDX_sls_works_session_id")
+  @@map("sls_works_session_entity")
+}
+
+model SlsWorksDailyStatisticsEntity {
+  id          String   @id @default(cuid())
+  /// 作品ID（不建立外键约束）
+  works_id    String   @map("works_id") @db.VarChar
+  /// 统计日期
+  date        DateTime @db.Date
+  /// 查看PV
+  viewer_pv   Int      @default(0) @map("viewer_pv")
+  /// 查看UV
+  viewer_uv   Int      @default(0) @map("viewer_uv")
+  /// 统计数据（JSON格式）
+  data        Json     @map("data")
+  /// 额外的元数据
+  metadata    Json?    @map("metadata")
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@unique([works_id, date], map: "UQ_sls_works_daily_statistics_works_date")
+  @@index([works_id], map: "IDX_sls_works_daily_statistics_works_id")
+  @@index([date], map: "IDX_sls_works_daily_statistics_date")
+  @@index([works_id, date], map: "IDX_sls_works_daily_statistics_works_date")
+  @@map("sls_works_daily_statistics_entity")
+}
+
+/// SLS 作品累计 PV/UV 数据实体 - 存储每个作品的累计访问数据
+model SlsWorksCumulativePvUvEntity {
+  id          String   @id @default(cuid())
+  /// 作品ID（不建立外键约束）
+  works_id    String   @unique(map: "UQ_sls_works_cumulative_pv_uv_works_id") @map("works_id") @db.VarChar
+  /// 累计PV
+  pv          Int      @default(0) @map("pv")
+  /// 累计UV
+  uv          Int      @default(0) @map("uv")
+  /// 统计数据（JSON格式）
+  data        Json     @default("{}") @map("data")
+  /// 额外的元数据
+  metadata    Json?    @default("{}") @map("metadata")
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@index([works_id], map: "IDX_sls_works_cumulative_pv_uv_works_id")
+  @@map("sls_works_cumulative_pv_uv_entity")
+}

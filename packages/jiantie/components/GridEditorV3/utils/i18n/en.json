@@ -1,0 +1,14 @@
+{
+  "replaceImage": "Replace Image",
+  "adjustImage": "Adjust Image",
+  "zoomIn": "Zoom In",
+  "zoomOut": "Zoom Out",
+  "removeBg": "BG Removal",
+  "removeBgTip": "Image recognition and matting are in progress...",
+  "crop": "Crop",
+  "reset": "Reset",
+  "done": "Done",
+  "cancel": "Cancel",
+  "flipHorizontal": "Flip Horizontal",
+  "rotate": "Rotate"
+}

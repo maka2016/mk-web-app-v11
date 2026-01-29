@@ -1,0 +1,61 @@
+/// 广告点击回调数据实体 - 存储广告平台的点击回调数据
+model AdClickCallbackEntity {
+  id                        String                    @id @default(cuid())
+  /// 广告平台标识，如 "gdt"
+  platform                  String                    @db.VarChar
+  /// 点击ID
+  click_id                  String                    @map("click_id") @db.VarChar
+  /// 曝光 ID（用于将曝光与后续点击/转化进行关联），来自广告平台回调的 impression_id
+  impression_id             String?                   @map("impression_id") @db.VarChar
+  /// 回调参数
+  callback                  String?                   @db.VarChar
+  /// 其他回调数据（JSON格式）
+  data                      Json                      @default("{}") @map("data")
+  /// 原始URL查询字符串
+  raw_query                 String                    @map("raw_query")
+  create_time               DateTime                  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time               DateTime                  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 归因数据（JSON格式）
+  attribution_data          Json?                     @map("attribution_data")
+  /// 应用ID
+  appid                     String?                   @map("appid") @db.VarChar
+  adConversionEventEntities AdConversionEventEntity[]
+
+  @@index([click_id], map: "IDX_ad_click_callback_click_id")
+  @@index([impression_id], map: "IDX_ad_click_callback_impression_id")
+  @@index([platform], map: "IDX_ad_click_callback_platform")
+  @@index([id], map: "IDX_ad_click_callback_id")
+  @@map("ad_click_callback_entity")
+}
+
+/// 广告归因转化事件实体 - 存储内部转化事件并用于后续上报广告平台
+model AdConversionEventEntity {
+  id            String                 @id @default(cuid())
+  /// 事件名，例如 register、pay_success 等
+  event         String                 @db.VarChar
+  /// 业务 UID（简帖用户 ID）
+  uid           Int                    @map("uid")
+  /// 事件参数，原样存储用于后续上报
+  data          Json                   @default("{}") @map("data")
+  /// 关联的广告点击事件ID，可选（例如来自 AdClickCallbackEntity.id）
+  ad_event_id   String?                @map("ad_event_id")
+  /// 预留的广告平台标识，例如 gdt、toutiao 等（可为空，视 data 中实际字段而定）
+  platform      String?                @db.VarChar
+  /// 预留的上报状态：pending、success、failed 等
+  report_status String                 @default("pending") @map("report_status") @db.VarChar
+  /// 预留的上报响应或错误信息
+  report_result String?                @map("report_result")
+  create_time   DateTime               @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time   DateTime               @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 应用ID
+  appid         String?                @map("appid") @db.VarChar
+  ad_event      AdClickCallbackEntity? @relation(fields: [ad_event_id], references: [id])
+
+  @@index([uid], map: "IDX_ad_conversion_event_uid")
+  @@index([event], map: "IDX_ad_conversion_event_event")
+  @@index([platform], map: "IDX_ad_conversion_event_platform")
+  @@index([report_status], map: "IDX_ad_conversion_event_report_status")
+  @@index([ad_event_id], map: "IDX_ad_conversion_event_ad_event_id")
+  @@index([id], map: "IDX_ad_conversion_event_id")
+  @@map("ad_conversion_event_entity")
+}

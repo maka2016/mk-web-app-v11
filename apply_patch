@@ -1,0 +1,12 @@
+*** Update File: /Users/lilin/workspace/mk-web-app-v11/packages/jiantie/services/shipment.ts
+@@
+-
+-/**
++import type { Prisma } from '@mk/jiantie/v11-database/generated/client/client';
++
++/**
+  * 发货服务
+  *
+  * 根据订单的商品配置和 trace_metadata（可能包含作品id），
+  * 为用户发放有效期角色或有效期资源。
+  */

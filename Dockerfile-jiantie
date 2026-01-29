@@ -1,0 +1,79 @@
+FROM svc.maka.mobi:84/base/node:22-alpine as base
+
+# 安装 pnpm
+RUN npm config set registry https://registry.npmmirror.com
+RUN npm install -g pnpm
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+FROM base AS builder
+WORKDIR /app
+ARG BUILD_ENV
+ARG APP_ID
+ARG RC_DB_URL
+COPY . .
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+ENV ENV=${BUILD_ENV:-test} \
+APP_ID=${APP_ID:-jiantie} \
+PREFIX='https://res.jiantieapp.com/'
+
+RUN pnpm run -F @mk/jiantie build
+
+FROM base AS jiantie
+RUN apk add --no-cache tzdata
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+WORKDIR /app
+
+COPY --from=builder /app/packages/jiantie/public ./packages/jiantie/public
+# 仅复制构建产物和node_modules
+COPY --from=builder /app/packages/jiantie/.next/standalone ./
+COPY --from=builder /app/packages/jiantie/.next/static ./packages/jiantie/.next/static
+
+# Build arguments
+ARG BUILD_ENV
+ARG APP_ID
+ARG DATABASE_URL
+ARG ALIYUN_AK_ID
+ARG ALIYUN_AK_SECRET
+ARG OSS_MAIN_BUCKET
+ARG OSS_LAN_ENDPOINT
+ARG OSS_REGION
+ARG STS_ROLE_ARN
+ARG EMBENDED_APIKEY
+ARG EMBENDED_HOST
+ARG EMBENDED_MODEL
+ARG SEARCHDB_URL
+ARG RC_DB_URL
+ARG SLS_ACCESS_KEY_ID
+ARG SLS_ACCESS_KEY_SECRET
+
+
+# Environment variables
+ENV ENV=${BUILD_ENV:-test} \
+    APP_ID=jiantie \
+    PREFIX='https://res.jiantieapp.com/' \
+    PORT=3000 \
+    SERVICE_NAME=mk-jiantie-fs \
+    DATABASE_URL=${DATABASE_URL} \
+    PF_DATABASE_URL=${PF_DATABASE_URL} \
+    ALIYUN_AK_ID=${ALIYUN_AK_ID} \
+    ALIYUN_AK_SECRET=${ALIYUN_AK_SECRET} \
+    OSS_MAIN_BUCKET=${OSS_MAIN_BUCKET} \
+    OSS_LAN_ENDPOINT=${OSS_LAN_ENDPOINT} \
+    OSS_REGION=${OSS_REGION} \
+    STS_ROLE_ARN=${STS_ROLE_ARN} \
+    EMBENDED_APIKEY=${EMBENDED_APIKEY} \
+    EMBENDED_HOST=${EMBENDED_HOST} \
+    EMBENDED_MODEL=${EMBENDED_MODEL} \
+    SEARCHDB_URL=${SEARCHDB_URL} \
+    RC_DB_URL=${RC_DB_URL} \
+    SLS_ACCESS_KEY_ID=${SLS_ACCESS_KEY_ID} \
+    SLS_ACCESS_KEY_SECRET={SLS_ACCESS_KEY_ID} \
+    SLS_ENDPOINT="cn-beijing.log.aliyuncs.com" \
+    SLS_PROJECT="v11-app-logs" \
+    SLS_LOGSTORE="v11-app-logs"
+
+
+CMD [ "node", "packages/jiantie/server.js" ]
