@@ -1,0 +1,701 @@
+.vipModal {
+  position: relative;
+  height: 664px;
+  min-width: 875px;
+  border-radius: 8px;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+
+  .close {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 9;
+  }
+
+  .head {
+    height: 132px;
+    background: url('https://img2.maka.im/cdn/webstore7/assets/vip/vip_bg_1.png');
+    background-size: contain;
+    overflow: hidden;
+    border-radius: 6px 6px 0 0;
+
+    .user {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      color: rgba(0, 0, 0, 0.88);
+
+      .avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        margin-right: 12px;
+        border: 1px solid #ffecc9;
+        overflow: hidden;
+        img {
+          width: 100%;
+          height: 100%;
+        }
+      }
+
+      .name {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 22px;
+        margin-right: 8px;
+      }
+      .vipIcon {
+        margin-right: 8px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .uid {
+        color: rgba(0, 0, 0, 0.6);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 22px;
+      }
+
+      .vipLevel {
+        display: flex;
+        color: rgba(0, 0, 0, 0.6);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 22px;
+        margin-top: 4px;
+      }
+
+      .other {
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 22px;
+        .split {
+          width: 1px;
+          height: 14px;
+          margin: 0 8px;
+          background: rgba(0, 0, 0, 0.6);
+        }
+      }
+    }
+
+    .tabs {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(5px);
+      height: 60px;
+
+      .tabItem {
+        flex: 1;
+        height: 100%;
+        color: #042e5e;
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 28px;
+        text-align: center;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        .desc {
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 20px;
+          text-align: center;
+          color: rgba(0, 0, 0, 0.6);
+        }
+        &.active {
+          position: relative;
+          border-radius: 0px 12px 0px 0px;
+          background:
+            linear-gradient(
+              180deg,
+              rgba(163, 205, 253, 0.3) 0%,
+              rgba(255, 255, 255, 0) 100%
+            ),
+            #fff;
+          &::before {
+            content: '';
+            position: absolute;
+            left: -9px;
+            bottom: 0;
+            width: 10px;
+            height: 10px;
+            background-image: url(https://img2.maka.im/cdn/webstore7/assets/tab_round.svg);
+            background-size: 10px 10px;
+            transform: rotateY(180deg);
+            z-index: 1;
+          }
+          &::after {
+            content: '';
+            position: absolute;
+            right: -9px;
+            bottom: 0;
+            width: 10px;
+            height: 10px;
+            background-image: url(https://img2.maka.im/cdn/webstore7/assets/tab_round.svg);
+            background-size: 10px 10px;
+            z-index: 1;
+          }
+        }
+      }
+    }
+  }
+
+  .main {
+    overflow: hidden;
+    flex: 1;
+    padding: 12px 16px;
+    display: flex;
+    position: relative;
+    .aside {
+      flex-shrink: 0;
+      position: relative;
+      width: 220px;
+      padding: 12px;
+      background: #f8f9fc;
+      border-radius: 8px;
+      .tit {
+        display: flex;
+        align-items: center;
+        color: #000;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 24px;
+        margin-bottom: 4px;
+        .icon {
+          width: 20px;
+          height: 20px;
+          margin-right: 4px;
+        }
+      }
+      .desc {
+        color: rgba(0, 0, 0, 0.88);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 22px;
+        margin-bottom: 16px;
+      }
+
+      .vipIntro {
+        padding-top: 16px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        .introItem {
+          display: flex;
+          align-items: flex-start;
+          margin-bottom: 8px;
+          color: rgba(1, 7, 13, 0.6);
+          font-size: 14px;
+          font-weight: 400;
+          line-height: 22px;
+          span {
+            margin-left: 8px;
+          }
+          iconpark-icon {
+            margin-top: 4px;
+          }
+        }
+      }
+      .vipAllInfo {
+        position: absolute;
+        left: 12px;
+        bottom: 12px;
+        display: flex;
+        align-items: center;
+        color: rgba(1, 7, 13, 0.6);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 20px;
+        cursor: pointer;
+      }
+    }
+
+    .vipMain {
+      position: relative;
+      padding: 0 24px;
+
+      .packageTitle {
+        display: flex;
+        align-items: center;
+        color: #000;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 24px;
+        margin-bottom: 12px;
+        .vipTip {
+          display: flex;
+          align-items: center;
+          height: 24px;
+          padding: 0px 8px;
+          margin-left: 12px;
+          color: rgba(0, 0, 0, 0.45);
+          text-align: center;
+          background-color: #f5f5f5;
+          border-radius: 4px;
+          span {
+            font-size: 12px;
+            line-height: 24px;
+            margin-right: 2px;
+          }
+        }
+      }
+
+      .vipTypes {
+        display: flex;
+        align-items: center;
+        .typeItem {
+          // min-width: 138px;
+          position: relative;
+          white-space: nowrap;
+          padding: 8px 20px;
+          margin-right: 24px;
+          color: #000;
+          text-align: center;
+          font-size: 14px;
+          font-weight: 400;
+          line-height: 22px;
+          border-radius: 8px;
+          border: 2px solid rgba(0, 0, 0, 0.06);
+          cursor: pointer;
+          .corner {
+            position: absolute;
+            top: -10px;
+            left: -1px;
+            color: #fff;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 16px;
+            border-radius: 8px 0px;
+            background: #f22d30;
+          }
+          .desc {
+            color: rgba(0, 0, 0, 0.6);
+            text-align: center;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 20px;
+            margin-top: 2px;
+          }
+          &.active {
+            font-weight: 500;
+            border: 2px solid #1a87ff;
+            .corner {
+              left: -2px;
+            }
+          }
+        }
+      }
+
+      .vipTypeTip {
+        margin-top: 8px;
+        color: rgba(0, 0, 0, 0.6);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 20px;
+        span {
+          color: #ff4d4f;
+        }
+      }
+
+      .paySuccess {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        background-color: #fff;
+        z-index: 9;
+        .paySuccessTitle {
+          margin-top: 12px;
+          color: rgba(1, 7, 13, 0.8);
+          font-size: 14px;
+          line-height: 24px;
+          font-weight: bold;
+        }
+        .paySuccessText {
+          margin-top: 8px;
+          color: rgba(1, 7, 13, 0.6);
+          font-size: 12px;
+          line-height: 16px;
+        }
+      }
+      .packages {
+        display: flex;
+        align-items: center;
+        // padding: 20px 0;
+        padding-bottom: 16px;
+        .packageItem {
+          position: relative;
+          margin-right: 24px;
+          // overflow: hidden;
+          width: 120px;
+          height: 140px;
+          padding: 24px 0 4px;
+          border-radius: 8px;
+          white-space: nowrap;
+          border: 2px solid rgba(0, 0, 0, 0.06);
+          cursor: pointer;
+          .corner {
+            position: absolute;
+            top: -10px;
+            left: -2px;
+            border-radius: 8px 0px;
+            background-color: #f5222d;
+            color: #fff;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 16px;
+          }
+          .name {
+            text-align: center;
+            color: #000;
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 26px;
+            color: rgba(0, 0, 0, 0.88);
+          }
+          .price {
+            text-align: center;
+            color: rgba(0, 0, 0, 0.88);
+            font-size: 17px;
+            height: 36px;
+            line-height: 36px;
+            margin: 4px 0 0;
+            vertical-align: middle;
+            span {
+              padding: 0 2px;
+              font-size: 32px;
+              font-weight: 700;
+            }
+          }
+          .originalPrice {
+            margin-top: 2px;
+            color: rgba(1, 7, 13, 0.4);
+            text-align: center;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+            text-decoration: line-through;
+          }
+
+          .tip {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 2px 0 0;
+            color: #fff;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 20px;
+            background: rgba(0, 0, 0, 0.06);
+            color: rgba(0, 0, 0, 0.25);
+            border-radius: 0 0 4px 4px;
+          }
+
+          &.active {
+            border: 2px solid #1a87ff;
+            .tip {
+              background-color: #1a87ff;
+              color: #fff;
+            }
+          }
+        }
+      }
+
+      .coupon {
+        display: flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 4px;
+        border: 1px solid #ffccc7;
+        background-color: #fff2ea;
+
+        .tag {
+          padding: 4px;
+          color: #fff;
+          text-align: center;
+          font-size: 12px;
+          font-weight: 500;
+          line-height: 12px;
+          border-radius: 4px;
+          background: linear-gradient(146deg, #ff7f57 -7.41%, #fe373e 103.81%);
+        }
+        .name {
+          margin: 0 24px 0 4px;
+          color: #ff594a;
+          font-size: 14px;
+          font-weight: 600;
+          line-height: 22px;
+        }
+        .countdown {
+          color: #ff4d4f;
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 20px;
+        }
+      }
+
+      .payWrap {
+        padding: 12px 4px;
+        display: flex;
+        .qrcode {
+          position: relative;
+          width: 132px;
+          height: 132px;
+          padding: 11px;
+          margin-right: 24px;
+          background: url('https://img2.maka.im/cdn/webstore7/assets/vip/qrcode_border.png');
+          background-size: contain;
+          .qrcodeLoading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.95);
+          }
+        }
+
+        .payInfo {
+          color: rgba(0, 0, 0, 0.45);
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 20px;
+
+          .payTotal {
+            display: flex;
+            align-items: flex-end;
+            color: rgba(0, 0, 0, 0.88);
+            font-size: 12px;
+            line-height: 20px;
+            margin-bottom: 4px;
+
+            .price {
+              font-size: 24px;
+              font-weight: 700;
+              line-height: 28px;
+              color: #f5222d;
+            }
+            .discount {
+              padding: 0 4px;
+              margin-left: 4px;
+              color: #f5222d;
+              font-size: 12px;
+              font-weight: 400;
+              line-height: 20px;
+              background-color: #fff1f0;
+              border-radius: 4px;
+            }
+          }
+
+          .date {
+            color: rgba(0, 0, 0, 0.88);
+          }
+          .payType {
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+          }
+
+          a {
+            color: rgba(0, 0, 0, 0.6);
+          }
+        }
+      }
+
+      .serviceWrap {
+        display: flex;
+        align-items: center;
+        margin-top: 24px;
+        .qrcode {
+          width: 132px;
+          height: 132px;
+          margin-right: 24px;
+          padding: 11px;
+          background: url('https://img2.maka.im/cdn/webstore7/assets/vip/company_qrcode_border.png');
+          background-size: contain;
+        }
+        .tit {
+          font-size: 24px;
+          font-weight: 600;
+          line-height: 32px;
+          background: linear-gradient(93deg, #965a00 -11.97%, #131315 38.42%);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .desc {
+          color: #ad6800;
+          font-size: 18px;
+          font-weight: 600;
+          line-height: 26px;
+          margin-top: 8px;
+        }
+      }
+    }
+  }
+
+  &.super {
+    .head {
+      background: url('https://img2.maka.im/cdn/webstore7/assets/vip/vip_bg_2.png');
+      background-size: contain;
+      .tabs {
+        .tabItem {
+          color: #6b2c08;
+          &.active {
+            border-radius: 12px 12px 0px 0px;
+            background:
+              linear-gradient(
+                180deg,
+                rgba(255, 173, 127, 0.2) 10%,
+                rgba(255, 255, 255, 0) 100%
+              ),
+              #fff;
+          }
+        }
+      }
+    }
+  }
+
+  &.company {
+    .head {
+      background: url('https://img2.maka.im/cdn/webstore7/assets/vip/vip_bg_3.png');
+      background-size: contain;
+      .user {
+        color: rgba(255, 255, 255, 0.8);
+        .uid,
+        .vipLevel {
+          color: rgba(255, 255, 255, 0.6);
+        }
+        .split {
+          background: rgba(255, 255, 255, 0.6) !important;
+        }
+      }
+
+      .tabs {
+        .tabItem {
+          color: #f3f1ff;
+          .desc {
+            color: rgba(255, 255, 255, 0.6);
+          }
+          &.active {
+            color: #1b1a28;
+            border-radius: 12px 0px 0px 0px;
+            background:
+              linear-gradient(
+                180deg,
+                rgba(255, 204, 127, 0.2) 0%,
+                rgba(255, 255, 255, 0) 100%
+              ),
+              #fff;
+            .desc {
+              color: rgba(0, 0, 0, 0.6);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.clauseMenu {
+  & > div {
+    padding: 0;
+  }
+}
+.clauseContent {
+  .clauseItem {
+    width: 250px;
+    font-size: 12px;
+    padding-left: 10px;
+    padding-right: 12px;
+    color: rgba(1, 7, 13, 0.8);
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    &:hover {
+      background-color: #faf6ed;
+    }
+    &:last-child {
+      border-top: 1px solid rgba(1, 7, 13, 0.04);
+    }
+  }
+}
+.kefuQrcodeContent {
+  border-radius: 8px;
+}
+
+.kefuQrcode {
+  text-align: center;
+  padding: 8px;
+  border-radius: 8px;
+
+  .title {
+    font-weight: 600;
+    color: #000;
+    font-size: 16px;
+    line-height: 24px;
+  }
+  .tips {
+    padding: 4px 0 12px;
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.invoice {
+  padding: 10px 8px;
+  .title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    .tit {
+      color: #000;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 24px;
+    }
+    .desc {
+      display: flex;
+      align-items: center;
+      color: rgba(1, 7, 13, 0.6);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 20px;
+    }
+  }
+  img {
+    width: 450px;
+  }
+}

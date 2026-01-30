@@ -1,0 +1,93 @@
+/// 接力配置实体
+model RelayConfigEntity {
+  id                String              @id @default(cuid())
+  /// 关联的作品ID（必需，外键关联到WorksEntity）
+  works_id          String              @unique(map: "UQ_relay_config_works_id") @map("works_id")
+  /// 功能设置
+  /// 是否启用接力功能
+  enabled           Boolean             @default(true)
+  /// 自定义按钮文案
+  button_text       String?             @map("button_text") @db.VarChar
+  /// 是否显示用户列表
+  show_user_list    Boolean             @default(true) @map("show_user_list")
+  /// 分享配置
+  /// 自定义分享标题
+  share_title       String?             @map("share_title") @db.VarChar
+  /// 自定义分享描述
+  share_desc        String?             @map("share_desc")
+  /// 列表展示配置
+  /// 列表展示模式：horizontal（横向滚动）、grid（网格）
+  list_display_mode String?             @default("horizontal") @map("list_display_mode") @db.VarChar
+  /// 限制配置
+  /// 最大接力人数限制（可选）
+  max_relay_count   Int?                @map("max_relay_count")
+  /// 主题配置（JSON格式，可选）
+  /// 主题配置 JSON
+  theme             Json?               @map("theme")
+  /// 状态管理
+  deleted           Boolean             @default(false)
+  create_time       DateTime            @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time       DateTime            @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 内容设置
+  /// 内容前缀（第1段，用户填写）
+  content_prefix    String?             @map("content_prefix") @db.VarChar
+  /// 内容后缀（第3段，用户填写）
+  content_suffix    String?             @map("content_suffix") @db.VarChar
+  /// 留言设置
+  /// 是否启用留言功能
+  enable_message    Boolean             @default(false) @map("enable_message")
+  /// 预设词列表（JSON数组格式）
+  message_presets   Json?               @map("message_presets")
+  works             WorksEntity         @relation(fields: [works_id], references: [id])
+  records           RelayRecordEntity[]
+
+  @@index([works_id], map: "IDX_relay_config_works_id")
+  @@index([deleted], map: "IDX_relay_config_deleted")
+  @@index([enabled], map: "IDX_relay_config_enabled")
+  @@index([id], map: "IDX_relay_config_id")
+  @@map("relay_config_entity")
+}
+
+/// 接力记录实体
+model RelayRecordEntity {
+  id            String            @id @default(cuid())
+  /// 关联的配置ID
+  config_id     String            @map("config_id")
+  /// 关联的作品ID（冗余字段，方便查询）
+  works_id      String            @map("works_id")
+  /// 用户信息（微信）
+  /// 微信openid（唯一标识，用于防重复）
+  user_openid   String            @map("user_openid") @db.VarChar
+  /// 微信unionid（可选）
+  user_unionid  String?           @map("user_unionid") @db.VarChar
+  /// 用户昵称
+  user_nickname String            @map("user_nickname") @db.VarChar
+  /// 用户头像URL
+  user_avatar   String?           @map("user_avatar") @db.VarChar
+  /// 接力信息
+  /// 接力时间
+  relay_time    DateTime          @default(now()) @map("relay_time") @db.Timestamptz(6)
+  /// 分享来源（来源用户的openid，可选）
+  share_source  String?           @map("share_source") @db.VarChar
+  /// 访问信息（用于风控）
+  /// IP地址
+  ip_address    String?           @map("ip_address") @db.VarChar
+  /// User-Agent
+  user_agent    String?           @map("user_agent")
+  /// 状态管理
+  deleted       Boolean           @default(false)
+  create_time   DateTime          @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time   DateTime          @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 用户留言（可选）
+  user_message  String?           @map("user_message")
+  config        RelayConfigEntity @relation(fields: [config_id], references: [id])
+
+  @@unique([config_id, user_openid], map: "UQ_relay_record_config_openid")
+  @@index([config_id], map: "IDX_relay_record_config_id")
+  @@index([works_id], map: "IDX_relay_record_works_id")
+  @@index([user_openid], map: "IDX_relay_record_user_openid")
+  @@index([relay_time], map: "IDX_relay_record_relay_time")
+  @@index([deleted], map: "IDX_relay_record_deleted")
+  @@index([id], map: "IDX_relay_record_id")
+  @@map("relay_record_entity")
+}

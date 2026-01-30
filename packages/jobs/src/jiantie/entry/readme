@@ -1,0 +1,192 @@
+#设备来源
+全部小写,整合成web、ios、android、wap、other
+
+#数据来源说明
+const biAdb = knex({
+client: 'mysql',
+connection: {
+host: 'am-2zeo48x814d64lo93167330.ads.aliyuncs.com',
+user: 'report_api',
+password: 'j3E4h6NWBQ5U-',
+database: 'mk_datawork',
+},
+});
+
+#打点数据
+biAdb的mk_datawork_sls_events表结构
+`uid` varchar NOT NULL COMMENT '用户id',
+`trace_id` varchar NOT NULL COMMENT '跟踪id',
+`distinct_id` varchar NOT NULL COMMENT '访问id',
+`event_time` timestamp NOT NULL COMMENT '事件时间',
+`event_type` varchar NOT NULL COMMENT '事件类型',
+`is_login` boolean NOT NULL COMMENT '是否登录',
+`is_first_day` boolean NOT NULL COMMENT '是否首日访问',
+`device_id` varchar NOT NULL COMMENT '设备id',
+`ip` varchar NOT NULL COMMENT 'IP',
+`object_type` varchar NOT NULL COMMENT '对象类型',
+`object_id` varchar NOT NULL COMMENT '对象id',
+`parent_type` varchar NOT NULL COMMENT '上级元素类型',
+`parent_id` varchar NOT NULL COMMENT '上级元素id',
+`ref_page_id` varchar COMMENT '来源页面id',
+`ref_page_type` varchar COMMENT '来源页面类型',
+`page_type` varchar COMMENT '所属页面类型',
+`page_id` varchar COMMENT '所属页面id',
+`url` varchar COMMENT 'url',
+`platform` varchar COMMENT '设备类型', (web|android|ios)
+
+#用户数据
+this.usercenterDB = knex({
+client: "mysql", //指定knex要操作的数据库为MySQL
+connection: {
+host: "rdsa2uaava2uaav413.mysql.rds.aliyuncs.com", //数据库地址
+user: "query_prod", //数据库登录名
+password: "jCItnVtI0k67RBrt", //数据库登录密码
+database: "mk_user_center", //要操作的库名称
+},
+});
+
+#user表
+`uid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'uid',
+`appid` varchar(50) NOT NULL COMMENT '应用ID maka|jiantie',
+`username` varchar(50) NOT NULL DEFAULT '' COMMENT '用户名',
+`avatar` varchar(255) NOT NULL DEFAULT '' COMMENT '头像',
+`reg_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+`status` tinyint(3) NOT NULL DEFAULT '0' COMMENT '状态: 0正常 -1封停',
+`full_name` varchar(100) NOT NULL DEFAULT '' COMMENT '姓名',
+`address` varchar(255) NOT NULL DEFAULT '' COMMENT '地址',
+`city` varchar(50) NOT NULL DEFAULT '' COMMENT '城市',
+`country` varchar(50) NOT NULL DEFAULT '' COMMENT '国家',
+`is_team` tinyint(3) NOT NULL DEFAULT '0' COMMENT '是否团队帐号: 0否 1是',
+`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+#注册来源
+TABLE `user_reg_sources` (
+`uid` bigint(11) NOT NULL,
+`appid` varchar(50) NOT NULL COMMENT '应用ID',
+`bundleid` varchar(50) NOT NULL DEFAULT '' COMMENT '包ID',
+`device` varchar(20) NOT NULL DEFAULT '' COMMENT '设备',
+`market` varchar(100) NOT NULL DEFAULT '' COMMENT '市场',
+`channelid` varchar(64) NOT NULL DEFAULT '' COMMENT '渠道ID',
+`deviceid` varchar(64) NOT NULL DEFAULT '' COMMENT '设备ID',
+`idfa` varchar(64) NOT NULL DEFAULT '' COMMENT 'idfa',
+`version` varchar(64) NOT NULL DEFAULT '' COMMENT '版本',
+`utm_source` varchar(255) DEFAULT NULL COMMENT '广告来源',
+`utm_medium` varchar(255) DEFAULT NULL COMMENT '广告媒介',
+`utm_term` varchar(255) DEFAULT NULL COMMENT '关键词',
+`utm_content` varchar(255) DEFAULT NULL COMMENT '广告内容',
+`utm_campaign` varchar(255) DEFAULT NULL COMMENT '广告活动',
+`hume_channel` varchar(50) DEFAULT NULL COMMENT '渠道',
+
+#订单数据
+
+orderDB = knex({
+client: "mysql", //指定knex要操作的数据库为MySQL
+connection: {
+host: "rdsa2uaava2uaav413.mysql.rds.aliyuncs.com", //数据库地址
+user: "query_prod", //数据库登录名
+password: "jCItnVtI0k67RBrt", //数据库登录密码
+database: "mk_order_center", //要操作的库名称
+},
+});
+
+order表
+`id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增订单ID',
+`order_no` char(30) NOT NULL COMMENT '业务唯一订单号',
+`appid` varchar(50) NOT NULL COMMENT '应用ID',
+`uid` int(10) unsigned NOT NULL COMMENT '用户ID',
+`amount` int(10) unsigned NOT NULL COMMENT '订单金额分）',
+`currency` char(10) NOT NULL COMMENT '货币类型',
+`order_status` varchar(10) NOT NULL DEFAULT 'created' COMMENT '订单状态', ‘paid为支付完成’
+`notification_url` varchar(255) DEFAULT NULL COMMENT '订单状态变更时通知URL',
+`notification_attach` text COMMENT '通知透传数据',
+`updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+`created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+
+order_extra_info表
+`id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+`order_no` char(30) NOT NULL COMMENT '订单号',
+`appid` varchar(50) NOT NULL COMMENT '应用ID',
+`uid` int(10) unsigned NOT NULL COMMENT '用户ID',
+`device` varchar(50) DEFAULT NULL COMMENT '设备信息',
+`version` varchar(50) DEFAULT NULL COMMENT '设备版本号',
+`bundle_id` varchar(50) DEFAULT NULL COMMENT 'Bundle ID',
+`ip` varchar(45) DEFAULT NULL COMMENT '用户 IP 地址',
+`header_info` text COMMENT 'Header 信息',
+`channel_id` varchar(255) DEFAULT NULL COMMENT '渠道ID',
+`device_identifiers` text COMMENT '设备标识符',
+`utm_metadata` text COMMENT 'UTM 元数据',
+`trace_metadata` text COMMENT '来源追踪元数据',
+`updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+`created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+
+payments表
+`payments` (
+`id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+`order_no` char(30) NOT NULL COMMENT '订单号',
+`appid` varchar(50) NOT NULL COMMENT '应用ID',
+`uid` int(10) unsigned NOT NULL COMMENT '用户ID',
+`payment_method` varchar(30) NOT NULL COMMENT '支付方式',
+`payment_type` varchar(30) NOT NULL COMMENT '支付类型',
+`transaction_id` varchar(100) DEFAULT NULL COMMENT '支付交易ID',
+`amount` int(10) unsigned NOT NULL COMMENT '支付金额',
+`currency` varchar(10) NOT NULL COMMENT '货币类型',
+`payment_status` varchar(20) NOT NULL DEFAULT 'pending' COMMENT '支付状态',
+`raw_response` text COMMENT '渠道原始响应',
+`paid_at` datetime(3) DEFAULT NULL COMMENT '支付完成时间',
+`created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+`updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+
+#渠道数据
+this.makadb = knex({
+client: "mysql", //指定knex要操作的数据库为MySQL
+connection: {
+host: "rdsa2uaava2uaav413.mysql.rds.aliyuncs.com",
+user: "mso_read_only",
+password: "j3E4h6NWBQ5U",
+database: "makaplatv4",
+},
+});
+
+#转化事件
+CREATE TABLE `promotion_event_conversions` (
+`id` int(11) NOT NULL AUTO_INCREMENT COMMENT '广告投放转化表的主键',
+`conversion_unq_id` char(50) NOT NULL DEFAULT '' COMMENT '转化唯一标识',
+`conversion_type` char(20) NOT NULL COMMENT '转化类型',
+`event_id` int(11) unsigned NOT NULL COMMENT '关联的广告投放事件ID，来自promotion_events表',
+`uid` int(11) unsigned NOT NULL COMMENT '用户UID',
+`imei` char(50) NOT NULL DEFAULT '' COMMENT '安卓设备ID',
+`idfa` char(50) NOT NULL DEFAULT '' COMMENT 'iOS 6+设备ID',
+`oaid` char(50) NOT NULL DEFAULT '' COMMENT 'Android Q及更高版本的设备号',
+`caid` char(50) NOT NULL DEFAULT '' COMMENT '中国广告协会互联网广告标识',
+`idfv` char(50) NOT NULL COMMENT 'IOS设备标识符',
+`androidid` char(50) NOT NULL COMMENT 'Android设备标识符',
+`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建的时间戳',
+`conversion_data` text NOT NULL COMMENT '转化数据JSON',
+`conversion_time` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '转化时间',
+`bundleid` varchar(50) NOT NULL DEFAULT '' COMMENT '应用包名',
+
+#广告事件
+CREATE TABLE `promotion_events` (
+`id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '广告投放事件表的主键',
+`event_unq_id` char(50) NOT NULL COMMENT '事件唯一标识',
+`event_type` char(20) NOT NULL COMMENT '事件类型',
+`channel` char(20) NOT NULL COMMENT '事件发生的渠道',
+`event_data` text NOT NULL COMMENT '事件相关数据的JSON格式',
+`attribution_data` text COMMENT '事件归因数据的JSON格式',
+`imei` char(50) NOT NULL DEFAULT '' COMMENT '安卓设备ID',
+`imei_md5` char(50) NOT NULL DEFAULT '' COMMENT '安卓设备ID MD5',
+`idfa` char(50) NOT NULL DEFAULT '' COMMENT 'iOS 6+设备ID',
+`idfa_md5` char(50) NOT NULL DEFAULT '' COMMENT 'iOS 6+设备ID MD5',
+`oaid` char(100) NOT NULL DEFAULT '' COMMENT 'Android Q及更高版本的设备号',
+`oaid_md5` char(50) NOT NULL DEFAULT '' COMMENT 'Android Q及更高版本的设备号 MD5',
+`caid` varchar(300) NOT NULL DEFAULT '' COMMENT '中国广告协会互联网广告标识',
+`idfv` char(50) NOT NULL COMMENT 'IOS设备标识符',
+`idfv_md5` char(50) NOT NULL DEFAULT '' COMMENT 'IOS设备标识符 MD5',
+`androidid` char(50) NOT NULL COMMENT 'Android设备标识符',
+`androidid_md5` char(50) NOT NULL DEFAULT '' COMMENT 'Android设备标识符 MD5',
+`bundleid` varchar(50) NOT NULL DEFAULT '' COMMENT '应用包名',
+`ext_unq_id` varchar(100) NOT NULL DEFAULT '' COMMENT '外部唯一ID',
+`event_time` timestamp NULL DEFAULT NULL COMMENT '事件发生时间',
+`appid` varchar(30) NOT NULL DEFAULT '' COMMENT '应用ID，由回传参数定义',
+`ip` varchar(50) NOT NULL DEFAULT '' COMMENT 'ip',
+`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '事件创建的时间戳',

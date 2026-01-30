@@ -1,0 +1,56 @@
+.jiantie {
+  --primary: 349 100% 64%;
+  --primary-foreground: 0 0% 100%;
+  --primary-btn: 0 0% 100%;
+  --theme-color: #ff4667 !important;
+  --btn-text-color: #fff;
+  --theme-text-color: #ff4667;
+  --theme-background-color: #fff3f6;
+  --theme-border-color: #ff8fab;
+}
+
+.avite {
+  --primary: 48 96% 76%;
+  --primary-foreground: 0 0% 100%;
+  --primary-btn: 0 0% 100%;
+  --theme-color: #ffd966 !important;
+  --btn-text-color: #fff;
+  --theme-text-color: #ffcc33;
+  --theme-background-color: #fffef9;
+  --theme-border-color: #ffe8a3;
+}
+
+.xueji {
+  --primary: 48 97% 72%;
+  --primary-foreground: 0 0% 0%;
+  --primary-btn: 0 0% 0%;
+  --theme-color: #fde272 !important;
+  --theme-background-color: #fefdf0;
+  --theme-text-color: #000;
+  --btn-text-color: #000;
+  --theme-border-color: #fde272;
+}
+
+.huiyao {
+  --primary: 226 65% 52%;
+  --primary-foreground: 0 0% 100%;
+  --primary-btn: 0 0% 100%;
+  --theme-color: #355ad4 !important;
+  --theme-background-color: #edf2fe;
+  --theme-text-color: #355ad4;
+  --btn-text-color: #fff;
+  --theme-text-color: #355ad4;
+  --theme-border-color: #c1d0ff;
+}
+
+.maka {
+  --primary: 211 100% 55%;
+  --primary-foreground: 0 0% 100%;
+  --primary-btn: 0 0% 100%;
+  --theme-color: #1a87ff !important;
+  --theme-background-color: #1a89ff1a;
+  --theme-text-color: #1a87ff;
+  --btn-text-color: #fff;
+  --theme-text-color: #1a88ff;
+  --theme-border-color: #c1d0ff;
+}

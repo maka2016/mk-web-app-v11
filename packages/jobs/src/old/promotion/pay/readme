@@ -1,0 +1,33 @@
+export class PayConversionDto {
+@IsNumber()
+uid: number
+@IsNumber()
+conversionTime: number
+@IsNumber()
+payAmount: number // 分
+@IsString()
+orderId: string
+}
+
+@Post('/v1/conversion/pay')
+async handlePaymentConversion(@Body() body: PayConversionDto): Promise<void> {
+console.log(`handlePaymentConversion: ${JSON.stringify(body)}`)
+
+    try {
+      const conversionTimeDate = new Date(body.conversionTime)
+
+      if (isNaN(conversionTimeDate.getTime())) {
+        throw new BadRequestException('conversionTime非有效的日期')
+      }
+
+      return await this.appService.createPayConversion({
+        ...body,
+        conversionTime: conversionTimeDate,
+        conversionData: JSON.stringify(body),
+      })
+    } catch (err) {
+      this.errorLogger.logError(err, body, 'handlePaymentConversionError')
+      throw err
+    }
+
+}

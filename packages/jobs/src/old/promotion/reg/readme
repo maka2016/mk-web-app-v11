@@ -1,0 +1,70 @@
+
+  export class BaseConversionDto {
+  @IsOptional()
+  appid?: string
+  @IsOptional()
+  @IsNumber()
+  uid?: number
+  @IsOptional()
+  imei?: string
+  @IsOptional()
+  idfa?: string
+  @IsOptional()
+  oaid?: string
+  @IsOptional()
+  caid?: string
+  @IsOptional()
+  androidid?: string
+  @IsOptional()
+  idfv?: string
+  @IsOptional()
+  device?: string
+  @IsOptional()
+  bundleid?: string
+  @IsOptional()
+  deviceid?: string
+  @IsOptional()
+  ip?: string
+  @IsNumber()
+  conversionTime: number
+  @IsOptional()
+  douyinH5Clickid?: string
+  @IsOptional()
+  baiduLogidUrl?: string
+}
+
+export class RegisterConversionDto extends BaseConversionDto {}
+
+  // 处理注册转化的端点
+
+
+  @Post('/v1/conversion/register')
+  @UsePipes(DeviceIdentifiersTransformPipe)
+  async handleRegisterConversion(
+    @Body() body: RegisterConversionDto,
+  ): Promise<void> {
+    console.log(`handleRegisterConversion: ${JSON.stringify(body)}`)
+
+    try {
+      if (!body.conversionTime) {
+        throw new BadRequestException('conversionTime不为空')
+      }
+
+      const conversionTimeDate = new Date(body.conversionTime)
+
+      if (isNaN(conversionTimeDate.getTime())) {
+        throw new BadRequestException('conversionTime非有效的日期')
+      }
+
+      this.appService.createConvBeforeAttribution({
+        ...body,
+        conversionType: ConversionType.Register,
+        conversionTime: conversionTimeDate,
+      })
+
+      return
+    } catch (err) {
+      this.errorLogger.logError(err, body, 'handleRegisterConversionError')
+      throw err
+    }
+  }

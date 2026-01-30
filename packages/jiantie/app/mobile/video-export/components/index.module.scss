@@ -1,0 +1,121 @@
+.container {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  gap: 8px;
+
+  .ListItem {
+    display: flex;
+    align-items: center;
+    // padding: 12px;
+    background-color: #fff;
+    border-radius: 8px;
+    gap: 12px;
+
+    .thumb {
+      width: 58px;
+      height: 58px;
+      border-radius: 6px;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .title {
+      font-family: PingFang SC;
+      font-weight: var(--font-semibold);
+      font-style: Semibold;
+      font-size: 14px;
+      line-height: 20px;
+      color: #09090b;
+      margin-bottom: 4px;
+    }
+
+    .status {
+      font-family: PingFang SC;
+      font-weight: var(--font-semibold);
+      font-style: Semibold;
+      font-size: 11px;
+      line-height: 16px;
+      text-align: center;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background-color: #ededed;
+
+      &.processing {
+        background-color: #f0f8ff;
+        color: #0973dc;
+      }
+
+      &.success {
+        background-color: #ecfdf2;
+        color: #008a2e;
+      }
+
+      &.failed {
+        background-color: #fff0f0;
+        color: #e60000;
+      }
+    }
+
+    .time {
+      font-family: PingFang SC;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 12px;
+      line-height: 18px;
+      letter-spacing: 0px;
+      color: #71717a;
+    }
+  }
+
+  .retry {
+    width: 100%;
+    color: #ff4667;
+  }
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 120px;
+
+  img {
+    width: 200px;
+    height: 150px;
+  }
+
+  span {
+    font-family: PingFang SC;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 22px;
+    letter-spacing: 0px;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.45);
+  }
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  .title {
+    font-weight: var(--font-semibold);
+    font-size: 16px;
+    padding: 20px;
+  }
+}

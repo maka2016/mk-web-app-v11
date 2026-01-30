@@ -1,0 +1,150 @@
+/// 广告点击回调数据实体 - 存储广告平台的点击回调数据的流水
+/// 用于记录所有来自广告平台的点击回调数据，作为原始数据源
+model ADV2ClickCallbackFlowEntity {
+  id                 String                        @id @default(cuid())
+  /// 广告平台标识，如 "gdt"、"toutiao" 等
+  platform           String                        @db.VarChar
+  /// 点击ID
+  click_id           String                        @map("click_id") @db.VarChar
+  /// 曝光 ID（用于将曝光与后续点击/转化进行关联），来自广告平台回调的 impression_id
+  impression_id      String?                       @map("impression_id") @db.VarChar
+  /// 其他回调数据（JSON格式）
+  data               Json                          @default("{}") @map("data")
+  /// 原始URL查询字符串
+  raw_query          String                        @map("raw_query")
+  /// 应用ID
+  appid              String?                       @map("appid") @db.VarChar
+  /// 来源，如 "api"、"v5sync" 等
+  source             String?                       @map("source") @db.VarChar
+  create_time        DateTime                      @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time        DateTime                      @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  attributionResults ADV2AttributionResultEntity[]
+
+  @@unique([platform, click_id], map: "UNIQUE_adv2_click_callback_flow_platform_click_id")
+  @@index([click_id], map: "IDX_adv2_click_callback_flow_click_id")
+  @@index([impression_id], map: "IDX_adv2_click_callback_flow_impression_id")
+  @@index([platform], map: "IDX_adv2_click_callback_flow_platform")
+  @@index([appid], map: "IDX_adv2_click_callback_flow_appid")
+  @@index([create_time], map: "IDX_adv2_click_callback_flow_create_time")
+  @@index([id], map: "IDX_adv2_click_callback_flow_id")
+  @@map("adv2_click_callback_flow_entity")
+}
+
+/// 广告转化事件实体 - 用于存储广告转化事件数据
+/// 存储业务系统产生的转化事件，如注册、支付成功等
+model ADV2ConversionEventEntity {
+  id                 String                       @id @default(cuid())
+  /// 事件名，例如 register、pay_success 等
+  event              String                       @db.VarChar
+  /// 业务 UID（用户 ID），激活事件等可能尚未有用户身份，可为空
+  uid                Int?                         @map("uid")
+  /// 事件参数，原样存储用于后续上报，所有线索数据body、header、ip等
+  data               Json                         @default("{}") @map("data")
+  /// 预留的广告平台标识，例如 gdt、toutiao 等（可为空，视 data 中实际字段而定）
+  platform           String?                      @db.VarChar
+  /// 应用ID
+  appid              String?                      @map("appid") @db.VarChar
+  create_time        DateTime                     @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time        DateTime                     @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 归因状态：pending（默认：待归因）、success（成功）、failed（失败）
+  attribution_status String                       @default("pending") @map("attribution_status") @db.VarChar
+  attributionResults ADV2AttributionResultEntity?
+
+  @@index([uid], map: "IDX_adv2_conversion_event_uid")
+  @@index([event], map: "IDX_adv2_conversion_event_event")
+  @@index([platform], map: "IDX_adv2_conversion_event_platform")
+  @@index([appid], map: "IDX_adv2_conversion_event_appid")
+  @@index([create_time], map: "IDX_adv2_conversion_event_create_time")
+  @@index([id], map: "IDX_adv2_conversion_event_id")
+  @@map("adv2_conversion_event_entity")
+}
+
+/// 广告归因结果实体 - 用于存储广告归因结果
+/// 一般收到转化事件触发归因（归因的data+归因来源类型（自event归因还是三方融合归因）+事件id（如果有））
+model ADV2AttributionResultEntity {
+  id                     String                              @id @default(cuid())
+  /// 归因数据（JSON格式），包含归因后的完整信息
+  attribution_data       Json                                @default("{}") @map("attribution_data")
+  /// 归因来源类型：event（自event归因）、third_party（三方融合归因：douyinronghe等）
+  attribution_type       String                              @map("attribution_type") @db.VarChar
+  /// 关联的转化事件ID（如果有），来自 ADV2ConversionEventEntity.id；按此去重，同一转化事件仅保留一条归因结果
+  conversion_event_id    String?                             @unique @map("conversion_event_id")
+  /// 关联的点击回调数据ID（如果有），来自 ADV2ClickCallbackFlowEntity.id
+  click_callback_flow_id String?                             @map("click_callback_flow_id")
+  /// 用户 ID（如果有），从转化事件带入，便于查询
+  uid                    Int?                                @map("uid")
+  /// 广告平台标识，例如 gdt、toutiao 等
+  platform               String?                             @db.VarChar
+  /// 应用ID
+  appid                  String?                             @map("appid") @db.VarChar
+  create_time            DateTime                            @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time            DateTime                            @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  reportRecords          ADV2AttributionReportRecordEntity[]
+  clickCallbackFlow      ADV2ClickCallbackFlowEntity?        @relation(fields: [click_callback_flow_id], references: [id])
+  conversionEvent        ADV2ConversionEventEntity?          @relation(fields: [conversion_event_id], references: [id])
+
+  @@index([click_callback_flow_id], map: "IDX_adv2_attribution_result_click_callback_flow_id")
+  @@index([attribution_type], map: "IDX_adv2_attribution_result_attribution_type")
+  @@index([platform], map: "IDX_adv2_attribution_result_platform")
+  @@index([appid], map: "IDX_adv2_attribution_result_appid")
+  @@index([uid], map: "IDX_adv2_attribution_result_uid")
+  @@index([create_time], map: "IDX_adv2_attribution_result_create_time")
+  @@index([id], map: "IDX_adv2_attribution_result_id")
+  @@map("adv2_attribution_result_entity")
+}
+
+/// 广告归因事件上报记录实体 - 存储归因结果的上报记录
+/// 记录每次向广告平台上报归因结果的情况
+model ADV2AttributionReportRecordEntity {
+  id                    String                                  @id @default(cuid())
+  /// 关联的归因结果ID，来自 ADV2AttributionResultEntity.id
+  attribution_result_id String                                  @map("attribution_result_id")
+  /// 广告平台标识，例如 gdt、toutiao 等
+  platform              String                                  @db.VarChar
+  /// 上报状态：pending（待上报）、success（成功）、failed（失败）、retrying（重试中）
+  report_status         String                                  @default("pending") @map("report_status") @db.VarChar
+  /// 上报响应或错误信息（简要描述）
+  report_result         String?                                 @map("report_result")
+  /// 重试次数
+  retry_count           Int                                     @default(0) @map("retry_count")
+  /// 最后上报时间
+  last_report_time      DateTime?                               @map("last_report_time") @db.Timestamptz(6)
+  /// 应用ID
+  appid                 String?                                 @map("appid") @db.VarChar
+  create_time           DateTime                                @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time           DateTime                                @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  attributionResult     ADV2AttributionResultEntity             @relation(fields: [attribution_result_id], references: [id])
+  reportFlows           ADV2AttributionReportRecordFlowEntity[]
+
+  @@index([attribution_result_id], map: "IDX_adv2_attribution_report_record_attribution_result_id")
+  @@index([platform], map: "IDX_adv2_attribution_report_record_platform")
+  @@index([report_status], map: "IDX_adv2_attribution_report_record_report_status")
+  @@index([appid], map: "IDX_adv2_attribution_report_record_appid")
+  @@index([create_time], map: "IDX_adv2_attribution_report_record_create_time")
+  @@index([id], map: "IDX_adv2_attribution_report_record_id")
+  @@map("adv2_attribution_report_record_entity")
+}
+
+/// 广告归因事件上报记录流水 - 存储上报记录的详细流水
+/// 记录每次上报尝试的详细信息，包括请求、响应、错误等
+model ADV2AttributionReportRecordFlowEntity {
+  id               String                            @id @default(cuid())
+  /// 关联的上报记录ID，来自 ADV2AttributionReportRecordEntity.id
+  report_record_id String                            @map("report_record_id")
+  /// 流水类型：request（请求）、response（响应）、error（错误）、retry（重试）
+  flow_type        String                            @map("flow_type") @db.VarChar
+  /// 请求数据（JSON格式），当 flow_type 为 request 时使用
+  request_data     Json?                             @map("request_data")
+  /// 响应数据（JSON格式），当 flow_type 为 response 时使用
+  response_data    Json?                             @map("response_data")
+  /// 流水描述，用于 error、retry 等类型的额外信息
+  description      String?                           @map("description")
+  create_time      DateTime                          @default(now()) @map("create_time") @db.Timestamptz(6)
+  reportRecord     ADV2AttributionReportRecordEntity @relation(fields: [report_record_id], references: [id])
+
+  @@index([report_record_id], map: "IDX_adv2_attribution_report_record_flow_report_record_id")
+  @@index([flow_type], map: "IDX_adv2_attribution_report_record_flow_flow_type")
+  @@index([create_time], map: "IDX_adv2_attribution_report_record_flow_create_time")
+  @@index([id], map: "IDX_adv2_attribution_report_record_flow_id")
+  @@map("adv2_attribution_report_record_flow_entity")
+}

@@ -1,0 +1,21 @@
+.main {
+}
+
+.rowSelectHeadCell {
+  width: 68px;
+  display: flex;
+  font-weight: 400;
+  gap: 4px;
+  padding-left: 8px;
+  &::before {
+    position: absolute;
+    top: 50%;
+    inset-inline-end: 0;
+    width: 1px;
+    height: 1.6em;
+    background-color: #f0f0f0;
+    transform: translate(0px, -50%);
+    transition: background-color 0.2s;
+    content: '';
+  }
+}

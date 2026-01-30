@@ -1,0 +1,137 @@
+.loginPage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  // justify-content: center;
+  // height: 100vh;
+  min-height: 334px;
+  padding: 16px 28px 34px;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(180deg, #ebf3ff 0%, #ffffff 23.41%);
+
+  .back {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+  }
+
+  .close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+
+  .head {
+    font-family: PingFang SC;
+    font-weight: var(--font-semibold);
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0%;
+    text-align: center;
+    vertical-align: middle;
+    color: rgba(0, 0, 0, 0.88);
+    margin-bottom: 46px;
+  }
+
+  .title {
+    width: 100%;
+    font-family: PingFang SC;
+    font-weight: var(--font-semibold);
+    font-size: 18px;
+    line-height: 26px;
+    letter-spacing: 0%;
+    vertical-align: middle;
+    color: rgba(0, 0, 0, 1);
+    text-align: left;
+  }
+
+  .input {
+    width: 100%;
+    display: flex;
+    align-items: center;
+
+    padding: 14px 20px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+
+    input {
+      flex: 1;
+      border: 0;
+      outline: 0;
+      height: 24px;
+      line-height: 24px;
+      font-size: 16px;
+      color: #000;
+      background-color: transparent;
+    }
+
+    .verifycode {
+      flex-shrink: 0;
+      white-space: nowrap;
+      font-family: PingFang SC;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 24px;
+      letter-spacing: 0px;
+      color: #000;
+    }
+  }
+
+  .privacy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 24px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 20px;
+    letter-spacing: 0px;
+    color: rgba(0, 0, 0, 0.45);
+    gap: 4px;
+
+    a {
+      color: #000;
+    }
+  }
+}
+
+.mobileAuth {
+  // height: 100vh;
+  // height: 100dvh;
+  width: 100%;
+  margin: 64px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  .other {
+    font-family: PingFang SC;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0px;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.6);
+    margin: 20px 0 32px;
+  }
+
+  .privacy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 24px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 20px;
+    letter-spacing: 0px;
+    color: rgba(0, 0, 0, 0.45);
+    gap: 4px;
+
+    a {
+      color: #000;
+      margin: 0 4px;
+    }
+  }
+}

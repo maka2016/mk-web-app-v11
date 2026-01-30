@@ -1,0 +1,739 @@
+generator client {
+  provider      = "prisma-client"
+  output        = "../generated/client"
+  binaryTargets = ["native", "darwin-arm64", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// Works Schema - Works and Templates
+// ============================================
+
+enum WorksSpecEntityUnitEnum {
+  px
+  mm
+  cm
+  in
+  pt
+  pc
+
+  @@map("works_spec_entity_unit_enum")
+}
+
+model WorksSpecEntity {
+  alias                String                   @db.VarChar
+  desc                 String?                  @db.VarChar
+  width                Int?
+  height               Int?
+  max_page_count       Int?                     @map("max_page_count")
+  /// 是否翻页
+  is_flip_page         Boolean?                 @map("is_flip_page")
+  /// 是否使用动画
+  use_animation        Boolean?                 @map("use_animation")
+  offline              Boolean?                 @default(false)
+  deleted              Boolean                  @default(false)
+  create_time          DateTime                 @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time          DateTime                 @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  appid                String?                  @db.VarChar
+  /// 是否多页平铺
+  is_flat_page         Boolean?                 @map("is_flat_page")
+  name                 String
+  unit                 WorksSpecEntityUnitEnum?
+  /// 文档id, 通过md5(name)得出的id
+  id                   String                   @id(map: "PK_faad62178424ae6de4f4fc51632") @default(cuid())
+  interactive_features String?                  @map("interactive_features")
+  display_name         String?                  @map("display_name") @db.VarChar
+  viewport_width       Int?                     @map("viewport_width")
+  fixed_height         Boolean?                 @map("fixed_height")
+  export_format        String?                  @map("export_format")
+
+  preview_width  Int? @map("preview_width")
+  preview_height Int? @map("preview_height")
+
+  /// 关联关系
+  works     WorksEntity[] /// 使用该规格的作品
+  templates TemplateEntity[] /// 使用该规格的模板
+
+  @@index([alias], map: "IDX_b4e878a9d7962422e5c968abda")
+  @@index([deleted], map: "IDX_fa6660065ae44e94a7cf8abce9")
+  @@index([appid], map: "IDX_cb4295fef52621f89102b0049d")
+  @@index([name], map: "IDX_5e7a363c0d9bd7d0e087c09b95")
+  @@index([id], map: "IDX_faad62178424ae6de4f4fc5163")
+  @@map("works_spec_entity")
+}
+
+/// 设计师实体
+model DesignerEntity {
+  id          String   @id @default(cuid()) @db.Text
+  name        String   @db.VarChar /// 设计师名称
+  desc        String?  @db.VarChar /// 设计师描述
+  avatar      String?  @db.VarChar /// 头像URL
+  email       String?  @db.VarChar /// 邮箱
+  phone       String?  @db.VarChar /// 电话
+  deleted     Boolean  @default(false) /// 是否删除
+  uid         Int      @unique /// 设计师在简帖业务中的用户ID（唯一）
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  /// 关联关系
+  templates TemplateEntity[] /// 关联的模板
+
+  @@index([deleted], map: "IDX_designer_entity_deleted")
+  @@index([id], map: "IDX_designer_entity_id")
+  @@index([uid], map: "IDX_designer_entity_uid")
+  @@map("designer_entity")
+}
+
+model TemplateEntity {
+  title             String   @db.VarChar
+  desc              String?  @db.VarChar
+  cover             String?  @db.VarChar
+  coverV2           String?  @db.VarChar
+  coverV3           Json?    @map("cover_v3")
+  deleted           Boolean  @default(false)
+  deleted_confirmed Boolean  @default(false) @map("deleted_confirmed")
+  create_time       DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time       DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  custom_time       DateTime @default(now()) @map("custom_time") @db.Timestamptz(6)
+  version           Int      @default(1)
+  designer_works_id String?  @map("designer_works_id")
+  designer_uid      Int?     @map("designer_uid") /// 关联的设计师UID（可选）
+  id                String   @id(map: "PK_83f66c7249ae42d36912d8e3def") @default(cuid())
+  spec_id           String?  @map("spec_id") @db.VarChar
+  /// 信封功能：是否配置了信封
+  envelope_enabled  Boolean? @default(false) @map("envelope_enabled")
+  /// 信封功能配置（JSON格式，包含6张信封图片、视频背景等）
+  /// 结构：{ backgroundImage, envelopeLeftOpeningImage, envelopeRightOpeningImage, envelopeInnerImage, envelopeSealImage, duration?, delay?, easing? }
+  envelope_config   Json?    @map("envelope_config")
+
+  /// 关联关系
+  tags             TemplateTag[]                   @relation("TemplateTags")
+  sortMetrics      TemplateSortMetricsEntity? /// 排序依据数据
+  designer         DesignerEntity?                 @relation(fields: [designer_uid], references: [uid]) /// 关联的设计师（可选）
+  spec             WorksSpecEntity?                @relation(fields: [spec_id], references: [id]) /// 关联的规格（可选）
+  daily_statistics TemplateDailyStatisticsEntity[] /// 每日统计数据
+
+  @@index([designer_works_id], map: "IDX_66088e78c3bfd2706638f66598")
+  @@index([designer_uid], map: "IDX_3e730e89a9ec98217d789cd750")
+  @@index([spec_id], map: "IDX_template_entity_spec_id")
+  @@index([id], map: "IDX_83f66c7249ae42d36912d8e3de")
+  @@map("template_entity")
+}
+
+/// 模版标签实体
+model TemplateTag {
+  id          String   @id @default(cuid()) @db.Text
+  type        String   @db.VarChar /// 标签类型
+  name        String   @db.VarChar /// 标签名称
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  /// 关联关系
+  templates TemplateEntity[] @relation("TemplateTags")
+
+  @@index([type], map: "IDX_template_tag_type")
+  @@index([name], map: "IDX_template_tag_name")
+  @@index([id], map: "IDX_template_tag_id")
+  @@map("template_tag")
+}
+
+model TemplateFilterEntity {
+  id                            String                        @id @default(cuid()) @db.Text
+  alias                         String                        @unique @db.VarChar
+  name                          String                        @db.VarChar
+  config                        Json?                         @map("config")
+  create_time                   DateTime                      @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time                   DateTime                      @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  templateIds                   String[]                      @map("template_ids")
+  templateMarketChannelEntities TemplateMarketChannelEntity[]
+
+  @@index([alias], map: "IDX_template_filter_alias")
+  @@index([id], map: "IDX_template_filter_id")
+  @@map("template_filter_entity")
+}
+
+/// 模板排序依据数据表
+model TemplateSortMetricsEntity {
+  id              String    @id @default(cuid()) @db.Text
+  template_id     String    @unique @map("template_id") @db.VarChar /// 关联的模板ID
+  /// 销量：模板被使用的次数
+  sales_count     Int       @default(0) @map("sales_count")
+  /// 创作量：基于该模板创建的作品数量
+  creation_count  Int       @default(0) @map("creation_count")
+  /// 综合排序分：综合多个维度计算出的排序分数
+  composite_score Float     @default(0) @map("composite_score")
+  /// 上架时间：模板上架到商城的时间
+  publish_time    DateTime? @map("publish_time") @db.Timestamptz(6)
+  data            Json?     @map("data")
+  /// 运营置顶权重：数值越大越靠前，0表示不置顶
+  pin_weight      Int       @default(0) @map("pin_weight")
+  create_time     DateTime  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time     DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  /// 关联关系
+  template TemplateEntity @relation(fields: [template_id], references: [id])
+
+  @@index([template_id], map: "IDX_template_sort_metrics_template_id")
+  @@index([sales_count], map: "IDX_template_sort_metrics_sales_count")
+  @@index([creation_count], map: "IDX_template_sort_metrics_creation_count")
+  @@index([composite_score], map: "IDX_template_sort_metrics_composite_score")
+  @@index([publish_time], map: "IDX_template_sort_metrics_publish_time")
+  @@index([pin_weight], map: "IDX_template_sort_metrics_pin_weight")
+  @@index([id], map: "IDX_template_sort_metrics_id")
+  @@map("template_sort_metrics_entity")
+}
+
+/// 模板商城频道实体 - 支持无限嵌套的树形结构
+model TemplateMarketChannelEntity {
+  id           Int                   @id @default(autoincrement())
+  alias        String                @unique @db.VarChar /// 频道别名（唯一标识，用于URL等场景）
+  display_name String                @map("display_name") @db.VarChar /// 频道显示名
+  desc         String?               @map("desc") @db.VarChar /// 频道描述
+  thumb_path   String?               @map("thumb_path") @db.VarChar /// 频道缩略图URL
+  class        String                @db.VarChar /// 频道分类，如: level_1, level_2, level_3, level_4 等，支持扩展
+  locale       String                @db.VarChar /// i18语言类型，如: zh-CN, en-US
+  // template_ids String[] @map("template_ids") /// 关联的多个模板ID数组
+  parent_id    Int?                  @map("parent_id") /// 父频道ID
+  // children_ids Int[]   @map("children_ids") /// 子频道ID数组
+  filter       TemplateFilterEntity? @relation(fields: [templateFilterEntityAlias], references: [alias])
+  appid        String?               @db.VarChar /// 应用ID
+  create_time  DateTime              @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time  DateTime              @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  env          String                @default("production") @db.VarChar /// 环境，如: production, test, dev
+  online       Boolean               @default(true) @map("online") /// 是否上线
+  sort_weight  Int                   @default(0) @map("sort_weight") /// 排序权重
+
+  /// 树形结构关系
+  parent                    TemplateMarketChannelEntity?  @relation("ChannelTree", fields: [parent_id], references: [id])
+  children                  TemplateMarketChannelEntity[] @relation("ChannelTree")
+  templateFilterEntityAlias String?                       @db.Text
+
+  /// 关联关系
+  daily_statistics ChannelDailyStatisticsEntity[]
+
+  @@index([alias], map: "IDX_template_market_channel_alias")
+  @@index([parent_id], map: "IDX_template_market_channel_parent_id")
+  // @@index([template_ids], map: "IDX_template_market_channel_template_ids")
+  @@index([class], map: "IDX_template_market_channel_class")
+  @@index([locale], map: "IDX_template_market_channel_locale")
+  @@index([appid], map: "IDX_template_market_channel_appid")
+  @@index([id], map: "IDX_template_market_channel_id")
+  @@index([env], map: "IDX_template_market_channel_env")
+  @@index([online], map: "IDX_template_market_channel_online")
+  @@map("template_market_channel_entity")
+}
+
+//模板每日统计实体（分端、日）
+
+/// 频道每日统计实体
+model ChannelDailyStatisticsEntity {
+  id                 String   @id @default(cuid()) @db.Text
+  channel_id         Int      @map("channel_id") /// 频道ID，关联到 TemplateMarketChannelEntity
+  date               DateTime @db.Date /// 统计日期
+  device             String   @default("web") @map("device") @db.VarChar(20) /// 设备类型：web、ios、android、wap、other
+  /// 浏览数据
+  view_pv            Int      @default(0) @map("view_pv") /// 浏览PV
+  view_uv            Int      @default(0) @map("view_uv") /// 浏览UV
+  /// 点击数据
+  click_pv           Int      @default(0) @map("click_pv") /// 点击PV
+  click_uv           Int      @default(0) @map("click_uv") /// 点击UV
+  /// 创作数据
+  creation_pv        Int      @default(0) @map("creation_pv") /// 创作PV
+  creation_uv        Int      @default(0) @map("creation_uv") /// 创作UV
+  /// 拦截数据
+  intercept_pv       Int      @default(0) @map("intercept_pv") /// 拦截PV
+  intercept_uv       Int      @default(0) @map("intercept_uv") /// 拦截UV
+  /// 订单数据
+  order_count        Int      @default(0) @map("order_count") /// 订单数
+  transaction_amount Decimal  @default(0) @map("transaction_amount") @db.Decimal(10, 2) /// 成交金额
+  create_time        DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time        DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  /// 关联关系
+  channel TemplateMarketChannelEntity @relation(fields: [channel_id], references: [id])
+
+  @@unique([channel_id, date, device], map: "UQ_channel_daily_statistics_channel_date_device")
+  @@index([channel_id], map: "IDX_channel_daily_statistics_channel_id")
+  @@index([date], map: "IDX_channel_daily_statistics_date")
+  @@index([device], map: "IDX_channel_daily_statistics_device")
+  @@index([channel_id, date], map: "IDX_channel_daily_statistics_channel_date")
+  @@index([channel_id, date, device], map: "IDX_channel_daily_statistics_channel_date_device")
+  @@index([id], map: "IDX_channel_daily_statistics_id")
+  @@map("channel_daily_statistics_entity")
+}
+
+/// 模板每日统计实体
+model TemplateDailyStatisticsEntity {
+  id                 String   @id @default(cuid()) @db.Text
+  template_id        String   @map("template_id") @db.VarChar /// 模板ID，关联到 TemplateEntity
+  date               DateTime @db.Date /// 统计日期
+  device             String   @default("web") @map("device") @db.VarChar(20) /// 设备类型：web、ios、android、wap、other
+  /// 浏览数据
+  view_pv            Int      @default(0) @map("view_pv") /// 浏览PV
+  view_uv            Int      @default(0) @map("view_uv") /// 浏览UV
+  /// 点击数据
+  click_pv           Int      @default(0) @map("click_pv") /// 点击PV
+  click_uv           Int      @default(0) @map("click_uv") /// 点击UV
+  /// 创作数据
+  creation_pv        Int      @default(0) @map("creation_pv") /// 创作PV
+  creation_uv        Int      @default(0) @map("creation_uv") /// 创作UV
+  /// 拦截数据
+  intercept_pv       Int      @default(0) @map("intercept_pv") /// 拦截PV
+  intercept_uv       Int      @default(0) @map("intercept_uv") /// 拦截UV
+  /// 订单数据
+  order_count        Int      @default(0) @map("order_count") /// 订单数
+  transaction_amount Decimal  @default(0) @map("transaction_amount") @db.Decimal(10, 2) /// 成交金额
+  create_time        DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time        DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  /// 关联关系
+  template TemplateEntity @relation(fields: [template_id], references: [id])
+
+  @@unique([template_id, date, device], map: "UQ_template_daily_statistics_template_date_device")
+  @@index([template_id], map: "IDX_template_daily_statistics_template_id")
+  @@index([date], map: "IDX_template_daily_statistics_date")
+  @@index([device], map: "IDX_template_daily_statistics_device")
+  @@index([template_id, date], map: "IDX_template_daily_statistics_template_date")
+  @@index([template_id, date, device], map: "IDX_template_daily_statistics_template_date_device")
+  @@index([id], map: "IDX_template_daily_statistics_id")
+  @@map("template_daily_statistics_entity")
+}
+
+model WorksEntity {
+  title                  String   @db.VarChar
+  desc                   String?  @db.VarChar
+  cover                  String?  @db.VarChar
+  deleted                Boolean  @default(false)
+  deleted_confirmed      Boolean  @default(false) @map("deleted_confirmed")
+  create_time            DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time            DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  custom_time            DateTime @default(now()) @map("custom_time") @db.Timestamptz(6)
+  version                Int      @default(1)
+  child_works_id         String?  @map("child_works_id")
+  template_id            String?  @map("template_id")
+  uid                    Int
+  is_folder              Boolean  @default(false) @map("is_folder")
+  is_paied               Boolean  @default(false) @map("is_paied")
+  folder_id              String?  @map("folder_id") @db.VarChar
+  alias                  String?  @db.VarChar
+  id                     String   @id(map: "PK_a52922adec7b0677945f4471081") @default(cuid())
+  appid                  String?  @db.VarChar
+  offline                Boolean? @default(false)
+  spec_id                String?  @map("spec_id") @db.VarChar
+  is_title_desc_modified Boolean  @default(false) @map("is_title_desc_modified")
+  is_rsvp                Boolean  @default(false) @map("is_rsvp")
+  /// 信封功能：是否配置了信封
+  envelope_enabled       Boolean? @default(false) @map("envelope_enabled")
+  /// 信封功能配置（JSON格式，包含6张信封图片、视频背景等）
+  /// 结构：{ backgroundImage, envelopeLeftOpeningImage, envelopeRightOpeningImage, envelopeInnerImage, envelopeSealImage, duration?, delay?, easing? }
+  envelope_config        Json?    @map("envelope_config")
+  /// 额外的元数据（JSON格式，用于存储来源信息等）
+  metadata               Json?    @map("metadata") @db.JsonB
+
+  /// 关联关系
+  rsvp_form_config RsvpFormConfigEntity? /// RSVP表单配置（可选，一个作品最多有一个RSVP配置）
+  spec             WorksSpecEntity?      @relation(fields: [spec_id], references: [id]) /// 关联的规格（可选）
+
+  @@index([uid], map: "IDX_121635b71d5f6986874d4c5de4")
+  @@index([alias], map: "IDX_d6ed9b7a04fa675847385b649e")
+  @@index([title], map: "IDX_38ec230c026b7bf0f26cd4d3af")
+  @@index([deleted], map: "IDX_be9b6ba752f89754c380cf730c")
+  @@index([deleted_confirmed], map: "IDX_bc26e3ce127467389b618be65e")
+  @@index([template_id], map: "IDX_6971eef7cc8c6e651145e8aaa4")
+  @@index([spec_id], map: "IDX_works_entity_spec_id")
+  @@index([id], map: "IDX_a52922adec7b0677945f447108")
+  @@index([appid], map: "IDX_37330c43b0c9f7e1689cb94e4e")
+  @@map("works_entity")
+}
+
+// ============================================
+// RSVP Schema - Invitation and Event Registration
+// ============================================
+
+/// RSVP 表单配置实体
+model RsvpFormConfigEntity {
+  id          String  @id @default(cuid()) @db.Text
+  works_id    String  @map("works_id") @db.Text /// 关联的作品ID（必需，外键关联到WorksEntity）
+  title       String  @db.VarChar /// 表单标题
+  desc        String? @db.Text /// 表单描述
+  form_fields Json    @map("form_fields") /// 表单字段配置 JSON
+
+  /// 表单功能设置
+  allow_multiple_submit Boolean   @default(true) @map("allow_multiple_submit") /// 是否允许多次提交
+  require_approval      Boolean   @default(true) @map("require_approval") /// 是否需要审核
+  max_submit_count      Int?      @map("max_submit_count") @db.Integer /// 最大提交次数限制
+  submit_deadline       DateTime? @map("submit_deadline") @db.Timestamptz /// 提交截止时间
+
+  /// 状态管理
+  enabled      Boolean  @default(true) /// 是否启用
+  collect_form Boolean  @default(true) @map("collect_form") /// 是否收集表单信息
+  deleted      Boolean  @default(false)
+  create_time  DateTime @default(now()) @map("create_time") @db.Timestamptz
+  update_time  DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz
+
+  /// 关联关系
+  works                WorksEntity                   @relation(fields: [works_id], references: [id]) /// 关联的作品（必需）
+  submissions          RsvpSubmissionEntity[]
+  view_logs            RsvpViewLogEntity[] /// 操作记录（访问、提交、重新提交等）
+  contact_form_configs RsvpContactFormConfigEntity[] /// 关联的嘉宾关系（多对多）
+
+  @@unique([works_id], map: "UQ_rsvp_form_config_works_id") /// 确保一个作品只有一个RSVP配置
+  @@index([works_id], map: "IDX_rsvp_form_config_works_id")
+  @@index([deleted], map: "IDX_rsvp_form_config_deleted")
+  @@index([enabled], map: "IDX_rsvp_form_config_enabled")
+  @@index([id], map: "IDX_rsvp_form_config_id")
+  @@map("rsvp_form_config_entity")
+}
+
+/// RSVP 提交状态枚举
+enum RsvpSubmissionStatusEnum {
+  pending /// 待审核
+  approved /// 已确认
+  rejected /// 已拒绝
+  cancelled /// 已取消
+
+  @@map("rsvp_submission_status_enum")
+}
+
+/// RSVP 提交记录实体（版本化设计）
+model RsvpSubmissionEntity {
+  id             String  @id @default(cuid()) @db.Text
+  form_config_id String  @map("form_config_id") @db.Text /// 关联的表单配置ID
+  contact_id     String? @map("contact_id") @db.Text /// 关联的联系人ID
+
+  /// 版本化管理
+  submission_group_id String @map("submission_group_id") @db.Text /// 同一逻辑提交的组ID（第一次提交时等于id，后续修改使用第一次的id）
+
+  /// 提交数据
+  will_attend     Boolean?                 @map("will_attend") /// 是否出席（true=出席，false=不出席，null=未选择）
+  submission_data Json                     @map("submission_data") /// 提交的表单数据 JSON
+  status          RsvpSubmissionStatusEnum @default(pending) /// 提交状态
+
+  /// 审核信息
+  approved_by   String?   @map("approved_by") @db.VarChar /// 审核人
+  approved_time DateTime? @map("approved_time") @db.Timestamptz /// 审核时间
+  reject_reason String?   @map("reject_reason") @db.Text /// 拒绝原因
+
+  /// 修改信息（仅修改时填写）
+  changed_fields Json?   @map("changed_fields") /// 变更字段列表 JSON
+  operator_type  String? @map("operator_type") @db.VarChar /// 操作类型：visitor（访客）、admin（管理员）、system（系统）
+  operator_id    String? @map("operator_id") @db.VarChar /// 操作人ID
+  operator_name  String? @map("operator_name") @db.VarChar /// 操作人名称
+  remark         String? @db.Text /// 修改备注
+
+  /// 状态管理
+  deleted     Boolean  @default(false)
+  /// 注意：最新版本通过 create_time 排序获取；版本号可通过查询时排序后的序号计算
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
+
+  /// 关联关系
+  form_config RsvpFormConfigEntity @relation(fields: [form_config_id], references: [id])
+  contact     RsvpContactEntity?   @relation(fields: [contact_id], references: [id])
+  action_logs RsvpViewLogEntity[] /// 操作记录
+
+  @@index([form_config_id], map: "IDX_rsvp_submission_form_config_id")
+  @@index([contact_id], map: "IDX_rsvp_submission_contact_id")
+  @@index([submission_group_id], map: "IDX_rsvp_submission_group_id")
+  @@index([status], map: "IDX_rsvp_submission_status")
+  @@index([deleted], map: "IDX_rsvp_submission_deleted")
+  @@index([create_time], map: "IDX_rsvp_submission_create_time")
+  @@index([submission_group_id, create_time], map: "IDX_rsvp_submission_group_time") /// 用于快速查询最新版本和历史版本
+  @@index([id], map: "IDX_rsvp_submission_id")
+  @@map("rsvp_submission_entity")
+}
+
+/// RSVP 操作日志实体（访问、提交、重新提交等）
+model RsvpViewLogEntity {
+  id             String  @id @default(cuid()) @db.Text
+  form_config_id String  @map("form_config_id") @db.Text /// 关联的表单配置ID
+  contact_id     String? @map("contact_id") @db.Text /// 关联的嘉宾ID（可选，公开访客可能没有）
+
+  /// 操作类型
+  action_type String @default("view_page") @map("action_type") @db.VarChar /// 操作类型：view_page（访问页面）、submit（提交）、resubmit（重新提交）
+
+  /// 关联的提交记录（仅用于 submit 和 resubmit）
+  submission_id String? @map("submission_id") @db.Text
+
+  /// 访问信息
+  ip_address  String? @map("ip_address") @db.VarChar /// IP地址
+  user_agent  String? @map("user_agent") @db.Text /// User-Agent
+  referer     String? @db.Text /// 来源页面
+  device_type String? @map("device_type") @db.VarChar /// 设备类型（mobile、desktop、tablet等）
+
+  /// 访问时长（秒）- 仅用于 view_page
+  view_duration Int? @map("view_duration") @db.Integer /// 页面停留时长（秒）
+
+  /// 操作详情
+  metadata Json? @db.JsonB /// 额外的元数据
+
+  /// 时间戳
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
+
+  /// 关联关系
+  form_config RsvpFormConfigEntity  @relation(fields: [form_config_id], references: [id])
+  contact     RsvpContactEntity?    @relation(fields: [contact_id], references: [id])
+  submission  RsvpSubmissionEntity? @relation(fields: [submission_id], references: [id])
+
+  @@index([form_config_id], map: "IDX_rsvp_view_log_form_config_id")
+  @@index([contact_id], map: "IDX_rsvp_view_log_contact_id")
+  @@index([action_type], map: "IDX_rsvp_view_log_action_type")
+  @@index([create_time], map: "IDX_rsvp_view_log_create_time")
+  @@index([ip_address], map: "IDX_rsvp_view_log_ip_address")
+  @@index([id], map: "IDX_rsvp_view_log_id")
+  @@map("rsvp_view_log_entity")
+}
+
+/// RSVP 联系人实体
+model RsvpContactEntity {
+  id    String  @id @default(cuid()) @db.Text
+  name  String  @db.VarChar /// 联系人姓名
+  email String? @db.VarChar /// 邮箱
+  phone String? @db.VarChar /// 电话
+
+  /// 嘉宾归属：嘉宾归属于简帖用户（uid），而不是某个RSVP表单
+  uid Int @map("uid") /// 用户ID，嘉宾归属于该用户
+
+  /// 邀请分享信息
+  invite_title String? @db.VarChar /// 邀请标题
+  invite_desc  String? @db.VarChar /// 邀请描述
+
+  /// 备注：至少需要 email 或 phone 其中一个
+
+  /// 状态管理
+  deleted     Boolean  @default(false)
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
+  update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz
+
+  /// 关联关系
+  submissions          RsvpSubmissionEntity[]
+  action_logs          RsvpViewLogEntity[] /// 操作记录
+  contact_form_configs RsvpContactFormConfigEntity[] /// 关联的表单（多对多）
+
+  @@unique([email], map: "UQ_rsvp_contact_email")
+  @@unique([phone], map: "UQ_rsvp_contact_phone")
+  @@index([name], map: "IDX_rsvp_contact_name")
+  @@index([email], map: "IDX_rsvp_contact_email")
+  @@index([phone], map: "IDX_rsvp_contact_phone")
+  @@index([uid], map: "IDX_rsvp_contact_uid")
+  @@index([deleted], map: "IDX_rsvp_contact_deleted")
+  @@index([id], map: "IDX_rsvp_contact_id")
+  @@map("rsvp_contact_entity")
+}
+
+/// RSVP 嘉宾与表单的多对多关联表
+model RsvpContactFormConfigEntity {
+  id             String @id @default(cuid()) @db.Text
+  contact_id     String @map("contact_id") @db.Text /// 关联的嘉宾ID
+  form_config_id String @map("form_config_id") @db.Text /// 关联的表单配置ID
+
+  /// 时间戳
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz
+
+  /// 关联关系
+  contact     RsvpContactEntity    @relation(fields: [contact_id], references: [id])
+  form_config RsvpFormConfigEntity @relation(fields: [form_config_id], references: [id])
+
+  @@unique([contact_id, form_config_id], map: "UQ_rsvp_contact_form_config")
+  @@index([contact_id], map: "IDX_rsvp_contact_form_config_contact_id")
+  @@index([form_config_id], map: "IDX_rsvp_contact_form_config_form_config_id")
+  @@index([id], map: "IDX_rsvp_contact_form_config_id")
+  @@map("rsvp_contact_form_config_entity")
+}
+
+/// RSVP 通知已读记录表
+model RsvpNotificationReadEntity {
+  id            String  @id @default(cuid()) @db.Text
+  user_id       String  @map("user_id") @db.Text /// 用户ID
+  submission_id String  @map("submission_id") @db.Text /// 提交记录ID
+  action_log_id String? @map("action_log_id") @db.Text /// 操作日志ID（可选）
+
+  /// 时间戳
+  read_time DateTime @default(now()) @map("read_time") @db.Timestamptz /// 已读时间
+
+  @@unique([user_id, submission_id], map: "UQ_rsvp_notification_user_submission")
+  @@index([user_id], map: "IDX_rsvp_notification_user_id")
+  @@index([submission_id], map: "IDX_rsvp_notification_submission_id")
+  @@map("rsvp_notification_read_entity")
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model boost_activity {
+  id                 Int                      @id(map: "PK_efa2f9f1a364deeee11d138fb1f") @default(autoincrement())
+  uid                Int
+  requiredPeople     Int
+  timeLimit          Int
+  type               boost_activity_type_enum
+  createdAt          DateTime                 @default(now()) @db.Timestamp(6)
+  worksId            String?                  @db.VarChar
+  sub_boost_activity sub_boost_activity[]
+
+  @@ignore
+}
+
+// ============================================
+// 兼容旧业务的 Schema，不要再使用这些模型
+// ============================================
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model boost_record {
+  id                 Int                    @id(map: "PK_566dfb09e9e088680ceba49be6c") @default(autoincrement())
+  openId             String                 @db.VarChar
+  nickname           String?                @db.VarChar
+  avatar             String?                @db.VarChar
+  type               boost_record_type_enum
+  score              Int                    @default(1)
+  createdAt          DateTime               @default(now()) @db.Timestamp(6)
+  subBoostActivityId Int?
+  phone              String?                @db.VarChar
+  sub_boost_activity sub_boost_activity?    @relation(fields: [subBoostActivityId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_602109673eb1426d09e3fc9b0ec")
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model group_buy_activity {
+  id                     Int                      @id(map: "PK_38f17d06330460e304db516edd9") @default(autoincrement())
+  uid                    Int
+  worksId                String                   @db.VarChar
+  requiredPeople         Int
+  timeLimit              Int
+  createdAt              DateTime                 @default(now()) @db.Timestamp(6)
+  sub_group_buy_activity sub_group_buy_activity[]
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model group_buy_record {
+  id                     Int                          @id(map: "PK_506483854ef60b902e42255eb86") @default(autoincrement())
+  openId                 String                       @db.VarChar
+  nickname               String?                      @db.VarChar
+  avatar                 String?                      @db.VarChar
+  phone                  String?                      @db.VarChar
+  createdAt              DateTime                     @default(now()) @db.Timestamp(6)
+  status                 group_buy_record_status_enum @default(zero)
+  isLeader               Boolean                      @default(false)
+  subGroupBuyActivityId  Int?
+  sub_group_buy_activity sub_group_buy_activity?      @relation(fields: [subGroupBuyActivityId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_4c81817292604b1ca0199bcb3a1")
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model invite_batch {
+  id             Int      @id @default(autoincrement())
+  uid            Int?
+  work_id        String?  @db.VarChar
+  appid          String?  @db.VarChar
+  title_template String?  @db.VarChar
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model invite_person {
+  id              Int       @id @default(autoincrement())
+  batch_id        Int
+  sent_at         DateTime? @db.Timestamptz(6)
+  last_sent_at    DateTime? @db.Timestamptz(6)
+  visited_at      DateTime? @db.Timestamptz(6)
+  last_visited_at DateTime? @db.Timestamptz(6)
+  version         Int       @default(1)
+  name            String?   @db.VarChar
+  unique_title    String?   @db.VarChar
+  created_at      DateTime  @default(now()) @db.Timestamp(6)
+  updated_at      DateTime  @default(now()) @db.Timestamp(6)
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model invite_send_record {
+  id        Int      @id @default(autoincrement())
+  batch_id  Int
+  person_id Int
+  send_type String   @db.VarChar
+  sent_at   DateTime @default(now()) @db.Timestamp(6)
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model invite_visit_record {
+  id         Int      @id @default(autoincrement())
+  batch_id   Int
+  person_id  Int
+  visited_at DateTime @default(now()) @db.Timestamp(6)
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model sub_boost_activity {
+  id              Int                            @id(map: "PK_c0d1e2553bbc5dfcd528585109e") @default(autoincrement())
+  openId          String                         @db.VarChar
+  nickname        String?                        @db.VarChar
+  avatar          String?                        @db.VarChar
+  phone           String?                        @db.VarChar
+  status          sub_boost_activity_status_enum @default(zero)
+  startTime       DateTime                       @db.Timestamp(6)
+  endTime         DateTime                       @db.Timestamp(6)
+  createdAt       DateTime                       @default(now()) @db.Timestamp(6)
+  boostActivityId Int?
+  boost_record    boost_record[]
+  boost_activity  boost_activity?                @relation(fields: [boostActivityId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_6f4acef639462539c07fac5296a")
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+model sub_group_buy_activity {
+  id                 Int                 @id(map: "PK_99328e0c83dabd37b0d16dbb529") @default(autoincrement())
+  openId             String              @db.VarChar
+  nickname           String?             @db.VarChar
+  avatar             String?             @db.VarChar
+  phone              String?             @db.VarChar
+  startTime          DateTime            @db.Timestamp(6)
+  endTime            DateTime            @db.Timestamp(6)
+  createdAt          DateTime            @default(now()) @db.Timestamp(6)
+  groupBuyActivityId Int?
+  requiredPeople     Int?
+  group_buy_record   group_buy_record[]
+  group_buy_activity group_buy_activity? @relation(fields: [groupBuyActivityId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_8d57a40f62a3dfc3beaa25e3c11")
+
+  @@ignore
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+enum boost_activity_type_enum {
+  once
+  daily
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+enum boost_record_type_enum {
+  friend
+  share
+  shareTimeline
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+enum group_buy_record_status_enum {
+  zero  @map("0")
+  one   @map("1")
+  two   @map("2")
+  three @map("3")
+}
+
+/// @deprecated 已废弃 - 仅用于同步数据库结构，请勿使用
+enum sub_boost_activity_status_enum {
+  zero  @map("0")
+  one   @map("1")
+  two   @map("2")
+  three @map("3")
+}

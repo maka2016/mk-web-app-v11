@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SLS 日志上传 Demo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 40px;
+        max-width: 600px;
+        width: 100%;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 30px;
+        text-align: center;
+        font-size: 28px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      input[type='text'],
+      input[type='password'],
+      textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+
+      input[type='text']:focus,
+      input[type='password']:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+        font-family: inherit;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .status {
+        margin-top: 20px;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        display: none;
+      }
+
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        display: block;
+      }
+
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        display: block;
+      }
+
+      .status.info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+        display: block;
+      }
+
+      .config-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .config-section h2 {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📊 SLS 日志上传 Demo</h1>
+
+      <div class="form-group">
+        <label for="logContent">日志内容（JSON格式）</label>
+        <textarea
+          id="logContent"
+          placeholder='例如: {"level": "info", "message": "这是一条测试日志", "timestamp": "2024-01-01T00:00:00Z"}'
+        ></textarea>
+      </div>
+      <button class="btn" id="uploadBtn" onclick="initTracker()">init</button>
+      <button class="btn" id="uploadBtn" onclick="uploadLog()">上传日志</button>
+
+      <div class="status" id="status"></div>
+    </div>
+
+    <script src="https://g.alicdn.com/sls/sls-js-sdk/0.3.5/web-track-browser.js"></script>
+    <script>
+      let tracker = null;
+
+      function initTracker() {
+        const endpoint = 'cn-beijing.log.aliyuncs.com';
+        const project = 'h5-user-work-log';
+        const logstore = 'h5-work';
+
+        if (window.SLS_Tracker) {
+          tracker = new SLS_Tracker({
+            host: `${endpoint}`, // 所在地域的服务入口。例如cn-hangzhou.log.aliyuncs.com
+            project: `${project}`, // Project名称。
+            logstore: `${logstore}`, // Logstore名称。
+            time: 1, // 发送日志的时间间隔，默认是10秒。
+            count: 10, // 发送日志的数量大小，默认是10条。
+            topic: 'h5-work', // 自定义日志主题。
+            source: 'web',
+          });
+        }
+      }
+
+      function uploadLog(eventType, eventId) {
+        console.log('uploadLog');
+        tracker.send({
+          eventType: eventType,
+          sessionId: '',
+          distincId: '', //存在cookie或者localstorage
+          eventId: eventId,
+        });
+      }
+    </script>
+  </body>
+</html>

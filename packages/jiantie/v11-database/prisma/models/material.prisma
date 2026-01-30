@@ -1,0 +1,121 @@
+/// 素材分类实体（顶层分类，用于区分不同类型的素材，如：图片、视频、模板等）
+model MaterialClassEntity {
+  id              String                @id @default(cuid())
+  /// 分类名称
+  name            String                @db.VarChar
+  /// 分类描述
+  desc            String?               @db.VarChar
+  /// 分类别名（唯一标识，用于作用域隔离）
+  alias           String?               @unique @db.VarChar
+  /// 是否删除
+  deleted         Boolean               @default(false)
+  create_time     DateTime              @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time     DateTime              @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 排序权重，数值越大越靠前
+  sort_order      Int                   @default(0) @map("sort_order")
+  material_floors MaterialFloorEntity[]
+  material_items  MaterialItemEntity[]
+  theme_tasks     ThemeTaskEntity[]     @relation("MaterialClassThemeTasks")
+
+  @@index([alias], map: "IDX_material_class_alias")
+  @@index([deleted], map: "IDX_material_class_deleted")
+  @@index([id], map: "IDX_material_class_id")
+  @@index([sort_order], map: "IDX_material_class_sort_order")
+  @@map("material_class_entity")
+}
+
+/// 素材标签/分类实体（支持无限嵌套的树形结构）
+model MaterialFloorEntity {
+  id                String                      @id @default(cuid())
+  /// 标签名称
+  name              String                      @db.VarChar
+  /// 标签描述
+  desc              String?                     @db.VarChar
+  /// 关联的素材分类ID
+  material_class_id String                      @map("material_class_id")
+  /// 是否删除
+  deleted           Boolean                     @default(false)
+  create_time       DateTime                    @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time       DateTime                    @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  material_class    MaterialClassEntity         @relation(fields: [material_class_id], references: [id])
+  child_relations   MaterialFloorParentEntity[] @relation("MaterialFloorChild")
+  parent_relations  MaterialFloorParentEntity[] @relation("MaterialFloorParent")
+  material_items    MaterialItemTagEntity[]
+
+  @@index([material_class_id], map: "IDX_material_floor_material_class_id")
+  @@index([deleted], map: "IDX_material_floor_deleted")
+  @@index([name], map: "IDX_material_floor_name")
+  @@index([id], map: "IDX_material_floor_id")
+  @@map("material_floor_entity")
+}
+
+/// 素材标签层级关系中间表（支持多对多父子关系）
+model MaterialFloorParentEntity {
+  id         String              @id @default(cuid())
+  /// 父标签ID
+  parent_id  String              @map("parent_id")
+  /// 子标签ID
+  child_id   String              @map("child_id")
+  /// 排序权重，数值越大越靠前
+  sort_order Int                 @default(0) @map("sort_order")
+  child      MaterialFloorEntity @relation("MaterialFloorChild", fields: [child_id], references: [id])
+  parent     MaterialFloorEntity @relation("MaterialFloorParent", fields: [parent_id], references: [id])
+
+  @@unique([parent_id, child_id], map: "UQ_material_floor_parent_child")
+  @@index([parent_id], map: "IDX_material_floor_parent_parent_id")
+  @@index([child_id], map: "IDX_material_floor_parent_child_id")
+  @@index([parent_id, sort_order], map: "IDX_material_floor_parent_sort")
+  @@index([id], map: "IDX_material_floor_parent_id")
+  @@map("material_floor_parent_entity")
+}
+
+/// 素材项实体
+model MaterialItemEntity {
+  id                String                  @id @default(cuid())
+  /// 素材名称
+  name              String                  @db.VarChar
+  /// 作者
+  author            String                  @db.VarChar
+  /// 描述
+  desc              String?                 @db.VarChar
+  /// 素材内容（JSON格式，支持泛型）
+  content           Json                    @map("content")
+  /// 封面URL
+  cover_url         String                  @map("cover_url") @db.VarChar
+  /// 关联的素材分类ID（可选）
+  material_class_id String?                 @map("material_class_id")
+  /// 是否删除
+  deleted           Boolean                 @default(false)
+  create_time       DateTime                @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time       DateTime                @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  material_class    MaterialClassEntity?    @relation(fields: [material_class_id], references: [id])
+  material_tags     MaterialItemTagEntity[]
+
+  @@index([material_class_id], map: "IDX_material_item_material_class_id")
+  @@index([author], map: "IDX_material_item_author")
+  @@index([name], map: "IDX_material_item_name")
+  @@index([deleted], map: "IDX_material_item_deleted")
+  @@index([create_time], map: "IDX_material_item_create_time")
+  @@index([id], map: "IDX_material_item_id")
+  @@map("material_item_entity")
+}
+
+/// 素材项与标签的多对多关系中间表
+model MaterialItemTagEntity {
+  id                String              @id @default(cuid())
+  /// 素材项ID
+  material_item_id  String              @map("material_item_id")
+  /// 素材标签ID
+  material_floor_id String              @map("material_floor_id")
+  /// 排序权重，数值越大越靠前
+  sort_order        Int                 @default(0) @map("sort_order")
+  material_floor    MaterialFloorEntity @relation(fields: [material_floor_id], references: [id])
+  material_item     MaterialItemEntity  @relation(fields: [material_item_id], references: [id])
+
+  @@unique([material_item_id, material_floor_id], map: "UQ_material_item_tag")
+  @@index([material_item_id], map: "IDX_material_item_tag_item_id")
+  @@index([material_floor_id], map: "IDX_material_item_tag_floor_id")
+  @@index([material_floor_id, sort_order], map: "IDX_material_item_tag_sort")
+  @@index([id], map: "IDX_material_item_tag_id")
+  @@map("material_item_tag_entity")
+}

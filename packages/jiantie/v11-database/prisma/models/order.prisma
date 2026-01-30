@@ -1,0 +1,253 @@
+/// 订单表 - 存储订单信息（合并了 order_extra 到 meta 字段）
+model Order {
+  id            String        @id @default(cuid())
+  /// 业务唯一订单号
+  order_no      String        @unique @map("order_no") @db.VarChar(30)
+  /// 应用ID
+  appid         String        @map("appid") @db.VarChar(50)
+  /// 用户ID
+  uid           Int           @map("uid")
+  /// 订单金额（分）
+  amount        Int           @map("amount")
+  /// 货币类型
+  currency      String        @map("currency") @db.VarChar(10)
+  /// 订单状态：created、paid、cancelled、refunded等
+  order_status  String        @default("created") @map("order_status") @db.VarChar(10)
+  /// 商品别名（冗余字段，便于查询）
+  product_alias String?       @map("product_alias") @db.VarChar(100)
+  /// meta 字段：合并了原 order_extra_info 表的数据
+  /// 包含：device、version、bundle_id、ip、header_info、channel_id、device_identifiers、utm_metadata、trace_metadata等
+  /// 订单扩展信息（JSON格式）
+  meta          Json          @default("{}") @map("meta")
+  create_time   DateTime      @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time   DateTime      @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  payments      Payment[]
+  refundLogs    RefundLog[]
+  shippingLogs  ShippingLog[]
+
+  @@index([order_no], map: "IDX_order_order_no")
+  @@index([appid], map: "IDX_order_appid")
+  @@index([uid], map: "IDX_order_uid")
+  @@index([order_status], map: "IDX_order_order_status")
+  @@index([product_alias], map: "IDX_order_product_alias")
+  @@index([create_time], map: "IDX_order_create_time")
+  @@index([id], map: "IDX_order_id")
+  @@map("order")
+}
+
+/// 支付记录表 - 存储支付信息
+model Payment {
+  id             String    @id @default(cuid())
+  /// 订单号
+  order_no       String    @map("order_no") @db.VarChar(30)
+  /// 应用ID
+  appid          String    @map("appid") @db.VarChar(50)
+  /// 用户ID
+  uid            Int       @map("uid")
+  /// 支付方式：wechat、alipay、apple_iap等
+  payment_method String    @map("payment_method") @db.VarChar(30)
+  /// 支付类型
+  payment_type   String    @map("payment_type") @db.VarChar(30)
+  /// 支付交易ID
+  transaction_id String?   @map("transaction_id") @db.VarChar(100)
+  /// 支付金额（分）
+  amount         Int       @map("amount")
+  /// 货币类型
+  currency       String    @map("currency") @db.VarChar(10)
+  /// 支付状态：pending、success、failed、cancelled
+  payment_status String    @default("pending") @map("payment_status") @db.VarChar(20)
+  /// 渠道原始响应
+  raw_response   String?   @map("raw_response")
+  /// 支付完成时间
+  paid_at        DateTime? @map("paid_at") @db.Timestamptz(6)
+  create_time    DateTime  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time    DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  order          Order     @relation(fields: [order_no], references: [order_no])
+
+  @@index([order_no], map: "IDX_payment_order_no")
+  @@index([appid], map: "IDX_payment_appid")
+  @@index([uid], map: "IDX_payment_uid")
+  @@index([payment_method], map: "IDX_payment_payment_method")
+  @@index([payment_status], map: "IDX_payment_payment_status")
+  @@index([transaction_id], map: "IDX_payment_transaction_id")
+  @@index([create_time], map: "IDX_payment_create_time")
+  @@index([id], map: "IDX_payment_id")
+  @@map("payment")
+}
+
+/// 三方支付凭证表 - 存储第三方支付平台的凭证信息
+model PaymentTokenLog {
+  id             String    @id @default(cuid())
+  /// 订单号
+  order_no       String    @map("order_no") @db.VarChar(30)
+  /// 应用ID
+  appid          String    @map("appid") @db.VarChar(50)
+  /// 用户ID
+  uid            Int       @map("uid")
+  /// 支付方式
+  payment_method String    @map("payment_method") @db.VarChar(30)
+  /// 支付凭证token
+  token          String?   @map("token")
+  /// 凭证数据（JSON格式）
+  token_data     Json      @default("{}") @map("token_data")
+  /// 凭证过期时间
+  expires_at     DateTime? @map("expires_at") @db.Timestamptz(6)
+  create_time    DateTime  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time    DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@index([order_no], map: "IDX_payment_token_log_order_no")
+  @@index([appid], map: "IDX_payment_token_log_appid")
+  @@index([uid], map: "IDX_payment_token_log_uid")
+  @@index([payment_method], map: "IDX_payment_token_log_payment_method")
+  @@index([create_time], map: "IDX_payment_token_log_create_time")
+  @@index([id], map: "IDX_payment_token_log_id")
+  @@map("payment_token_log")
+}
+
+/// 三方回调log表 - 存储第三方支付平台回调的日志
+model PaymentCallbackLog {
+  id             String    @id @default(cuid())
+  /// 订单号（可选）
+  order_no       String?   @map("order_no") @db.VarChar(30)
+  /// 应用ID
+  appid          String    @map("appid") @db.VarChar(50)
+  /// 支付方式
+  payment_method String    @map("payment_method") @db.VarChar(30)
+  /// 回调类型：wechat、alipay等
+  callback_type  String    @map("callback_type") @db.VarChar(50)
+  /// 原始回调数据
+  raw_data       String    @map("raw_data")
+  /// 解析后的数据（JSON格式）
+  parsed_data    Json      @default("{}") @map("parsed_data")
+  /// 处理状态：pending、success、failed
+  status         String    @default("pending") @map("status") @db.VarChar(20)
+  /// 错误信息
+  error_message  String?   @map("error_message")
+  /// 处理时间
+  process_time   DateTime? @map("process_time") @db.Timestamptz(6)
+  create_time    DateTime  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time    DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@index([order_no], map: "IDX_payment_callback_log_order_no")
+  @@index([appid], map: "IDX_payment_callback_log_appid")
+  @@index([payment_method], map: "IDX_payment_callback_log_payment_method")
+  @@index([callback_type], map: "IDX_payment_callback_log_callback_type")
+  @@index([status], map: "IDX_payment_callback_log_status")
+  @@index([create_time], map: "IDX_payment_callback_log_create_time")
+  @@index([id], map: "IDX_payment_callback_log_id")
+  @@map("payment_callback_log")
+}
+
+/// 三方回调日志表 - 存储第三方支付平台的 Webhook 回调日志
+model PaymentWebhook {
+  id             String    @id @default(cuid())
+  /// 订单号（可选）
+  order_no       String?   @map("order_no") @db.VarChar(30)
+  /// 应用ID
+  appid          String    @map("appid") @db.VarChar(50)
+  /// 支付方式
+  payment_method String    @map("payment_method") @db.VarChar(30)
+  /// Webhook类型
+  webhook_type   String    @map("webhook_type") @db.VarChar(50)
+  /// HTTP Headers（JSON格式）
+  headers        Json      @default("{}") @map("headers")
+  /// 请求体
+  body           String    @map("body")
+  /// 签名
+  signature      String?   @map("signature") @db.VarChar(255)
+  /// 处理状态：pending、success、failed
+  status         String    @default("pending") @map("status") @db.VarChar(20)
+  /// 错误信息
+  error_message  String?   @map("error_message")
+  /// 处理时间
+  process_time   DateTime? @map("process_time") @db.Timestamptz(6)
+  create_time    DateTime  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time    DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@index([order_no], map: "IDX_payment_webhook_order_no")
+  @@index([appid], map: "IDX_payment_webhook_appid")
+  @@index([payment_method], map: "IDX_payment_webhook_payment_method")
+  @@index([webhook_type], map: "IDX_payment_webhook_webhook_type")
+  @@index([status], map: "IDX_payment_webhook_status")
+  @@index([create_time], map: "IDX_payment_webhook_create_time")
+  @@index([id], map: "IDX_payment_webhook_id")
+  @@map("payment_webhook")
+}
+
+/// 发货记录流水表 - 存储发货记录（对应旧库 event_webhook_log）
+model ShippingLog {
+  id            String    @id @default(cuid())
+  /// 订单号
+  order_no      String    @map("order_no") @db.VarChar(30)
+  /// 应用ID
+  appid         String    @map("appid") @db.VarChar(50)
+  /// 用户ID
+  uid           Int       @map("uid")
+  /// 发货类型：apple_iap、wechat、alipay等
+  shipping_type String    @map("shipping_type") @db.VarChar(50)
+  /// 发货数据（JSON格式）
+  shipping_data Json      @default("{}") @map("shipping_data")
+  /// 发货状态：pending、success、failed
+  status        String    @default("pending") @map("status") @db.VarChar(20)
+  /// 错误信息
+  error_message String?   @map("error_message")
+  /// 发货时间
+  shipped_at    DateTime? @map("shipped_at") @db.Timestamptz(6)
+  create_time   DateTime  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time   DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 发货来源：v5_api（旧API）、v11_order（新订单）、cms（CMS系统）等
+  source        String?   @map("source") @db.VarChar(50)
+  order         Order     @relation(fields: [order_no], references: [order_no])
+
+  @@index([order_no], map: "IDX_shipping_log_order_no")
+  @@index([appid], map: "IDX_shipping_log_appid")
+  @@index([uid], map: "IDX_shipping_log_uid")
+  @@index([shipping_type], map: "IDX_shipping_log_shipping_type")
+  @@index([status], map: "IDX_shipping_log_status")
+  @@index([source], map: "IDX_shipping_log_source")
+  @@index([create_time], map: "IDX_shipping_log_create_time")
+  @@index([id], map: "IDX_shipping_log_id")
+  @@map("shipping_log")
+}
+
+/// 退款流水表 - 存储退款记录（仅MAKA）
+model RefundLog {
+  id             String    @id @default(cuid())
+  /// 订单号
+  order_no       String    @map("order_no") @db.VarChar(30)
+  /// 应用ID
+  appid          String    @map("appid") @db.VarChar(50)
+  /// 用户ID
+  uid            Int       @map("uid")
+  /// 退款单号
+  refund_no      String    @unique @map("refund_no") @db.VarChar(50)
+  /// 退款金额（分）
+  refund_amount  Int       @map("refund_amount")
+  /// 货币类型
+  currency       String    @map("currency") @db.VarChar(10)
+  /// 退款方式：wechat、alipay等
+  refund_method  String    @map("refund_method") @db.VarChar(30)
+  /// 退款原因
+  refund_reason  String?   @map("refund_reason")
+  /// 退款状态：pending、success、failed
+  refund_status  String    @default("pending") @map("refund_status") @db.VarChar(20)
+  /// 退款交易ID
+  transaction_id String?   @map("transaction_id") @db.VarChar(100)
+  /// 渠道原始响应
+  raw_response   String?   @map("raw_response")
+  /// 退款完成时间
+  refunded_at    DateTime? @map("refunded_at") @db.Timestamptz(6)
+  create_time    DateTime  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time    DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  order          Order     @relation(fields: [order_no], references: [order_no])
+
+  @@index([order_no], map: "IDX_refund_log_order_no")
+  @@index([refund_no], map: "IDX_refund_log_refund_no")
+  @@index([appid], map: "IDX_refund_log_appid")
+  @@index([uid], map: "IDX_refund_log_uid")
+  @@index([refund_method], map: "IDX_refund_log_refund_method")
+  @@index([refund_status], map: "IDX_refund_log_refund_status")
+  @@index([create_time], map: "IDX_refund_log_create_time")
+  @@index([id], map: "IDX_refund_log_id")
+  @@map("refund_log")
+}

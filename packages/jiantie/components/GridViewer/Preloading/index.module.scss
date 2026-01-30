@@ -1,0 +1,65 @@
+.container {
+  background: white;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100dvh;
+  height: 100vh;
+  z-index: 999;
+  transition: all ease 0.3s;
+
+  .html_loading_area {
+    position: absolute;
+    width: 96px;
+    height: 96px;
+    top: 30%;
+    left: 50%;
+    margin-left: -48px;
+    transition: all ease 0.3s;
+
+    .cycle_container {
+      transition: all ease 0.3s;
+    }
+
+    .outer_circle {
+      position: absolute;
+      width: 96px;
+      height: 96px;
+      border-radius: 140px;
+      background: hsl(349, 100%, 80%);
+      opacity: 0.3;
+      animation: outer-circle 2s infinite;
+      -moz-animation: outer-circle 2s infinite;
+      -webkit-animation: outer-circle 2s infinite;
+      -o-animation: outer-circle 2s infinite;
+    }
+
+    .inner_circle {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      margin-top: -18px;
+      margin-left: -18px;
+      height: 36px;
+      width: 36px;
+      background: hsl(349, 100%, 80%);
+      border-radius: 140px;
+    }
+  }
+
+  @keyframes outer-circle {
+    0% {
+      transform: scale(0.5);
+    }
+
+    50% {
+      transform: scale(1);
+    }
+
+    100% {
+      transform: scale(0.5);
+    }
+  }
+}

@@ -1,0 +1,117 @@
+model WorksSpecEntity {
+  alias                String                   @db.VarChar
+  desc                 String?                  @db.VarChar
+  width                Int?
+  height               Int?
+  max_page_count       Int?                     @map("max_page_count")
+  /// 是否翻页
+  is_flip_page         Boolean?                 @map("is_flip_page")
+  /// 是否使用动画
+  use_animation        Boolean?                 @map("use_animation")
+  offline              Boolean?                 @default(false)
+  deleted              Boolean                  @default(false)
+  create_time          DateTime                 @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time          DateTime                 @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  appid                String?                  @db.VarChar
+  /// 是否多页平铺
+  is_flat_page         Boolean?                 @map("is_flat_page")
+  name                 String
+  unit                 WorksSpecEntityUnitEnum?
+  /// 文档id, 通过md5(name)得出的id
+  id                   String                   @id(map: "PK_faad62178424ae6de4f4fc51632") @default(cuid())
+  interactive_features String?                  @map("interactive_features")
+  display_name         String?                  @map("display_name") @db.VarChar
+  viewport_width       Int?                     @map("viewport_width")
+  fixed_height         Boolean?                 @map("fixed_height")
+  export_format        String?                  @map("export_format")
+  preview_width        Int?                     @map("preview_width")
+  preview_height       Int?                     @map("preview_height")
+  templates            TemplateEntity[]
+  theme_tasks          ThemeTaskEntity[]        @relation("WorksSpecThemeTasks")
+  works                WorksEntity[]
+
+  @@index([alias], map: "IDX_b4e878a9d7962422e5c968abda")
+  @@index([deleted], map: "IDX_fa6660065ae44e94a7cf8abce9")
+  @@index([appid], map: "IDX_cb4295fef52621f89102b0049d")
+  @@index([name], map: "IDX_5e7a363c0d9bd7d0e087c09b95")
+  @@index([id], map: "IDX_faad62178424ae6de4f4fc5163")
+  @@map("works_spec_entity")
+}
+
+model WorksEntity {
+  title                  String                       @db.VarChar
+  desc                   String?                      @db.VarChar
+  cover                  String?                      @db.VarChar
+  deleted                Boolean                      @default(false)
+  deleted_confirmed      Boolean                      @default(false) @map("deleted_confirmed")
+  create_time            DateTime                     @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time            DateTime                     @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  custom_time            DateTime                     @default(now()) @map("custom_time") @db.Timestamptz(6)
+  version                Int                          @default(1)
+  child_works_id         String?                      @map("child_works_id")
+  template_id            String?                      @map("template_id")
+  uid                    Int
+  is_folder              Boolean                      @default(false) @map("is_folder")
+  is_paied               Boolean                      @default(false) @map("is_paied")
+  folder_id              String?                      @map("folder_id") @db.VarChar
+  alias                  String?                      @db.VarChar
+  id                     String                       @id(map: "PK_a52922adec7b0677945f4471081") @default(cuid())
+  appid                  String?                      @db.VarChar
+  offline                Boolean?                     @default(false)
+  spec_id                String?                      @map("spec_id") @db.VarChar
+  is_title_desc_modified Boolean                      @default(false) @map("is_title_desc_modified")
+  /// 废弃字段，使用 rsvp_form_config.enabled 替代
+  is_rsvp                Boolean                      @default(false) @map("is_rsvp")
+  /// 信封功能：是否配置了信封
+  envelope_enabled       Boolean?                     @default(false) @map("envelope_enabled")
+  /// 信封功能配置（JSON格式，包含6张信封图片、视频背景等）
+  /// 结构：{ backgroundImage, envelopeLeftOpeningImage, envelopeRightOpeningImage, envelopeInnerImage, envelopeSealImage, duration?, delay?, easing? }
+  envelope_config        Json?                        @map("envelope_config")
+  /// 额外的元数据（JSON格式，用于存储来源信息等）
+  metadata               Json?                        @map("metadata")
+  /// 编辑器版本，目前最新是2，1是旧版编辑器
+  editor_version         Int                          @default(2) @map("editor_version")
+  /// 分享类型： invite、poster、other，默认other
+  share_type             ShareTypeEnum?               @default(other) @map("share_type")
+  relay_config           RelayConfigEntity?
+  rsvp_contacts          RsvpContactEntity[]
+  rsvp_form_config       RsvpFormConfigEntity?
+  templates              TemplateEntity[]             @relation("TemplateDesignerWorks")
+  theme_task_submissions ThemeTaskSubmissionEntity[]  @relation("WorksThemeTaskSubmissions")
+  daily_statistics       WorksDailyStatisticsEntity[]
+  specInfo               WorksSpecEntity?             @relation(fields: [spec_id], references: [id])
+
+  @@index([uid], map: "IDX_121635b71d5f6986874d4c5de4")
+  @@index([alias], map: "IDX_d6ed9b7a04fa675847385b649e")
+  @@index([title], map: "IDX_38ec230c026b7bf0f26cd4d3af")
+  @@index([deleted], map: "IDX_be9b6ba752f89754c380cf730c")
+  @@index([deleted_confirmed], map: "IDX_bc26e3ce127467389b618be65e")
+  @@index([template_id], map: "IDX_6971eef7cc8c6e651145e8aaa4")
+  @@index([spec_id], map: "IDX_works_entity_spec_id")
+  @@index([id], map: "IDX_a52922adec7b0677945f447108")
+  @@index([appid], map: "IDX_37330c43b0c9f7e1689cb94e4e")
+  @@index([share_type], map: "IDX_works_entity_share_type")
+  @@map("works_entity")
+}
+
+enum WorksSpecEntityUnitEnum {
+  px
+  mm
+  cm
+  in
+  pt
+  pc
+
+  @@map("works_spec_entity_unit_enum")
+}
+
+enum ShareTypeEnum {
+  /// 邀请
+  invite
+  /// 海报
+  poster
+  /// 其他
+  other
+
+  @@map("share_type_enum")
+}

@@ -1,0 +1,106 @@
+//从旧系统同步信息到新的数据表里
+
+//1、用户数据
+
+旧数据：getUsercenterDB
+
+/******************************************/
+/*   DatabaseName = mk_user_center   */
+/*   TableName = users   */
+/******************************************/
+CREATE TABLE `users` (
+  `uid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'uid',
+  `appid` varchar(50) NOT NULL COMMENT '应用ID maka|danye|zebra|shouzhang',
+  `username` varchar(50) NOT NULL DEFAULT '' COMMENT '用户名',
+  `avatar` varchar(255) NOT NULL DEFAULT '' COMMENT '头像',
+  `reg_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` tinyint(3) NOT NULL DEFAULT '0' COMMENT '状态: 0正常 -1封停',
+  `full_name` varchar(100) NOT NULL DEFAULT '' COMMENT '姓名',
+  `address` varchar(255) NOT NULL DEFAULT '' COMMENT '地址',
+  `city` varchar(50) NOT NULL DEFAULT '' COMMENT '城市',
+  `country` varchar(50) NOT NULL DEFAULT '' COMMENT '国家',
+  `is_team` tinyint(3) NOT NULL DEFAULT '0' COMMENT '是否团队帐号: 0否 1是',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`uid`),
+  KEY `idx_uid` (`uid`) USING BTREE,
+  KEY `idx_reg_date` (`reg_date`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=605617581 DEFAULT CHARSET=utf8mb4 COMMENT='用户表'
+;
+
+
+/******************************************/
+/*   DatabaseName = mk_user_center   */
+/*   TableName = user_auth   */
+/******************************************/
+CREATE TABLE `user_auth` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL,
+  `appid` varchar(50) NOT NULL COMMENT '应用ID',
+  `reg_type` varchar(50) NOT NULL DEFAULT '' COMMENT '注册类型 wechat, qq, phone, email',
+  `loginid` varchar(100) NOT NULL DEFAULT '' COMMENT '登录标识，可以是phone、微信unionid、QQ unionid或邮箱',
+  `password_hash` varchar(128) NOT NULL DEFAULT '' COMMENT '密码哈希值',
+  `platform_data` varchar(500) NOT NULL DEFAULT '' COMMENT '特定平台数据',
+  `is_checked` tinyint(4) NOT NULL DEFAULT '1',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unq_key` (`appid`,`reg_type`,`loginid`) USING BTREE,
+  KEY `idx_uid` (`uid`) USING BTREE,
+  KEY `idx_loginid` (`loginid`) USING BTREE,
+  CONSTRAINT `user_auth_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=20930870 DEFAULT CHARSET=utf8mb4 COMMENT='用户身份验证信息表'
+;
+
+
+/******************************************/
+/*   DatabaseName = mk_user_center   */
+/*   TableName = user_activity_logs   */
+/******************************************/
+CREATE TABLE `user_activity_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) DEFAULT NULL,
+  `appid` varchar(50) NOT NULL DEFAULT '',
+  `activity_type` varchar(20) DEFAULT NULL,
+  `device` varchar(20) NOT NULL DEFAULT '',
+  `login_type` varchar(50) NOT NULL DEFAULT '',
+  `ip_addr` varchar(50) DEFAULT NULL,
+  `port` int(11) DEFAULT NULL,
+  `user_agent` text,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `header_json` text,
+  PRIMARY KEY (`id`,`created_at`),
+  KEY `idx_uid` (`uid`) USING BTREE,
+  KEY `idx_appid_activity_created` (`appid`,`activity_type`,`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=2897634 DEFAULT CHARSET=utf8mb4
+/*!50100 PARTITION BY RANGE (YEAR(created_at))
+(PARTITION p0 VALUES LESS THAN (2023) ENGINE = InnoDB,
+ PARTITION p2023 VALUES LESS THAN (2024) ENGINE = InnoDB,
+ PARTITION p2024 VALUES LESS THAN (2025) ENGINE = InnoDB,
+ PARTITION p2025 VALUES LESS THAN (2026) ENGINE = InnoDB,
+ PARTITION p2026 VALUES LESS THAN (2027) ENGINE = InnoDB,
+ PARTITION p2027 VALUES LESS THAN (2028) ENGINE = InnoDB) */
+;
+
+
+/******************************************/
+/*   DatabaseName = mk_user_center   */
+/*   TableName = user_third_party_auth   */
+/******************************************/
+CREATE TABLE `user_third_party_auth` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  `uid` int(11) unsigned NOT NULL COMMENT 'UID',
+  `appid` varchar(50) NOT NULL COMMENT '应用ID',
+  `platform` varchar(20) NOT NULL COMMENT '平台标识(wechat/douyin/apple...)',
+  `external_appid` varchar(100) NOT NULL COMMENT '外部平台的应用ID（如微信AppID、抖音ClientKey）',
+  `openid` varchar(128) NOT NULL COMMENT '第三方用户唯一标识',
+  `unionid` varchar(128) DEFAULT NULL COMMENT '跨应用唯一标识（如微信的 unionid，部分平台无此字段可为空）',
+  `extra_info` text COMMENT '扩展信息',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_key` (`platform`,`external_appid`,`uid`) USING BTREE,
+  KEY `idx_uid_platform` (`uid`,`platform`),
+  KEY `idx_union_id` (`unionid`),
+  KEY `idx_app_platform` (`appid`,`platform`),
+  KEY `idx_openid` (`openid`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=70956 DEFAULT CHARSET=utf8mb4 COMMENT='第三方授权关系表'
+;

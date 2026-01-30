@@ -1,0 +1,61 @@
+.templateCard {
+  position: relative;
+  overflow: hidden;
+  background: rgba(1, 7, 13, 0.1);
+  border-radius: 6px;
+
+  .imageWrap {
+    overflow: hidden;
+    height: 100%;
+    border-radius: 6px;
+    font-size: 0;
+  }
+
+  .spec {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    font-size: 11px;
+    line-height: 16px;
+    padding: 0 2px;
+    color: #fff;
+    border-radius: 2.5px;
+    background-color: rgba(1, 7, 13, 0.4);
+  }
+
+  .free {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 11px;
+    line-height: 16px;
+    padding: 0 2px;
+    color: #fff;
+    border-radius: 2.5px;
+    background-color: rgba(1, 7, 13, 0.4);
+  }
+
+  .new {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: linear-gradient(98.14deg, #ffe768 14.45%, #ffbe00 120%);
+    border: 1px solid;
+    border-image-source: linear-gradient(
+      217.27deg,
+      rgba(255, 255, 255, 0.55) -9.02%,
+      rgba(255, 255, 255, 0) 53.03%
+    );
+    border-radius: 0 6px 0 6px;
+
+    height: 16px;
+    line-height: 16px;
+    font-weight: var(--font-semibold);
+    font-size: 10px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a16207;
+  }
+}

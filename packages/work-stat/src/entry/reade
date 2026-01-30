@@ -1,0 +1,4 @@
+//定时脚本
+//每分钟执行miniutejob：统计前90秒的session
+//每小时执行miniutejob：统计前3600秒的session
+//每30分钟执行一下：statDailyWork.ts

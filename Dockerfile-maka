@@ -1,0 +1,74 @@
+FROM svc.maka.mobi:84/base/node:22-alpine as base
+
+# 安装 pnpm
+RUN npm config set registry https://registry.npmmirror.com
+RUN npm install -g pnpm
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+FROM base AS builder
+WORKDIR /app
+ARG BUILD_ENV
+ARG APP_ID
+COPY . .
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+# ENV ENV=${BUILD_ENV:-test} \
+# APP_ID=${APP_ID:-jiantie}\
+# BASEPATH="/maka2026"\
+# PREFIX='https://res.jiantieapp.com/maka2026/'
+
+RUN ENV=${BUILD_ENV:-test} \
+APP_ID=${APP_ID:-jiantie} \
+BASEPATH="/maka2026" \
+PREFIX='https://res.maka.im/maka2026/' pnpm run -F @mk/jiantie build
+
+FROM base AS jiantie
+RUN apk add --no-cache tzdata
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+WORKDIR /app
+
+COPY --from=builder /app/packages/jiantie/public ./packages/jiantie/public
+# 仅复制构建产物和node_modules
+COPY --from=builder /app/packages/jiantie/.next/standalone ./
+COPY --from=builder /app/packages/jiantie/.next/static ./packages/jiantie/.next/static
+
+# Build arguments
+ARG BUILD_ENV
+ARG APP_ID
+ARG DATABASE_URL
+ARG ALIYUN_AK_ID
+ARG ALIYUN_AK_SECRET
+ARG OSS_MAIN_BUCKET
+ARG OSS_LAN_ENDPOINT
+ARG OSS_REGION
+ARG STS_ROLE_ARN
+ARG EMBENDED_APIKEY
+ARG EMBENDED_HOST
+ARG EMBENDED_MODEL
+ARG SEARCHDB_URL
+ARG RC_DB_URL
+
+# Environment variables
+ENV ENV=${BUILD_ENV:-test} \
+    APP_ID=maka \
+    PORT=3000 \
+    PREFIX='https://res.jiantieapp.com/maka2026/' \
+    SERVICE_NAME=mk-shegongbao-fs \
+    DATABASE_URL=${DATABASE_URL} \
+    PF_DATABASE_URL=${PF_DATABASE_URL} \
+    ALIYUN_AK_ID=${ALIYUN_AK_ID} \
+    ALIYUN_AK_SECRET=${ALIYUN_AK_SECRET} \
+    OSS_MAIN_BUCKET=${OSS_MAIN_BUCKET} \
+    OSS_LAN_ENDPOINT=${OSS_LAN_ENDPOINT} \
+    OSS_REGION=${OSS_REGION} \
+    STS_ROLE_ARN=${STS_ROLE_ARN} \
+    EMBENDED_APIKEY=${EMBENDED_APIKEY} \
+    EMBENDED_HOST=${EMBENDED_HOST} \
+    EMBENDED_MODEL=${EMBENDED_MODEL} \
+    SEARCHDB_URL=${SEARCHDB_URL} \
+    RC_DB_URL=${RC_DB_URL} \
+    BASEPATH="/maka2026"
+
+CMD [ "node", "packages/jiantie/server.js" ]

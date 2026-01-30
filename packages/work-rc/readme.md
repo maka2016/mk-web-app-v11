@@ -1,0 +1,201 @@
+import dayjs from "dayjs";
+import DB from "../../db";
+import path from "path";
+
+//第一步，从bi库获取今天的作品访问数据,object_id为作品id，object_id的从第9位数字位uid
+//第二步，从work表查询uid（%16）对应的works_id的信息，并console
+
+const scan = async () => {
+// 获取今天的开始和结束时间
+const today = dayjs();
+const startOfDay = today
+.startOf("day")
+
+    .format("YYYY-MM-DD HH:mm:ss");
+
+const endOfDay = today.endOf("day").format("YYYY-MM-DD HH:mm:ss");
+
+console.log("开始查询今天的作品访问数据...", startOfDay, "到", endOfDay);
+
+// 第一步：从bi库获取今天的作品访问数据
+const todayVisitData = await DB.biAdb("mk_datawork_sls_events")
+.select("object_id")
+.count("\* as count")
+.where("event_type", "page_view")
+.whereIn("parent_type", ["h5", "website", "longH5"])
+.where("event_time", ">=", startOfDay)
+.where("event_time", "<=", endOfDay)
+.groupBy("object_id")
+.orderBy("count", "desc");
+
+console.log(`查询到 ${todayVisitData.length} 个作品访问记录`);
+
+// 从object_id提取uid（从第9位数字开始）
+const worksDataMap = new Map<
+string,
+{ object_id: string; count: number; uid: number }
+
+> ();
+
+for (const item of todayVisitData) {
+console.log("item", item);
+const objectId = String(item.object_id || "");
+if (!objectId || objectId.length < 10) {
+continue;
+}
+
+    console.log("objectId", objectId);
+    // 从第9位开始提取uid（索引从0开始，所以是第9位）例子AXXO9I03W600078570，uid为600078570
+    const uidStr = objectId.substring(9);
+
+    console.log("uidStr", uidStr);
+
+    // 提取数字部分作为uid
+    const uidMatch = uidStr.match(/^\d+/);
+    if (!uidMatch) {
+      continue;
+    }
+
+    const uid = parseInt(uidMatch[0], 10);
+
+    if (isNaN(uid)) {
+      continue;
+    }
+
+    worksDataMap.set(objectId, {
+      object_id: objectId,
+      count: Number(item.count) || 0,
+      uid: uid,
+    });
+
+}
+
+console.log(`提取到 ${worksDataMap.size} 个有效的作品ID和UID`);
+
+// 第二步：从work表查询uid（%16）对应的works_id的信息
+// 按uid % 16分组，以便批量查询
+const worksByTable = new Map<
+number,
+Array<{ object_id: string; count: number; uid: number }>
+
+> ();
+
+for (const [objectId, data] of worksDataMap.entries()) {
+const tableIndex = data.uid % 16;
+if (!worksByTable.has(tableIndex)) {
+worksByTable.set(tableIndex, []);
+}
+worksByTable.get(tableIndex)!.push(data);
+}
+
+// 收集所有结果用于导出CSV
+const allResults: Array<{
+works_id: string;
+uid: number;
+title: string;
+status: number;
+visit_count: number;
+create_time: Date | string;
+update_time: Date | string;
+work_url: string;
+ban_url: string;
+}> = [];
+
+// 查询每个分表的works信息
+for (const [tableIndex, worksList] of worksByTable.entries()) {
+const tableName = `platv5_works_${tableIndex}`;
+const uids = worksList.map((w) => w.uid);
+const objectIds = worksList.map((w) => w.object_id);
+
+    console.log(`\n查询表 ${tableName}，共 ${worksList.length} 条记录`);
+
+    try {
+      const worksInfo = await DB.makadb(tableName)
+        .select(
+          "works_id",
+          "uid",
+          "title",
+          "status",
+          "create_time",
+          "update_time"
+        )
+        .whereIn("uid", uids)
+        .whereIn("works_id", objectIds);
+
+      console.log(`从 ${tableName} 查询到 ${worksInfo.length} 条works信息:`);
+
+      // 输出每个作品的信息并收集结果
+      for (const work of worksInfo) {
+        const visitData = worksList.find((w) => w.object_id === work.works_id);
+
+        // 拼装作品地址和封禁url
+        const workUrl = `https://www.maka.im//mk-viewer-7/h5/${work.uid}/${work.works_id}?env=prod&editor_preview=`;
+        const banUrl = `http://cms.maka.mobi/user/manage?uid=${work.uid}`;
+
+        const result = {
+          works_id: work.works_id,
+          uid: work.uid,
+          title: work.title || "",
+          status: work.status,
+          visit_count: visitData?.count || 0,
+          create_time: work.create_time,
+          update_time: work.update_time,
+          work_url: workUrl,
+          ban_url: banUrl,
+        };
+
+        console.log(result);
+        allResults.push(result);
+      }
+    } catch (error) {
+      console.error(`查询表 ${tableName} 时出错:`, error);
+    }
+
+}
+
+// 导出CSV
+if (allResults.length > 0) {
+const csvWriter = require("csv-writer").createObjectCsvWriter;
+const fileName = `scan_${today.format("YYYY-MM-DD")}_${Date.now()}.csv`;
+const filePath = path.join(\_\_dirname, "..", "..", "..", fileName);
+
+    const writer = csvWriter({
+      path: filePath,
+      header: [
+        { id: "works_id", title: "作品ID" },
+        { id: "uid", title: "用户ID" },
+        { id: "title", title: "作品标题" },
+        { id: "status", title: "状态" },
+        { id: "visit_count", title: "访问次数" },
+        { id: "create_time", title: "创建时间" },
+        { id: "update_time", title: "更新时间" },
+        { id: "work_url", title: "作品地址" },
+        { id: "ban_url", title: "封禁URL" },
+      ],
+    });
+
+    await writer.writeRecords(allResults);
+    console.log(`\n✅ CSV文件已导出: ${filePath}`);
+    console.log(`共导出 ${allResults.length} 条记录`);
+
+} else {
+console.log("\n⚠️ 没有数据可导出");
+}
+
+console.log("\n扫描完成！");
+};
+
+// 运行脚本
+if (require.main === module) {
+scan()
+.then(() => {
+console.log("脚本执行完成");
+process.exit(0);
+})
+.catch((error) => {
+console.error("脚本执行出错:", error);
+process.exit(1);
+});
+}
+
+export default scan;

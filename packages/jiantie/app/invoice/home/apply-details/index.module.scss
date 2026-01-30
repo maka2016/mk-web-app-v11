@@ -1,0 +1,24 @@
+.main {
+  padding: 0 20px;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  .formWrapper {
+    padding: 16px 0;
+    margin-top: 4px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  :global(.ant-form-item-label) {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+  }
+
+  :global(.ant-form-item-control-input) {
+    min-height: 30px;
+  }
+}

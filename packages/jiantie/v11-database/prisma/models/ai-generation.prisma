@@ -1,0 +1,55 @@
+/// AI 模版生成会话（每次点击「生成模版」一条记录）
+model AiTemplateGenerationRunEntity {
+  id              String    @id @default(uuid()) @db.Uuid
+  created_at      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  uid             Int       @map("uid")
+  appid           String?   @map("appid")
+  template_id     String?   @map("template_id")
+  template_title  String?   @map("template_title")
+  /// 用户输入/查询文本
+  user_input      String?   @map("user_input") @db.Text
+  /// running | success | failed
+  status          String    @map("status")
+  /// 失败原因
+  error_message   String?   @map("error_message") @db.Text
+  /// 最终文本元素快照 + 布局结构快照
+  final_snapshot  Json?     @map("final_snapshot")
+
+  steps AiTemplateGenerationStepEntity[]
+
+  @@index([uid], map: "IDX_ai_gen_run_uid")
+  @@index([template_id], map: "IDX_ai_gen_run_template_id")
+  @@index([status], map: "IDX_ai_gen_run_status")
+  @@index([created_at], map: "IDX_ai_gen_run_created_at")
+  @@map("ai_template_generation_run_entity")
+}
+
+/// AI 模版生成单步（每轮 analyze/validate 一条）
+model AiTemplateGenerationStepEntity {
+  id               String   @id @default(uuid()) @db.Uuid
+  run_id           String   @map("run_id") @db.Uuid
+  iteration        Int      @map("iteration")
+  /// analyze | validate
+  step_type        String   @map("step_type")
+  model_name       String?  @map("model_name")
+  duration_ms      Int?     @map("duration_ms")
+  /// 请求体摘要等
+  request_json     Json?    @map("request_json")
+  /// 完整 prompt
+  prompt_text      String?  @map("prompt_text") @db.Text
+  /// 模型原始返回文本
+  response_text    String?  @map("response_text") @db.Text
+  /// 解析后的 analysis/validation
+  response_json    Json?    @map("response_json")
+  /// 仅 validate 步：客户端本轮执行结果
+  execution_report Json?    @map("execution_report")
+  /// 失败堆栈/消息
+  error            String?  @map("error") @db.Text
+
+  run AiTemplateGenerationRunEntity @relation(fields: [run_id], references: [id], onDelete: Cascade)
+
+  @@index([run_id], map: "IDX_ai_gen_step_run_id")
+  @@index([run_id, iteration, step_type], map: "IDX_ai_gen_step_run_iter_type")
+  @@map("ai_template_generation_step_entity")
+}

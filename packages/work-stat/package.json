@@ -1,0 +1,21 @@
+{
+  "name": "work-stat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@alicloud/credentials": "^2.4.4",
+    "@alicloud/openapi-client": "^0.4.15",
+    "@alicloud/sls20201230": "^5.9.0",
+    "@alicloud/tea-util": "^1.4.11",
+    "@mk/jiantie": "workspace:*",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20"
+  }
+}

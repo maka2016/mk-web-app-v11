@@ -1,0 +1,399 @@
+/// 搜索词每日统计实体
+model SearchTermDailyStatisticsEntity {
+  id                 String   @id @default(cuid())
+  /// 应用ID
+  appid              String   @map("appid") @db.VarChar
+  /// 搜索词
+  search_term        String   @map("search_term") @db.VarChar(200)
+  /// 统计日期
+  date               DateTime @db.Date
+  /// 搜索数据
+  /// 搜索PV（搜索次数）
+  search_pv          Int      @default(0) @map("search_pv")
+  /// 搜索UV（搜索用户数）
+  search_uv          Int      @default(0) @map("search_uv")
+  /// 点击数据
+  /// 点击PV（点击搜索结果次数）
+  click_pv           Int      @default(0) @map("click_pv")
+  /// 点击UV（点击搜索结果用户数）
+  click_uv           Int      @default(0) @map("click_uv")
+  /// 创作数据
+  /// 创作PV（基于搜索结果创建作品次数）
+  creation_pv        Int      @default(0) @map("creation_pv")
+  /// 创作UV（基于搜索结果创建作品用户数）
+  creation_uv        Int      @default(0) @map("creation_uv")
+  /// 拦截数据
+  /// VIP拦截PV
+  vip_intercept_pv   Int      @default(0) @map("vip_intercept_pv")
+  /// VIP拦截UV
+  vip_intercept_uv   Int      @default(0) @map("vip_intercept_uv")
+  /// 成功数据
+  /// 成功PV,h5为分享，海报为导出
+  success_pv         Int      @default(0) @map("success_pv")
+  /// 成功UV,h5为分享，海报为导出
+  success_uv         Int      @default(0) @map("success_uv")
+  /// 订单数据
+  /// 订单数
+  order_count        Int      @default(0) @map("order_count")
+  /// 成交金额
+  transaction_amount Decimal  @default(0) @map("transaction_amount") @db.Decimal(10, 2)
+  /// 其他数据
+  /// 平均搜索结果数量（可选，用于分析搜索质量）
+  result_count       Int      @default(0) @map("result_count")
+  create_time        DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time        DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@unique([appid, search_term, date], map: "UQ_search_term_daily_statistics_appid_term_date")
+  @@index([search_term], map: "IDX_search_term_daily_statistics_search_term")
+  @@index([date], map: "IDX_search_term_daily_statistics_date")
+  @@index([search_term, date], map: "IDX_search_term_daily_statistics_term_date")
+  @@index([id], map: "IDX_search_term_daily_statistics_id")
+  @@index([appid], map: "IDX_search_term_daily_statistics_appid")
+  @@map("search_term_daily_statistics_entity")
+}
+
+/// 搜索词模板点击每日统计实体
+model SearchTermTemplateClickDailyStatisticsEntity {
+  id          String   @id @default(cuid())
+  /// 应用ID
+  appid       String   @map("appid") @db.VarChar
+  /// 搜索词
+  search_term String   @map("search_term") @db.VarChar(200)
+  /// 模板ID，关联到 TemplateEntity
+  template_id String   @map("template_id") @db.VarChar
+  /// 统计日期
+  date        DateTime @db.Date
+  /// 展示数据
+  /// 展示PV
+  show_pv     Int      @default(0) @map("show_pv")
+  /// 展示UV
+  show_uv     Int      @default(0) @map("show_uv")
+  /// 点击数据
+  /// 点击PV
+  click_pv    Int      @default(0) @map("click_pv")
+  /// 点击UV
+  click_uv    Int      @default(0) @map("click_uv")
+  /// 创作数据
+  /// 创作PV
+  creation_pv Int      @default(0) @map("creation_pv")
+  /// 创作UV
+  creation_uv Int      @default(0) @map("creation_uv")
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@unique([appid, search_term, template_id, date], map: "UQ_st_tc_ds_appid_term_tmpl_date")
+  @@index([search_term], map: "IDX_st_tc_ds_search_term")
+  @@index([template_id], map: "IDX_st_tc_ds_template_id")
+  @@index([date], map: "IDX_st_tc_ds_date")
+  @@index([search_term, date], map: "IDX_st_tc_ds_term_date")
+  @@index([template_id, date], map: "IDX_st_tc_ds_tmpl_date")
+  @@index([search_term, template_id, date], map: "IDX_st_tc_ds_term_tmpl_date")
+  @@index([id], map: "IDX_st_tc_ds_id")
+  @@index([appid], map: "IDX_st_tc_ds_appid")
+  @@map("search_term_template_click_daily_statistics_entity")
+}
+
+/// MixSearch 搜索词每日统计实体
+model MixSearchDailyStatisticsEntity {
+  id                     String   @id @default(cuid())
+  /// 应用ID
+  appid                  String   @map("appid") @db.VarChar
+  /// 搜索词
+  search_term            String   @map("search_term") @db.VarChar(200)
+  /// 统计日期
+  date                   DateTime @db.Date
+  /// 搜索数据
+  /// 搜索PV（搜索次数）
+  search_pv              Int      @default(0) @map("search_pv")
+  /// 搜索UV（搜索用户数）
+  search_uv              Int      @default(0) @map("search_uv")
+  /// 点击数据
+  /// 点击PV（点击搜索结果次数）
+  click_pv               Int      @default(0) @map("click_pv")
+  /// 点击UV（点击搜索结果用户数）
+  click_uv               Int      @default(0) @map("click_uv")
+  /// 旧版点击PV（点击搜索结果次数）
+  old_click_pv           Int      @default(0) @map("old_click_pv")
+  /// 旧版点击UV（点击搜索结果用户数）
+  old_click_uv           Int      @default(0) @map("old_click_uv")
+  /// 创作数据
+  /// 创作PV（基于搜索结果创建作品次数）
+  creation_pv            Int      @default(0) @map("creation_pv")
+  /// 创作UV（基于搜索结果创建作品用户数）
+  creation_uv            Int      @default(0) @map("creation_uv")
+  /// 拦截数据
+  /// VIP拦截PV
+  vip_intercept_pv       Int      @default(0) @map("vip_intercept_pv")
+  /// VIP拦截UV
+  vip_intercept_uv       Int      @default(0) @map("vip_intercept_uv")
+  /// 成功数据
+  /// 成功PV,h5为分享，海报为导出
+  success_pv             Int      @default(0) @map("success_pv")
+  /// 成功UV,h5为分享，海报为导出
+  success_uv             Int      @default(0) @map("success_uv")
+  /// 订单数据（仅统计新模样）
+  /// 新模样订单数
+  new_order_count        Int      @default(0) @map("new_order_count")
+  /// 新模样成交金额
+  new_transaction_amount Decimal  @default(0) @map("new_transaction_amount") @db.Decimal(10, 2)
+  /// 搜索结果数量（区分新老）
+  /// 新版推荐的平均搜索结果数量
+  result_count           Int      @default(0) @map("new_result_count")
+  /// 旧搜索列表的平均搜索结果数量
+  old_result_count       Int      @default(0) @map("old_result_count")
+  create_time            DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time            DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@unique([appid, search_term, date], map: "UQ_mix_search_daily_statistics_appid_term_date")
+  @@index([search_term], map: "IDX_mix_search_daily_statistics_search_term")
+  @@index([date], map: "IDX_mix_search_daily_statistics_date")
+  @@index([search_term, date], map: "IDX_mix_search_daily_statistics_term_date")
+  @@index([id], map: "IDX_mix_search_daily_statistics_id")
+  @@index([appid], map: "IDX_mix_search_daily_statistics_appid")
+  @@map("mix_search_daily_statistics_entity")
+}
+
+/// 频道每日统计实体
+model ChannelDailyStatisticsEntity {
+  id                 String                      @id @default(cuid())
+  /// 频道ID，关联到 TemplateMarketChannelEntity
+  channel_id         Int                         @map("channel_id")
+  /// 统计日期
+  date               DateTime                    @db.Date
+  /// 设备类型：web、ios、android、wap、other
+  device             String                      @default("web") @map("device") @db.VarChar(20)
+  /// 浏览数据
+  /// 浏览PV
+  view_pv            Int                         @default(0) @map("view_pv")
+  /// 浏览UV
+  view_uv            Int                         @default(0) @map("view_uv")
+  /// 点击数据
+  /// 点击PV
+  click_pv           Int                         @default(0) @map("click_pv")
+  /// 点击UV
+  click_uv           Int                         @default(0) @map("click_uv")
+  /// 创作数据
+  /// 创作PV
+  creation_pv        Int                         @default(0) @map("creation_pv")
+  /// 创作UV
+  creation_uv        Int                         @default(0) @map("creation_uv")
+  /// 拦截数据
+  /// 拦截PV
+  intercept_pv       Int                         @default(0) @map("intercept_pv")
+  /// 拦截UV
+  intercept_uv       Int                         @default(0) @map("intercept_uv")
+  /// 成功PV,h5为分享，海报为导出
+  success_pv         Int                         @default(0) @map("success_pv")
+  /// 成功UV,h5为分享，海报为导出
+  success_uv         Int                         @default(0) @map("success_uv")
+  /// 订单数据
+  /// 订单数
+  order_count        Int                         @default(0) @map("order_count")
+  /// 成交金额
+  transaction_amount Decimal                     @default(0) @map("transaction_amount") @db.Decimal(10, 2)
+  create_time        DateTime                    @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time        DateTime                    @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  channel            TemplateMarketChannelEntity @relation(fields: [channel_id], references: [id])
+
+  @@unique([channel_id, date, device], map: "UQ_channel_daily_statistics_channel_date_device")
+  @@index([channel_id], map: "IDX_channel_daily_statistics_channel_id")
+  @@index([date], map: "IDX_channel_daily_statistics_date")
+  @@index([device], map: "IDX_channel_daily_statistics_device")
+  @@index([channel_id, date], map: "IDX_channel_daily_statistics_channel_date")
+  @@index([channel_id, date, device], map: "IDX_channel_daily_statistics_channel_date_device")
+  @@index([id], map: "IDX_channel_daily_statistics_id")
+  @@map("channel_daily_statistics_entity")
+}
+
+/// 模板每日统计实体
+model TemplateDailyStatisticsEntity {
+  id                 String   @id @default(cuid())
+  /// 模板ID，关联到 TemplateEntity
+  template_id        String   @map("template_id") @db.VarChar
+  /// 统计日期
+  date               DateTime @db.Date
+  /// 设备类型：web、ios、android、wap、other
+  device             String   @default("web") @map("device") @db.VarChar(20)
+  /// 浏览数据
+  /// 浏览PV
+  view_pv            Int      @default(0) @map("view_pv")
+  /// 浏览UV
+  view_uv            Int      @default(0) @map("view_uv")
+  /// 点击数据
+  /// 点击PV
+  click_pv           Int      @default(0) @map("click_pv")
+  /// 点击UV
+  click_uv           Int      @default(0) @map("click_uv")
+  /// 创作数据
+  /// 创作PV
+  creation_pv        Int      @default(0) @map("creation_pv")
+  /// 创作UV
+  creation_uv        Int      @default(0) @map("creation_uv")
+  /// 拦截数据
+  /// 拦截PV
+  intercept_pv       Int      @default(0) @map("intercept_pv")
+  /// 拦截UV
+  intercept_uv       Int      @default(0) @map("intercept_uv")
+  /// 成功PV,h5为分享，海报为导出
+  success_pv         Int      @default(0) @map("success_pv")
+  /// 成功UV,h5为分享，海报为导出
+  success_uv         Int      @default(0) @map("success_uv")
+  /// 订单数据
+  /// 订单数
+  order_count        Int      @default(0) @map("order_count")
+  /// 成交金额
+  transaction_amount Decimal  @default(0) @map("transaction_amount") @db.Decimal(10, 2)
+  create_time        DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time        DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@unique([template_id, date, device], map: "UQ_template_daily_statistics_template_date_device")
+  @@index([template_id], map: "IDX_template_daily_statistics_template_id")
+  @@index([date], map: "IDX_template_daily_statistics_date")
+  @@index([device], map: "IDX_template_daily_statistics_device")
+  @@index([template_id, date], map: "IDX_template_daily_statistics_template_date")
+  @@index([template_id, date, device], map: "IDX_template_daily_statistics_template_date_device")
+  @@index([id], map: "IDX_template_daily_statistics_id")
+  @@map("template_daily_statistics_entity")
+}
+
+/// 订单记录中间表实体
+model OrderRecordEntity {
+  id            String   @id @default(cuid())
+  /// 用户ID
+  uid           Int      @map("uid")
+  /// 订单ID
+  order_id      String   @map("order_id") @db.VarChar
+  /// 创作PV
+  order_amount  Int      @default(0) @map("order_amount")
+  /// 支付时间
+  payment_time  DateTime @map("payment_time") @db.Timestamptz(6)
+  /// 支付类型
+  payment_type  String   @map("payment_type") @db.VarChar
+  /// 关联的页面类型
+  ref_page_type String?  @map("ref_page_type") @db.VarChar
+  /// 关联的页面ID
+  ref_page_id   String?  @map("ref_page_id") @db.VarChar
+  /// 关联的作品ID
+  work_id       String?  @map("work_id") @db.VarChar
+  /// 作品类型：v11\v5maka
+  work_type     String?  @map("work_type") @db.VarChar
+  /// 应用ID
+  appid         String?  @map("appid") @db.VarChar
+  /// 日期
+  date          DateTime @db.Date
+  /// 是否删除
+  deleted       Boolean  @default(false)
+  create_time   DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time   DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  worksEntityId String?
+  /// 关联的模板ID
+  template_id   String?  @map("template_id") @db.VarChar
+
+  @@unique([order_id, appid], map: "UQ_order_record_order_id_appid")
+  @@index([order_id], map: "IDX_order_record_order_id")
+  @@index([payment_type], map: "IDX_order_record_payment_type")
+  @@index([ref_page_type], map: "IDX_order_record_ref_page_type")
+  @@index([ref_page_id], map: "IDX_order_record_ref_page_id")
+  @@index([work_id], map: "IDX_order_record_work_id")
+  @@index([template_id], map: "IDX_order_record_template_id")
+  @@index([appid], map: "IDX_order_record_appid")
+  @@index([date], map: "IDX_order_record_date")
+  @@index([deleted], map: "IDX_order_record_deleted")
+  @@index([work_id, date], map: "IDX_order_record_work_date")
+  @@index([template_id, date], map: "IDX_order_record_template_date")
+  @@index([id], map: "IDX_order_record_id")
+  @@map("order_record_entity")
+}
+
+/// 作品每日统计实体
+model WorksDailyStatisticsEntity {
+  id              String      @id @default(cuid())
+  /// 作品ID，关联到 WorksEntity
+  works_id        String      @map("works_id") @db.VarChar
+  /// 统计日期
+  date            DateTime    @db.Date
+  /// 统计数据
+  /// 导出次数(平面为导出、h5为下一步)
+  publish_count   Int         @default(0) @map("export_count")
+  /// 查看PV
+  viewer_pv       Int         @default(0) @map("viewer_pv")
+  /// 查看UV
+  viewer_uv       Int         @default(0) @map("viewer_uv")
+  /// VIP拦截次数vip_intercept_page
+  vip_inter_count Int         @default(0) @map("vip_inter_count")
+  /// 分享次数work_share_btn
+  share_count     Int         @default(0) @map("share_count")
+  /// 成功PV,h5为分享，海报为导出
+  success_pv      Int         @default(0) @map("success_pv")
+  /// 成功UV,h5为分享，海报为导出
+  success_uv      Int         @default(0) @map("success_uv")
+  create_time     DateTime    @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time     DateTime    @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  works           WorksEntity @relation(fields: [works_id], references: [id])
+
+  @@unique([works_id, date], map: "UQ_works_daily_statistics_works_date")
+  @@index([works_id], map: "IDX_works_daily_statistics_works_id")
+  @@index([date], map: "IDX_works_daily_statistics_date")
+  @@index([works_id, date], map: "IDX_works_daily_statistics_works_date")
+  @@index([id], map: "IDX_works_daily_statistics_id")
+  @@map("works_daily_statistics_entity")
+}
+
+/// 用户信息中间表实体
+model UserInfoEntity {
+  id              String    @id @default(cuid())
+  /// 用户ID（唯一）
+  uid             Int       @unique @map("uid")
+  /// 注册日期
+  register_date   DateTime  @map("register_date") @db.Date
+  /// 注册时间
+  register_time   DateTime? @map("register_time") @db.Timestamptz(6)
+  /// 注册设备：web、ios、android、wap、other
+  register_device String    @map("register_device") @db.VarChar(50)
+  /// 注册来源：渠道、推广等
+  register_source String?   @map("register_source") @db.VarChar(100)
+  /// 广告计划ID（可选）
+  ad_plan_id      String?   @map("ad_plan_id") @db.VarChar(100)
+  /// 是否删除
+  deleted         Boolean   @default(false)
+  create_time     DateTime  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time     DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// maka|jiantie
+  appid           String    @map("appid") @db.VarChar
+
+  @@index([uid], map: "IDX_user_info_uid")
+  @@index([register_date], map: "IDX_user_info_register_date")
+  @@index([register_device], map: "IDX_user_info_register_device")
+  @@index([register_source], map: "IDX_user_info_register_source")
+  @@index([ad_plan_id], map: "IDX_user_info_ad_plan_id")
+  @@index([deleted], map: "IDX_user_info_deleted")
+  @@index([id], map: "IDX_user_info_id")
+  @@map("user_info_entity")
+}
+
+/// 搜索热词实体
+model SearchHotKeywordEntity {
+  id          String   @id @default(cuid())
+  /// 热词
+  keyword     String   @map("keyword") @db.VarChar(200)
+  /// 应用ID
+  appid       String   @map("appid") @db.VarChar
+  /// 排序值，数值越大越靠前
+  sort_order  Int      @default(0) @map("sort_order")
+  /// 是否上线
+  online      Boolean  @default(true) @map("online")
+  /// 是否删除
+  deleted     Boolean  @default(false)
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+
+  @@index([keyword], map: "IDX_search_hot_keyword_keyword")
+  @@index([appid], map: "IDX_search_hot_keyword_appid")
+  @@index([sort_order], map: "IDX_search_hot_keyword_sort_order")
+  @@index([online], map: "IDX_search_hot_keyword_online")
+  @@index([deleted], map: "IDX_search_hot_keyword_deleted")
+  @@index([appid, online, deleted], map: "IDX_search_hot_keyword_appid_online_deleted")
+  @@index([appid, sort_order], map: "IDX_search_hot_keyword_appid_sort")
+  @@index([id], map: "IDX_search_hot_keyword_id")
+  @@map("search_hot_keyword_entity")
+}

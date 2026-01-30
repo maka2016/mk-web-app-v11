@@ -1,0 +1,43 @@
+.main {
+  display: flex;
+  flex-direction: column;
+  row-gap: 12px;
+  padding: 0 12px;
+
+  @media (min-width: 768px) {
+    row-gap: 16px;
+    padding: 0;
+  }
+
+  .optsCell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+
+    .optsBtn {
+      padding-left: 6px;
+      padding-right: 6px;
+      font-size: 13px;
+
+      @media (min-width: 768px) {
+        font-size: 14px;
+      }
+
+      &:first-child {
+        padding-left: 0;
+      }
+
+      &:last-child {
+        padding-right: 0;
+      }
+
+      &.disabled {
+        // color:
+      }
+    }
+
+    .effectiveBtn {
+      color: rgba(21, 94, 239, 1);
+    }
+  }
+}

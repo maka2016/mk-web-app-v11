@@ -1,0 +1,176 @@
+{
+  "code": 200,
+  "data": {
+    "pdata": {
+      "history": {
+        "platform": "PC",
+        "saveTime": "2025-03-04 15:38:12",
+        "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0",
+        "jsonUploadMethod": "oss"
+      },
+      "json": [
+        {
+          "bgcolor": "#ffffff",
+          "bgpic": "",
+          "bgpictype": "picture",
+          "bgpicheight": 1007.99994,
+          "bgpicleft": 0,
+          "bgpictop": 0,
+          "bgpicwidth": 640,
+          "content": [
+            {
+              "id": 2,
+              "type": "pic",
+              "top": -124.70087,
+              "left": -19.216331,
+              "h": 1300,
+              "w": 675,
+              "lineheight": 1,
+              "lineHeight": 1,
+              "opacity": 1,
+              "rotate": 0,
+              "textdecoration": "none",
+              "ftsize": 1,
+              "boxshadow": 0,
+              "borderradius": 0,
+              "inleft": -122.15411,
+              "intop": 0,
+              "orgHeight": 3508,
+              "orgWidth": 2480,
+              "inw": 919.725,
+              "inh": 1300,
+              "imgUrl": "http://JHgBxKQu.g82Qp3297uqgZDch.kymqvz.cn/app/82VY8B0hqN/_xjyHBpwp",
+              "needWeixin": false,
+              "shadow": {
+                "enable": false,
+                "color": "#adadad",
+                "direction": 0,
+                "blur": 8
+              },
+              "element_end": 0,
+              "element_start": 0,
+              "element_anim_duration": 0,
+              "elementAnimations": {
+                "animation_in": {
+                  "enable": false,
+                  "show": "fadeInNormal",
+                  "delay": 600,
+                  "speed": 1000
+                },
+                "animation_on": [
+                  {
+                    "iteration_count": 1,
+                    "enable": false,
+                    "speed": 1000,
+                    "delay": 600,
+                    "show": "noEffect",
+                    "enable_loop": false
+                  }
+                ],
+                "animation_out": {
+                  "enable": false,
+                  "speed": 1000,
+                  "delay": 600,
+                  "show": "noEffect"
+                }
+              },
+              "picid": "user/603982064/images/756136_5ddc65ff9283afb65044c6c25e110a27.jpg",
+              "materialId": "",
+              "pcEditorPicId": "user/603982064/images/756136_5ddc65ff9283afb65044c6c25e110a27.jpg",
+              "cropData": {
+                "left": 329,
+                "top": 0,
+                "width": 1821,
+                "height": 3508
+              },
+              "linkInfo": {
+                "openLink": true,
+                "linkType": "link",
+                "linkUrl": "http://JHgBxKQu.g82Qp3297uqgZDch.kymqvz.cn/app/82VY8B0hqN/_xjyHBpwp",
+                "linkPage": 1
+              },
+              "layer": { "isLock": false, "isHide": false }
+            }
+          ],
+          "effect": "pushup",
+          "opacity": 1,
+          "pageId": "03ef6953",
+          "pageIndex": 0,
+          "templateId": "",
+          "slideable": false,
+          "slideUp": true,
+          "slideDown": true,
+          "page_duration": 5000000
+        }
+      ],
+      "menu": { "menuOpen": false },
+      "version": "138",
+      "vipInfo": {
+        "loading_page_custom": false,
+        "show_makalogo": true,
+        "viewer_domain_custom": false,
+        "enable_bottom_menu": false,
+        "enable_relay": false,
+        "enable_lottery": false,
+        "enable_form": true,
+        "enable_vote": true,
+        "enable_barrage": true,
+        "enable_anti_fake_vote": true,
+        "enable_form_lamp": false,
+        "enable_pvuv_data": true,
+        "enable_share_data": true,
+        "enable_share_trend": true,
+        "enable_read_time": false,
+        "enable_read_time_per_page": false,
+        "enable_read_page_num": false,
+        "enable_share_level": false,
+        "enable_visitor_source": false,
+        "enable_vistior_device": false,
+        "enable_visitor_location": false,
+        "enable_pages_pvuv_data": false,
+        "enable_pages_read_time": false,
+        "enable_visitor_brand": false,
+        "enable_maka": true,
+        "enable_danye": true,
+        "enable_poster": true,
+        "enable_video": true,
+        "enable_font": true,
+        "enable_logo": true,
+        "enable_poster_logo": true,
+        "enable_material": true,
+        "enable_marke_assistant": false,
+        "enable_end_page_style": false,
+        "enable_end_page_read_num": false,
+        "enable_public_ball": false,
+        "enable_open_password": false,
+        "max_image_number": 1000000,
+        "max_music_number": 1000000,
+        "max_works_folder_number": 50,
+        "max_template_folder_number": 100,
+        "max_template_number": 100000,
+        "max_image_folder_number": 100,
+        "max_works_recycle_bin_days": 30,
+        "isFromApi": true
+      },
+      "spec": {
+        "id": 317,
+        "width": 640,
+        "height": 1008,
+        "unit": "px",
+        "dpi": 72
+      },
+      "password": null,
+      "publicBall": null,
+      "readNums": null,
+      "autoPlay": { "isAutoPlay": false, "autoPlayTime": 1000 },
+      "lastPageStyle": null,
+      "slideGuide": "assets/usual/slideguide-1-view.png",
+      "pageNumPos": "",
+      "barrage": {
+        "isUseBarrage": false,
+        "canUserSend": true,
+        "inputPlaceholder": "说点什么..."
+      }
+    }
+  }
+}

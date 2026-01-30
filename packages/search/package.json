@@ -1,0 +1,25 @@
+{
+  "name": "mksearch",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "sync:vector": "tsx src/jobs/syncSearchVector.ts",
+    "test:vector": "tsx src/jobs/test_vector_search.ts",
+    "benchmark": "tsx src/jobs/benchmark_search.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@mk/jiantie": "workspace:*",
+    "dotenv": "^16.3.1",
+    "pg": "^8.16.3",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/pg": "^8.15.6",
+    "tsx": "^4.20.6"
+  }
+}
