@@ -1,0 +1,99 @@
+.jiantie {
+  --primary: 349 100% 64%;
+  --primary-foreground: 0 0% 100%;
+  --primary-btn: 0 0% 100%;
+  --loading-color: 349 100% 80%;
+  --theme-color: #ff4667 !important;
+  --btn-text-color: #fff;
+  --theme-text-color: #ff4667;
+  --theme-background-color: #fff3f6;
+  --theme-border-color: #ff8fab;
+  --theme-color-dark: #b82e29;
+  --theme-color-light: #fde8e7;
+  --theme-accent-color: #d53933;
+  --theme-accent-color-light: #e06b66;
+  --theme-bg-gradient: linear-gradient(229.87deg, rgba(242, 155, 227, 0.5) 1.92%, rgba(255, 255, 255, 0.5) 28.84%), linear-gradient(135.77deg, rgba(242, 155, 155, 0.5) 7.08%, rgba(255, 255, 255, 0.5) 38.06%), linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 1) 100%);
+  --theme-card-bg: #ffffff;
+  --theme-text-primary: #09090b;
+  --theme-text-secondary: #71717a;
+}
+
+.janur {
+  --primary: 176 51% 33%;
+  --primary-foreground: 0 0% 100%;
+  --primary-btn: 0 0% 100%;
+  --loading-color: 176 30% 80%;
+  --theme-color: #2A807A !important;
+  --btn-text-color: #fff;
+  --theme-text-color: #1F6B65;
+  --theme-background-color: #F3EFE8;
+  --theme-border-color: #B8D8D3;
+  --theme-color-dark: #1F6B65;
+  --theme-color-light: #E0F0ED;
+  --theme-accent-color: #C49A3C;
+  --theme-accent-color-light: #D4AE5C;
+  --theme-bg-gradient: #F5F5F5;
+  --theme-card-bg: #FAF7F2;
+  --theme-text-primary: #2C2A28;
+  --theme-text-secondary: #6F6963;
+}
+
+.xueji {
+  --primary: 48 97% 72%;
+  --primary-foreground: 0 0% 0%;
+  --primary-btn: 0 0% 0%;
+  --loading-color: 48 97% 84%;
+  --theme-color: #fde272 !important;
+  --theme-background-color: #fefdf0;
+  --theme-text-color: #000;
+  --btn-text-color: #000;
+  --theme-border-color: #fde272;
+  --theme-color-dark: #e5c84a;
+  --theme-color-light: #fef9d6;
+  --theme-accent-color: #fde272;
+  --theme-accent-color-light: #fee99c;
+  --theme-bg-gradient: #fefdf0;
+  --theme-card-bg: #ffffff;
+  --theme-text-primary: #09090b;
+  --theme-text-secondary: #71717a;
+}
+
+.huiyao {
+  --primary: 226 65% 52%;
+  --primary-foreground: 0 0% 100%;
+  --primary-btn: 0 0% 100%;
+  --loading-color: 226 65% 75%;
+  --theme-color: #355ad4 !important;
+  --theme-background-color: #edf2fe;
+  --theme-text-color: #355ad4;
+  --btn-text-color: #fff;
+  --theme-border-color: #c1d0ff;
+  --theme-color-dark: #2a47a8;
+  --theme-color-light: #e8edfa;
+  --theme-accent-color: #355ad4;
+  --theme-accent-color-light: #5b7ae0;
+  --theme-bg-gradient: #edf2fe;
+  --theme-card-bg: #ffffff;
+  --theme-text-primary: #09090b;
+  --theme-text-secondary: #71717a;
+}
+
+.maka {
+  --primary: 211 100% 55%;
+  --primary-foreground: 0 0% 100%;
+  --primary-btn: 0 0% 100%;
+  --loading-color: 211 100% 78%;
+  --theme-color: #1a87ff !important;
+  --theme-background-color: #1a89ff1a;
+  --theme-text-color: #1a87ff;
+  --btn-text-color: #fff;
+  --theme-border-color: #c1d0ff;
+  --theme-color-dark: #2948b5;
+  --theme-color-light: #e8edfa;
+  --theme-accent-color: #3358d4;
+  --theme-accent-color-light: #5b7ae0;
+  --theme-bg-gradient: linear-gradient(229.87deg, rgba(0, 120, 255, 0.8) 1.92%, rgba(255, 255, 255, 0.6) 38.84%), linear-gradient(135.77deg, rgba(0, 80, 255, 0.8) 17.08%, rgba(255, 255, 255, 0.6) 38.06%), linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 1) 100%);
+  --theme-card-bg: #ffffff;
+  --theme-text-primary: #09090b;
+  --theme-text-secondary: #71717a;
+}

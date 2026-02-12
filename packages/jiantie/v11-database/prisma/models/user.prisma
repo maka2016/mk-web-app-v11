@@ -1,0 +1,254 @@
+/// 用户信息表 - 存储用户基本信息
+model User {
+  id            String         @id @default(dbgenerated("gen_random_uuid()"))
+  /// 用户ID（唯一，对应旧库uid）
+  uid           Int            @unique @default(autoincrement()) @map("uid")
+  /// 应用ID：maka|jiantie
+  appid         String         @map("appid") @db.VarChar(50)
+  /// 用户名
+  username      String         @default("") @map("username") @db.VarChar(50)
+  /// 头像
+  avatar        String?        @default("") @map("avatar") @db.VarChar(255)
+  /// 注册日期
+  reg_date      DateTime       @default(now()) @map("reg_date") @db.Timestamptz(6)
+  /// 状态：0正常 -2封停 -1删除
+  status        Int            @default(0) @map("status") @db.SmallInt
+  /// 是否团队帐号：0否 1是
+  is_team       Int            @default(0) @map("is_team") @db.SmallInt
+  create_time   DateTime       @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time   DateTime       @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  userAuths     UserAuth[]
+  userLoginLogs UserLoginLog[]
+  userResources UserResource[]
+  userRoles     UserRole[]
+  userSource    UserSource?
+
+  @@index([uid], map: "IDX_user_uid")
+  @@index([appid], map: "IDX_user_appid")
+  @@index([status], map: "IDX_user_status")
+  @@index([reg_date], map: "IDX_user_reg_date")
+  @@index([id], map: "IDX_user_id")
+  @@map("user")
+}
+
+/// 用户登陆信息表 - 存储用户认证信息
+model UserAuth {
+  id                  String    @id @default(cuid())
+  /// 用户ID
+  uid                 Int       @map("uid")
+  /// 应用ID
+  appid               String    @map("appid") @db.VarChar(50)
+  /// 认证类型：email、phone、oauth等
+  auth_type           String    @map("auth_type") @db.VarChar(50)
+  /// 认证值（邮箱、手机号等）
+  auth_value          String    @map("auth_value") @db.VarChar(255)
+  /// 密码哈希（可选）
+  password_hash       String?   @map("password_hash") @db.VarChar(255)
+  /// OAuth提供商（如google、github）
+  oauth_provider      String?   @map("oauth_provider") @db.VarChar(50)
+  /// OAuth ID
+  oauth_id            String?   @map("oauth_id") @db.VarChar(255)
+  /// 是否已验证
+  is_verified         Boolean   @default(false) @map("is_verified")
+  /// 最后登录时间
+  last_login          DateTime? @map("last_login") @db.Timestamptz(6)
+  create_time         DateTime  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time         DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// OAuth平台完整数据（JSON格式）
+  oauth_platform_data Json?     @map("oauth_platform_data")
+  user                User      @relation(fields: [uid], references: [uid])
+
+  @@unique([uid, appid, auth_type, oauth_provider], map: "UQ_user_auth_uid_appid_type_provider")
+  @@index([uid], map: "IDX_user_auth_uid")
+  @@index([appid], map: "IDX_user_auth_appid")
+  @@index([auth_type], map: "IDX_user_auth_auth_type")
+  @@index([auth_value], map: "IDX_user_auth_auth_value")
+  @@index([id], map: "IDX_user_auth_id")
+  @@map("user_auth")
+}
+
+/// 用户来源表 - 存储用户注册来源信息
+model UserSource {
+  id           String   @id @default(cuid())
+  /// 用户ID（唯一）
+  uid          Int      @unique @map("uid")
+  /// 应用ID
+  appid        String   @map("appid") @db.VarChar(50)
+  /// 包ID
+  bundleid     String   @default("") @map("bundleid") @db.VarChar(50)
+  /// 设备：web、ios、android、wap、other
+  device       String   @default("") @map("device") @db.VarChar(20)
+  /// 市场
+  market       String?  @default("") @map("market") @db.VarChar(100)
+  /// 渠道ID
+  channelid    String?  @default("") @map("channelid") @db.VarChar(64)
+  /// 设备ID
+  deviceid     String?  @default("") @map("deviceid") @db.VarChar(64)
+  /// IDFA
+  idfa         String?  @default("") @map("idfa") @db.VarChar(64)
+  /// 版本
+  version      String?  @default("") @map("version") @db.VarChar(64)
+  /// 广告来源
+  utm_source   String?  @map("utm_source") @db.VarChar(255)
+  /// 广告媒介
+  utm_medium   String?  @map("utm_medium") @db.VarChar(255)
+  /// 关键词
+  utm_term     String?  @map("utm_term") @db.VarChar(255)
+  /// 广告内容
+  utm_content  String?  @map("utm_content") @db.VarChar(255)
+  /// 广告活动
+  utm_campaign String?  @map("utm_campaign") @db.VarChar(255)
+  create_time  DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time  DateTime @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  user         User     @relation(fields: [uid], references: [uid])
+
+  @@index([uid], map: "IDX_user_source_uid")
+  @@index([appid], map: "IDX_user_source_appid")
+  @@index([device], map: "IDX_user_source_device")
+  @@index([channelid], map: "IDX_user_source_channelid")
+  @@index([id], map: "IDX_user_source_id")
+  @@map("user_source")
+}
+
+/// 角色表 - 存储系统角色
+model Role {
+  id              Int              @id @default(autoincrement())
+  /// 应用ID：maka|jiantie
+  appid           String           @map("appid") @db.VarChar(50)
+  /// 角色名称
+  name            String?          @map("name") @db.VarChar(100)
+  /// 角色别名
+  alias           String?          @map("alias") @db.VarChar(100)
+  /// 角色描述
+  description     String?          @map("description")
+  create_time     DateTime         @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time     DateTime         @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@index([name], map: "IDX_role_name")
+  @@index([id], map: "IDX_role_id")
+  @@map("role")
+}
+
+/// 权限表 - 存储系统权限
+model Permission {
+  id                      Int              @id @default(autoincrement())
+  /// 权限动作URL
+  action_url              String           @map("action_url") @db.VarChar(255)
+  /// 权限别名
+  alias                   String?          @map("alias") @db.VarChar(100)
+  /// 权限描述
+  description             String?          @map("description")
+  /// 权限值
+  value                   Int?             @map("value")
+  create_time             DateTime         @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time             DateTime         @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  rolePermissions         RolePermission[]
+  userResourcePermissions UserResource[]
+
+  @@index([action_url], map: "IDX_permission_action_url")
+  @@index([id], map: "IDX_permission_id")
+  @@map("permission")
+}
+
+/// 用户角色关联表 - 存储用户与角色的关联关系
+model UserRole {
+  id          String    @id @default(cuid())
+  /// 用户ID
+  uid         Int       @map("uid")
+  /// 角色ID
+  role_id     Int       @map("role_id")
+  /// 开始时间
+  start_at    DateTime? @map("start_at") @db.Timestamptz(6)
+  /// 过期时间
+  expires_at  DateTime? @map("expires_at") @db.Timestamptz(6)
+  create_time DateTime  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  role        Role      @relation(fields: [role_id], references: [id])
+  user        User      @relation(fields: [uid], references: [uid])
+
+  @@unique([uid, role_id], map: "UQ_user_role_uid_role_id")
+  @@index([uid], map: "IDX_user_role_uid")
+  @@index([role_id], map: "IDX_user_role_role_id")
+  @@index([id], map: "IDX_user_role_id")
+  @@map("user_role")
+}
+
+/// 角色权限关联表 - 存储角色与权限的关联关系
+model RolePermission {
+  id            Int        @id @default(autoincrement())
+  /// 角色ID
+  role_id       Int        @map("role_id")
+  /// 权限ID
+  permission_id Int        @map("permission_id")
+  create_time   DateTime   @default(now()) @map("create_time") @db.Timestamptz(6)
+  permission    Permission @relation(fields: [permission_id], references: [id])
+  role          Role       @relation(fields: [role_id], references: [id])
+
+  @@unique([role_id, permission_id], map: "UQ_role_permission_role_id_permission_id")
+  @@index([role_id], map: "IDX_role_permission_role_id")
+  @@index([permission_id], map: "IDX_role_permission_permission_id")
+  @@index([id], map: "IDX_role_permission_id")
+  @@map("role_permission")
+}
+
+/// 用户资源权限表 - 存储用户对特定资源的权限
+model UserResource {
+  id            String      @id @default(cuid())
+  /// 用户ID
+  uid           Int         @map("uid")
+  /// 权限ID（可选）
+  permission_id Int?        @map("permission_id")
+  /// 资源ID
+  resource_id   String?     @map("resource_id") @db.VarChar(255)
+  /// 资源类型
+  resource_type String?     @map("resource_type") @db.VarChar(100)
+  /// 权限动作URL
+  action_url    String?     @map("action_url") @db.VarChar(255)
+  /// 权限值
+  val           Int?        @map("val")
+  /// 开始时间
+  start_at      DateTime?   @map("start_at") @db.Timestamptz(6)
+  /// 过期时间
+  expires_at    DateTime?   @map("expires_at") @db.Timestamptz(6)
+  create_time   DateTime    @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time   DateTime    @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  permission    Permission? @relation(fields: [permission_id], references: [id])
+  user          User        @relation(fields: [uid], references: [uid])
+
+  @@index([uid], map: "IDX_user_resource_uid")
+  @@index([permission_id], map: "IDX_user_resource_permission_id")
+  @@index([resource_id], map: "IDX_user_resource_resource_id")
+  @@index([resource_type], map: "IDX_user_resource_resource_type")
+  @@index([id], map: "IDX_user_resource_id")
+  @@map("user_resource")
+}
+
+/// 用户登录日志表 - 存储用户登录时的设备信息和 header 数据
+model UserLoginLog {
+  id          String   @id @default(cuid())
+  /// 用户ID
+  uid         Int      @map("uid")
+  /// 应用ID
+  appid       String   @map("appid") @db.VarChar(50)
+  /// 登录类型：apple、google、wechat、phone、email等
+  login_type  String   @map("login_type") @db.VarChar(50)
+  /// Header 信息（JSON格式）：appid、device、version、bundleid、idfa、oaid、idfv、androidid等
+  header_data Json     @default("{}") @map("header_data")
+  /// IP地址
+  ip_address  String?  @map("ip_address") @db.VarChar(50)
+  /// User-Agent
+  user_agent  String?  @map("user_agent")
+  /// 登录时间
+  create_time DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+  user        User     @relation(fields: [uid], references: [uid])
+
+  @@index([uid], map: "IDX_user_login_log_uid")
+  @@index([appid], map: "IDX_user_login_log_appid")
+  @@index([login_type], map: "IDX_user_login_log_login_type")
+  @@index([create_time], map: "IDX_user_login_log_create_time")
+  @@index([uid, create_time], map: "IDX_user_login_log_uid_create_time")
+  @@index([id], map: "IDX_user_login_log_id")
+  @@map("user_login_log")
+}

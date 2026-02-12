@@ -1,0 +1,166 @@
+{
+  "_version": 17,
+  "pageSetting": {
+    "paginAnimateSetting": {
+      "autoPlay": false,
+      "indicator": "slim",
+      "pageNumber": "none",
+      "pageTurningEffect": "layer",
+      "autoPlayTime": 3,
+      "disableManualPageTurning": false
+    }
+  },
+  "canvasData": {
+    "width": 375,
+    "height": 738,
+    "visualHeight": 738,
+    "content": {
+      "pages": [
+        {
+          "id": "m8sWHNEiYmP47hGBibfhCxdfZcPNXWrJ",
+          "layers": [
+            {
+              "attrs": {
+                "hasChangedWidth": true,
+                "textDirection": "center",
+                "fontUrl": "https://font.maka.im/20190724/Alibaba-PuHuiTi-Regular.ttf",
+                "fontFamily": "Alibaba-PuHuiTi-Regular",
+                "originContent": "双击编辑文字",
+                "text": "<p>识别二维码添加金总微信领取新澳门内幕资料</p>",
+                "fontSize": 31.01757527501661,
+                "originBoxInfo": {
+                  "width": 328.27636171786094,
+                  "height": 99
+                },
+                "textCrop": {
+                  "content": "识别二维码添加金总微信领取新澳门内幕资料",
+                  "fontFamily": "Alibaba-PuHuiTi-Regular"
+                },
+                "textScale": 1,
+                "letterSpacing": 0,
+                "lineHeight": "1.6",
+                "planText": "识别二维码添加金总微信领取新澳门内幕资料",
+                "rawData": {
+                  "blocks": [
+                    {
+                      "key": "fopf1",
+                      "text": "识别二维码添加金总微信领取新澳门内幕资料",
+                      "type": "unstyled",
+                      "depth": 0,
+                      "inlineStyleRanges": [],
+                      "entityRanges": [],
+                      "data": {}
+                    }
+                  ],
+                  "entityMap": {}
+                },
+                "version": 1
+              },
+              "elementRef": "MkText",
+              "elemId": "HDJPumHxea",
+              "type": "element"
+            },
+            {
+              "type": "element",
+              "attrs": {
+                "ossPath": "https://img2.maka.im/user/605551267/thumb/1766624644469",
+                "version": 1,
+                "baseW": 270.6949806949807,
+                "baseH": 369,
+                "orgWidth": 950,
+                "orgHeight": 1295,
+                "borderRadius": 0,
+                "cropData": {
+                  "left": 0,
+                  "top": 0,
+                  "width": 270.6949806949807,
+                  "height": 369
+                }
+              },
+              "elementRef": "MkPicture",
+              "elemId": "PgvudaGoHp"
+            }
+          ],
+          "background": {
+            "bgcolor": "rgba(250,250,250,1)",
+            "bgpic": "",
+            "bgpicleft": "0",
+            "bgpictop": "0",
+            "bgpicwidth": "640",
+            "opacity": 1
+          },
+          "width": 375,
+          "height": 738
+        }
+      ],
+      "fixedPages": {
+        "layers": []
+      },
+      "fixedLayer": [
+        {
+          "elementRef": "MkWatermark",
+          "elemId": "wAyHnylJ_q",
+          "attrs": {},
+          "type": "element"
+        }
+      ]
+    },
+    "actions": {},
+    "music": {
+      "title": "",
+      "materialId": "",
+      "type": "maka",
+      "duration": 0,
+      "url": "",
+      "preview": ""
+    },
+    "__unitProcessed": 9
+  },
+  "positionLink": {
+    "wAyHnylJ_q": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 99999,
+      "mount": true,
+      "x": 297.6,
+      "y": 528,
+      "width": 75,
+      "height": 150
+    },
+    "HDJPumHxea": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 100000,
+      "mount": true,
+      "x": 17.624554341980517,
+      "y": 58.54718049659311,
+      "width": 328.27636171786094,
+      "height": 99
+    },
+    "PgvudaGoHp": {
+      "lock": false,
+      "visibility": true,
+      "rotate": 0,
+      "borderRadius": 0,
+      "opacity": 1,
+      "zIndex": 100001,
+      "mount": true,
+      "x": 51.77264770087396,
+      "y": 243.02877109865074,
+      "width": 270.6949806949807,
+      "height": 369
+    }
+  },
+  "meta": {
+    "originCanvasScale": {
+      "width": 375,
+      "height": 738
+    }
+  }
+}

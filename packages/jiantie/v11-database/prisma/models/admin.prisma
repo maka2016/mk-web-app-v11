@@ -1,0 +1,64 @@
+/// 后台管理员账号表 - 存储后台管理员账号信息
+model AdminUser {
+  id             String          @id @default(cuid())
+  /// 用户名（唯一）
+  username       String          @unique @map("username") @db.VarChar(50)
+  /// 邮箱（可选）
+  email          String?         @map("email") @db.VarChar(255)
+  /// 密码哈希
+  password_hash  String          @map("password_hash") @db.VarChar(255)
+  /// 状态：0正常 -1删除
+  status         Int             @default(0) @map("status") @db.SmallInt
+  create_time    DateTime        @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time    DateTime        @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  adminUserRoles AdminUserRole[]
+
+  @@index([username], map: "IDX_admin_user_username")
+  @@index([status], map: "IDX_admin_user_status")
+  @@index([id], map: "IDX_admin_user_id")
+  @@map("admin_user")
+}
+
+/// 后台管理员角色表 - 存储管理员角色及其权限（菜单分组）
+model AdminRole {
+  id             String          @id @default(cuid())
+  /// 角色名称
+  name           String          @unique(map: "UQ_admin_role_name") @map("name") @db.VarChar(100)
+  /// 角色别名
+  alias          String?         @map("alias") @db.VarChar(100)
+  /// 角色描述
+  description    String?         @map("description")
+  /// 菜单分组权限（例如：["基础数据管理","BI报表"]）
+  menu_groups    Json?           @map("menu_groups")
+  create_time    DateTime        @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time    DateTime        @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  adminUserRoles AdminUserRole[]
+
+  @@index([id], map: "IDX_admin_role_id")
+  @@map("admin_role")
+}
+
+/// 管理员账号与角色关联表 - 存储管理员账号与角色的关联关系
+model AdminUserRole {
+  id            String    @id @default(cuid())
+  /// 管理员ID
+  admin_user_id String    @map("admin_user_id")
+  /// 开始时间
+  start_at      DateTime? @map("start_at") @db.Timestamptz(6)
+  /// 过期时间
+  expires_at    DateTime? @map("expires_at") @db.Timestamptz(6)
+  create_time   DateTime  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time   DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 管理员角色ID
+  admin_role_id String    @map("admin_role_id")
+  /// 权限快照（菜单分组），写在 AdminUserRole 中
+  menu_groups   Json?     @map("menu_groups")
+  adminRole     AdminRole @relation(fields: [admin_role_id], references: [id], onDelete: Cascade)
+  adminUser     AdminUser @relation(fields: [admin_user_id], references: [id], onDelete: Cascade)
+
+  @@unique([admin_user_id, admin_role_id], map: "UQ_admin_user_role_admin_user_id_admin_role_id")
+  @@index([admin_user_id], map: "IDX_admin_user_role_admin_user_id")
+  @@index([admin_role_id], map: "IDX_admin_user_role_admin_role_id")
+  @@index([id], map: "IDX_admin_user_role_id")
+  @@map("admin_user_role")
+}

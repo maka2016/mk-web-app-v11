@@ -1,0 +1,39 @@
+enum TicketStatus {
+  open // 待处理
+  processing // 处理中
+  resolved // 已解决
+  closed // 已关单
+  rated // 已评价
+}
+
+model Ticket {
+  id                  String       @id @default(cuid()) @db.Uuid
+  ticketId            String       @unique @map("ticket_id") // 业务系统内的工单主键 (e.g., #20240130-001)
+  feishuThreadId      String?      @map("feishu_thread_id") // 飞书话题贴的根消息 ID
+  userId              String       @map("user_id") // 发起工单的用户 ID
+  status              TicketStatus @default(open)
+  ownerOpenId         String?      @map("owner_open_id") // 当前跟进的客服飞书 OpenID
+  satisfactionScore   Int?         @map("satisfaction_score") // 1-5 分
+  satisfactionComment String?      @map("satisfaction_comment") // 用户评价内容
+  content             String       @map("content") // 问题描述
+  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  messages TicketMessage[]
+
+  @@map("tickets")
+}
+
+model TicketMessage {
+  id          String   @id @default(cuid()) @db.Uuid
+  ticketId    String   @map("ticket_id") @db.Uuid
+  sender      String // user or support
+  content     String
+  type        String // text, image
+  feishuMsgId String?  @map("feishu_msg_id")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+
+  @@map("ticket_messages")
+}

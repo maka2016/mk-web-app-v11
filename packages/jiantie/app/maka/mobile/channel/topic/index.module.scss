@@ -1,0 +1,16 @@
+.mainContainer {
+  height: 100%;
+  overflow-y: auto;
+
+  .sticky {
+    position: sticky;
+    top: 44px;
+    z-index: 1;
+  }
+
+  .scrollContainer {
+    padding: 0 16px;
+    min-height: 100vh;
+    background-color: #fff;
+  }
+}

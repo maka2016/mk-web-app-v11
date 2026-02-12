@@ -1,0 +1,46 @@
+.exportSetting {
+  padding: 16px 16px 34px;
+
+  .head {
+    text-align: center;
+    font-size: 16px;
+    font-weight: var(--font-semibold);
+    line-height: 22px;
+    color: #000000e0;
+  }
+
+  .title {
+    text-align: left;
+    margin-bottom: 4px;
+    font-size: 14px;
+    font-weight: var(--font-semibold);
+    line-height: 22px;
+    color: #000000e0;
+  }
+
+  .setting {
+    padding: 8px 0;
+  }
+
+  .radioItem {
+    display: flex;
+    align-items: center;
+
+    label {
+      color: #000;
+      font-weight: var(--font-semibold);
+      font-size: 14px;
+    }
+
+    .desc {
+      font-size: 12px;
+      margin-left: 8px;
+      font-weight: 400;
+      color: #00000099;
+
+      &.vip {
+        color: #d4a03f;
+      }
+    }
+  }
+}

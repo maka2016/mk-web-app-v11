@@ -1,0 +1,33 @@
+.tabsWrap {
+  background-color: #fff;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  overflow: hidden;
+
+  .tabs {
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 8px;
+
+    .tabItem {
+      position: relative;
+      flex-shrink: 0;
+      color: rgba(0, 0, 0, 0.8);
+      padding: 4px 8px;
+      font-size: 14px;
+      line-height: 20px;
+      border: 1px solid #0000000f;
+      border-radius: 999px;
+      font-weight: var(--font-semibold);
+
+      &.active {
+        color: var(--theme-color);
+        background-color: #fff;
+        border-color: var(--theme-color);
+        pointer-events: none;
+      }
+    }
+  }
+}

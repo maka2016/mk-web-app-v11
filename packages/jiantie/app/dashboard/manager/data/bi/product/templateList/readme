@@ -1,0 +1,13 @@
+模板列表页（加入layyout导航）
+读取appid作为频道筛选条件
+读取template_market_channel_entity的2、3、4级频道
+读取4级频道里面挂的模板id，匹配tempalte_entity的id，获取模板信息
+
+页面顶部入口列表：二级频道（带上thumb），三级热词，四级标签（带上thumb）
+
+
+页面下方为模版列表
+每个模版显示：封面、标题、设计师、新模版标签（当月、上月）、 上架时间（创建时间）、状态、近7天曝光、近7天点击、近7天创作、近7天拦截、近7天成功、近7天销量、60天销量、近7天GMV、60天GMV
+
+曝光、点击、创作、拦截、成功从template_bi_daily_entity读取
+订单从order_record_entity读取

@@ -1,0 +1,162 @@
+{
+  "title": "投资峰会论坛会议邀请函长页H5线性蓝紫",
+  "desc": "请填写描述",
+  "cover": "https://img2.maka.im/cdn/screenshot/template/T_2Y30TOSK6RSE-v1-s1-__-p0.gif?v=1764311706648",
+  "deleted": false,
+  "deleted_confirmed": false,
+  "create_time": "2026-01-07T10:26:03.550Z",
+  "update_time": "2026-01-08T03:10:16.831Z",
+  "custom_time": "2026-01-07T10:26:03.550Z",
+  "version": 2,
+  "child_works_id": null,
+  "template_id": "T_2Y30TOSK6RSE",
+  "uid": 600328322,
+  "is_folder": false,
+  "is_paied": false,
+  "folder_id": null,
+  "alias": null,
+  "id": "NVSP33VA_600328322",
+  "appid": "maka",
+  "offline": false,
+  "spec_id": "7ee4c72fe272959de662fff3378e7063",
+  "is_title_desc_modified": false,
+  "is_rsvp": false,
+  "envelope_enabled": false,
+  "envelope_config": null,
+  "metadata": {
+    "page_id": "18300",
+    "page_type": "tag_channel",
+    "ref_page_id": "18300",
+    "ref_page_type": "tag_channel"
+  },
+  "editor_version": 2,
+  "share_type": "other",
+  "specInfo": {
+    "alias": "One Pager",
+    "desc": "链接，可导出长图和视频",
+    "width": 375,
+    "height": 768,
+    "max_page_count": 50,
+    "is_flip_page": false,
+    "use_animation": true,
+    "offline": false,
+    "deleted": false,
+    "create_time": "2025-07-31T03:00:40.430Z",
+    "update_time": "2025-12-03T10:21:00.783Z",
+    "appid": null,
+    "is_flat_page": true,
+    "name": "长页H5",
+    "unit": "px",
+    "id": "7ee4c72fe272959de662fff3378e7063",
+    "interactive_features": "ditu,liuyan_danmu,songliwu,huizhi_biaodan,zidong_gundong",
+    "display_name": "长页",
+    "viewport_width": 720,
+    "fixed_height": false,
+    "export_format": "html",
+    "preview_width": 9,
+    "preview_height": 16
+  },
+  "rsvp_form_config": {
+    "id": "cmk3vi2u70000qf8olbbpgrl3",
+    "works_id": "NVSP33VA_600328322",
+    "title": "诚邀",
+    "desc": "",
+    "form_fields": {
+      "fields": [
+        {
+          "id": "name",
+          "type": "text",
+          "label": "姓名",
+          "enabled": true,
+          "isSystem": true,
+          "required": true,
+          "placeholder": "请输入您的姓名"
+        },
+        {
+          "id": "phone",
+          "type": "text",
+          "label": "手机号",
+          "enabled": true,
+          "isSystem": true,
+          "required": false,
+          "placeholder": "请输入手机号码"
+        },
+        {
+          "id": "email",
+          "type": "text",
+          "label": "电子邮箱",
+          "enabled": false,
+          "isSystem": true,
+          "required": false,
+          "placeholder": "请输入邮箱地址"
+        },
+        {
+          "id": "remark",
+          "type": "text",
+          "label": "留言备注",
+          "enabled": false,
+          "isSystem": true,
+          "required": false,
+          "placeholder": "请输入留言备注"
+        },
+        {
+          "id": "ask_will_attend",
+          "type": "radio",
+          "label": "是否出席",
+          "enabled": false,
+          "options": [
+            {
+              "label": "出席",
+              "value": "true"
+            },
+            {
+              "label": "不出席",
+              "value": "false"
+            }
+          ],
+          "isSystem": true,
+          "required": false
+        },
+        {
+          "id": "guest_count",
+          "type": "guest_count",
+          "label": "出席人数",
+          "enabled": false,
+          "isSystem": true,
+          "required": false,
+          "splitAdultChild": false
+        },
+        {
+          "id": "address",
+          "type": "address",
+          "label": "地址选择",
+          "enabled": false,
+          "isSystem": true,
+          "required": false,
+          "placeholder": "请输入地址"
+        },
+        {
+          "id": "attachment",
+          "type": "attachment",
+          "label": "上传附件",
+          "accept": ["image/*", "application/pdf"],
+          "enabled": false,
+          "isSystem": true,
+          "maxFiles": 3,
+          "required": false,
+          "maxSizeMB": 10
+        }
+      ]
+    },
+    "success_feedback_config": null,
+    "allow_multiple_submit": true,
+    "require_approval": false,
+    "max_submit_count": null,
+    "submit_deadline": null,
+    "enabled": false,
+    "collect_form": true,
+    "deleted": false,
+    "create_time": "2026-01-07T10:26:06.943Z",
+    "update_time": "2026-01-07T10:26:06.943Z"
+  }
+}

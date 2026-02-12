@@ -1,0 +1,27 @@
+/// V5同步接口日志表 - 记录所有v5sync API的调用记录
+model V5SyncLog {
+  id            String   @id @default(cuid())
+  /// API路径，如：user-register、user-login、order-create等
+  api_path      String   @map("api_path") @db.VarChar(100)
+  /// 请求数据（JSON格式）
+  request_data  Json?    @map("request_data")
+  /// 响应数据（JSON格式）
+  response_data Json?    @map("response_data")
+  /// 状态：success、failed
+  status        String   @map("status") @db.VarChar(20)
+  /// 错误信息（失败时使用）
+  error_message String?  @map("error_message")
+  /// HTTP状态码
+  http_status   Int?     @map("http_status")
+  /// 创建时间
+  create_time   DateTime @default(now()) @map("create_time") @db.Timestamptz(6)
+
+  @@index([api_path], map: "IDX_v5sync_log_api_path")
+  @@index([status], map: "IDX_v5sync_log_status")
+  @@index([http_status], map: "IDX_v5sync_log_http_status")
+  @@index([create_time], map: "IDX_v5sync_log_create_time")
+  @@index([api_path, status], map: "IDX_v5sync_log_api_path_status")
+  @@index([api_path, create_time], map: "IDX_v5sync_log_api_path_create_time")
+  @@index([id], map: "IDX_v5sync_log_id")
+  @@map("v5sync_log")
+}

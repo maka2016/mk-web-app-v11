@@ -1,0 +1,75 @@
+.main {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+
+  @media (min-width: 768px) {
+    overflow-x: visible;
+  }
+
+  :global(.ant-table-tbody) {
+    & > tr > td {
+      border: none;
+    }
+  }
+
+  :global(.ant-table-selection-column) {
+  }
+
+  :global(.ant-pagination-options-size-changer) {
+    display: none;
+  }
+
+  .pagination {
+    padding: 12px 0;
+
+    @media (min-width: 768px) {
+      padding: 16px 0;
+    }
+  }
+
+  // 表格样式
+  :global(table) {
+    width: 100%;
+    min-width: max-content;
+    table-layout: auto;
+    border-collapse: collapse;
+
+    @media (min-width: 768px) {
+      table-layout: auto;
+      min-width: 100%;
+    }
+  }
+
+  // 表头行样式
+  :global(thead) {
+    display: table-header-group;
+
+    @media (max-width: 767px) {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background-color: white;
+    }
+  }
+
+  // 表头单元格样式
+  :global(thead th) {
+    white-space: nowrap !important;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  // 表格行样式
+  :global(tbody) {
+    display: table-row-group;
+  }
+
+  // 表格单元格样式
+  :global(tbody td) {
+    white-space: nowrap !important;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+}

@@ -1,0 +1,274 @@
+body {
+  overscroll-behavior-y: contain;
+  #designer_scroll_container {
+    overscroll-behavior-y: contain;
+    background-color: rgb(238, 238, 238);
+  }
+}
+
+#editor_container {
+  background-color: rgb(238, 238, 238);
+}
+
+#editor_header {
+  background-color: rgb(255, 255, 255);
+}
+
+.editor_container {
+  .blink_modal {
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    animation: blink-elem 1.5s 2;
+    animation-delay: 1000ms;
+    box-sizing: content-box;
+  }
+}
+
+@keyframes blink-elem {
+  0% {
+    background-color: rgba(180, 186, 238, 0);
+  }
+
+  50% {
+    background-color: rgba(180, 186, 238, 0.5);
+  }
+
+  100% {
+    background-color: rgba(180, 186, 238, 0);
+  }
+}
+
+.Grid_container {
+  width: 100%;
+  height: 100%;
+  min-width: 320px;
+  min-height: 100%;
+
+  .option_handler_wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    pointer-events: none;
+  }
+}
+
+.GridV2Comp {
+  // display: grid;
+  // min-height: 100%;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+
+  .Cell {
+    .hover_visual {
+      display: none;
+    }
+
+    &.selected,
+    &:hover {
+      // z-index: 22;
+
+      .hover_visual {
+        display: block;
+      }
+    }
+  }
+
+  .Row,
+  .Cell,
+  .Elem {
+    max-width: 100%;
+    min-width: 24px;
+    // overflow: hidden;
+    position: relative;
+  }
+
+  .Row,
+  .Cell,
+  .Elem {
+    &.selected {
+      // outline: $selectedOutlineWidth dashed rgba(0, 0, 0, 0.25) !important;
+      // z-index: 11;
+    }
+
+    &.active {
+      // outline: $activeOutlineWidth solid #187ff1 !important;
+      // z-index: 12;
+    }
+  }
+
+  .Row {
+    // min-height: 48px;
+
+    &.active {
+      &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        // background-color: rgba(0, 0, 0, 0.1);
+        z-index: 11;
+        pointer-events: none;
+      }
+    }
+  }
+
+  .Elem {
+    // min-width: 100px;
+    // display: flex;
+    // flex-direction: column;
+    overflow: hidden;
+  }
+
+  &.interactive {
+    // padding: 16px 0 !important;
+    // background-color: #f5f5f5 !important;
+  }
+
+  &.full_editing {
+    .Cell {
+      max-width: 100%;
+      z-index: 3;
+      // position: relative;
+
+      &.selected {
+        // outline: $selectedOutlineWidth dashed rgba(0, 0, 0, 0.25) !important;
+        // z-index: 11;
+      }
+
+      &.active {
+        // outline: $activeOutlineWidth solid #187ff1 !important;
+        // z-index: 12;
+      }
+    }
+
+    .hover_elem_v1 {
+      position: relative;
+
+      &:hover {
+        &::after {
+          opacity: 1;
+        }
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        box-shadow: inset 0 0 0 1px #1a87ff;
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
+  }
+}
+
+.jiantie_band_container {
+  width: 100%;
+  padding: 16px 0 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .jiantie_band {
+    width: 343px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 10px;
+    height: 35px;
+    background-image: url('https://img2.maka.im/cdn/webstore10/jiantie/jiantie_logo_bg.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+
+    img {
+      height: 20px;
+    }
+
+    span {
+      flex: 1;
+      font-family: PingFang SC;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 100%;
+      letter-spacing: 0px;
+      color: #000;
+    }
+
+    .jiantie_band_btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      font-family: PingFang SC;
+      font-weight: 600;
+      font-size: 11px;
+      line-height: 100%;
+      letter-spacing: 0px;
+      text-align: center;
+      color: #fff;
+      background-color: #fb7299;
+      border-radius: 100px;
+    }
+  }
+}
+
+.android_focus_in {
+  #editor_footer {
+    display: none;
+  }
+}
+
+// 系统变量提示样式
+.ElemWrapper {
+  position: relative;
+
+  &.show_system_var_tip {
+    outline: 2px dashed #9747ff;
+    // border-radius: 2px;
+    // outline-offset: 2px;
+    .system_var_tip {
+      position: absolute;
+      top: 0;
+      right: 0;
+      transform: translate(0, -100%);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      background-color: #9747ff;
+      color: #fff;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 500;
+      z-index: 1000;
+      // pointer-events: none;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+      .system_var_tip_text {
+        line-height: 1;
+      }
+
+      svg {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+      }
+    }
+  }
+}

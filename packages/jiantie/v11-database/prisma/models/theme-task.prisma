@@ -1,0 +1,127 @@
+/// 主题任务单实体：用于分配主题生产任务给设计师
+model ThemeTaskEntity {
+  id                String                      @id @default(cuid())
+  title             String                      @db.VarChar
+  desc              String?                     @db.VarChar
+  status            ThemeTaskStatusEnum         @default(in_progress)
+  /// 关联素材分类（PRD：素材分类）
+  material_class_id String?                     @map("material_class_id")
+  /// 关联规格（PRD：规格）
+  spec_id           String?                     @map("spec_id") @db.VarChar
+  /// 指派设计师（PRD：分配设计任务给设计师）
+  designer_uid      Int?                        @map("designer_uid")
+  /// 创建人（运营）
+  created_by_uid    Int?                        @map("created_by_uid")
+  due_at            DateTime?                   @map("due_at") @db.Timestamptz(6)
+  deleted           Boolean                     @default(false)
+  create_time       DateTime                    @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time       DateTime                    @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 样稿图片数组（JSON格式存储图片URL数组）
+  sample_images     Json?                       @map("sample_images")
+  /// 风格字段
+  style             String?                     @map("style") @db.VarChar
+  designers         ThemeTaskDesignerEntity[]
+  material_class    MaterialClassEntity?        @relation("MaterialClassThemeTasks", fields: [material_class_id], references: [id])
+  specInfo          WorksSpecEntity?            @relation("WorksSpecThemeTasks", fields: [spec_id], references: [id])
+  submissions       ThemeTaskSubmissionEntity[]
+
+  @@index([status], map: "IDX_theme_task_status")
+  @@index([designer_uid], map: "IDX_theme_task_entity_designer_uid")
+  @@index([material_class_id], map: "IDX_theme_task_material_class_id")
+  @@index([spec_id], map: "IDX_theme_task_spec_id")
+  @@index([create_time], map: "IDX_theme_task_create_time")
+  @@index([id], map: "IDX_theme_task_id")
+  @@map("theme_task_entity")
+}
+
+/// 主题任务单和设计师的关联表（多对多关系）
+model ThemeTaskDesignerEntity {
+  id            String          @id @default(cuid())
+  theme_task_id String          @map("theme_task_id")
+  designer_uid  Int             @map("designer_uid")
+  create_time   DateTime        @default(now()) @map("create_time") @db.Timestamptz(6)
+  themeTask     ThemeTaskEntity @relation(fields: [theme_task_id], references: [id])
+
+  @@unique([theme_task_id, designer_uid], map: "UQ_theme_task_designer_task_uid")
+  @@index([theme_task_id], map: "IDX_theme_task_designer_task_id")
+  @@index([designer_uid], map: "IDX_theme_task_designer_entity_designer_uid")
+  @@index([id], map: "IDX_theme_task_designer_id")
+  @@map("theme_task_designer_entity")
+}
+
+/// 主题任务单作品记录：设计师向任务单提交作品（当前态）
+model ThemeTaskSubmissionEntity {
+  id            String                              @id @default(cuid())
+  theme_task_id String                              @map("theme_task_id")
+  works_id      String                              @map("works_id") @db.VarChar
+  designer_uid  Int                                 @map("designer_uid")
+  /// 当前审核态（覆盖更新即可满足 PRD；历史见 review_logs）
+  review_status ThemeTaskSubmissionReviewStatusEnum @default(pending) @map("review_status")
+  review_note   String?                             @map("review_note")
+  reviewed_at   DateTime?                           @map("reviewed_at") @db.Timestamptz(6)
+  reviewer_uid  Int?                                @map("reviewer_uid")
+  submit_time   DateTime                            @default(now()) @map("submit_time") @db.Timestamptz(6)
+  update_time   DateTime                            @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 提交相关
+  designer_note String?                             @map("designer_note")
+  /// 审核图片数组（JSON格式存储图片URL数组）
+  review_images Json?                               @map("review_images")
+  review_logs   ThemeTaskReviewLogEntity[]
+  themeTask     ThemeTaskEntity                     @relation(fields: [theme_task_id], references: [id])
+  works         WorksEntity                         @relation("WorksThemeTaskSubmissions", fields: [works_id], references: [id])
+
+  @@unique([theme_task_id, works_id], map: "UQ_theme_task_submission_task_works")
+  @@index([theme_task_id], map: "IDX_theme_task_submission_task_id")
+  @@index([works_id], map: "IDX_theme_task_submission_works_id")
+  @@index([designer_uid], map: "IDX_theme_task_submission_designer_uid")
+  @@index([review_status], map: "IDX_theme_task_submission_review_status")
+  @@index([submit_time], map: "IDX_theme_task_submission_submit_time")
+  @@index([id], map: "IDX_theme_task_submission_id")
+  @@map("theme_task_submission_entity")
+}
+
+/// 主题任务审核日志：记录每次审核动作（用于绩效/追责）
+model ThemeTaskReviewLogEntity {
+  id                 String                               @id @default(cuid())
+  submission_id      String                               @map("submission_id")
+  from_review_status ThemeTaskSubmissionReviewStatusEnum? @map("from_review_status")
+  to_review_status   ThemeTaskSubmissionReviewStatusEnum  @map("to_review_status")
+  reviewer_uid       Int                                  @map("reviewer_uid")
+  review_note        String?                              @map("review_note")
+  create_time        DateTime                             @default(now()) @map("create_time") @db.Timestamptz(6)
+  /// 审核图片数组（JSON格式存储图片URL数组）
+  review_images      Json?                                @map("review_images")
+  submission         ThemeTaskSubmissionEntity            @relation(fields: [submission_id], references: [id])
+
+  @@index([submission_id], map: "IDX_theme_task_review_log_submission_id")
+  @@index([reviewer_uid], map: "IDX_theme_task_review_log_reviewer_uid")
+  @@index([create_time], map: "IDX_theme_task_review_log_create_time")
+  @@index([id], map: "IDX_theme_task_review_log_id")
+  @@map("theme_task_review_log_entity")
+}
+
+/// 主题任务单状态
+enum ThemeTaskStatusEnum {
+  /// 待审核
+  pending_review
+  /// 进行中
+  in_progress
+  /// 已完成
+  completed
+
+  @@map("theme_task_status_enum")
+}
+
+/// 主题任务作品提交的审核状态（“当前态”）
+enum ThemeTaskSubmissionReviewStatusEnum {
+  /// 待审核
+  pending
+  /// 已通过
+  approved
+  /// 需修改（设计师需要重新提交）
+  changes_requested
+  /// 已拒绝
+  rejected
+
+  @@map("theme_task_submission_review_status_enum")
+}

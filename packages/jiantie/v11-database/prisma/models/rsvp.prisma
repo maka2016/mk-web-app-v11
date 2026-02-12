@@ -1,0 +1,232 @@
+/// RSVP 表单配置实体
+model RsvpFormConfigEntity {
+  id                      String                        @id @default(cuid())
+  /// 关联的作品ID（必需，外键关联到WorksEntity）
+  works_id                String                        @unique(map: "UQ_rsvp_form_config_works_id") @map("works_id")
+  /// 表单标题
+  title                   String                        @db.VarChar
+  /// 表单描述
+  desc                    String?
+  /// 表单字段配置 JSON
+  form_fields             Json                          @map("form_fields")
+  /// 提交成功反馈配置（JSON格式，包含 success_message 和 success_image）
+  /// 提交成功反馈配置 JSON
+  success_feedback_config Json?                         @map("success_feedback_config")
+  /// 表单功能设置
+  /// 是否允许多次提交
+  allow_multiple_submit   Boolean                       @default(true) @map("allow_multiple_submit")
+  /// 是否需要审核
+  require_approval        Boolean                       @default(true) @map("require_approval")
+  /// 最大提交次数限制
+  max_submit_count        Int?                          @map("max_submit_count")
+  /// 提交截止时间
+  submit_deadline         DateTime?                     @map("submit_deadline") @db.Timestamptz(6)
+  /// 状态管理
+  /// 是否启用
+  enabled                 Boolean                       @default(true)
+  /// 是否收集表单信息
+  collect_form            Boolean                       @default(true) @map("collect_form")
+  deleted                 Boolean                       @default(false)
+  create_time             DateTime                      @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time             DateTime                      @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  contact_form_configs    RsvpContactFormConfigEntity[]
+  works                   WorksEntity                   @relation(fields: [works_id], references: [id])
+  submissions             RsvpSubmissionEntity[]
+  view_logs               RsvpViewLogEntity[]
+
+  @@index([works_id], map: "IDX_rsvp_form_config_works_id")
+  @@index([deleted], map: "IDX_rsvp_form_config_deleted")
+  @@index([enabled], map: "IDX_rsvp_form_config_enabled")
+  @@index([id], map: "IDX_rsvp_form_config_id")
+  @@map("rsvp_form_config_entity")
+}
+
+/// RSVP 提交记录实体（版本化设计）
+model RsvpSubmissionEntity {
+  id                  String                   @id @default(cuid())
+  /// 关联的表单配置ID
+  form_config_id      String                   @map("form_config_id")
+  /// 关联的联系人ID
+  contact_id          String?                  @map("contact_id")
+  /// 版本化管理
+  /// 同一逻辑提交的组ID（第一次提交时等于id，后续修改使用第一次的id）
+  submission_group_id String                   @map("submission_group_id")
+  /// 提交数据
+  /// 是否出席（true=出席，false=不出席，null=未选择）
+  will_attend         Boolean?                 @map("will_attend")
+  /// 提交的表单数据 JSON
+  submission_data     Json                     @map("submission_data")
+  /// 提交状态
+  status              RsvpSubmissionStatusEnum @default(pending)
+  /// 审核信息
+  /// 审核人
+  approved_by         String?                  @map("approved_by") @db.VarChar
+  /// 审核时间
+  approved_time       DateTime?                @map("approved_time") @db.Timestamptz(6)
+  /// 拒绝原因
+  reject_reason       String?                  @map("reject_reason")
+  /// 修改信息（仅修改时填写）
+  /// 变更字段列表 JSON
+  changed_fields      Json?                    @map("changed_fields")
+  /// 操作类型：visitor（访客）、admin（管理员）、system（系统）
+  operator_type       String?                  @map("operator_type") @db.VarChar
+  /// 操作人ID
+  operator_id         String?                  @map("operator_id") @db.VarChar
+  /// 操作人名称
+  operator_name       String?                  @map("operator_name") @db.VarChar
+  /// 修改备注
+  remark              String?
+  /// 状态管理
+  deleted             Boolean                  @default(false)
+  /// 注意：最新版本通过 create_time 排序获取；版本号可通过查询时排序后的序号计算
+  create_time         DateTime                 @default(now()) @map("create_time") @db.Timestamptz(6)
+  contact             RsvpContactEntity?       @relation(fields: [contact_id], references: [id])
+  form_config         RsvpFormConfigEntity     @relation(fields: [form_config_id], references: [id])
+  action_logs         RsvpViewLogEntity[]
+
+  @@index([form_config_id], map: "IDX_rsvp_submission_form_config_id")
+  @@index([contact_id], map: "IDX_rsvp_submission_contact_id")
+  @@index([submission_group_id], map: "IDX_rsvp_submission_group_id")
+  @@index([status], map: "IDX_rsvp_submission_status")
+  @@index([deleted], map: "IDX_rsvp_submission_deleted")
+  @@index([create_time], map: "IDX_rsvp_submission_create_time")
+  @@index([submission_group_id, create_time], map: "IDX_rsvp_submission_group_time")
+  @@index([id], map: "IDX_rsvp_submission_id")
+  @@map("rsvp_submission_entity")
+}
+
+/// RSVP 操作日志实体（访问、提交、重新提交等）
+model RsvpViewLogEntity {
+  id             String                @id @default(cuid())
+  /// 关联的表单配置ID
+  form_config_id String                @map("form_config_id")
+  /// 关联的嘉宾ID（可选，公开访客可能没有）
+  contact_id     String?               @map("contact_id")
+  /// 操作类型
+  /// 操作类型：view_page（访问页面）、submit（提交）、resubmit（重新提交）
+  action_type    String                @default("view_page") @map("action_type") @db.VarChar
+  /// 关联的提交记录（仅用于 submit 和 resubmit）
+  submission_id  String?               @map("submission_id")
+  /// 访问信息
+  /// IP地址
+  ip_address     String?               @map("ip_address") @db.VarChar
+  /// User-Agent
+  user_agent     String?               @map("user_agent")
+  /// 来源页面
+  referer        String?
+  /// 设备类型（mobile、desktop、tablet等）
+  device_type    String?               @map("device_type") @db.VarChar
+  /// 访问时长（秒）- 仅用于 view_page
+  /// 页面停留时长（秒）
+  view_duration  Int?                  @map("view_duration")
+  /// 操作详情
+  /// 额外的元数据
+  metadata       Json?
+  /// 时间戳
+  create_time    DateTime              @default(now()) @map("create_time") @db.Timestamptz(6)
+  contact        RsvpContactEntity?    @relation(fields: [contact_id], references: [id])
+  form_config    RsvpFormConfigEntity  @relation(fields: [form_config_id], references: [id])
+  submission     RsvpSubmissionEntity? @relation(fields: [submission_id], references: [id])
+
+  @@index([form_config_id], map: "IDX_rsvp_view_log_form_config_id")
+  @@index([contact_id], map: "IDX_rsvp_view_log_contact_id")
+  @@index([action_type], map: "IDX_rsvp_view_log_action_type")
+  @@index([create_time], map: "IDX_rsvp_view_log_create_time")
+  @@index([ip_address], map: "IDX_rsvp_view_log_ip_address")
+  @@index([id], map: "IDX_rsvp_view_log_id")
+  @@map("rsvp_view_log_entity")
+}
+
+/// RSVP 联系人实体
+model RsvpContactEntity {
+  id                   String                        @id @default(cuid())
+  /// 联系人姓名
+  name                 String                        @db.VarChar
+  /// 邮箱
+  email                String?                       @unique(map: "UQ_rsvp_contact_email") @db.VarChar
+  /// 电话
+  phone                String?                       @unique(map: "UQ_rsvp_contact_phone") @db.VarChar
+  /// 嘉宾归属：嘉宾归属于简帖用户（uid），而不是某个RSVP表单
+  /// 用户ID，嘉宾归属于该用户
+  uid                  Int                           @map("uid")
+  /// 关联的作品ID（可选，迁移后需要填充）：一个作品可以有多个联系人
+  /// 关联的作品ID
+  works_id             String?                       @map("works_id")
+  /// 邀请分享信息
+  /// 邀请标题
+  invite_title         String?                       @db.VarChar
+  /// 邀请描述
+  invite_desc          String?                       @db.VarChar
+  /// 创建来源：'manual'（主动邀请）| 'auto'（被动创建，公开链接提交时自动创建）
+  source_type          String?                       @default("manual") @map("source_type") @db.VarChar
+  /// 状态管理
+  deleted              Boolean                       @default(false)
+  create_time          DateTime                      @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time          DateTime                      @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  works                WorksEntity?                  @relation(fields: [works_id], references: [id])
+  contact_form_configs RsvpContactFormConfigEntity[]
+  submissions          RsvpSubmissionEntity[]
+  action_logs          RsvpViewLogEntity[]
+
+  @@index([name], map: "IDX_rsvp_contact_name")
+  @@index([email], map: "IDX_rsvp_contact_email")
+  @@index([phone], map: "IDX_rsvp_contact_phone")
+  @@index([uid], map: "IDX_rsvp_contact_uid")
+  @@index([works_id], map: "IDX_rsvp_contact_works_id")
+  @@index([source_type], map: "IDX_rsvp_contact_source_type")
+  @@index([deleted], map: "IDX_rsvp_contact_deleted")
+  @@index([id], map: "IDX_rsvp_contact_id")
+  @@map("rsvp_contact_entity")
+}
+
+/// RSVP 嘉宾与表单的多对多关联表
+model RsvpContactFormConfigEntity {
+  id             String               @id @default(cuid())
+  /// 关联的嘉宾ID
+  contact_id     String               @map("contact_id")
+  /// 关联的表单配置ID
+  form_config_id String               @map("form_config_id")
+  /// 时间戳
+  create_time    DateTime             @default(now()) @map("create_time") @db.Timestamptz(6)
+  contact        RsvpContactEntity    @relation(fields: [contact_id], references: [id])
+  form_config    RsvpFormConfigEntity @relation(fields: [form_config_id], references: [id])
+
+  @@unique([contact_id, form_config_id], map: "UQ_rsvp_contact_form_config")
+  @@index([contact_id], map: "IDX_rsvp_contact_form_config_contact_id")
+  @@index([form_config_id], map: "IDX_rsvp_contact_form_config_form_config_id")
+  @@index([id], map: "IDX_rsvp_contact_form_config_id")
+  @@map("rsvp_contact_form_config_entity")
+}
+
+/// RSVP 通知已读记录表
+model RsvpNotificationReadEntity {
+  id            String   @id @default(cuid())
+  /// 用户ID
+  user_id       String   @map("user_id")
+  /// 提交记录ID
+  submission_id String   @map("submission_id")
+  /// 操作日志ID（可选）
+  action_log_id String?  @map("action_log_id")
+  /// 时间戳
+  /// 已读时间
+  read_time     DateTime @default(now()) @map("read_time") @db.Timestamptz(6)
+
+  @@unique([user_id, submission_id], map: "UQ_rsvp_notification_user_submission")
+  @@index([user_id], map: "IDX_rsvp_notification_user_id")
+  @@index([submission_id], map: "IDX_rsvp_notification_submission_id")
+  @@map("rsvp_notification_read_entity")
+}
+
+/// RSVP 提交状态枚举
+enum RsvpSubmissionStatusEnum {
+  /// 待审核
+  pending
+  /// 已确认
+  approved
+  /// 已拒绝
+  rejected
+  /// 已取消
+  cancelled
+
+  @@map("rsvp_submission_status_enum")
+}

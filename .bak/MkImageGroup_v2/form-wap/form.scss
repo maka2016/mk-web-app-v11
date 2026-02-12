@@ -1,0 +1,33 @@
+.mk_imagegroup_wap_form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .mk_imagegroup_wap_form_btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #000000e0;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+}
+
+.mk_imagegroup_drawer {
+  height: 100vh;
+  border-radius: 0;
+}
+
+.mk_imagegroup_drawer_web {
+  @media (min-width: 768px) {
+    width: 880px;
+    max-width: 880px;
+    height: 680px;
+    border-radius: 0.75rem;
+  }
+
+  @media (max-width: 1000px) and (min-width: 768px) {
+    width: calc(100vw - 48px) !important;
+  }
+}

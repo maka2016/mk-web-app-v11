@@ -1,0 +1,64 @@
+/// 商品信息表 - 存储商品基本信息
+model Product {
+  id                 String           @id @default(cuid())
+  /// 应用ID：maka|jiantie
+  appid              String           @map("appid") @db.VarChar(50)
+  /// 商品名称
+  name               String           @map("name") @db.VarChar(255)
+  /// 商品别名（唯一标识）
+  alias              String           @unique @map("alias") @db.VarChar(100)
+  /// 价格（分）
+  price              Int              @map("price")
+  /// 货币类型
+  currency           String           @default("CNY") @map("currency") @db.VarChar(10)
+  /// 是否订阅商品
+  is_subscription    Boolean          @default(false) @map("is_subscription")
+  /// 是否可试用
+  is_trial           Boolean          @default(false) @map("is_trial")
+  /// 试用天数（如果可试用）
+  trial_days         Int?             @map("trial_days")
+  /// 多语言描述（JSON格式）
+  /// 格式：{ "zh-CN": { "name": "商品名", "description": "描述" }, "en-US": { ... } }
+  /// 多语言描述信息
+  i18nInfo           Json             @default("{}") @map("i18n")
+  /// 发货配置（角色、权限、有效期等）
+  shipping_config    Json             @default("{}") @map("shipping_config")
+  /// 商品状态：active、inactive、deleted
+  status             String           @default("active") @map("status") @db.VarChar(20)
+  /// 排序值
+  sort_order         Int              @default(0) @map("sort_order")
+  create_time        DateTime         @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time        DateTime         @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  /// 三方商品元数据,
+  third_product_meta Json?            @map("third_product_meta")
+  packages           ProductPackage[] @relation("ProductToProductPackage")
+
+  @@index([appid], map: "IDX_product_appid")
+  @@index([alias], map: "IDX_product_alias")
+  @@index([is_subscription], map: "IDX_product_is_subscription")
+  @@index([status], map: "IDX_product_status")
+  @@index([id], map: "IDX_product_id")
+  @@map("product")
+}
+
+/// 商品包表 - 存储商品包信息
+model ProductPackage {
+  /// 商品包ID（主键）
+  modulo      Int       @id @map("modulo")
+  /// 商品包名称
+  name        String?   @map("name") @db.VarChar(255)
+  /// 商品包描述
+  description String?   @map("description")
+  /// 商品包状态：active、inactive、deleted
+  status      String    @default("active") @map("status") @db.VarChar(20)
+  /// 排序值
+  sort_order  Int       @default(0) @map("sort_order")
+  create_time DateTime  @default(now()) @map("create_time") @db.Timestamptz(6)
+  update_time DateTime  @default(now()) @updatedAt @map("update_time") @db.Timestamptz(6)
+  appid       String    @default("appid") @map("appid") @db.VarChar(50)
+  products    Product[] @relation("ProductToProductPackage")
+
+  @@index([status], map: "IDX_product_package_status")
+  @@index([modulo], map: "IDX_product_package_modulo")
+  @@map("product_package")
+}

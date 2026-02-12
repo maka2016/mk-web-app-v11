@@ -1,0 +1,42 @@
+---
+description: 简帖项目特定规则 - 项目架构、技术栈、代码质量和开发流程规范
+globs:
+alwaysApply: true
+---
+
+> **注意**：UI 组件库使用、样式规范、设计 Token 等设计系统相关内容请参考 `design-system.mdc` 文档。
+
+### 项目架构规则
+
+1. **核心应用**: 简帖（jiantie）是主要业务应用，其他包都是工具库
+2. **monorepo 结构**: 使用 pnpm workspace 管理，共享代码通过 workspace 引用
+3. **package.json**: 没有特别声明的情况下使用根目录的 package.json
+4. **文档**: 没有在特别声明的情况下不直接写文档文件，直接在chat中写下理由即可，或者直接在代码中写注释
+
+### 技术栈规则
+
+5. **React 19 + Next.js 16**: 使用最新的 App Router 架构
+6. **TypeScript 优先**: 所有新代码必须使用 TypeScript
+7. **状态管理**: 使用 MobX 进行状态管理，提供 useStore Hook
+8. **tRPC API 使用**: 在 React 组件中调用 tRPC API 时，必须使用 `trpcReact`（从 `@/utils/trpc` 导入），不要使用 `trpc` 客户端
+
+### 代码质量规则
+
+9. **避免复杂Hook**: 不要使用 useCallback、useMemo 等复杂优化
+10. **保持简单**: 优先使用最简单的可运行代码方案
+11. **严格 TypeScript 类型**: 禁止使用 `any` 类型，必须使用明确的类型定义。如果类型暂时无法确定，应使用 `unknown` 类型并进行类型守卫，或使用泛型、联合类型等 TypeScript 类型特性
+
+### 开发流程规则
+
+12. **启动命令**: 主要使用 `pnpm dev:jiantie` 启动简帖应用
+13. **包管理**: 使用 pnpm 作为包管理器
+14. **构建输出**: 支持 standalone 模式和 Docker 容器化部署
+
+### UI交互细节
+
+15. **区分初始化和数据更新**: 初始化时显示loading，更新时需要保留原有的数据，而不是清空UI显示再渲染数据
+16. **国际化使用中文作为key**: 当需要做国际化时，使用中文作为key(key值避免有符号.)，再去国际化文件新增对应语言的翻译
+
+### 其他
+
+17. **不要使用 Next.js Image 组件**: 项目中不使用 Next.js 提供的 Image 组件（已在 design-system.mdc 中说明，此处作为项目层面提醒）

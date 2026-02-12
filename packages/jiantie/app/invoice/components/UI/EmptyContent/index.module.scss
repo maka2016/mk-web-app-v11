@@ -1,0 +1,26 @@
+.main {
+  text-align: center;
+
+  display: flex;
+  flex-direction: column;
+  row-gap: 16px;
+
+  .imgWrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    img {
+      width: 140px;
+      height: 140px;
+      user-select: none;
+      margin: 0 auto 16px;
+    }
+  }
+
+  .emptyText {
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 14px;
+    line-height: 22px;
+  }
+}

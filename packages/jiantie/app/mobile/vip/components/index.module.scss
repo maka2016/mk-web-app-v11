@@ -1,0 +1,10 @@
+.vipPage {
+  max-height: calc(100vh - 44px);
+  max-height: calc(100dvh - 44px);
+  height: calc(100vh - 44px);
+  height: calc(100dvh - 44px);
+
+  .head {
+    display: none;
+  }
+}

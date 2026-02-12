@@ -1,0 +1,164 @@
+generator client {
+  provider      = "prisma-client"
+  output        = "../generated/client"
+  binaryTargets = ["native", "darwin-arm64", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ReviewStatus {
+  waiting // 待审核
+  pass // 通过
+  failed // 失败
+}
+
+enum RiskLevel {
+  low // 无
+  suspicious // 嫌疑
+  high // 高危
+}
+
+enum ManualAction {
+  default // 默认
+  pass // 通过
+  ban // 封禁
+}
+
+enum WorkType {
+  makav7 // makav7作品
+  jiantie // 简帖作品
+}
+
+enum ReviewTaskStatus {
+  pending // 待审核
+  reviewing // 审核中
+  completed // 完成
+}
+
+enum PassType {
+  whiteWork // 白名单作品
+  whiteUser // 白名单用户
+  manual // 人工
+  machine // 机器
+}
+
+model WhitelistUser {
+  uid       Int      @id @map("uid")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  reason    String?
+
+  @@map("whitelist_users")
+}
+
+model WhitelistWork {
+  workId    String   @id @map("work_id")
+  uid       Int      @map("uid")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  reason    String?
+
+  @@map("whitelist_works")
+}
+
+model SensitiveWord {
+  id    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  word  String // 敏感词
+  level RiskLevel // 风险等级
+
+  @@index([word]) // 为敏感词建立索引，提高查询效率
+  @@map("sensitive_words")
+}
+
+model WorkAuditList {
+  id                  String        @id @default(uuid()) @db.Uuid
+  workId              String        @map("work_id") // 作品id
+  uid                 Int           @map("uid") // 用户id
+  type                WorkType      @map("type") // 作品类型
+  snapshotTime        DateTime      @map("snapshot_time") @db.Timestamptz(6) // 快照时间
+  machineReviewResult ReviewStatus? @map("machine_review_result") // 机审核结果
+  passType            PassType      @map("pass_type") // 通过类型
+  machineRiskLevel    RiskLevel?    @map("machine_risk_level") // 机审核风险等级
+  reason              String?       @map("reason") // 审核原因
+  reviewTime          DateTime?     @map("review_time") @db.Timestamptz(6) // 审核时间
+  createdAt           DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  workAuditResult WorkAuditResult? // 引用此审核记录的结果（一对一关系）
+
+  @@index([workId]) // 为作品id建立索引
+  @@index([uid]) // 为用户id建立索引
+  @@index([type]) // 为作品类型建立索引
+  @@index([reviewTime]) // 为审核时间建立索引
+  @@map("work_audit_list")
+}
+
+model WorkAuditResult {
+  id             String    @id @default(uuid()) @db.Uuid
+  workId         String    @unique @map("work_id") // 作品id
+  uid            Int       @map("uid") // 用户id
+  type           WorkType  @map("type") // 作品类型
+  pv             Int       @default(0) // 当前PV
+  uv             Int       @default(0) // 当前UV
+  historyPv      Int       @default(0) @map("history_pv") // 历史PV
+  historyUv      Int       @default(0) @map("history_uv") // 历史UV
+  meta           Json?     @map("meta") @db.JsonB // 元数据
+  lastReviewTime DateTime? @map("last_review_time") @db.Timestamptz(6) // 最近一次审核时间
+  reviewCount    Int       @default(0) @map("review_count") // 累计审核次数
+  manualTag      String?   @map("manual_tag") // 人工标签
+  lastAuditId    String?   @unique @map("last_audit_id") @db.Uuid // 最后一次审核记录ID
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  lastAudit WorkAuditList? @relation(fields: [lastAuditId], references: [id])
+
+  @@index([uid]) // 为用户id建立索引
+  @@index([type]) // 为作品类型建立索引
+  @@index([lastReviewTime]) // 为最近一次审核时间建立索引
+  @@map("work_audit_results")
+}
+
+//
+model WorkInfo {
+  id         String    @id @default(uuid()) @db.Uuid
+  workId     String    @unique @map("work_id") // 作品id
+  uid        Int       @map("uid") // 用户id
+  type       WorkType  @map("type") // 作品类型
+  title      String    @map("title") // 作品标题
+  cover      String?   @map("cover") // 作品封面
+  status     Int?      @map("status") // 作品状态
+  createTime DateTime? @map("create_time") @db.Timestamptz(6) // 创建时间
+  updateTime DateTime? @map("update_time") @db.Timestamptz(6) // 更新时间
+  metadata   Json?     @map("metadata") @db.JsonB // 元数据
+  features   Json?     @map("features") @db.JsonB // 特征
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([uid]) // 为用户id建立索引
+  @@index([type]) // 为作品类型建立索引
+  @@index([status]) // 为作品状态建立索引
+  @@map("work_info")
+}
+
+model ReviewTask {
+  id           String           @id @default(uuid()) @db.Uuid
+  workId       String           @map("work_id") // 作品id
+  uid          Int              @map("uid") // 用户id
+  type         WorkType         @map("type") // 作品类型
+  pv           Int              @default(0) // 当前PV
+  uv           Int              @default(0) // 当前UV
+  share        Int              @default(0) @map("share") // 分享次数(先预留)
+  historyPv    Int              @default(0) @map("history_pv") // 历史PV
+  historyUv    Int              @default(0) @map("history_uv") // 历史UV
+  snapshotTime DateTime         @map("snapshot_time") @db.Timestamptz(6) // 快照时间
+  status       ReviewTaskStatus @default(pending) @map("status") // 审核任务状态
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([workId]) // 为作品id建立索引
+  @@index([uid]) // 为用户id建立索引
+  @@index([type]) // 为作品类型建立索引
+  @@index([snapshotTime]) // 为快照时间建立索引
+  @@index([status]) // 为审核任务状态建立索引
+  @@map("review_tasks")
+}

@@ -1,0 +1,50 @@
+.layout {
+  font-family: PingFang SC;
+  width: 100vw;
+  min-height: 100vh;
+  background-color: rgba(245, 245, 245, 1);
+  padding: 0;
+
+  @media (min-width: 768px) {
+    padding: 20px;
+    height: 100vh;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 20px 120px;
+  }
+
+  .container {
+    width: 100%;
+    background-color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    @media (min-width: 768px) {
+      max-width: 1200px;
+      margin: 0 auto;
+      border-radius: 8px;
+      height: 100%;
+      overflow: hidden;
+      flex-direction: row;
+    }
+  }
+
+  .leftContainer {
+    width: 100%;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+    @media (min-width: 768px) {
+      width: 220px;
+      flex-shrink: 0;
+      border-bottom: none;
+      border-right: 1px solid rgba(0, 0, 0, 0.06);
+    }
+  }
+
+  .rightContainer {
+    flex: 1;
+    overflow-y: auto;
+  }
+}

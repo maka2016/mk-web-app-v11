@@ -1,0 +1,99 @@
+export class BaseConversionDto {
+@IsOptional()
+appid?: string
+@IsOptional()
+@IsNumber()
+uid?: number
+@IsOptional()
+imei?: string
+@IsOptional()
+idfa?: string
+@IsOptional()
+oaid?: string
+@IsOptional()
+caid?: string
+@IsOptional()
+androidid?: string
+@IsOptional()
+idfv?: string
+@IsOptional()
+device?: string
+@IsOptional()
+bundleid?: string
+@IsOptional()
+deviceid?: string
+@IsOptional()
+ip?: string
+@IsNumber()
+conversionTime: number
+@IsOptional()
+douyinH5Clickid?: string
+@IsOptional()
+baiduLogidUrl?: string
+}
+
+export class ActiveConversionDto extends BaseConversionDto {
+asaToken?: string
+gclid?: string
+}
+
+// 处理激活转化的端点
+@Post('/v1/conversion/active')
+@UsePipes(DeviceIdentifiersTransformPipe)
+async handleActiveConversion(
+@Body() body: ActiveConversionDto,
+): Promise<void> {
+console.log(`handleActiveConversion: ${JSON.stringify(body)}`)
+
+    try {
+      switch (body.device) {
+        case 'ios':
+          if (!body.deviceid && !body.idfa && !body.idfv) {
+            throw new BadRequestException('ios广告标识都为空')
+          }
+          break
+        case 'android':
+          if (!body.androidid && !body.oaid) {
+            throw new BadRequestException('android广告标识都为空')
+          }
+          break
+        default:
+          throw new BadRequestException(
+            `active event unsupport the device: ${body.device}`,
+          )
+      }
+
+      if (!body.conversionTime) {
+        throw new BadRequestException('conversionTime不为空')
+      }
+
+      let conversionTimeValue = Number(body.conversionTime)
+
+      if (isNaN(conversionTimeValue)) {
+        throw new BadRequestException('conversionTime必须是数值')
+      }
+
+      // 如果是秒级时间戳（10位），转换为毫秒
+      if (conversionTimeValue < 1e10) {
+        conversionTimeValue *= 1000
+      }
+
+      const conversionTimeDate = new Date(conversionTimeValue)
+
+      if (isNaN(conversionTimeDate.getTime())) {
+        throw new BadRequestException('conversionTime格式错误')
+      }
+
+      this.appService.createConvBeforeAttribution({
+        ...body,
+        conversionType: ConversionType.Active,
+        conversionTime: conversionTimeDate,
+      })
+
+      return
+    } catch (err) {
+      this.errorLogger.logError(err, body, 'handleActiveConversionError')
+      throw err
+    }
+
+}

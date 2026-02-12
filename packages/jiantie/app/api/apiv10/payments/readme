@@ -1,0 +1,93 @@
+import { Type } from 'class-transformer'
+import {
+IsNotEmpty,
+IsNumber,
+IsOptional,
+IsPositive,
+IsString,
+ValidateNested,
+} from 'class-validator'
+import { OrderExtraInfoDto } from '../../order/dtos/order-extra-info.dto'
+
+export class AppleIapBodyDto {
+@IsString()
+@IsNotEmpty({ message: 'receipt 不能为空' })
+receipt: string
+
+@IsNumber({}, { message: 'uid 必须为数字' })
+@IsPositive({ message: 'uid 必须为正整数' })
+uid: number
+
+@IsString()
+appid: string
+
+@IsOptional()
+@IsString()
+notificationAttach?: string
+
+@ValidateNested()
+@Type(() => OrderExtraInfoDto)
+extraInfo: OrderExtraInfoDto
+}
+
+export class OrderExtraInfoDto {
+@IsString()
+locale: string
+
+@IsString()
+device: string
+
+@IsOptional()
+version?: string
+
+@IsOptional()
+@IsString()
+bundleId?: string
+
+@IsOptional()
+@IsIP()
+ip?: string
+
+@IsOptional()
+@IsString()
+headerInfo?: string
+
+@IsOptional()
+channelId?: string
+
+@IsOptional()
+utmMetadata?: OrderUtmMetadata
+
+@IsOptional()
+deviceIdentifiers?: OrderDeviceIdentifiers
+
+@IsOptional()
+traceMetadata?: OrderTraceMetadata
+}
+
+export class OrderTraceMetadata {
+@IsOptional()
+fromWhere?: string
+@IsOptional()
+forwardModule?: string
+@IsOptional()
+forwardPageName?: string
+@IsOptional()
+refPageType?: string
+@IsOptional()
+refPageId?: string
+@IsOptional()
+refPageInstId?: string
+@IsOptional()
+refPageviewEventId?: string
+@IsOptional()
+refObjectType?: string
+@IsOptional()
+refObjectId?: string
+@IsOptional()
+refObjectInstId?: string
+@IsOptional()
+refEventId?: string
+@IsOptional()
+workId?: string
+}

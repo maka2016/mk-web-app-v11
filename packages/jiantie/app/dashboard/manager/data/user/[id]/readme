@@ -1,0 +1,19 @@
+//从bi查询用户的信息，新建biRouter
+
+// const biAdb = knex({
+// client: 'mysql',
+// connection: {
+// host: 'am-2zeo48x814d64lo93167330.ads.aliyuncs.com',
+// user: 'report_api',
+// password: 'j3E4h6NWBQ5U-',
+// database: 'mk_datawork',
+// },
+// });
+
+//需要查询和显示的关键行为特征
+//热词频道访问page_id: "4605",page_type: "hotword_channel",可以显示url
+//访问模板详情页：page_type: "template_page"，page_id：模板id
+//访问编辑器：page_type: "editor_page"，parent_id为作品id，显示url
+//vip拦截页：page_type: "vip_intercept_page"，page_id: "vip_intercept_page"，显示url
+//编辑器右上角点击：event_type: "click", object_type: "editor_publish_btn", ref_page_id 为作品 id，显示url
+//分享点击：event_type: "click", object_type: "work_share_btn", object_id 为作品 id，显示url
